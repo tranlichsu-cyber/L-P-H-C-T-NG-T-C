@@ -7,6 +7,7 @@ import { Badge } from '../../components/common/Badge';
 import { SchoolService } from '../../services/school/SchoolService';
 import type { SchoolJoinRequest } from '../../services/school/types';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   UserPlus,
   CheckCircle2,
@@ -18,6 +19,11 @@ import {
 export const JoinRequestsPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
+  const actor = {
+    uid: currentUser?.uid || 'admin-current',
+    name: currentUser?.displayName || currentUser?.email || 'Quản trị trường',
+  };
 
   const [requests, setRequests] = useState<SchoolJoinRequest[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -41,7 +47,6 @@ export const JoinRequestsPage: React.FC = () => {
 
   const handleApprove = async (req: SchoolJoinRequest) => {
     setProcessingId(req.id);
-    const actor = { uid: 'admin-1', name: 'Hiệu trưởng Nguyễn Văn A' };
     try {
       const ok = await SchoolService.approveJoinRequest(req.id, actor);
       if (ok) {
