@@ -400,6 +400,20 @@ export class SchoolService {
     if (isFirebaseConfigured && db) {
       const uRef = doc(db, 'users', targetUid);
       await updateDoc(uRef, { role: newRole, updatedAt: target.updatedAt });
+
+      if (newRole === 'TEACHER') {
+        const teamsSnap = await getDocs(collection(db, 'teams'));
+        await Promise.all(
+          teamsSnap.docs.map(async (teamDoc) => {
+            const team = teamDoc.data() as SchoolTeam;
+            if ((team.leaderIds || []).includes(targetUid)) {
+              await updateDoc(teamDoc.ref, {
+                leaderIds: (team.leaderIds || []).filter((uid) => uid !== targetUid),
+              });
+            }
+          })
+        );
+      }
     }
 
     const local = this.loadLocalStorage();
@@ -481,6 +495,35 @@ export class SchoolService {
     if (isFirebaseConfigured && db) {
       const uRef = doc(db, 'users', targetUid);
       await updateDoc(uRef, { teamIds, updatedAt: target.updatedAt });
+
+      const teamsSnap = await getDocs(collection(db, 'teams'));
+      await Promise.all(
+        teamsSnap.docs.map(async (teamDoc) => {
+          const team = teamDoc.data() as SchoolTeam;
+          const shouldBeMember = teamIds.includes(teamDoc.id);
+          const nextMemberIds = Array.from(
+            new Set(
+              shouldBeMember
+                ? [...(team.memberIds || []), targetUid]
+                : (team.memberIds || []).filter((uid) => uid !== targetUid)
+            )
+          );
+
+          let nextLeaderIds = team.leaderIds || [];
+          if (target.role === 'TEAM_LEADER') {
+            nextLeaderIds = shouldBeMember
+              ? Array.from(new Set([...nextLeaderIds, targetUid]))
+              : nextLeaderIds.filter((uid) => uid !== targetUid);
+          } else {
+            nextLeaderIds = nextLeaderIds.filter((uid) => uid !== targetUid);
+          }
+
+          await updateDoc(teamDoc.ref, {
+            memberIds: nextMemberIds,
+            leaderIds: nextLeaderIds,
+          });
+        })
+      );
     }
 
     const local = this.loadLocalStorage();
@@ -522,9 +565,27 @@ export class SchoolService {
       createdAt: new Date().toISOString(),
     };
 
-    if (db) {
+    if (isFirebaseConfigured && db) {
       const tRef = doc(db, 'teams', teamId);
       await setDoc(tRef, newTeam);
+
+      const allAssignedIds = Array.from(new Set([...leaderIds, ...memberIds]));
+      for (const uid of allAssignedIds) {
+        const profile = await this.getUser(uid);
+        if (!profile) continue;
+
+        const nextTeamIds = Array.from(new Set([...(profile.teamIds || []), teamId]));
+        const nextRole: UserRole =
+          leaderIds.includes(uid) && profile.role !== 'SCHOOL_ADMIN'
+            ? 'TEAM_LEADER'
+            : profile.role;
+
+        await updateDoc(doc(db, 'users', uid), {
+          teamIds: nextTeamIds,
+          role: nextRole,
+          updatedAt: new Date().toISOString(),
+        });
+      }
     }
 
     const local = this.loadLocalStorage();
@@ -565,6 +626,22 @@ export class SchoolService {
         })
       );
       await deleteDoc(doc(db, 'teams', teamId));
+
+      const remainingTeams = teams.filter((team) => team.id !== teamId);
+      for (const leaderUid of target.leaderIds || []) {
+        const stillLeadsAnotherTeam = remainingTeams.some((team) =>
+          (team.leaderIds || []).includes(leaderUid)
+        );
+        if (!stillLeadsAnotherTeam) {
+          const leader = await this.getUser(leaderUid);
+          if (leader?.role === 'TEAM_LEADER') {
+            await updateDoc(doc(db, 'users', leaderUid), {
+              role: 'TEACHER',
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        }
+      }
     }
 
     const local = this.loadLocalStorage();
