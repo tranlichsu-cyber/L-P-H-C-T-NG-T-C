@@ -9,10 +9,11 @@ import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { PresentationView } from '../../components/teacher/PresentationView';
 import { useRoomRealtime } from '../../hooks/useRoomRealtime';
-import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
+import { activeRealtimeService, isFirebaseActive } from '../../services/realtime/realtimeServiceSwitch';
 import { loadMockDatabase } from '../../services/realtime/mockStorage';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { GameHubModal } from '../../components/games/GameHubModal';
 import { RandomWheelGame } from '../../components/games/RandomWheelGame';
 import { MysteryDoorGame } from '../../components/games/MysteryDoorGame';
@@ -41,6 +42,7 @@ export const RoomControllerPage: React.FC = () => {
   const navigate = useNavigate();
   const { quizzes, classes } = useTeacherData();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'students' | 'scoreboard'>('overview');
@@ -67,23 +69,33 @@ export const RoomControllerPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'score-desc' | 'score-asc' | 'name'>('score-desc');
 
-  // Initialize room if accessing directly
+  // Initialize room. Firestore createRoom is async; mock mode remains supported.
   useEffect(() => {
-    if (paramRoomId) {
-      setActiveRoomId(paramRoomId);
-    } else {
-      const db = loadMockDatabase();
-      const rooms = Object.values(db.rooms);
-      const active = rooms.find((r) => r.status !== 'FINISHED');
+    let cancelled = false;
 
-      if (active) {
-        setActiveRoomId(active.id);
-      } else {
-        const defaultQuiz = quizzes[0];
-        const defaultClass = classes[0];
-        if (defaultQuiz && defaultClass) {
-          const room = activeRealtimeService.createRoom({
-            teacherId: 'teacher-1',
+    const initializeRoom = async () => {
+      if (paramRoomId) {
+        setActiveRoomId(paramRoomId);
+        return;
+      }
+
+      if (!isFirebaseActive) {
+        const mockDb = loadMockDatabase();
+        const active = Object.values(mockDb.rooms).find((r) => r.status !== 'FINISHED');
+        if (active) {
+          setActiveRoomId(active.id);
+          return;
+        }
+      }
+
+      const defaultQuiz = quizzes[0];
+      const defaultClass = classes[0];
+      if (!defaultQuiz || !defaultClass) return;
+
+      try {
+        const createdRoom = await Promise.resolve(
+          activeRealtimeService.createRoom({
+            teacherId: currentUser?.uid || 'teacher-current',
             classId: defaultClass.id,
             className: defaultClass.name,
             subject: defaultQuiz.subject,
@@ -91,12 +103,26 @@ export const RoomControllerPage: React.FC = () => {
             quizTitle: defaultQuiz.title,
             questions: defaultQuiz.questions,
             roster: defaultClass.students.map((s) => ({ id: s.id, name: s.name })),
-          });
-          setActiveRoomId(room.id);
+          })
+        );
+
+        if (!cancelled) {
+          setActiveRoomId(createdRoom.id);
+        }
+      } catch (error) {
+        console.error('Không thể tạo phòng học Live', error);
+        if (!cancelled) {
+          showToast('Không thể tạo phòng học Live. Vui lòng thử lại.', 'error');
         }
       }
-    }
-  }, [paramRoomId, quizzes, classes]);
+    };
+
+    void initializeRoom();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paramRoomId, quizzes, classes, currentUser?.uid, showToast]);
 
   const room = useRoomRealtime(activeRoomId);
 
