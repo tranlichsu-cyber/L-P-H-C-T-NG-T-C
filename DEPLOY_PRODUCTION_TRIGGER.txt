@@ -5,3 +5,4 @@ Trigger after simplified workflow.
 Retry after Service Usage Admin granted.
 Retry after Firebase Rules Admin granted.
 Deploy school name correction to Trường Tiểu học Sông Công.
+Retry after type-safe school name migration fix.
