@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "lhtt-dev",
+    "dev": "lhtt-dev",
+    "prod": "lophoctuongtac-prod"
+  }
+}

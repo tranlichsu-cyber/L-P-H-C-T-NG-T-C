@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- HELPER FUNCTIONS FOR SINGLE SCHOOL ARCHITECTURE ---
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    function isSchoolAdmin() {
+      return isTeacher() && (
+        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
+        getUserData().role == 'SCHOOL_ADMIN'
+      );
+    }
+
+    function isTeamLeader() {
+      return isTeacher() && getUserData().role == 'TEAM_LEADER';
+    }
+
+    function isOwner(teacherId) {
+      return isAuthenticated() && request.auth.uid == teacherId;
+    }
+
+    function isSameTeam(teamIds) {
+      return isTeacher() && getUserData().teamIds.hasAny(teamIds);
+    }
+
+    // 1. Single School User Profiles (users/{uid})
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow write: if isSchoolAdmin() || isOwner(uid);
+    }
+
+    // 2. Single School Settings (settings/school)
+    match /settings/school {
+      allow read: if isAuthenticated();
+      allow write: if isSchoolAdmin();
+    }
+
+    // 3. Single School Teams (teams/{teamId})
+    match /teams/{teamId} {
+      allow read: if isAuthenticated();
+      allow write: if isSchoolAdmin();
+    }
+
+    // 4. Single School Join Requests (joinRequests/{requestId})
+    match /joinRequests/{requestId} {
+      allow read: if isSchoolAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if isSchoolAdmin();
+    }
+
+    // 5. Single School Audit Logs (auditLogs/{logId})
+    match /auditLogs/{logId} {
+      allow read: if isSchoolAdmin();
+      allow create: if isSchoolAdmin();
+      allow update, delete: if false; // Audit logs are immutable
+    }
+
+    // 6. Classes (classes/{classId})
+    match /classes/{classId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+
+      match /students/{studentId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+    }
+
+    // 7. Quizzes (quizzes/{quizId})
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      allow update, delete: if isSchoolAdmin() || isOwner(resource.data.teacherId);
+    }
+
+    // 8. Rooms (rooms/{roomId})
+    match /rooms/{roomId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      allow update, delete: if isSchoolAdmin() || isOwner(resource.data.teacherId);
+
+      match /roster/{studentId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+
+      match /participants/{studentId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated();
+      }
+
+      match /liveQuestions/{questionId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+
+      match /submissions/{submissionId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isTeacher();
+      }
+
+      match /scores/{studentId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+
+      match /games/{gameId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+      }
+    }
+
+    // 9. Self-Paced Practice Sets (practiceSets/{setId})
+    match /practiceSets/{setId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeacher();
+      allow update, delete: if isSchoolAdmin() || isOwner(resource.data.teacherId);
+
+      match /responses/{responseId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+        allow update, delete: if isTeacher();
+      }
+    }
+
+    // 10. History Summaries (history/{historyId})
+    match /history/{historyId} {
+      allow read: if isSchoolAdmin() || isTeacher();
+      allow write: if isTeacher();
+    }
+
+    // 11. Feedback
+    match /pilotFeedback/{feedbackId} {
+      allow read: if isSchoolAdmin();
+      allow create: if isAuthenticated();
+    }
+  }
+}

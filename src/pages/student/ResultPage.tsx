@@ -1,0 +1,96 @@
+import React from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { Button } from '../../components/common/Button';
+import { useStudentSession } from '../../context/StudentSessionContext';
+import { PartyPopper, Lightbulb, ArrowRight, HelpCircle } from 'lucide-react';
+
+export const ResultPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { session, devControls } = useStudentSession();
+
+  // Route Guards
+  if (!session.roomCode) {
+    return <Navigate to="/student/join" replace />;
+  }
+  if (!session.studentName) {
+    return <Navigate to="/student/select-name" replace />;
+  }
+  if (!session.liveQuestion || session.liveQuestion.status !== 'RESULT') {
+    return <Navigate to="/student/waiting" replace />;
+  }
+
+  const q = session.liveQuestion;
+  const isCorrect = session.isCorrect;
+
+  const handleContinue = () => {
+    // Reset submitted state for next question and return to waiting
+    devControls.setWaiting();
+    navigate('/student/waiting');
+  };
+
+  return (
+    <div className="w-full max-w-md mx-auto space-y-6 text-center animate-fade-in">
+      {/* Result Display Card */}
+      <div
+        className={`bg-white rounded-3xl p-8 border-4 shadow-xl transition-all ${
+          isCorrect ? 'border-emerald-400 bg-emerald-50/20' : 'border-amber-400 bg-amber-50/20'
+        }`}
+      >
+        {isCorrect ? (
+          <div>
+            <div className="w-24 h-24 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 border-4 border-emerald-300 shadow-lg animate-bounce">
+              <PartyPopper className="w-12 h-12" />
+            </div>
+
+            <h1 className="text-3xl font-black text-emerald-950 mb-1">CHÍNH XÁC! 🎉</h1>
+            <p className="text-slate-600 font-bold text-base mb-6">
+              Em đã trả lời đúng! Xuất sắc lắm! 🌟
+            </p>
+
+            <div className="p-4 rounded-2xl bg-emerald-100/80 border-2 border-emerald-300 text-emerald-950 text-sm font-bold mb-6">
+              <span className="text-xs text-emerald-800 block mb-1">Đáp án đúng chuẩn:</span>
+              <span className="text-xl font-black">{q.correctAnswer}</span>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="w-24 h-24 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-4 border-4 border-amber-300 shadow-lg">
+              <Lightbulb className="w-12 h-12" />
+            </div>
+
+            <h1 className="text-3xl font-black text-amber-950 mb-1">TIẾC QUÁ 💡</h1>
+            <p className="text-slate-600 font-bold text-base mb-6">
+              Em chưa chọn đúng lần này, cố gắng hơn ở câu tiếp theo nhé!
+            </p>
+
+            <div className="p-4 rounded-2xl bg-amber-100/80 border-2 border-amber-300 text-amber-950 text-sm font-bold mb-6">
+              <span className="text-xs text-amber-800 block mb-1">Đáp án đúng là:</span>
+              <span className="text-xl font-black">{q.correctAnswer}</span>
+              {session.submittedAnswer && (
+                <div className="text-xs font-normal text-slate-600 mt-1 border-t border-amber-200/60 pt-1">
+                  Câu trả lời của em: <span className="line-through">{session.submittedAnswer}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Explanation Section */}
+        {q.explanation && (
+          <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 text-left mb-6 text-xs text-slate-700">
+            <div className="flex items-center gap-1.5 font-bold text-slate-900 mb-1">
+              <HelpCircle className="w-4 h-4 text-sky-600" />
+              <span>Giải thích chi tiết:</span>
+            </div>
+            <p className="font-medium">{q.explanation}</p>
+          </div>
+        )}
+
+        {/* Continue Button */}
+        <Button variant="student" size="xl" fullWidth onClick={handleContinue}>
+          TIẾP TỤC <ArrowRight className="w-6 h-6 ml-2 inline" />
+        </Button>
+      </div>
+    </div>
+  );
+};
