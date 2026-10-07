@@ -254,7 +254,9 @@ export class HistoryService {
           const scores: any = {};
           scoreSnap.docs.forEach((d) => (scores[d.id] = d.data()));
 
-          const roster = rosterSnap.docs.map((d) => d.data());
+          const roster = rosterSnap.docs.map(
+            (d) => d.data() as MockRoomData['roster'][number]
+          );
 
           roomData = {
             ...r,
