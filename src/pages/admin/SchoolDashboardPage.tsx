@@ -75,7 +75,7 @@ export const SchoolDashboardPage: React.FC = () => {
               <Badge variant="info">Năm học: {school?.academicYear || '2026-2027'}</Badge>
             </div>
             <h1 className="text-2xl font-black text-amber-400 uppercase tracking-wide">
-              {school?.name || 'Trường Tiểu học Nguyễn Trãi'}
+              {school?.name || 'Trường Tiểu học Sông Công'}
             </h1>
             <p className="text-xs text-sky-200 font-medium">
               Bảng điều khiển Quản trị Cấp trường dành cho Ban Giám hiệu
