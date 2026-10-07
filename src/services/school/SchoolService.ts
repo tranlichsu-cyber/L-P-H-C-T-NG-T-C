@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  onSnapshot,
 } from 'firebase/firestore';
 import { deleteApp, initializeApp } from 'firebase/app';
 import {
@@ -113,9 +114,21 @@ export class SchoolService {
     }
   }
 
+  private static settingsListeners: Array<(s: SchoolSettings) => void> = [];
+
+  private static notifySettingsListeners(updated: SchoolSettings): void {
+    this.settingsListeners.forEach((listener) => {
+      try {
+        listener(updated);
+      } catch (err) {
+        console.error('Error in settings listener:', err);
+      }
+    });
+  }
+
   // 1. Get Single School Settings (settings/school)
   public static async getSchoolSettings(): Promise<SchoolSettings> {
-    if (db) {
+    if (isFirebaseConfigured && db) {
       try {
         const sRef = doc(db, 'settings', 'school');
         const snap = await getDoc(sRef);
@@ -140,6 +153,81 @@ export class SchoolService {
     return local.settings;
   }
 
+  // Update School Settings (settings/school) & logoUrl
+  public static async updateSchoolSettings(
+    updates: Partial<SchoolSettings>,
+    actor?: { uid: string; name: string }
+  ): Promise<SchoolSettings> {
+    const current = await this.getSchoolSettings();
+    const updated: SchoolSettings = {
+      ...current,
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (isFirebaseConfigured && db) {
+      try {
+        const sRef = doc(db, 'settings', 'school');
+        await setDoc(sRef, updated, { merge: true });
+      } catch (err) {
+        console.error('Failed to save settings/school in Firestore:', err);
+      }
+    }
+
+    const local = this.loadLocalStorage();
+    local.settings = updated;
+    this.saveLocalStorage(local);
+
+    this.notifySettingsListeners(updated);
+
+    if (actor) {
+      await this.logAuditEvent('SETTING_UPDATED', actor, 'settings/school', 'Cấu hình trường', updates);
+    }
+
+    return updated;
+  }
+
+  // Subscribe to real-time updates for settings/school
+  public static subscribeSchoolSettings(
+    callback: (settings: SchoolSettings) => void
+  ): () => void {
+    let firestoreUnsub: (() => void) | null = null;
+
+    if (isFirebaseConfigured && db) {
+      try {
+        const sRef = doc(db, 'settings', 'school');
+        firestoreUnsub = onSnapshot(
+          sRef,
+          (snap) => {
+            if (snap.exists()) {
+              const data = snap.data() as SchoolSettings;
+              const normalized = normalizeSchoolSettings(data);
+              const local = SchoolService.loadLocalStorage();
+              local.settings = normalized;
+              SchoolService.saveLocalStorage(local);
+              callback(normalized);
+            }
+          },
+          (err) => {
+            console.warn('onSnapshot warning for settings/school:', err);
+          }
+        );
+      } catch (err) {
+        console.warn('Failed to listen to settings/school via onSnapshot:', err);
+      }
+    }
+
+    // Register local listener as well
+    this.settingsListeners.push(callback);
+
+    return () => {
+      if (firestoreUnsub) {
+        firestoreUnsub();
+      }
+      this.settingsListeners = this.settingsListeners.filter((l) => l !== callback);
+    };
+  }
+
   // Backward compatibility method
   public static async getSchool(): Promise<School> {
     const s = await this.getSchoolSettings();
@@ -149,6 +237,7 @@ export class SchoolService {
       code: 'SC2026',
       status: 'ACTIVE',
       academicYear: s.schoolYear,
+      logoUrl: s.logoUrl,
       createdAt: s.createdAt,
     };
   }

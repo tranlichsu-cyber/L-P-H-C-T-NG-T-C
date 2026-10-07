@@ -24,6 +24,7 @@ export interface SchoolSettings {
   campusName?: string;
   defaultPoints?: number;
   supportThreshold?: number;
+  logoUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -35,6 +36,7 @@ export interface School {
   code: string;
   status: 'ACTIVE' | 'DISABLED';
   academicYear?: string;
+  logoUrl?: string;
   createdAt: string;
 }
 

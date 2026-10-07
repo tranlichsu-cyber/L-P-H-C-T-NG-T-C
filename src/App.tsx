@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
+import { SchoolProvider } from './context/SchoolContext';
 import { TeacherDataProvider } from './context/TeacherDataContext';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import { PWAInstallPrompt } from './components/common/PWAInstallPrompt';
@@ -107,71 +108,73 @@ export const App: React.FC = () => {
   return (
     <ToastProvider>
       <AuthProvider>
-        <TeacherDataProvider>
-          <OfflineBanner />
-          <PWAInstallPrompt />
-          <BrowserRouter>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                {/* Role Selection Landing */}
-                <Route path="/" element={<RoleSelectionPage />} />
+        <SchoolProvider>
+          <TeacherDataProvider>
+            <OfflineBanner />
+            <PWAInstallPrompt />
+            <BrowserRouter>
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
+                  {/* Role Selection Landing */}
+                  <Route path="/" element={<RoleSelectionPage />} />
 
-                {/* Teacher Auth */}
-                <Route path="/login" element={<LoginPage />} />
+                  {/* Teacher Auth */}
+                  <Route path="/login" element={<LoginPage />} />
 
-                {/* Teacher Section */}
-                <Route path="/teacher" element={<TeacherLayout />}>
-                  <Route index element={<DashboardPage />} />
-                  <Route path="classes" element={<ClassesPage />} />
-                  <Route path="classes/:classId" element={<ClassDetailsPage />} />
-                  <Route path="classes/:classId/students/:studentId/history" element={<StudentHistoryPage />} />
-                  <Route path="quizzes" element={<QuizzesPage />} />
-                  <Route path="quizzes/:quizId" element={<QuizEditorPage />} />
-                  <Route path="ai" element={<AiQuestionPage />} />
-                  <Route path="remediation" element={<RemediationHubPage />} />
-                  <Route path="practice" element={<PracticeListPage />} />
-                  <Route path="practice/new" element={<PracticeEditorPage />} />
-                  <Route path="practice/:practiceSetId" element={<PracticeMonitorPage />} />
-                  <Route path="practice/:practiceSetId/edit" element={<PracticeEditorPage />} />
-                  <Route path="history" element={<HistoryPage />} />
-                  <Route path="history/:roomId" element={<SessionDetailPage />} />
-                  <Route path="room" element={<RoomControllerPage />} />
-                  <Route path="room/:roomId" element={<RoomControllerPage />} />
-                  <Route path="room/present" element={<PresentationPage />} />
-                  <Route path="room/:roomId/present" element={<PresentationPage />} />
-                </Route>
+                  {/* Teacher Section */}
+                  <Route path="/teacher" element={<TeacherLayout />}>
+                    <Route index element={<DashboardPage />} />
+                    <Route path="classes" element={<ClassesPage />} />
+                    <Route path="classes/:classId" element={<ClassDetailsPage />} />
+                    <Route path="classes/:classId/students/:studentId/history" element={<StudentHistoryPage />} />
+                    <Route path="quizzes" element={<QuizzesPage />} />
+                    <Route path="quizzes/:quizId" element={<QuizEditorPage />} />
+                    <Route path="ai" element={<AiQuestionPage />} />
+                    <Route path="remediation" element={<RemediationHubPage />} />
+                    <Route path="practice" element={<PracticeListPage />} />
+                    <Route path="practice/new" element={<PracticeEditorPage />} />
+                    <Route path="practice/:practiceSetId" element={<PracticeMonitorPage />} />
+                    <Route path="practice/:practiceSetId/edit" element={<PracticeEditorPage />} />
+                    <Route path="history" element={<HistoryPage />} />
+                    <Route path="history/:roomId" element={<SessionDetailPage />} />
+                    <Route path="room" element={<RoomControllerPage />} />
+                    <Route path="room/:roomId" element={<RoomControllerPage />} />
+                    <Route path="room/present" element={<PresentationPage />} />
+                    <Route path="room/:roomId/present" element={<PresentationPage />} />
+                  </Route>
 
-                {/* Milestone 11: School Admin & Team Routes */}
-                <Route path="/admin" element={<TeacherLayout />}>
-                  <Route index element={<SchoolDashboardPage />} />
-                  <Route path="teachers" element={<TeacherManagementPage />} />
-                  <Route path="teams" element={<TeamManagementPage />} />
-                  <Route path="requests" element={<JoinRequestsPage />} />
-                  <Route path="reports" element={<SchoolReportsPage />} />
-                  <Route path="logs" element={<AuditLogsPage />} />
-                </Route>
+                  {/* Milestone 11: School Admin & Team Routes */}
+                  <Route path="/admin" element={<TeacherLayout />}>
+                    <Route index element={<SchoolDashboardPage />} />
+                    <Route path="teachers" element={<TeacherManagementPage />} />
+                    <Route path="teams" element={<TeamManagementPage />} />
+                    <Route path="requests" element={<JoinRequestsPage />} />
+                    <Route path="reports" element={<SchoolReportsPage />} />
+                    <Route path="logs" element={<AuditLogsPage />} />
+                  </Route>
 
-                <Route path="/team" element={<TeacherLayout />}>
-                  <Route index element={<TeamDashboardPage />} />
-                </Route>
+                  <Route path="/team" element={<TeacherLayout />}>
+                    <Route index element={<TeamDashboardPage />} />
+                  </Route>
 
-                {/* Student Section (Eagerly Loaded Fast Bundle) */}
-                <Route path="/student" element={<StudentLayout />}>
-                  <Route index element={<Navigate to="/student/join" replace />} />
-                  <Route path="join" element={<JoinPage />} />
-                  <Route path="select-name" element={<SelectNamePage />} />
-                  <Route path="waiting" element={<WaitingPage />} />
-                  <Route path="quiz" element={<QuizPage />} />
-                  <Route path="result" element={<ResultPage />} />
-                  <Route path="practice" element={<StudentPracticeHubPage />} />
-                </Route>
+                  {/* Student Section (Eagerly Loaded Fast Bundle) */}
+                  <Route path="/student" element={<StudentLayout />}>
+                    <Route index element={<Navigate to="/student/join" replace />} />
+                    <Route path="join" element={<JoinPage />} />
+                    <Route path="select-name" element={<SelectNamePage />} />
+                    <Route path="waiting" element={<WaitingPage />} />
+                    <Route path="quiz" element={<QuizPage />} />
+                    <Route path="result" element={<ResultPage />} />
+                    <Route path="practice" element={<StudentPracticeHubPage />} />
+                  </Route>
 
-                {/* Fallback 404 */}
-                <Route path="*" element={<NotFoundPage />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TeacherDataProvider>
+                  {/* Fallback 404 */}
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </TeacherDataProvider>
+        </SchoolProvider>
       </AuthProvider>
     </ToastProvider>
   );

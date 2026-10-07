@@ -7,6 +7,7 @@ export const INITIAL_SCHOOL_SETTINGS: SchoolSettings = {
   campusName: 'Phân hiệu Lý Tự Trọng',
   defaultPoints: 5,
   supportThreshold: 60,
+  logoUrl: '',
   createdAt: '2026-09-01T08:00:00.000Z',
   updatedAt: '2026-10-06T10:00:00.000Z',
 };
@@ -17,6 +18,7 @@ export const INITIAL_SCHOOL: School = {
   code: 'SC2026',
   status: 'ACTIVE',
   academicYear: '2026-2027',
+  logoUrl: '',
   createdAt: '2026-09-01T08:00:00.000Z',
 };
 

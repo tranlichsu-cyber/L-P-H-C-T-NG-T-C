@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, BookOpen, Radio, LogOut, Sparkles, History, HeartHandshake, Building2, Crown } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, Radio, LogOut, Sparkles, History, HeartHandshake, Building2, Crown, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSchool } from '../context/SchoolContext';
 import { SCHOOL_LOGO_SRC } from '../assets/schoolLogo';
 
 export const TeacherLayout: React.FC = () => {
   const location = useLocation();
   const { currentUser, signOutTeacher } = useAuth();
+  const { logoUrl, settings } = useSchool();
   const accountLabel = currentUser?.displayName || currentUser?.email || 'Trần Lịch Sử';
 
   const navItems = [
@@ -21,6 +23,8 @@ export const TeacherLayout: React.FC = () => {
     { path: '/admin', label: 'Quản trị trường', icon: Building2, idle: 'bg-indigo-50 text-indigo-700 border-indigo-200', active: 'bg-indigo-700 text-white border-indigo-700 shadow-indigo-200' },
   ];
 
+  const currentLogoSrc = logoUrl || SCHOOL_LOGO_SRC;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Top Header */}
@@ -28,13 +32,18 @@ export const TeacherLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <Link to="/teacher" className="flex items-center gap-3 group">
-              <img
-                src={SCHOOL_LOGO_SRC}
-                alt="Logo Trường Tiểu học Sông Công"
-                className="w-11 h-11 rounded-full object-cover object-center border-2 border-red-200 shadow-md group-hover:scale-105 transition-transform"
-              />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-sky-600/30 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
+                {currentLogoSrc ? (
+                  <img src={currentLogoSrc} alt="Logo trường" className="w-full h-full object-cover" />
+                ) : (
+                  <GraduationCap className="w-6 h-6" />
+                )}
+              </div>
               <div>
-                <span className="font-black text-lg text-slate-900 leading-tight block tracking-tight">Lớp Học Tương Tác</span>
+                <span className="font-black text-lg text-slate-900 leading-tight block tracking-tight">
+                  {settings.displayName || settings.schoolName || 'Lớp Học Tương Tác'}
+                </span>
+                <span className="text-[11px] font-extrabold text-sky-600 uppercase tracking-wider block">Giao diện Giáo viên v1.1</span>
               </div>
             </Link>
 
