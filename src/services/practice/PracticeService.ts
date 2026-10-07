@@ -21,6 +21,20 @@ type StudentProgress = PracticeAssignment & {
   authUid?: string | null;
 };
 
+const sanitizeFirestoreData = (value: unknown): any => {
+  if (Array.isArray(value)) {
+    return value.map((item) => (item === undefined ? null : sanitizeFirestoreData(item)));
+  }
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .map(([key, item]) => [key, sanitizeFirestoreData(item)])
+    );
+  }
+  return value;
+};
+
 export class PracticeService {
   private static loadLocalPracticeSets(): PracticeSet[] {
     try {
@@ -89,7 +103,7 @@ export class PracticeService {
     };
 
     if (isFirebaseConfigured && db) {
-      await setDoc(doc(db, 'practiceSets', id), newSet);
+      await setDoc(doc(db, 'practiceSets', id), sanitizeFirestoreData(newSet));
       return newSet;
     }
 
@@ -97,6 +111,53 @@ export class PracticeService {
     sets.unshift(newSet);
     this.saveLocalPracticeSets(sets);
     return newSet;
+  }
+
+  // 2. Update Practice Set
+  public static async updatePracticeSet(
+    practiceSetId: string,
+    params: Omit<PracticeSet, 'id' | 'createdAt' | 'assignments' | 'responses'>
+  ): Promise<PracticeSet> {
+    if (isFirebaseConfigured && db) {
+      const ref = doc(db, 'practiceSets', practiceSetId);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error('Không tìm thấy bài ôn tập.');
+
+      const current = { ...(snap.data() as PracticeSet), id: snap.id };
+      const updated: PracticeSet = {
+        ...current,
+        ...params,
+        id: practiceSetId,
+        createdAt: current.createdAt,
+        assignments: current.assignments || {},
+        responses: current.responses || {},
+      };
+
+      await updateDoc(
+        ref,
+        sanitizeFirestoreData({
+          ...params,
+          dueAt: params.dueAt || null,
+          updatedAt: new Date().toISOString(),
+        })
+      );
+
+      return updated;
+    }
+
+    const sets = this.loadLocalPracticeSets();
+    const index = sets.findIndex((s) => s.id === practiceSetId);
+    if (index === -1) throw new Error('Không tìm thấy bài ôn tập.');
+    sets[index] = {
+      ...sets[index],
+      ...params,
+      id: practiceSetId,
+      createdAt: sets[index].createdAt,
+      assignments: sets[index].assignments || {},
+      responses: sets[index].responses || {},
+    };
+    this.saveLocalPracticeSets(sets);
+    return sets[index];
   }
 
   // 2. Assign Practice Set
