@@ -11,6 +11,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
+  unlink,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../services/firebase/firebase';
@@ -154,8 +155,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      await linkWithPopup(auth.currentUser, provider);
+      provider.setCustomParameters({
+        prompt: 'select_account',
+        login_hint: auth.currentUser.email || '',
+      });
+      const result = await linkWithPopup(auth.currentUser, provider);
+      const googleProfile = result.user.providerData.find(
+        (item) => item.providerId === 'google.com'
+      );
+
+      if (
+        auth.currentUser.email &&
+        googleProfile?.email &&
+        googleProfile.email.toLowerCase() !== auth.currentUser.email.toLowerCase()
+      ) {
+        await unlink(auth.currentUser, 'google.com').catch(() => undefined);
+        showToast(
+          'Email Google phải trùng với email tài khoản giáo viên đang đăng nhập.',
+          'error'
+        );
+        return false;
+      }
+
       await auth.currentUser.reload();
       setCurrentUser(auth.currentUser);
       showToast('Đã liên kết tài khoản Google thành công!', 'success');
