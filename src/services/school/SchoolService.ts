@@ -171,6 +171,7 @@ export class SchoolService {
         await setDoc(sRef, updated, { merge: true });
       } catch (err) {
         console.error('Failed to save settings/school in Firestore:', err);
+        throw new Error('Không thể lưu cấu hình trường lên Firestore. Vui lòng kiểm tra kết nối và quyền truy cập.');
       }
     }
 
