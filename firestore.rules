@@ -113,7 +113,10 @@ service cloud.firestore {
 
     // 8. Rooms (rooms/{roomId})
     match /rooms/{roomId} {
-      allow read: if isAuthenticated();
+      allow read: if (
+        isAuthenticated()
+        && request.auth.token.firebase.sign_in_provider == 'anonymous'
+      ) || canManageRoom(roomId);
       allow create: if isTeacher();
       allow update, delete: if canManageRoom(roomId);
 
