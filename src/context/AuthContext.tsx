@@ -9,6 +9,7 @@ import {
 import type { User } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../services/firebase/firebase';
 import { useToast } from './ToastContext';
+import { SchoolService } from '../services/school/SchoolService';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -48,8 +49,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      showToast('Đăng nhập Giáo viên thành công!', 'success');
+      const credential = await signInWithEmailAndPassword(auth, email, pass);
+      const profile = await SchoolService.getUser(credential.user.uid);
+
+      if (!profile) {
+        await signOut(auth);
+        showToast('Tài khoản chưa được Quản trị trường cấp hồ sơ sử dụng.', 'error');
+        return false;
+      }
+
+      if (profile.status !== 'ACTIVE') {
+        await signOut(auth);
+        showToast('Tài khoản đang bị khóa. Vui lòng liên hệ Quản trị trường.', 'error');
+        return false;
+      }
+
+      showToast('Đăng nhập thành công!', 'success');
       return true;
     } catch (err: any) {
       const msg =
