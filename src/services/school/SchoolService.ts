@@ -5,8 +5,19 @@ import {
   getDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase/firebase';
+import { deleteApp, initializeApp } from 'firebase/app';
+import {
+  createUserWithEmailAndPassword,
+  deleteUser,
+  getAuth,
+  inMemoryPersistence,
+  setPersistence,
+  signOut,
+  updateProfile,
+} from 'firebase/auth';
+import { db, firebaseConfig, isFirebaseConfigured } from '../firebase/firebase';
 import type {
   School,
   SchoolSettings,
@@ -161,7 +172,109 @@ export class SchoolService {
     return this.getUsers();
   }
 
-  // 3. Get User Profile
+  // 3. Create Teacher Account by School Admin.
+  // Password is used only by Firebase Authentication and is NEVER stored in Firestore/localStorage.
+  public static async createTeacherAccount(
+    displayName: string,
+    email: string,
+    password: string,
+    teamIds: string[],
+    actor: { uid: string; name: string }
+  ): Promise<UserProfile> {
+    const cleanName = displayName.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName) throw new Error('Vui lòng nhập họ và tên giáo viên.');
+    if (!cleanEmail) throw new Error('Vui lòng nhập email giáo viên.');
+    if (password.length < 6) throw new Error('Mật khẩu phải có ít nhất 6 ký tự.');
+
+    let uid = `teacher-${Date.now()}`;
+
+    if (isFirebaseConfigured && db) {
+      const secondaryApp = initializeApp(
+        firebaseConfig,
+        `admin-create-teacher-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      );
+      const secondaryAuth = getAuth(secondaryApp);
+      let createdUser: Awaited<ReturnType<typeof createUserWithEmailAndPassword>>['user'] | null = null;
+
+      try {
+        await setPersistence(secondaryAuth, inMemoryPersistence);
+        const credential = await createUserWithEmailAndPassword(
+          secondaryAuth,
+          cleanEmail,
+          password
+        );
+        createdUser = credential.user;
+        uid = credential.user.uid;
+        await updateProfile(credential.user, { displayName: cleanName });
+
+        const now = new Date().toISOString();
+        const profile: UserProfile = {
+          uid,
+          displayName: cleanName,
+          email: cleanEmail,
+          role: 'TEACHER',
+          teamIds,
+          status: 'ACTIVE',
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        try {
+          await setDoc(doc(db, 'users', uid), profile);
+        } catch (profileError) {
+          // Roll back the just-created Firebase Auth account if its profile cannot be created.
+          await deleteUser(credential.user).catch(() => undefined);
+          throw profileError;
+        }
+
+        const local = this.loadLocalStorage();
+        local.users = local.users.filter((u) => u.uid !== uid && u.email !== cleanEmail);
+        local.users.push(profile);
+        this.saveLocalStorage(local);
+
+        await this.logAuditEvent(
+          'TEACHER_ACCOUNT_CREATED',
+          actor,
+          uid,
+          cleanName,
+          { email: cleanEmail, teamIds }
+        );
+
+        return profile;
+      } finally {
+        if (createdUser && secondaryAuth.currentUser) {
+          await signOut(secondaryAuth).catch(() => undefined);
+        }
+        await deleteApp(secondaryApp).catch(() => undefined);
+      }
+    }
+
+    const now = new Date().toISOString();
+    const profile: UserProfile = {
+      uid,
+      displayName: cleanName,
+      email: cleanEmail,
+      role: 'TEACHER',
+      teamIds,
+      status: 'ACTIVE',
+      createdAt: now,
+      updatedAt: now,
+    };
+    const local = this.loadLocalStorage();
+    local.users = local.users.filter((u) => u.email !== cleanEmail);
+    local.users.push(profile);
+    this.saveLocalStorage(local);
+    await this.logAuditEvent('TEACHER_ACCOUNT_CREATED', actor, uid, cleanName, {
+      email: cleanEmail,
+      teamIds,
+      mock: true,
+    });
+    return profile;
+  }
+
+  // 4. Get User Profile
   public static async getUser(uid: string): Promise<UserProfile | null> {
     if (db) {
       try {
@@ -326,6 +439,7 @@ export class SchoolService {
     name: string,
     leaderIds: string[],
     memberIds: string[],
+    actor?: { uid: string; name: string },
     _deprecatedSchoolId?: string
   ): Promise<SchoolTeam> {
     const teamId = `team-${Date.now()}`;
@@ -338,20 +452,65 @@ export class SchoolService {
     };
 
     if (db) {
-      try {
-        const tRef = doc(db, 'teams', teamId);
-        await setDoc(tRef, newTeam);
-      } catch {}
+      const tRef = doc(db, 'teams', teamId);
+      await setDoc(tRef, newTeam);
     }
 
     const local = this.loadLocalStorage();
     local.teams.push(newTeam);
     this.saveLocalStorage(local);
 
+    if (actor) {
+      await this.logAuditEvent('TEAM_CREATED', actor, teamId, newTeam.name, {
+        leaderIds,
+        memberIds,
+      });
+    }
+
     return newTeam;
   }
 
-  // 9. Get Join Requests (joinRequests/{requestId})
+  // 9. Delete Team
+  public static async deleteTeam(
+    teamId: string,
+    actor: { uid: string; name: string }
+  ): Promise<void> {
+    const teams = await this.getTeams();
+    const target = teams.find((t) => t.id === teamId);
+    if (!target) throw new Error('Không tìm thấy tổ chuyên môn.');
+
+    if (db) {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      await Promise.all(
+        usersSnap.docs.map(async (userDoc) => {
+          const data = userDoc.data() as UserProfile;
+          const currentTeamIds = data.teamIds || [];
+          if (currentTeamIds.includes(teamId)) {
+            await updateDoc(userDoc.ref, {
+              teamIds: currentTeamIds.filter((id) => id !== teamId),
+              updatedAt: new Date().toISOString(),
+            });
+          }
+        })
+      );
+      await deleteDoc(doc(db, 'teams', teamId));
+    }
+
+    const local = this.loadLocalStorage();
+    local.teams = local.teams.filter((t) => t.id !== teamId);
+    local.users = local.users.map((u) => ({
+      ...u,
+      teamIds: (u.teamIds || []).filter((id) => id !== teamId),
+      updatedAt: (u.teamIds || []).includes(teamId) ? new Date().toISOString() : u.updatedAt,
+    }));
+    this.saveLocalStorage(local);
+
+    await this.logAuditEvent('TEAM_DELETED', actor, teamId, target.name, {
+      formerLeaderIds: target.leaderIds,
+    });
+  }
+
+  // 10. Get Join Requests (joinRequests/{requestId})
   public static async getJoinRequests(): Promise<SchoolJoinRequest[]> {
     if (db) {
       try {
