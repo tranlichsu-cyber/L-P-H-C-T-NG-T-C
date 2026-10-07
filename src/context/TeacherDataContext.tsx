@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { ClassGroup, Student, Quiz, Question } from '../types';
 import { INITIAL_CLASSES } from '../data/mockClasses';
 import { INITIAL_QUIZZES } from '../data/mockQuizzes';
 import { normalizeVietnameseText } from '../utils/normalizeVietnamese';
+import { collection, getDocs } from 'firebase/firestore';
+import { db, isFirebaseConfigured } from '../services/firebase/firebase';
 
 interface BulkAddResult {
   addedCount: number;
@@ -42,8 +44,84 @@ interface TeacherDataContextType {
 const TeacherDataContext = createContext<TeacherDataContextType | undefined>(undefined);
 
 export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [classes, setClasses] = useState<ClassGroup[]>(INITIAL_CLASSES);
-  const [quizzes, setQuizzes] = useState<Quiz[]>(INITIAL_QUIZZES);
+  const [classes, setClasses] = useState<ClassGroup[]>(
+    isFirebaseConfigured ? [] : INITIAL_CLASSES
+  );
+  const [quizzes, setQuizzes] = useState<Quiz[]>(
+    isFirebaseConfigured ? [] : INITIAL_QUIZZES
+  );
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !db) return;
+
+    let cancelled = false;
+
+    const loadRealTeacherData = async () => {
+      try {
+        const classSnap = await getDocs(collection(db, 'classes'));
+        const realClasses = await Promise.all(
+          classSnap.docs.map(async (classDoc) => {
+            const data = classDoc.data() as Partial<ClassGroup>;
+            const studentsSnap = await getDocs(collection(db, 'classes', classDoc.id, 'students'));
+            const students = studentsSnap.docs.map((studentDoc) => ({
+              id: studentDoc.id,
+              ...(studentDoc.data() as Omit<Student, 'id'>),
+            }));
+
+            return {
+              id: classDoc.id,
+              name: data.name || data.className || 'Lớp chưa đặt tên',
+              grade: data.grade || '',
+              studentCount: students.length,
+              students,
+              createdAt: data.createdAt || '',
+            } as ClassGroup;
+          })
+        );
+
+        const quizSnap = await getDocs(collection(db, 'quizzes'));
+        const realQuizzes = await Promise.all(
+          quizSnap.docs.map(async (quizDoc) => {
+            const data = quizDoc.data() as Partial<Quiz>;
+            const questionsSnap = await getDocs(collection(db, 'quizzes', quizDoc.id, 'questions'));
+            const questions = questionsSnap.docs.map((questionDoc) => ({
+              id: questionDoc.id,
+              ...(questionDoc.data() as Omit<Question, 'id'>),
+            }));
+
+            return {
+              id: quizDoc.id,
+              title: data.title || 'Bộ câu hỏi chưa đặt tên',
+              subject: data.subject || '',
+              grade: data.grade || '',
+              questionCount: questions.length,
+              questions,
+              createdAt: data.createdAt || '',
+              visibility: data.visibility || 'PRIVATE',
+              teamId: data.teamId,
+            } as Quiz;
+          })
+        );
+
+        if (!cancelled) {
+          setClasses(realClasses);
+          setQuizzes(realQuizzes);
+        }
+      } catch (error) {
+        console.error('Không thể tải dữ liệu lớp/bộ câu hỏi từ Firestore', error);
+        if (!cancelled) {
+          setClasses([]);
+          setQuizzes([]);
+        }
+      }
+    };
+
+    void loadRealTeacherData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // --- CLASS ACTIONS ---
   const addClass = (name: string, grade: string): ClassGroup => {
