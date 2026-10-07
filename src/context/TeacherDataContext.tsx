@@ -271,14 +271,15 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const nextCount = targetClass.students.length + newStudents.length;
 
     if (isFirebaseConfigured && db) {
-      const batch = writeBatch(db);
+      const firestore = db;
+      const batch = writeBatch(firestore);
       newStudents.forEach((student) => {
-        batch.set(doc(db, 'classes', classId, 'students', student.id), {
+        batch.set(doc(firestore, 'classes', classId, 'students', student.id), {
           ...student,
           createdAt: new Date().toISOString(),
         });
       });
-      batch.update(doc(db, 'classes', classId), {
+      batch.update(doc(firestore, 'classes', classId), {
         studentCount: nextCount,
         updatedAt: new Date().toISOString(),
       });
