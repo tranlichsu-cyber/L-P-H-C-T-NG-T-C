@@ -790,4 +790,180 @@ export class SchoolService {
       };
     }
   }
+
+  // 13. Real school usage report from Firestore
+  public static async getSchoolUsageReport(
+    timeRange: 'THIS_WEEK' | 'THIS_MONTH' | 'THIS_SEMESTER'
+  ): Promise<{
+    totalSessions: number;
+    totalParticipants: number;
+    totalRoster: number;
+    avgParticipation: number;
+    sharedQuizCount: number;
+    subjectStats: Array<{
+      subject: string;
+      sessions: number;
+      quizzes: number;
+      totalStudents: number;
+      totalRoster: number;
+      avgParticipation: number;
+    }>;
+  }> {
+    const emptyReport = {
+      totalSessions: 0,
+      totalParticipants: 0,
+      totalRoster: 0,
+      avgParticipation: 0,
+      sharedQuizCount: 0,
+      subjectStats: [],
+    };
+
+    if (!isFirebaseConfigured || !db) return emptyReport;
+
+    const firestore = db;
+
+    const toDate = (raw: unknown): Date | null => {
+      if (typeof raw === 'string') {
+        const parsed = new Date(raw);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+      if (raw instanceof Date) return raw;
+      if (raw && typeof (raw as { toDate?: () => Date }).toDate === 'function') {
+        return (raw as { toDate: () => Date }).toDate();
+      }
+      return null;
+    };
+
+    const now = new Date();
+    let start: Date;
+
+    if (timeRange === 'THIS_WEEK') {
+      start = new Date(now);
+      const day = start.getDay();
+      const distanceToMonday = day === 0 ? 6 : day - 1;
+      start.setDate(start.getDate() - distanceToMonday);
+      start.setHours(0, 0, 0, 0);
+    } else if (timeRange === 'THIS_MONTH') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    } else {
+      // Học kỳ I: 01/09 -> 31/01 of the active school year.
+      const semesterStartYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      start = new Date(semesterStartYear, 8, 1, 0, 0, 0, 0);
+    }
+
+    try {
+      const [roomsSnap, quizzesSnap] = await Promise.all([
+        getDocs(collection(firestore, 'rooms')),
+        getDocs(collection(firestore, 'quizzes')),
+      ]);
+
+      const relevantRooms = roomsSnap.docs.filter((roomDoc) => {
+        const data = roomDoc.data() as { createdAt?: unknown; status?: string };
+        const created = toDate(data.createdAt);
+        if (!created || created < start || created > now) return false;
+        // A WAITING room that was never started is not counted as a teaching session.
+        return data.status === 'ACTIVE' || data.status === 'FINISHED';
+      });
+
+      const roomDetails = await Promise.all(
+        relevantRooms.map(async (roomDoc) => {
+          const data = roomDoc.data() as {
+            subject?: string;
+            classId?: string;
+          };
+
+          const [participantsSnap, rosterSnap] = await Promise.all([
+            getDocs(collection(firestore, 'rooms', roomDoc.id, 'participants')),
+            getDocs(collection(firestore, 'rooms', roomDoc.id, 'roster')),
+          ]);
+
+          return {
+            subject: (data.subject || 'Chưa xác định').trim() || 'Chưa xác định',
+            participants: participantsSnap.size,
+            roster: rosterSnap.size,
+          };
+        })
+      );
+
+      const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
+      const relevantQuizzes = quizzesSnap.docs.filter((quizDoc) => {
+        if (legacyQuizIds.has(quizDoc.id)) return false;
+        const data = quizDoc.data() as { createdAt?: unknown };
+        const created = toDate(data.createdAt);
+        return Boolean(created && created >= start && created <= now);
+      });
+
+      const sharedQuizCount = relevantQuizzes.filter((quizDoc) => {
+        const data = quizDoc.data() as { visibility?: string };
+        return data.visibility === 'TEAM' || data.visibility === 'SCHOOL';
+      }).length;
+
+      const subjectMap = new Map<
+        string,
+        {
+          subject: string;
+          sessions: number;
+          quizzes: number;
+          totalStudents: number;
+          totalRoster: number;
+        }
+      >();
+
+      roomDetails.forEach((room) => {
+        const current = subjectMap.get(room.subject) || {
+          subject: room.subject,
+          sessions: 0,
+          quizzes: 0,
+          totalStudents: 0,
+          totalRoster: 0,
+        };
+        current.sessions += 1;
+        current.totalStudents += room.participants;
+        current.totalRoster += room.roster;
+        subjectMap.set(room.subject, current);
+      });
+
+      relevantQuizzes.forEach((quizDoc) => {
+        const data = quizDoc.data() as { subject?: string };
+        const subject = (data.subject || 'Chưa xác định').trim() || 'Chưa xác định';
+        const current = subjectMap.get(subject) || {
+          subject,
+          sessions: 0,
+          quizzes: 0,
+          totalStudents: 0,
+          totalRoster: 0,
+        };
+        current.quizzes += 1;
+        subjectMap.set(subject, current);
+      });
+
+      const totalParticipants = roomDetails.reduce((sum, room) => sum + room.participants, 0);
+      const totalRoster = roomDetails.reduce((sum, room) => sum + room.roster, 0);
+      const avgParticipation =
+        totalRoster > 0 ? Math.round((totalParticipants / totalRoster) * 1000) / 10 : 0;
+
+      const subjectStats = Array.from(subjectMap.values())
+        .map((item) => ({
+          ...item,
+          avgParticipation:
+            item.totalRoster > 0
+              ? Math.round((item.totalStudents / item.totalRoster) * 1000) / 10
+              : 0,
+        }))
+        .sort((a, b) => b.sessions - a.sessions || b.quizzes - a.quizzes || a.subject.localeCompare(b.subject, 'vi'));
+
+      return {
+        totalSessions: relevantRooms.length,
+        totalParticipants,
+        totalRoster,
+        avgParticipation,
+        sharedQuizCount,
+        subjectStats,
+      };
+    } catch (error) {
+      console.error('Không thể tải báo cáo sử dụng cấp trường từ Firestore', error);
+      throw new Error('Không thể tải số liệu thống kê thực từ Firestore.');
+    }
+  }
+
 }
