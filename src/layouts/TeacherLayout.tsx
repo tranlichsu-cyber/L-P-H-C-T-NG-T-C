@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Users, BookOpen, Radio, LogOut, GraduationCap, Sparkles, History, HeartHandshake, Building2, Crown } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const TeacherLayout: React.FC = () => {
   const location = useLocation();
+  const { currentUser, signOutTeacher } = useAuth();
+  const accountLabel = currentUser?.displayName || currentUser?.email || 'Trần Lịch Sử';
 
   const navItems = [
     { path: '/teacher', label: 'Tổng quan', icon: LayoutDashboard, idle: 'bg-sky-50 text-sky-700 border-sky-200', active: 'bg-sky-600 text-white border-sky-600 shadow-sky-200' },
@@ -59,15 +62,16 @@ export const TeacherLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-900 text-xs font-bold border border-emerald-200/80 shadow-xs">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-              Cô Nguyễn Thị Hương
+              {accountLabel}
             </div>
-            <Link
-              to="/"
+            <button
+              type="button"
+              onClick={async () => { await signOutTeacher(); window.location.href = '/'; }}
               className="p-2 text-slate-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors"
               title="Đổi vai trò / Đăng xuất"
             >
               <LogOut className="w-5 h-5" />
-            </Link>
+            </button>
           </div>
         </div>
 
