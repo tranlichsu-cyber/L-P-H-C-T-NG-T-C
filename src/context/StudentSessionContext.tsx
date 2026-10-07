@@ -153,6 +153,8 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
 
   // 2. Select Student Name
   const selectStudent = (id: string, name: string) => {
+    localStorage.setItem('student_id', id);
+    localStorage.setItem('student_name', name);
     setSession((prev) => ({
       ...prev,
       studentId: id,
