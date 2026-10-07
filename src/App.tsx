@@ -7,6 +7,7 @@ import { TeacherDataProvider } from './context/TeacherDataContext';
 import { OfflineBanner } from './components/common/OfflineBanner';
 import { PWAInstallPrompt } from './components/common/PWAInstallPrompt';
 import { RefreshCw } from 'lucide-react';
+import { AccountRoleGuard } from './components/common/AccountRoleGuard';
 
 // Fast Eager Imports for Student Flow
 import { RoleSelectionPage } from './pages/RoleSelectionPage';
@@ -122,7 +123,14 @@ export const App: React.FC = () => {
                   <Route path="/login" element={<LoginPage />} />
 
                   {/* Teacher Section */}
-                  <Route path="/teacher" element={<TeacherLayout />}>
+                  <Route
+                    path="/teacher"
+                    element={
+                      <AccountRoleGuard allowedRoles={['SCHOOL_ADMIN', 'TEAM_LEADER', 'TEACHER']}>
+                        <TeacherLayout />
+                      </AccountRoleGuard>
+                    }
+                  >
                     <Route index element={<DashboardPage />} />
                     <Route path="classes" element={<ClassesPage />} />
                     <Route path="classes/:classId" element={<ClassDetailsPage />} />
@@ -144,7 +152,14 @@ export const App: React.FC = () => {
                   </Route>
 
                   {/* Milestone 11: School Admin & Team Routes */}
-                  <Route path="/admin" element={<TeacherLayout />}>
+                  <Route
+                    path="/admin"
+                    element={
+                      <AccountRoleGuard allowedRoles={['SCHOOL_ADMIN']}>
+                        <TeacherLayout />
+                      </AccountRoleGuard>
+                    }
+                  >
                     <Route index element={<SchoolDashboardPage />} />
                     <Route path="teachers" element={<TeacherManagementPage />} />
                     <Route path="teams" element={<TeamManagementPage />} />
@@ -153,7 +168,14 @@ export const App: React.FC = () => {
                     <Route path="logs" element={<AuditLogsPage />} />
                   </Route>
 
-                  <Route path="/team" element={<TeacherLayout />}>
+                  <Route
+                    path="/team"
+                    element={
+                      <AccountRoleGuard allowedRoles={['SCHOOL_ADMIN', 'TEAM_LEADER']}>
+                        <TeacherLayout />
+                      </AccountRoleGuard>
+                    }
+                  >
                     <Route index element={<TeamDashboardPage />} />
                   </Route>
 
