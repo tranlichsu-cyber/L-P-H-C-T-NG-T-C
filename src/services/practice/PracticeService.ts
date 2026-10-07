@@ -177,7 +177,20 @@ export class PracticeService {
       const assignments = { ...(setItem.assignments || {}) };
       const batch = writeBatch(db);
 
-      targetStudents.forEach((std) => {
+      for (const std of targetStudents) {
+        const progressRef = doc(db, 'practiceSets', practiceSetId, 'studentProgress', std.id);
+        const progressSnap = await getDoc(progressRef);
+
+        if (progressSnap.exists()) {
+          const existing = progressSnap.data() as StudentProgress;
+          const {
+            authUid: _authUid,
+            ...existingAssignment
+          } = existing;
+          assignments[std.id] = existingAssignment;
+          continue;
+        }
+
         const assignment: PracticeAssignment = {
           studentId: std.id,
           studentName: std.name,
@@ -187,15 +200,15 @@ export class PracticeService {
         };
         assignments[std.id] = assignment;
         batch.set(
-          doc(db!, 'practiceSets', practiceSetId, 'studentProgress', std.id),
+          progressRef,
           { ...assignment, authUid: null },
           { merge: true }
         );
-      });
+      }
 
       batch.update(pRef, {
         status: 'ASSIGNED',
-        assignedAt: now,
+        assignedAt: setItem.assignedAt || now,
         dueAt: dueAt || null,
         assignments,
       });
