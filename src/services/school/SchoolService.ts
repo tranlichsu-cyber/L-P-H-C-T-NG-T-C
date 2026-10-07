@@ -471,14 +471,16 @@ export class SchoolService {
       };
     }
 
+    const firestore = db;
+
     try {
       const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
       const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
 
       const [classesSnap, quizzesSnap, roomsSnap] = await Promise.all([
-        getDocs(collection(db, 'classes')),
-        getDocs(collection(db, 'quizzes')),
-        getDocs(collection(db, 'rooms')),
+        getDocs(collection(firestore, 'classes')),
+        getDocs(collection(firestore, 'quizzes')),
+        getDocs(collection(firestore, 'rooms')),
       ]);
 
       const realClassDocs = classesSnap.docs.filter((d) => !legacyClassIds.has(d.id));
@@ -486,7 +488,7 @@ export class SchoolService {
 
       const studentCounts = await Promise.all(
         realClassDocs.map(async (classDoc) => {
-          const studentsSnap = await getDocs(collection(db, 'classes', classDoc.id, 'students'));
+          const studentsSnap = await getDocs(collection(firestore, 'classes', classDoc.id, 'students'));
           return studentsSnap.size;
         })
       );
