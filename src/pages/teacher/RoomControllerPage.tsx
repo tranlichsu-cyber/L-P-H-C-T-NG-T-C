@@ -163,34 +163,59 @@ export const RoomControllerPage: React.FC = () => {
   const joinUrl = `${window.location.origin}/student/join?room=${room.roomCode}`;
 
   // --- ACTIONS ---
-  const handleStartSession = () => {
-    activeRealtimeService.startRoomSession(room.id);
-    showToast('Đã bắt đầu buổi học! Học sinh có thể nhận câu hỏi.', 'success');
+  const handleStartSession = async () => {
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.startRoomSession(room.id));
+      if (!ok) throw new Error('Không thể bắt đầu buổi học.');
+      showToast('Đã bắt đầu buổi học! Học sinh có thể nhận câu hỏi.', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể bắt đầu buổi học.', 'error');
+    }
   };
 
-  const handleOpenQuestion = () => {
+  const handleOpenQuestion = async () => {
     if (!currentQuestionId) return;
-    activeRealtimeService.openQuestion(room.id, currentQuestionId);
-    showToast('Đã phát câu hỏi tới thiết bị học sinh!', 'success');
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.openQuestion(room.id, currentQuestionId));
+      if (!ok) throw new Error('Không thể mở câu hỏi.');
+      showToast('Đã phát câu hỏi tới thiết bị học sinh!', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể mở câu hỏi.', 'error');
+    }
   };
 
-  const handleCloseQuestion = () => {
+  const handleCloseQuestion = async () => {
     if (!currentQuestionId) return;
-    activeRealtimeService.closeQuestion(room.id, currentQuestionId);
-    showToast('Đã đóng lượt nhận bài cho câu hỏi này!', 'info');
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.closeQuestion(room.id, currentQuestionId));
+      if (!ok) throw new Error('Không thể đóng câu hỏi.');
+      showToast('Đã đóng lượt nhận bài cho câu hỏi này!', 'info');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể đóng câu hỏi.', 'error');
+    }
   };
 
-  const handleShowResult = () => {
+  const handleShowResult = async () => {
     if (!currentQuestionId) return;
-    activeRealtimeService.showQuestionResult(room.id, currentQuestionId);
-    showToast('Đã công bố đáp án và tự động cộng +10 điểm cho học sinh làm đúng!', 'success');
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.showQuestionResult(room.id, currentQuestionId));
+      if (!ok) throw new Error('Không thể công bố đáp án.');
+      showToast('Đã công bố đáp án và tự động cộng +10 điểm cho học sinh làm đúng!', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể công bố đáp án.', 'error');
+    }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentIndex < questionIds.length - 1) {
       const nextId = questionIds[currentIndex + 1];
-      activeRealtimeService.openQuestion(room.id, nextId);
-      showToast('Đã chuyển sang câu hỏi tiếp theo!', 'info');
+      try {
+        const ok = await Promise.resolve(activeRealtimeService.openQuestion(room.id, nextId));
+        if (!ok) throw new Error('Không thể chuyển câu hỏi.');
+        showToast('Đã chuyển sang câu hỏi tiếp theo!', 'info');
+      } catch (err: any) {
+        showToast(err?.message || 'Không thể chuyển câu hỏi.', 'error');
+      }
     } else {
       showToast('Đã hết danh sách câu hỏi trong bộ đề này!', 'info');
     }
@@ -244,10 +269,15 @@ export const RoomControllerPage: React.FC = () => {
     }, 100);
   };
 
-  const handleManualCall = (studentId: string, name: string) => {
-    activeRealtimeService.callStudent(room.id, studentId, name, 'Mời phát biểu');
-    setIsCallModalOpen(true);
-    showToast(`Đã mời học sinh ${name} phát biểu!`, 'success');
+  const handleManualCall = async (studentId: string, name: string) => {
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.callStudent(room.id, studentId, name, 'Mời phát biểu'));
+      if (!ok) throw new Error('Không thể gọi học sinh.');
+      setIsCallModalOpen(true);
+      showToast(`Đã mời học sinh ${name} phát biểu!`, 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể gọi học sinh.', 'error');
+    }
   };
 
   const handleOralScore = (points: number, reason: string) => {
@@ -289,28 +319,47 @@ export const RoomControllerPage: React.FC = () => {
       return a.name.localeCompare(b.name, 'vi');
     });
 
-  const handleAddManualPoint = (studentId: string, name: string, points: number, reason: string) => {
-    activeRealtimeService.addManualScore(room.id, studentId, name, points, reason);
-    showToast(`Đã cập nhật ${points > 0 ? `+${points}` : points} điểm cho ${name}`, 'success');
-  };
-
-  // --- GAME HANDLERS ---
-  const handleStartGame = (type: GameType, settings: GameSessionData['settings']) => {
-    const game = activeRealtimeService.createGameSession(room.id, type, settings, questionIds);
-    if (game) {
-      activeRealtimeService.startGameSession(room.id);
-      showToast(`Đã bắt đầu trò chơi!`, 'success');
+  const handleAddManualPoint = async (studentId: string, name: string, points: number, reason: string) => {
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.addManualScore(room.id, studentId, name, points, reason));
+      if (!ok) throw new Error('Không thể cập nhật điểm.');
+      showToast(`Đã cập nhật ${points > 0 ? `+${points}` : points} điểm cho ${name}`, 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể cập nhật điểm.', 'error');
     }
   };
 
-  const handlePauseGame = () => {
-    activeRealtimeService.pauseGameSession(room.id);
-    showToast('Đã chuyển trạng thái Tạm dừng / Tiếp tục trò chơi', 'info');
+  // --- GAME HANDLERS ---
+  const handleStartGame = async (type: GameType, settings: GameSessionData['settings']) => {
+    try {
+      const game = await Promise.resolve(activeRealtimeService.createGameSession(room.id, type, settings, questionIds));
+      if (!game) throw new Error('Không thể tạo trò chơi.');
+      const started = await Promise.resolve(activeRealtimeService.startGameSession(room.id));
+      if (!started) throw new Error('Không thể bắt đầu trò chơi.');
+      showToast('Đã bắt đầu trò chơi!', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể bắt đầu trò chơi.', 'error');
+    }
   };
 
-  const handleFinishGame = () => {
-    activeRealtimeService.finishGameSession(room.id);
-    showToast('Đã kết thúc trò chơi! Phòng quay lại học bình thường.', 'info');
+  const handlePauseGame = async () => {
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.pauseGameSession(room.id));
+      if (!ok) throw new Error('Không thể đổi trạng thái trò chơi.');
+      showToast('Đã chuyển trạng thái Tạm dừng / Tiếp tục trò chơi', 'info');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể đổi trạng thái trò chơi.', 'error');
+    }
+  };
+
+  const handleFinishGame = async () => {
+    try {
+      const ok = await Promise.resolve(activeRealtimeService.finishGameSession(room.id));
+      if (!ok) throw new Error('Không thể kết thúc trò chơi.');
+      showToast('Đã kết thúc trò chơi! Phòng quay lại học bình thường.', 'info');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể kết thúc trò chơi.', 'error');
+    }
   };
 
   // Render Fullscreen Presentation if active
