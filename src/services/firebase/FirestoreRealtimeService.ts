@@ -28,6 +28,20 @@ import type {
 import { buildInitialGameSession } from '../realtime/gameHelpers';
 import { SessionAnalysisService } from '../history/SessionAnalysisService';
 
+const sanitizeFirestoreData = (value: unknown): any => {
+  if (Array.isArray(value)) {
+    return value.map((item) => (item === undefined ? null : sanitizeFirestoreData(item)));
+  }
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .map(([key, item]) => [key, sanitizeFirestoreData(item)])
+    );
+  }
+  return value;
+};
+
 export class FirestoreRealtimeService {
   private async ensureAuthenticated(): Promise<string> {
     if (!auth) throw new Error('Firebase Auth is not initialized');
@@ -40,6 +54,9 @@ export class FirestoreRealtimeService {
   // 1. Create Room (Teacher) - Uses writeBatch for cost optimization
   public async createRoom(params: CreateRoomParams): Promise<MockRoomData> {
     if (!db) throw new Error('Firestore is not initialized');
+    if (params.questions.length === 0) {
+      throw new Error('Bộ câu hỏi chưa có câu hỏi nào. Hãy thêm câu hỏi trước khi tạo phòng Live.');
+    }
 
     const roomRef = doc(collection(db!, 'rooms'));
     const roomId = roomRef.id;
@@ -83,10 +100,10 @@ export class FirestoreRealtimeService {
         id: q.id,
         type: q.type,
         content: q.content,
-        options: q.options ? [...q.options] : undefined,
+        ...(q.options ? { options: [...q.options] } : {}),
         status: 'READY',
       };
-      batch.set(qRef, publicQ);
+      batch.set(qRef, sanitizeFirestoreData(publicQ));
     });
 
     await batch.commit();
@@ -227,23 +244,26 @@ export class FirestoreRealtimeService {
     const roomData = roomSnap.data();
     const quizId = roomData.quizId;
 
-    // Fetch private answer from quizzes/{quizId}/questions/{questionId}
+    // Fetch private answer from quizzes/{quizId}/questions/{questionId}.
+    // Never invent a fallback answer because that would score students incorrectly.
     const privateSnap = await getDoc(doc(db!, 'quizzes', quizId, 'questions', questionId));
-    let correctAnswer = '500';
-    let explanation = 'Giải thích đáp án';
-
-    if (privateSnap.exists()) {
-      const data = privateSnap.data();
-      correctAnswer = data.correctAnswer || correctAnswer;
-      explanation = data.explanation || explanation;
+    if (!privateSnap.exists() || !privateSnap.data()?.correctAnswer) {
+      throw new Error('Không tìm thấy đáp án gốc của câu hỏi. Không thể công bố kết quả.');
     }
 
+    const privateData = privateSnap.data();
+    const correctAnswer = String(privateData.correctAnswer);
+    const explanation = privateData.explanation ? String(privateData.explanation) : '';
+
     const qRef = doc(db!, 'rooms', roomId, 'liveQuestions', questionId);
-    await updateDoc(qRef, {
-      status: 'RESULT',
-      correctAnswer,
-      explanation,
-    });
+    await updateDoc(
+      qRef,
+      sanitizeFirestoreData({
+        status: 'RESULT',
+        correctAnswer,
+        ...(explanation ? { explanation } : {}),
+      })
+    );
 
     // Idempotent Auto-Scoring for correct submissions in Firestore
     const sSnap = await getDocs(collection(db!, 'rooms', roomId, 'submissions'));
@@ -527,10 +547,13 @@ export class FirestoreRealtimeService {
     const game = buildInitialGameSession(roomId, type, settings, questionIds, participants);
 
     const roomRef = doc(db!, 'rooms', roomId);
-    await updateDoc(roomRef, {
-      activeGameId: game.id,
-      activeGame: game,
-    });
+    await updateDoc(
+      roomRef,
+      sanitizeFirestoreData({
+        activeGameId: game.id,
+        activeGame: game,
+      })
+    );
 
     return game;
   }
@@ -552,7 +575,7 @@ export class FirestoreRealtimeService {
       roundStartedAt: new Date().toISOString(),
     };
 
-    await updateDoc(roomRef, { activeGame: updatedGame });
+    await updateDoc(roomRef, { activeGame: sanitizeFirestoreData(updatedGame) });
     return true;
   }
 
@@ -571,7 +594,7 @@ export class FirestoreRealtimeService {
       status: roomData.activeGame.status === 'PAUSED' ? 'RUNNING' : 'PAUSED',
     };
 
-    await updateDoc(roomRef, { activeGame: updatedGame });
+    await updateDoc(roomRef, { activeGame: sanitizeFirestoreData(updatedGame) });
     return true;
   }
 
@@ -597,7 +620,7 @@ export class FirestoreRealtimeService {
     if (!roomData.activeGame) return false;
 
     const updatedGame = updateFn({ ...roomData.activeGame });
-    await updateDoc(roomRef, { activeGame: updatedGame });
+    await updateDoc(roomRef, { activeGame: sanitizeFirestoreData(updatedGame) });
     return true;
   }
 
