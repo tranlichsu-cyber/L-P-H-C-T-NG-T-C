@@ -82,6 +82,8 @@ export const QuizEditorPage: React.FC = () => {
     setQType(q.type);
     setQContent(q.content);
     setQExplanation(q.explanation || '');
+    setCaseInsensitive(q.caseInsensitive ?? true);
+    setTrimWhitespace(q.trimWhitespace ?? true);
 
     if (q.type === 'MULTIPLE_CHOICE' && q.options) {
       setOptA(q.options[0] || '');
@@ -143,6 +145,12 @@ export const QuizEditorPage: React.FC = () => {
       options: finalOptions,
       correctAnswer: finalCorrectAnswer,
       explanation: qExplanation.trim() || undefined,
+      ...(qType === 'SHORT_ANSWER'
+        ? {
+            caseInsensitive,
+            trimWhitespace,
+          }
+        : {}),
     };
 
     try {
