@@ -15,3 +15,4 @@ Deploy correct admin identity and exclude legacy demo records.
 Deploy real school dashboard metrics from Firestore.
 Retry real school metrics after Firestore type fix.
 Deploy removal of session status card.
+Deploy removal of teacher version labels.
