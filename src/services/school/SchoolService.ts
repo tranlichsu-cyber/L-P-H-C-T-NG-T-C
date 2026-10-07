@@ -507,11 +507,20 @@ export class SchoolService {
     if (!target) return false;
 
     target.teamIds = teamIds;
+    const effectiveRole: UserRole =
+      target.role === 'TEAM_LEADER' && teamIds.length === 0
+        ? 'TEACHER'
+        : target.role;
+    target.role = effectiveRole;
     target.updatedAt = new Date().toISOString();
 
     if (isFirebaseConfigured && db) {
       const uRef = doc(db, 'users', targetUid);
-      await updateDoc(uRef, { teamIds, updatedAt: target.updatedAt });
+      await updateDoc(uRef, {
+        teamIds,
+        role: effectiveRole,
+        updatedAt: target.updatedAt,
+      });
 
       const teamsSnap = await getDocs(collection(db, 'teams'));
       await Promise.all(
@@ -547,6 +556,7 @@ export class SchoolService {
     const localIdx = local.users.findIndex((u) => u.uid === targetUid);
     if (localIdx !== -1) {
       local.users[localIdx].teamIds = teamIds;
+      local.users[localIdx].role = effectiveRole;
       local.users[localIdx].updatedAt = target.updatedAt;
     }
 
