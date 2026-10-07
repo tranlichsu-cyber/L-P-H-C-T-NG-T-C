@@ -10,3 +10,4 @@ Deploy colorful navigation and admin dashboard UI.
 Deploy staff cleanup and real Firebase login.
 Deploy PWA cache invalidation after admin reset.
 Deploy real Firestore dashboard counts and richer action colors.
+Retry after Firestore loader type fix.
