@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { useStudentSession } from '../../context/StudentSessionContext';
-import { realtimeService } from '../../services/realtime/MockRealtimeService';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
 export const JoinPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { session, joinRoom } = useStudentSession();
-  const [pin, setPin] = useState('839201');
+  const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -18,20 +17,19 @@ export const JoinPage: React.FC = () => {
     const roomParam = searchParams.get('room');
     if (roomParam && roomParam.length === 6) {
       setPin(roomParam);
-      // Auto check and navigate if room is valid
-      const { room, error: joinErr } = realtimeService.joinRoomByCode(roomParam);
-      if (room) {
-        joinRoom(roomParam);
-        navigate('/student/select-name');
-      } else {
-        setError(joinErr || 'Phòng học không còn hoạt động. Hãy thử mã khác.');
-      }
+      void joinRoom(roomParam).then((res) => {
+        if (res.success) {
+          navigate('/student/select-name');
+        } else {
+          setError(res.message || 'Phòng học không còn hoạt động. Hãy thử mã khác.');
+        }
+      });
     } else {
       inputRef.current?.focus();
     }
   }, [searchParams, joinRoom, navigate]);
 
-  const handleJoin = (e: React.FormEvent) => {
+  const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pin.trim()) {
       setError('Vui lòng nhập mã phòng.');
@@ -42,17 +40,10 @@ export const JoinPage: React.FC = () => {
       return;
     }
 
-    // Attempt join room using Realtime Service
-    const { room, error: joinErr } = realtimeService.joinRoomByCode(pin);
-    if (joinErr || !room) {
-      // Fallback check in local session join
-      const res = joinRoom(pin);
-      if (!res.success) {
-        setError(joinErr || res.message || 'Không tìm thấy phòng học.');
-        return;
-      }
-    } else {
-      joinRoom(pin);
+    const res = await joinRoom(pin);
+    if (!res.success) {
+      setError(res.message || 'Không tìm thấy phòng học.');
+      return;
     }
 
     setError('');
@@ -101,7 +92,7 @@ export const JoinPage: React.FC = () => {
 
       {session.roomCode && (
         <div className="mt-5 pt-4 border-t border-slate-100 text-xs font-bold text-slate-400">
-          Đang kết nối phòng: <strong className="text-sky-700">{session.className || 'Lớp 4A'}</strong> • Mã <span className="font-mono text-amber-600">{session.roomCode}</span>
+          Đang kết nối phòng: <strong className="text-sky-700">{session.className || 'Đang tải lớp...'}</strong> • Mã <span className="font-mono text-amber-600">{session.roomCode}</span>
         </div>
       )}
     </div>
