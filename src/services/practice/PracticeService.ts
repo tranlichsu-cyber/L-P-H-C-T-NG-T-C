@@ -468,8 +468,36 @@ export class PracticeService {
       setItem.questions.forEach((q) => {
         const response = ownResponses.find((r) => r.questionId === q.id);
         if (!response) return;
-        const isCorrect =
-          response.answer.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase();
+        const rawAnswer = response.answer.trim();
+        const rawCorrect = q.correctAnswer.trim();
+
+        let isCorrect = false;
+        if (q.type === 'MULTIPLE_CHOICE' && q.options?.length) {
+          const answerIndex = /^[A-D]$/i.test(rawAnswer)
+            ? rawAnswer.toUpperCase().charCodeAt(0) - 65
+            : -1;
+          const selectedOption =
+            answerIndex >= 0 && answerIndex < q.options.length
+              ? q.options[answerIndex]
+              : rawAnswer;
+
+          const correctIndex = /^[A-D]$/i.test(rawCorrect)
+            ? rawCorrect.toUpperCase().charCodeAt(0) - 65
+            : -1;
+          const correctOption =
+            correctIndex >= 0 && correctIndex < q.options.length
+              ? q.options[correctIndex]
+              : rawCorrect;
+
+          isCorrect =
+            selectedOption.trim().toLocaleLowerCase('vi-VN') ===
+            correctOption.trim().toLocaleLowerCase('vi-VN');
+        } else {
+          isCorrect =
+            rawAnswer.toLocaleLowerCase('vi-VN') ===
+            rawCorrect.toLocaleLowerCase('vi-VN');
+        }
+
         if (isCorrect) correctCount++;
         batch.set(
           doc(db!, 'practiceSets', practiceSetId, 'responses', response.id),
