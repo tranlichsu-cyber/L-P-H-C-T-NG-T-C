@@ -8,17 +8,24 @@ import { Modal } from '../../components/common/Modal';
 import { SchoolService } from '../../services/school/SchoolService';
 import type { SchoolTeam, SchoolMember } from '../../services/school/types';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Building2,
   Plus,
   ArrowLeft,
   RefreshCw,
   Crown,
+  Trash2,
 } from 'lucide-react';
 
 export const TeamManagementPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
+  const actor = {
+    uid: currentUser?.uid || 'admin-current',
+    name: currentUser?.displayName || currentUser?.email || 'Quản trị trường',
+  };
 
   const [teams, setTeams] = useState<SchoolTeam[]>([]);
   const [members, setMembers] = useState<SchoolMember[]>([]);
@@ -29,6 +36,7 @@ export const TeamManagementPage: React.FC = () => {
   const [newTeamName, setNewTeamName] = useState<string>('');
   const [selectedLeaderId, setSelectedLeaderId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -58,7 +66,7 @@ export const TeamManagementPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const leaders = selectedLeaderId ? [selectedLeaderId] : [];
-      await SchoolService.createTeam(newTeamName, leaders, []);
+      await SchoolService.createTeam(newTeamName, leaders, [], actor);
       showToast(`Đã tạo thành công ${newTeamName}`, 'success');
       setNewTeamName('');
       setSelectedLeaderId('');
@@ -68,6 +76,24 @@ export const TeamManagementPage: React.FC = () => {
       showToast('Lỗi khi tạo tổ chuyên môn: ' + err.message, 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteTeam = async (team: SchoolTeam) => {
+    const confirmed = window.confirm(
+      `Xóa tổ "${team.name}"? Giáo viên đang thuộc tổ này sẽ được gỡ khỏi tổ, nhưng tài khoản giáo viên không bị xóa.`
+    );
+    if (!confirmed) return;
+
+    setDeletingTeamId(team.id);
+    try {
+      await SchoolService.deleteTeam(team.id, actor);
+      showToast(`Đã xóa tổ ${team.name}.`, 'success');
+      await loadData();
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể xóa tổ chuyên môn.', 'error');
+    } finally {
+      setDeletingTeamId(null);
     }
   };
 
@@ -85,7 +111,7 @@ export const TeamManagementPage: React.FC = () => {
           description="Tạo và quản lý các tổ bộ môn (Tổ 1, Tổ 4-5, Tổ Tin học...), phân bổ Tổ trưởng chuyên môn"
         />
         <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} className="shrink-0 font-bold">
-          <Plus className="w-4 h-4 mr-1" /> THÊM TỔ CHUYÊN MÔN NEW
+          <Plus className="w-4 h-4 mr-1" /> THÊM TỔ CHUYÊN MÔN
         </Button>
       </div>
 
@@ -108,7 +134,7 @@ export const TeamManagementPage: React.FC = () => {
 
             return (
               <Card key={t.id} className="p-6 bg-white border-2 border-slate-200 space-y-4 shadow-sm hover:shadow-md transition-all">
-                <div className="flex items-start justify-between border-b pb-3 border-slate-100">
+                <div className="flex items-start justify-between gap-3 border-b pb-3 border-slate-100">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-lg">
                       <Building2 className="w-6 h-6" />
@@ -120,7 +146,19 @@ export const TeamManagementPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <Badge variant="info">Mã tổ: {t.id}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="info">Mã tổ: {t.id}</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteTeam(t)}
+                      disabled={deletingTeamId === t.id}
+                      className="text-rose-700 border-rose-300 hover:bg-rose-50 font-bold"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      {deletingTeamId === t.id ? 'Đang xóa...' : 'Xóa tổ'}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Team Leaders */}
