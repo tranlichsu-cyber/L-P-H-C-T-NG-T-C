@@ -23,3 +23,4 @@ Deploy realtime school settings hardening fixes.
 Deploy real Firestore school usage reports.
 Deploy admin branding control layout cleanup.
 Deploy real student live-room data and realtime counts.
+Deploy anonymous student Firestore room access fix.
