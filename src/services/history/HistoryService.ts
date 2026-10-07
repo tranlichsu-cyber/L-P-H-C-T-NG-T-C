@@ -52,25 +52,21 @@ export class HistoryService {
   ): Promise<RoomSummary> {
     const summary = SessionAnalysisService.generateSessionSummary(room, privateQuestions);
 
-    // Save to Firestore if connected
     if (db) {
-      try {
-        const roomRef = doc(db, 'rooms', room.id);
-        const summaryRef = doc(db, 'rooms', room.id, 'summary', 'main');
+      const roomRef = doc(db, 'rooms', room.id);
+      const summaryRef = doc(db, 'rooms', room.id, 'summary', 'main');
 
-        await setDoc(summaryRef, summary, { merge: true });
-        await updateDoc(roomRef, {
-          status: 'FINISHED',
-          finishedAt: summary.endedAt,
-          summaryReady: true,
-          archived: false,
-        });
-      } catch (err) {
-        console.warn('Could not save summary to Firestore, falling back to local storage', err);
-      }
+      await setDoc(summaryRef, summary, { merge: true });
+      await updateDoc(roomRef, {
+        status: 'FINISHED',
+        finishedAt: summary.endedAt,
+        summaryReady: true,
+        archived: false,
+      });
+      return summary;
     }
 
-    // Save to Local Mock DB & Summaries list
+    // Mock/local mode only
     const mockDb = loadMockDatabase();
     mockDb.rooms[room.id] = {
       ...room,
@@ -81,13 +77,9 @@ export class HistoryService {
 
     const summaries = this.loadLocalSummaries();
     const existingIdx = summaries.findIndex((s) => s.roomId === room.id);
-    if (existingIdx !== -1) {
-      summaries[existingIdx] = summary;
-    } else {
-      summaries.unshift(summary);
-    }
+    if (existingIdx !== -1) summaries[existingIdx] = summary;
+    else summaries.unshift(summary);
     this.saveLocalSummaries(summaries);
-
     return summary;
   }
 
@@ -116,14 +108,50 @@ export class HistoryService {
           if (sSnap.exists()) {
             list.push(sSnap.data() as RoomSummary);
           } else {
-            // Generate summary dynamically if missing
-            list.push(SessionAnalysisService.generateSessionSummary(rData as any));
+            const [pSnap, qSnap, subSnap, scoreSnap, rosterSnap] = await Promise.all([
+              getDocs(collection(db, 'rooms', docSnap.id, 'participants')),
+              getDocs(collection(db, 'rooms', docSnap.id, 'liveQuestions')),
+              getDocs(collection(db, 'rooms', docSnap.id, 'submissions')),
+              getDocs(collection(db, 'rooms', docSnap.id, 'scores')),
+              getDocs(collection(db, 'rooms', docSnap.id, 'roster')),
+            ]);
+
+            const participants: any = {};
+            pSnap.docs.forEach((d) => (participants[d.id] = d.data()));
+            const liveQuestions: any = {};
+            qSnap.docs.forEach((d) => (liveQuestions[d.id] = d.data()));
+            const submissions: any = {};
+            subSnap.docs.forEach((d) => (submissions[d.id] = d.data()));
+            const scores: any = {};
+            scoreSnap.docs.forEach((d) => (scores[d.id] = d.data()));
+            const roster = rosterSnap.docs.map((d) => d.data());
+
+            const rawCreatedAt = rData.createdAt;
+            const createdAt =
+              typeof rawCreatedAt === 'string'
+                ? rawCreatedAt
+                : rawCreatedAt && typeof rawCreatedAt.toDate === 'function'
+                  ? rawCreatedAt.toDate().toISOString()
+                  : new Date().toISOString();
+
+            list.push(
+              SessionAnalysisService.generateSessionSummary({
+                ...(rData as any),
+                id: docSnap.id,
+                createdAt,
+                roster,
+                participants,
+                liveQuestions,
+                submissions,
+                scores,
+              })
+            );
           }
         }
         summaries = list;
       } catch (err) {
-        console.warn('Firestore history query failed, falling back to local summaries', err);
-        summaries = this.loadLocalSummaries();
+        console.error('Firestore history query failed', err);
+        throw new Error('Không thể tải lịch sử dạy học từ Firestore.');
       }
     } else {
       summaries = this.loadLocalSummaries();
@@ -213,11 +241,10 @@ export class HistoryService {
           };
         }
       } catch (err) {
-        console.warn('Firestore fetch session detail failed, falling back to mock DB', err);
+        console.error('Firestore fetch session detail failed', err);
+        throw new Error('Không thể tải chi tiết buổi học từ Firestore.');
       }
-    }
-
-    if (!roomData) {
+    } else {
       const mockDb = loadMockDatabase();
       roomData = mockDb.rooms[roomId] || MOCK_HISTORICAL_ROOM_DETAILS[roomId] || null;
       privateQuestions = mockDb.privateQuestions[roomId];
@@ -231,14 +258,14 @@ export class HistoryService {
   // 4. Archive / Unarchive Session (Soft delete)
   public static async archiveSession(roomId: string, archived: boolean): Promise<boolean> {
     if (db) {
-      try {
-        const roomRef = doc(db, 'rooms', roomId);
-        const summaryRef = doc(db, 'rooms', roomId, 'summary', 'main');
-        await updateDoc(roomRef, { archived });
+      const roomRef = doc(db, 'rooms', roomId);
+      const summaryRef = doc(db, 'rooms', roomId, 'summary', 'main');
+      await updateDoc(roomRef, { archived });
+      const summarySnap = await getDoc(summaryRef);
+      if (summarySnap.exists()) {
         await updateDoc(summaryRef, { archived });
-      } catch (err) {
-        console.warn('Firestore archive update failed', err);
       }
+      return true;
     }
 
     const summaries = this.loadLocalSummaries();
