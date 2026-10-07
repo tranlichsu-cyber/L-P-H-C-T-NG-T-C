@@ -23,6 +23,7 @@ import type {
   MockParticipant,
   GameType,
   GameSessionData,
+  ScoreEvent,
 } from '../realtime/types';
 import { buildInitialGameSession } from '../realtime/gameHelpers';
 import { SessionAnalysisService } from '../history/SessionAnalysisService';
@@ -612,6 +613,7 @@ export class FirestoreRealtimeService {
     let liveQuestions: MockRoomData['liveQuestions'] = {};
     let submissions: MockRoomData['submissions'] = {};
     let scores: MockRoomData['scores'] = {};
+    let scoreEvents: Record<string, ScoreEvent> = {};
 
     const emit = () => {
       if (!roomMeta) return;
@@ -623,6 +625,7 @@ export class FirestoreRealtimeService {
         liveQuestions,
         submissions,
         scores,
+        scoreEvents,
         calledStudent: roomMeta.calledStudent || null,
         callHistory: roomMeta.callHistory || [],
         activeGameId: roomMeta.activeGameId || null,
@@ -656,14 +659,22 @@ export class FirestoreRealtimeService {
         liveQuestions = next;
         emit();
       }),
-      onSnapshot(collection(firestore, 'rooms', roomId, 'submissions'), (snap) => {
-        const next: MockRoomData['submissions'] = {};
-        snap.docs.forEach((d) => {
-          next[d.id] = d.data() as MockSubmission;
-        });
-        submissions = next;
-        emit();
-      }),
+      onSnapshot(
+        auth?.currentUser?.isAnonymous
+          ? query(
+              collection(firestore, 'rooms', roomId, 'submissions'),
+              where('authUid', '==', auth.currentUser.uid)
+            )
+          : collection(firestore, 'rooms', roomId, 'submissions'),
+        (snap) => {
+          const next: MockRoomData['submissions'] = {};
+          snap.docs.forEach((d) => {
+            next[d.id] = d.data() as MockSubmission;
+          });
+          submissions = next;
+          emit();
+        }
+      ),
       onSnapshot(collection(firestore, 'rooms', roomId, 'scores'), (snap) => {
         const next: MockRoomData['scores'] = {};
         snap.docs.forEach((d) => {
@@ -672,6 +683,18 @@ export class FirestoreRealtimeService {
         scores = next;
         emit();
       }),
+      ...(auth?.currentUser?.isAnonymous
+        ? []
+        : [
+            onSnapshot(collection(firestore, 'rooms', roomId, 'scoreEvents'), (snap) => {
+              const next: Record<string, ScoreEvent> = {};
+              snap.docs.forEach((d) => {
+                next[d.id] = d.data() as ScoreEvent;
+              });
+              scoreEvents = next;
+              emit();
+            }),
+          ]),
     ];
 
     return () => {
