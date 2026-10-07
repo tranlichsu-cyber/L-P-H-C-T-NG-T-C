@@ -12,6 +12,8 @@ export interface Student {
 
 export interface ClassGroup {
   id: string;
+  teacherId?: string;
+  coTeacherIds?: string[];
   name: string;
   grade: string;
   studentCount: number;
@@ -35,6 +37,7 @@ export interface Question {
 
 export interface Quiz {
   id: string;
+  teacherId?: string;
   title: string;
   subject: string;
   grade: string;
