@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
@@ -8,6 +8,9 @@ import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { SchoolService } from '../../services/school/SchoolService';
+import type { SchoolTeam } from '../../services/school/types';
 import type { Quiz } from '../../types';
 import {
   Plus,
@@ -39,6 +42,8 @@ export const QuizzesPage: React.FC = () => {
   const navigate = useNavigate();
   const { quizzes, addQuiz, duplicateQuiz, deleteQuiz, updateQuizVisibility } = useTeacherData();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
+  const [availableTeams, setAvailableTeams] = useState<SchoolTeam[]>([]);
 
   // Scope Tab filter
   const [scopeFilter, setScopeFilter] = useState<'ALL' | 'PRIVATE' | 'TEAM' | 'SCHOOL'>('ALL');
@@ -53,7 +58,38 @@ export const QuizzesPage: React.FC = () => {
   const [subjectInput, setSubjectInput] = useState('Toán');
   const [gradeInput, setGradeInput] = useState('Khối 4');
   const [visibilityInput, setVisibilityInput] = useState<'PRIVATE' | 'TEAM' | 'SCHOOL'>('PRIVATE');
+  const [teamIdInput, setTeamIdInput] = useState('');
   const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!currentUser?.uid) {
+      setAvailableTeams([]);
+      return;
+    }
+
+    Promise.all([SchoolService.getUser(currentUser.uid), SchoolService.getTeams()])
+      .then(([profile, teams]) => {
+        if (cancelled) return;
+        if (!profile) {
+          setAvailableTeams([]);
+          return;
+        }
+
+        const visible =
+          profile.role === 'SCHOOL_ADMIN'
+            ? teams
+            : teams.filter((team) => (profile.teamIds || []).includes(team.id));
+        setAvailableTeams(visible);
+      })
+      .catch(() => {
+        if (!cancelled) setAvailableTeams([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.uid]);
 
   // Handle Create Quiz
   const handleOpenCreate = () => {
@@ -61,6 +97,7 @@ export const QuizzesPage: React.FC = () => {
     setSubjectInput('Toán');
     setGradeInput('Khối 4');
     setVisibilityInput('PRIVATE');
+    setTeamIdInput('');
     setFormError('');
     setIsCreateOpen(true);
   };
@@ -72,8 +109,19 @@ export const QuizzesPage: React.FC = () => {
       return;
     }
 
+    if (visibilityInput === 'TEAM' && !teamIdInput) {
+      setFormError('Vui lòng chọn Tổ chuyên môn nhận bộ câu hỏi.');
+      return;
+    }
+
     try {
-      const newQuiz = await addQuiz(titleInput, subjectInput, gradeInput, visibilityInput);
+      const newQuiz = await addQuiz(
+        titleInput,
+        subjectInput,
+        gradeInput,
+        visibilityInput,
+        visibilityInput === 'TEAM' ? teamIdInput : undefined
+      );
       showToast(`Đã tạo và lưu bộ câu hỏi "${newQuiz.title}"!`, 'success');
       setIsCreateOpen(false);
       navigate(`/teacher/quizzes/${newQuiz.id}`);
@@ -340,6 +388,34 @@ export const QuizzesPage: React.FC = () => {
               <option value="SCHOOL">Toàn trường (Chia sẻ với tất cả giáo viên)</option>
             </select>
           </div>
+
+          {visibilityInput === 'TEAM' && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                Chọn Tổ chuyên môn
+              </label>
+              <select
+                value={teamIdInput}
+                onChange={(e) => {
+                  setTeamIdInput(e.target.value);
+                  setFormError('');
+                }}
+                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-sky-500 focus:outline-none font-bold"
+              >
+                <option value="">-- Chọn tổ --</option>
+                {availableTeams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              {availableTeams.length === 0 && (
+                <p className="mt-1 text-xs text-rose-600 font-semibold">
+                  Tài khoản hiện chưa được gán vào Tổ chuyên môn nào.
+                </p>
+              )}
+            </div>
+          )}
         </form>
       </Modal>
 
