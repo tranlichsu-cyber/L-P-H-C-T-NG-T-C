@@ -27,6 +27,22 @@ import {
 
 const LOCAL_SCHOOL_KEY = 'lhtt_single_school_data';
 
+const normalizeSchoolSettings = (settings: SchoolSettings): SchoolSettings => {
+  const isLegacyNguyenTrai =
+    settings.schoolName?.includes('Nguyễn Trãi') ||
+    settings.displayName?.includes('Nguyễn Trãi');
+
+  if (!isLegacyNguyenTrai) return settings;
+
+  return {
+    ...settings,
+    schoolName: 'Trường Tiểu học Sông Công',
+    displayName: 'Trường TH Sông Công',
+    campusName: 'Phân hiệu Lý Tự Trọng',
+    updatedAt: new Date().toISOString(),
+  };
+};
+
 interface LocalSchoolStorage {
   settings: SchoolSettings;
   users: UserProfile[];
@@ -50,7 +66,13 @@ export class SchoolService {
         localStorage.setItem(LOCAL_SCHOOL_KEY, JSON.stringify(initial));
         return initial;
       }
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw) as LocalSchoolStorage;
+      const normalizedSettings = normalizeSchoolSettings(parsed.settings);
+      const migrated = { ...parsed, settings: normalizedSettings };
+      if (normalizedSettings !== parsed.settings) {
+        localStorage.setItem(LOCAL_SCHOOL_KEY, JSON.stringify(migrated));
+      }
+      return migrated;
     } catch {
       return {
         settings: INITIAL_SCHOOL_SETTINGS,
@@ -76,7 +98,16 @@ export class SchoolService {
       try {
         const sRef = doc(db, 'settings', 'school');
         const snap = await getDoc(sRef);
-        if (snap.exists()) return snap.data() as SchoolSettings;
+        if (snap.exists()) {
+          const settings = snap.data() as SchoolSettings;
+          const normalized = normalizeSchoolSettings(settings);
+          if (normalized !== settings) {
+            try {
+              await updateDoc(sRef, normalized);
+            } catch {}
+          }
+          return normalized;
+        }
       } catch {}
     }
     const local = this.loadLocalStorage();
