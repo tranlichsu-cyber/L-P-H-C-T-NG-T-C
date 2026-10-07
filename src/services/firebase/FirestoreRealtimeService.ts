@@ -12,7 +12,8 @@ import {
   writeBatch,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { auth, db } from './firebase';
+import { signInAnonymously } from 'firebase/auth';
 import type {
   MockRoomData,
   CreateRoomParams,
@@ -26,6 +27,14 @@ import type {
 import { buildInitialGameSession } from '../realtime/gameHelpers';
 
 export class FirestoreRealtimeService {
+  private async ensureAuthenticated(): Promise<string> {
+    if (!auth) throw new Error('Firebase Auth is not initialized');
+    if (auth.currentUser) return auth.currentUser.uid;
+
+    const credential = await signInAnonymously(auth);
+    return credential.user.uid;
+  }
+
   // 1. Create Room (Teacher) - Uses writeBatch for cost optimization
   public async createRoom(params: CreateRoomParams): Promise<MockRoomData> {
     if (!db) throw new Error('Firestore is not initialized');
@@ -90,34 +99,48 @@ export class FirestoreRealtimeService {
     };
   }
 
-  // 2. Join Room by Code (Student) - Optimized to 1 Single Query
+  // 2. Join Room by Code (Student)
+  // Authenticate anonymously first so Firestore Rules allow room reads.
+  // Query only by roomCode to avoid requiring a composite index.
   public async joinRoomByCode(code: string): Promise<{ room: MockRoomData | null; error?: string }> {
     if (!db) throw new Error('Firestore is not initialized');
 
+    await this.ensureAuthenticated();
+
     const q = query(
-      collection(db!, 'rooms'),
+      collection(db, 'rooms'),
       where('roomCode', '==', code),
-      where('status', 'in', ['WAITING', 'ACTIVE']),
       limit(1)
     );
 
     const snap = await getDocs(q);
     if (snap.empty) {
-      return { room: null, error: 'Không tìm thấy phòng học hoặc phòng đã kết thúc.' };
+      return { room: null, error: 'Không tìm thấy phòng học. Hãy kiểm tra lại mã.' };
     }
 
     const docSnap = snap.docs[0];
     const roomData = docSnap.data() as MockRoomData;
 
-    // Fetch roster once for name selection
-    const rosterSnap = await getDocs(collection(db!, 'rooms', docSnap.id, 'roster'));
-    const roster = rosterSnap.docs.map((d) => d.data() as any);
+    if (roomData.status !== 'WAITING' && roomData.status !== 'ACTIVE') {
+      return { room: null, error: 'Phòng học đã kết thúc hoặc không còn hoạt động.' };
+    }
+
+    if (roomData.expiresAt && new Date(roomData.expiresAt).getTime() < Date.now()) {
+      return { room: null, error: 'Phòng học đã hết hạn.' };
+    }
+
+    const rosterSnap = await getDocs(collection(db, 'rooms', docSnap.id, 'roster'));
+    const roster = rosterSnap.docs.map((d) => d.data() as MockRoomData['roster'][number]);
 
     return {
       room: {
         ...roomData,
         id: docSnap.id,
         roster,
+        participants: {},
+        liveQuestions: {},
+        submissions: {},
+        scores: {},
       },
     };
   }
@@ -131,13 +154,14 @@ export class FirestoreRealtimeService {
   ): Promise<{ participant: MockParticipant | null; error?: string }> {
     if (!db) throw new Error('Firestore is not initialized');
 
-    const participantRef = doc(db!, 'rooms', roomId, 'participants', studentId);
+    const realAuthUid = await this.ensureAuthenticated();
+    const participantRef = doc(db, 'rooms', roomId, 'participants', studentId);
     const now = new Date().toISOString();
 
     const participantData = {
       studentId,
       name,
-      mockAuthUid: authUid,
+      mockAuthUid: realAuthUid || authUid,
       sessionToken: `token-${Date.now()}`,
       joinedAt: serverTimestamp(),
       lastSeenAt: serverTimestamp(),
@@ -348,6 +372,7 @@ export class FirestoreRealtimeService {
   public async submitAnswer(params: SubmitAnswerParams): Promise<{ success: boolean; error?: string }> {
     if (!db) return { success: false, error: 'Firestore is not initialized' };
 
+    const realAuthUid = await this.ensureAuthenticated();
     const submissionId = `${params.questionId}_${params.studentId}`;
     const subRef = doc(db!, 'rooms', params.roomId, 'submissions', submissionId);
 
@@ -361,7 +386,7 @@ export class FirestoreRealtimeService {
       questionId: params.questionId,
       studentId: params.studentId,
       studentName: params.studentName,
-      authUid: params.mockAuthUid,
+      authUid: realAuthUid || params.mockAuthUid,
       answer: params.answer.trim(),
       submittedAt: serverTimestamp(),
     };
