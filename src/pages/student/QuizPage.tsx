@@ -3,7 +3,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { useStudentSession } from '../../context/StudentSessionContext';
-import { realtimeService } from '../../services/realtime/MockRealtimeService';
+import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { useToast } from '../../context/ToastContext';
 import { HelpCircle, CheckCircle2, Lock, Clock, Send } from 'lucide-react';
 
@@ -51,19 +51,19 @@ export const QuizPage: React.FC = () => {
   };
 
   // Confirm Final Submission -> Send to Realtime Service!
-  const handleConfirmSubmit = () => {
+  const handleConfirmSubmit = async () => {
     if (!session.roomId || !session.studentId || !session.selectedAnswer) return;
 
     const mockAuthUid = `mock-user-${session.studentId}`;
 
-    const res = realtimeService.submitAnswer({
+    const res = await Promise.resolve(activeRealtimeService.submitAnswer({
       roomId: session.roomId,
       questionId: q.id,
       studentId: session.studentId,
       studentName: session.studentName || 'Học sinh',
       mockAuthUid,
       answer: session.selectedAnswer,
-    });
+    }));
 
     if (!res.success) {
       setSubmitError(res.error || 'Không thể gửi câu trả lời.');
@@ -82,7 +82,7 @@ export const QuizPage: React.FC = () => {
       {/* Top Header Badge */}
       <div className="flex items-center justify-between bg-white px-4 py-3 rounded-2xl border border-sky-200 shadow-sm">
         <span className="text-xs font-bold text-sky-800 uppercase">
-          Môn {session.subject || 'Toán'} • {session.className || 'Lớp 4A'}
+          Môn {session.subject || 'Đang tải môn'} • {session.className || 'Đang tải lớp'}
         </span>
         <span className="text-xs font-extrabold px-3 py-1 bg-amber-100 text-amber-900 rounded-full border border-amber-300">
           🎒 {session.studentName}
