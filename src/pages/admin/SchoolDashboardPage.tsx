@@ -170,7 +170,6 @@ export const SchoolDashboardPage: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <Badge variant="warning">Mã trường: {school?.code || 'SC2026'}</Badge>
               <Badge variant="info">Năm học: {school?.academicYear || '2026-2027'}</Badge>
             </div>
             <h1 className="text-2xl font-black text-amber-400 uppercase tracking-wide">
@@ -183,14 +182,6 @@ export const SchoolDashboardPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <Button
-            variant="outline"
-            size="md"
-            onClick={handleOpenLogoModal}
-            className="text-amber-300 border-amber-400/50 hover:bg-amber-400/10 font-bold"
-          >
-            <Camera className="w-4 h-4 mr-1" /> ĐỔI LOGO TRƯỜNG
-          </Button>
           <Button
             variant="warning"
             size="md"
@@ -208,6 +199,18 @@ export const SchoolDashboardPage: React.FC = () => {
             <Building2 className="w-4 h-4 mr-1" /> TỔ CHUYÊN MÔN
           </Button>
         </div>
+      </div>
+
+      {/* School branding controls */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="md"
+          onClick={handleOpenLogoModal}
+          className="font-bold bg-white text-slate-700 border-slate-300 hover:bg-slate-50 shadow-sm"
+        >
+          <Camera className="w-4 h-4 mr-1" /> ĐỔI LOGO TRƯỜNG
+        </Button>
       </div>
 
       {/* OVERVIEW CARDS METRICS */}
