@@ -196,11 +196,20 @@ export const RoomControllerPage: React.FC = () => {
     }
   };
 
-  const handleFinishRoom = () => {
-    activeRealtimeService.finishRoom(room.id);
-    setIsFinishModalOpen(false);
-    setIsSummaryOpen(true);
-    showToast('Buổi học đã kết thúc!', 'info');
+  const handleFinishRoom = async () => {
+    try {
+      const success = await Promise.resolve(activeRealtimeService.finishRoom(room.id));
+      if (!success) {
+        throw new Error('Không thể cập nhật trạng thái phòng học.');
+      }
+
+      setIsFinishModalOpen(false);
+      setIsSummaryOpen(true);
+      showToast('Buổi học đã kết thúc và được lưu vào hệ thống!', 'success');
+    } catch (err: any) {
+      console.error('Không thể kết thúc buổi học', err);
+      showToast(err?.message || 'Không thể kết thúc buổi học. Vui lòng thử lại.', 'error');
+    }
   };
 
   // --- STUDENT CALLING LOGIC ---
