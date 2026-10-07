@@ -460,57 +460,85 @@ export class FirestoreRealtimeService {
     return true;
   }
 
-  // --- LISTENERS (Optimized for Spark Free Tier) ---
+  // --- LISTENERS ---
+  // Keep room metadata and the live subcollections in sync.
   public subscribeRoom(roomId: string, callback: (room: MockRoomData) => void): () => void {
     if (!db) return () => {};
 
-    const roomRef = doc(db!, 'rooms', roomId);
-    return onSnapshot(roomRef, async (snap) => {
-      if (!snap.exists()) return;
-      const data = snap.data() as MockRoomData;
+    const firestore = db;
+    let roomMeta: MockRoomData | null = null;
+    let roster: MockRoomData['roster'] = [];
+    let participants: MockRoomData['participants'] = {};
+    let liveQuestions: MockRoomData['liveQuestions'] = {};
+    let submissions: MockRoomData['submissions'] = {};
+    let scores: MockRoomData['scores'] = {};
 
-      // Fetch current participants snapshot
-      const pSnap = await getDocs(collection(db!, 'rooms', roomId, 'participants'));
-      const participants: Record<string, MockParticipant> = {};
-      pSnap.docs.forEach((d) => {
-        participants[d.id] = d.data() as MockParticipant;
-      });
-
-      // Fetch liveQuestions snapshot
-      const qSnap = await getDocs(collection(db!, 'rooms', roomId, 'liveQuestions'));
-      const liveQuestions: Record<string, LiveQuestionPublic> = {};
-      qSnap.docs.forEach((d) => {
-        liveQuestions[d.id] = d.data() as LiveQuestionPublic;
-      });
-
-      // Fetch submissions snapshot
-      const sSnap = await getDocs(collection(db!, 'rooms', roomId, 'submissions'));
-      const submissions: Record<string, MockSubmission> = {};
-      sSnap.docs.forEach((d) => {
-        submissions[d.id] = d.data() as MockSubmission;
-      });
-
-      // Fetch scores snapshot
-      const scoreSnap = await getDocs(collection(db!, 'rooms', roomId, 'scores'));
-      const scores: Record<string, any> = {};
-      scoreSnap.docs.forEach((d) => {
-        scores[d.id] = d.data();
-      });
-
+    const emit = () => {
+      if (!roomMeta) return;
       callback({
-        ...data,
-        id: snap.id,
+        ...roomMeta,
+        id: roomId,
+        roster,
         participants,
         liveQuestions,
         submissions,
         scores,
-        calledStudent: data.calledStudent || null,
-        callHistory: data.callHistory || [],
-        activeGameId: data.activeGameId || null,
-        activeGame: data.activeGame || null,
+        calledStudent: roomMeta.calledStudent || null,
+        callHistory: roomMeta.callHistory || [],
+        activeGameId: roomMeta.activeGameId || null,
+        activeGame: roomMeta.activeGame || null,
       });
-    });
+    };
+
+    const unsubscribers = [
+      onSnapshot(doc(firestore, 'rooms', roomId), (snap) => {
+        if (!snap.exists()) return;
+        roomMeta = { ...(snap.data() as MockRoomData), id: snap.id };
+        emit();
+      }),
+      onSnapshot(collection(firestore, 'rooms', roomId, 'roster'), (snap) => {
+        roster = snap.docs.map((d) => d.data() as MockRoomData['roster'][number]);
+        emit();
+      }),
+      onSnapshot(collection(firestore, 'rooms', roomId, 'participants'), (snap) => {
+        const next: MockRoomData['participants'] = {};
+        snap.docs.forEach((d) => {
+          next[d.id] = d.data() as MockParticipant;
+        });
+        participants = next;
+        emit();
+      }),
+      onSnapshot(collection(firestore, 'rooms', roomId, 'liveQuestions'), (snap) => {
+        const next: MockRoomData['liveQuestions'] = {};
+        snap.docs.forEach((d) => {
+          next[d.id] = d.data() as LiveQuestionPublic;
+        });
+        liveQuestions = next;
+        emit();
+      }),
+      onSnapshot(collection(firestore, 'rooms', roomId, 'submissions'), (snap) => {
+        const next: MockRoomData['submissions'] = {};
+        snap.docs.forEach((d) => {
+          next[d.id] = d.data() as MockSubmission;
+        });
+        submissions = next;
+        emit();
+      }),
+      onSnapshot(collection(firestore, 'rooms', roomId, 'scores'), (snap) => {
+        const next: MockRoomData['scores'] = {};
+        snap.docs.forEach((d) => {
+          next[d.id] = d.data() as MockRoomData['scores'][string];
+        });
+        scores = next;
+        emit();
+      }),
+    ];
+
+    return () => {
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
+    };
   }
+
 }
 
 export const firestoreRealtimeService = new FirestoreRealtimeService();
