@@ -3,16 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { GraduationCap, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('huong.nguyen@th-nguyenhue.edu.vn');
-  const [password, setPassword] = useState('123456');
+  const { signInTeacher } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In Milestone 1, redirect directly to teacher dashboard
-    navigate('/teacher');
+    setIsSubmitting(true);
+    try {
+      const ok = await signInTeacher(email.trim(), password);
+      if (ok) navigate('/admin');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,14 +64,14 @@ export const LoginPage: React.FC = () => {
             />
           </div>
 
-          <Button type="submit" variant="primary" fullWidth size="lg" className="mt-2">
-            Đăng nhập vào Dashboard
+          <Button type="submit" variant="primary" fullWidth size="lg" className="mt-2" disabled={isSubmitting}>
+            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập vào Dashboard'}
           </Button>
         </form>
 
         <div className="mt-6 pt-6 border-t border-slate-100 text-center">
           <p className="text-xs text-slate-400">
-            Mẫu thử nghiệm dành cho Giáo viên (Milestone 1 - Mock Data)
+            Đăng nhập bằng tài khoản Firebase của nhà trường
           </p>
         </div>
       </div>
