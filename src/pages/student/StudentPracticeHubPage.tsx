@@ -217,7 +217,7 @@ export const StudentPracticeHubPage: React.FC = () => {
           </div>
 
           {/* Multiple Choice / True False Options */}
-          {currentQ.options && (
+          {currentQ.type === 'MULTIPLE_CHOICE' && currentQ.options && (
             <div className="space-y-3">
               {currentQ.options.map((opt, idx) => {
                 const letter = String.fromCharCode(65 + idx);
