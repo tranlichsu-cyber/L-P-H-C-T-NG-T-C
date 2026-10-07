@@ -3,8 +3,8 @@ import type { ClassGroup, Student, Quiz, Question } from '../types';
 import { INITIAL_CLASSES } from '../data/mockClasses';
 import { INITIAL_QUIZZES } from '../data/mockQuizzes';
 import { normalizeVietnameseText } from '../utils/normalizeVietnamese';
-import { collection, getDocs } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from '../services/firebase/firebase';
+import { collection, deleteDoc, doc, getDocs, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { auth, db, isFirebaseConfigured } from '../services/firebase/firebase';
 
 interface BulkAddResult {
   addedCount: number;
@@ -16,15 +16,15 @@ interface TeacherDataContextType {
   quizzes: Quiz[];
   
   // Class Actions
-  addClass: (name: string, grade: string) => ClassGroup;
-  updateClass: (classId: string, name: string, grade: string) => void;
-  deleteClass: (classId: string) => void;
+  addClass: (name: string, grade: string) => Promise<ClassGroup>;
+  updateClass: (classId: string, name: string, grade: string) => Promise<void>;
+  deleteClass: (classId: string) => Promise<void>;
 
   // Student Actions
-  addStudent: (classId: string, studentName: string) => boolean;
-  bulkAddStudents: (classId: string, studentNames: string[]) => BulkAddResult;
-  updateStudent: (classId: string, studentId: string, newName: string) => void;
-  deleteStudent: (classId: string, studentId: string) => void;
+  addStudent: (classId: string, studentName: string) => Promise<boolean>;
+  bulkAddStudents: (classId: string, studentNames: string[]) => Promise<BulkAddResult>;
+  updateStudent: (classId: string, studentId: string, newName: string) => Promise<void>;
+  deleteStudent: (classId: string, studentId: string) => Promise<void>;
 
   // Quiz Actions
   addQuiz: (title: string, subject: string, grade: string, visibility?: 'PRIVATE' | 'TEAM' | 'SCHOOL', teamId?: string) => Quiz;
@@ -131,113 +131,189 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, []);
 
   // --- CLASS ACTIONS ---
-  const addClass = (name: string, grade: string): ClassGroup => {
+  const addClass = async (name: string, grade: string): Promise<ClassGroup> => {
+    const now = new Date().toISOString();
     const newClass: ClassGroup = {
       id: `class-${Date.now()}`,
       name: name.trim(),
       grade,
       studentCount: 0,
       students: [],
-      createdAt: new Date().toISOString().split('T')[0],
+      createdAt: now,
     };
+
+    if (isFirebaseConfigured && db) {
+      const teacherId = auth?.currentUser?.uid;
+      if (!teacherId) {
+        throw new Error('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại trước khi tạo lớp.');
+      }
+
+      await setDoc(doc(db, 'classes', newClass.id), {
+        teacherId,
+        coTeacherIds: [],
+        className: newClass.name,
+        name: newClass.name,
+        grade: newClass.grade,
+        studentCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
     setClasses((prev) => [newClass, ...prev]);
     return newClass;
   };
 
-  const updateClass = (classId: string, name: string, grade: string) => {
+  const updateClass = async (classId: string, name: string, grade: string): Promise<void> => {
+    const cleanName = name.trim();
+    if (isFirebaseConfigured && db) {
+      await updateDoc(doc(db, 'classes', classId), {
+        className: cleanName,
+        name: cleanName,
+        grade,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
     setClasses((prev) =>
-      prev.map((cls) => (cls.id === classId ? { ...cls, name: name.trim(), grade } : cls))
+      prev.map((cls) => (cls.id === classId ? { ...cls, name: cleanName, grade } : cls))
     );
   };
 
-  const deleteClass = (classId: string) => {
+  const deleteClass = async (classId: string): Promise<void> => {
+    if (isFirebaseConfigured && db) {
+      const studentsSnap = await getDocs(collection(db, 'classes', classId, 'students'));
+      const batch = writeBatch(db);
+      studentsSnap.docs.forEach((studentDoc) => batch.delete(studentDoc.ref));
+      batch.delete(doc(db, 'classes', classId));
+      await batch.commit();
+    }
+
     setClasses((prev) => prev.filter((cls) => cls.id !== classId));
   };
 
   // --- STUDENT ACTIONS ---
-  const addStudent = (classId: string, studentName: string): boolean => {
+  const addStudent = async (classId: string, studentName: string): Promise<boolean> => {
     const trimmed = studentName.trim();
     if (!trimmed) return false;
 
-    let isDuplicate = false;
+    const targetClass = classes.find((cls) => cls.id === classId);
+    if (!targetClass) throw new Error('Không tìm thấy lớp học.');
+
+    const normalizedNew = normalizeVietnameseText(trimmed);
+    const exists = targetClass.students.some(
+      (s) => normalizeVietnameseText(s.name) === normalizedNew
+    );
+    if (exists) return false;
+
+    const newStudent: Student = {
+      id: `std-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      name: trimmed,
+      studentCode: `${targetClass.name.replace(/\s+/g, '')}-${targetClass.students.length + 1}`,
+    };
+    const nextCount = targetClass.students.length + 1;
+
+    if (isFirebaseConfigured && db) {
+      await setDoc(doc(db, 'classes', classId, 'students', newStudent.id), {
+        ...newStudent,
+        createdAt: new Date().toISOString(),
+      });
+      await updateDoc(doc(db, 'classes', classId), {
+        studentCount: nextCount,
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
     setClasses((prev) =>
-      prev.map((cls) => {
-        if (cls.id !== classId) return cls;
-
-        const normalizedNew = normalizeVietnameseText(trimmed);
-        const exists = cls.students.some(
-          (s) => normalizeVietnameseText(s.name) === normalizedNew
-        );
-
-        if (exists) {
-          isDuplicate = true;
-          return cls;
-        }
-
-        const newStudent: Student = {
-          id: `std-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          name: trimmed,
-          studentCode: `${cls.name.replace(/\s+/g, '')}-${cls.students.length + 1}`,
-        };
-
-        const updatedStudents = [...cls.students, newStudent];
-        return {
-          ...cls,
-          students: updatedStudents,
-          studentCount: updatedStudents.length,
-        };
-      })
+      prev.map((cls) =>
+        cls.id === classId
+          ? { ...cls, students: [...cls.students, newStudent], studentCount: nextCount }
+          : cls
+      )
     );
 
-    return !isDuplicate;
+    return true;
   };
 
-  const bulkAddStudents = (classId: string, studentNames: string[]): BulkAddResult => {
-    let addedCount = 0;
+  const bulkAddStudents = async (
+    classId: string,
+    studentNames: string[]
+  ): Promise<BulkAddResult> => {
+    const targetClass = classes.find((cls) => cls.id === classId);
+    if (!targetClass) throw new Error('Không tìm thấy lớp học.');
+
+    const existingNormalized = new Set(
+      targetClass.students.map((s) => normalizeVietnameseText(s.name))
+    );
     const duplicateNames: string[] = [];
+    const newStudents: Student[] = [];
+
+    studentNames.forEach((name, index) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const norm = normalizeVietnameseText(trimmed);
+      if (existingNormalized.has(norm)) {
+        duplicateNames.push(trimmed);
+        return;
+      }
+      existingNormalized.add(norm);
+      newStudents.push({
+        id: `std-${Date.now()}-${index}-${Math.floor(Math.random() * 10000)}`,
+        name: trimmed,
+        studentCode: `${targetClass.name.replace(/\s+/g, '')}-${targetClass.students.length + newStudents.length + 1}`,
+      });
+    });
+
+    if (newStudents.length === 0) {
+      return { addedCount: 0, duplicateNames };
+    }
+
+    const nextCount = targetClass.students.length + newStudents.length;
+
+    if (isFirebaseConfigured && db) {
+      const batch = writeBatch(db);
+      newStudents.forEach((student) => {
+        batch.set(doc(db, 'classes', classId, 'students', student.id), {
+          ...student,
+          createdAt: new Date().toISOString(),
+        });
+      });
+      batch.update(doc(db, 'classes', classId), {
+        studentCount: nextCount,
+        updatedAt: new Date().toISOString(),
+      });
+      await batch.commit();
+    }
 
     setClasses((prev) =>
-      prev.map((cls) => {
-        if (cls.id !== classId) return cls;
-
-        const currentStudents = [...cls.students];
-        const existingNormalized = new Set(
-          currentStudents.map((s) => normalizeVietnameseText(s.name))
-        );
-
-        studentNames.forEach((name) => {
-          const trimmed = name.trim();
-          if (!trimmed) return;
-
-          const norm = normalizeVietnameseText(trimmed);
-          if (existingNormalized.has(norm)) {
-            duplicateNames.push(trimmed);
-          } else {
-            existingNormalized.add(norm);
-            currentStudents.push({
-              id: `std-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-              name: trimmed,
-              studentCode: `${cls.name.replace(/\s+/g, '')}-${currentStudents.length + 1}`,
-            });
-            addedCount++;
-          }
-        });
-
-        return {
-          ...cls,
-          students: currentStudents,
-          studentCount: currentStudents.length,
-        };
-      })
+      prev.map((cls) =>
+        cls.id === classId
+          ? {
+              ...cls,
+              students: [...cls.students, ...newStudents],
+              studentCount: nextCount,
+            }
+          : cls
+      )
     );
 
-    return { addedCount, duplicateNames };
+    return { addedCount: newStudents.length, duplicateNames };
   };
 
-  const updateStudent = (classId: string, studentId: string, newName: string) => {
+  const updateStudent = async (
+    classId: string,
+    studentId: string,
+    newName: string
+  ): Promise<void> => {
     const trimmed = newName.trim();
     if (!trimmed) return;
+
+    if (isFirebaseConfigured && db) {
+      await updateDoc(doc(db, 'classes', classId, 'students', studentId), {
+        name: trimmed,
+        updatedAt: new Date().toISOString(),
+      });
+    }
 
     setClasses((prev) =>
       prev.map((cls) => {
@@ -250,7 +326,19 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
   };
 
-  const deleteStudent = (classId: string, studentId: string) => {
+  const deleteStudent = async (classId: string, studentId: string): Promise<void> => {
+    const targetClass = classes.find((cls) => cls.id === classId);
+    if (!targetClass) throw new Error('Không tìm thấy lớp học.');
+    const nextCount = Math.max(0, targetClass.students.length - 1);
+
+    if (isFirebaseConfigured && db) {
+      await deleteDoc(doc(db, 'classes', classId, 'students', studentId));
+      await updateDoc(doc(db, 'classes', classId), {
+        studentCount: nextCount,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
     setClasses((prev) =>
       prev.map((cls) => {
         if (cls.id !== classId) return cls;
