@@ -6,6 +6,7 @@ import { Badge } from '../../components/common/Badge';
 import { SchoolService } from '../../services/school/SchoolService';
 import type { SchoolTeam, SchoolMember } from '../../services/school/types';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Building2,
   BookOpen,
@@ -18,6 +19,7 @@ import {
 export const TeamDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
 
   const [teams, setTeams] = useState<SchoolTeam[]>([]);
   const [members, setMembers] = useState<SchoolMember[]>([]);
@@ -25,14 +27,22 @@ export const TeamDashboardPage: React.FC = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([SchoolService.getTeams(), SchoolService.getMembers()])
-      .then(([tList, mList]) => {
-        setTeams(tList);
+    Promise.all([
+      SchoolService.getTeams(),
+      SchoolService.getMembers(),
+      currentUser?.uid ? SchoolService.getUser(currentUser.uid) : Promise.resolve(null),
+    ])
+      .then(([tList, mList, profile]) => {
+        const visibleTeams =
+          profile?.role === 'SCHOOL_ADMIN'
+            ? tList
+            : tList.filter((team) => team.leaderIds.includes(currentUser?.uid || ''));
+        setTeams(visibleTeams);
         setMembers(mList);
       })
       .catch(() => showToast('Lỗi khi tải thông tin Tổ chuyên môn.', 'error'))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [currentUser?.uid]);
 
   if (isLoading) {
     return (
