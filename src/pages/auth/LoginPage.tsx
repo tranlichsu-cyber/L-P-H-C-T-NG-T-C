@@ -9,28 +9,40 @@ import { auth } from '../../services/firebase/firebase';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signInTeacher } = useAuth();
+  const { signInTeacher, signInTeacherWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const navigateAfterLogin = async () => {
+    const uid = auth?.currentUser?.uid;
+    const profile = uid ? await SchoolService.getUser(uid) : null;
+
+    if (profile?.role === 'SCHOOL_ADMIN') {
+      navigate('/admin');
+    } else if (profile?.role === 'TEAM_LEADER') {
+      navigate('/team');
+    } else {
+      navigate('/teacher');
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
       const ok = await signInTeacher(email.trim(), password);
-      if (ok) {
-        const uid = auth?.currentUser?.uid;
-        const profile = uid ? await SchoolService.getUser(uid) : null;
+      if (ok) await navigateAfterLogin();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-        if (profile?.role === 'SCHOOL_ADMIN') {
-          navigate('/admin');
-        } else if (profile?.role === 'TEAM_LEADER') {
-          navigate('/team');
-        } else {
-          navigate('/teacher');
-        }
-      }
+  const handleGoogleLogin = async () => {
+    setIsSubmitting(true);
+    try {
+      const ok = await signInTeacherWithGoogle();
+      if (ok) await navigateAfterLogin();
     } finally {
       setIsSubmitting(false);
     }
@@ -82,9 +94,33 @@ export const LoginPage: React.FC = () => {
           </Button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-          <p className="text-xs text-slate-400">
-            Đăng nhập bằng tài khoản Firebase của nhà trường
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs font-bold text-slate-400 uppercase">Hoặc</span>
+          <div className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          fullWidth
+          size="lg"
+          disabled={isSubmitting}
+          onClick={handleGoogleLogin}
+          className="gap-3"
+        >
+          <span className="w-7 h-7 rounded-full border border-slate-300 bg-white flex items-center justify-center font-black text-slate-700">
+            G
+          </span>
+          Đăng nhập bằng Google
+        </Button>
+
+        <div className="mt-5 text-center space-y-1">
+          <p className="text-xs text-slate-500">
+            Tài khoản Google phải được liên kết với tài khoản giáo viên đã được nhà trường cấp.
+          </p>
+          <p className="text-[11px] text-slate-400">
+            Lần đầu: đăng nhập bằng Email/Mật khẩu → Tài khoản → Liên kết Google.
           </p>
         </div>
       </div>
