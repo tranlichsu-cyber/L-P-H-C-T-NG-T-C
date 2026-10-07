@@ -32,7 +32,6 @@ export const TeacherLayout: React.FC = () => {
               </div>
               <div>
                 <span className="font-black text-lg text-slate-900 leading-tight block tracking-tight">Lớp Học Tương Tác</span>
-                <span className="text-[11px] font-extrabold text-sky-600 uppercase tracking-wider block">Giao diện Giáo viên v1.1</span>
               </div>
             </Link>
 
