@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - DEPLOY_PRODUCTION_TRIGGER.txt
 
 permissions:
   contents: read
 
 jobs:
   deploy:
-    if: "${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'deploy: production') }}"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
