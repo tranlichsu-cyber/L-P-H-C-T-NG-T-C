@@ -60,8 +60,11 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const loadRealTeacherData = async () => {
       try {
         const classSnap = await getDocs(collection(firestore, 'classes'));
+        const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
         const realClasses = await Promise.all(
-          classSnap.docs.map(async (classDoc) => {
+          classSnap.docs
+            .filter((classDoc) => !legacyClassIds.has(classDoc.id))
+            .map(async (classDoc) => {
             const data = classDoc.data() as Partial<ClassGroup> & { className?: string };
             const studentsSnap = await getDocs(collection(firestore, 'classes', classDoc.id, 'students'));
             const students = studentsSnap.docs.map((studentDoc) => ({
@@ -81,8 +84,11 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         );
 
         const quizSnap = await getDocs(collection(firestore, 'quizzes'));
+        const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
         const realQuizzes = await Promise.all(
-          quizSnap.docs.map(async (quizDoc) => {
+          quizSnap.docs
+            .filter((quizDoc) => !legacyQuizIds.has(quizDoc.id))
+            .map(async (quizDoc) => {
             const data = quizDoc.data() as Partial<Quiz>;
             const questionsSnap = await getDocs(collection(firestore, 'quizzes', quizDoc.id, 'questions'));
             const questions = questionsSnap.docs.map((questionDoc) => ({
