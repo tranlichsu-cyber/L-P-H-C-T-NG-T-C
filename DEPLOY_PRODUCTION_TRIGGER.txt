@@ -28,3 +28,4 @@ Deploy persistent quizzes and quiz questions.
 Deploy Firestore undefined-field sanitizer for quiz questions.
 Deploy Firestore finish room action.
 Deploy comprehensive button flow and Firestore audit fixes.
+Deploy Google sign-in linking and password change.
