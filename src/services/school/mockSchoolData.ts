@@ -22,44 +22,14 @@ export const INITIAL_SCHOOL: School = {
 
 export const INITIAL_MEMBERS: UserProfile[] = [
   {
-    uid: 'teacher-1',
-    displayName: 'Cô Nguyễn Thị Hương',
-    email: 'huong.nguyen@nguyentrai.edu.vn',
+    uid: 'admin-tranlichsu',
+    displayName: 'Trần Lịch Sử',
+    email: 'tranlichsu@gmail.com',
     role: 'SCHOOL_ADMIN',
-    teamIds: ['team-2'],
+    teamIds: [],
     status: 'ACTIVE',
-    createdAt: '2026-09-01T08:00:00.000Z',
-    updatedAt: '2026-10-06T10:00:00.000Z',
-  },
-  {
-    uid: 'teacher-2',
-    displayName: 'Thầy Trần Văn Minh',
-    email: 'minh.tran@nguyentrai.edu.vn',
-    role: 'TEAM_LEADER',
-    teamIds: ['team-1'],
-    status: 'ACTIVE',
-    createdAt: '2026-09-02T09:00:00.000Z',
-    updatedAt: '2026-10-05T14:00:00.000Z',
-  },
-  {
-    uid: 'teacher-3',
-    displayName: 'Cô Lê Thu Hà',
-    email: 'ha.le@nguyentrai.edu.vn',
-    role: 'TEACHER',
-    teamIds: ['team-1'],
-    status: 'ACTIVE',
-    createdAt: '2026-09-03T10:30:00.000Z',
-    updatedAt: '2026-10-04T11:00:00.000Z',
-  },
-  {
-    uid: 'teacher-4',
-    displayName: 'Thầy Phạm Hoàng Nam',
-    email: 'nam.pham@nguyentrai.edu.vn',
-    role: 'TEACHER',
-    teamIds: ['team-2'],
-    status: 'DISABLED',
-    createdAt: '2026-09-05T11:00:00.000Z',
-    updatedAt: '2026-10-01T09:00:00.000Z',
+    createdAt: '2026-10-07T13:00:00.000Z',
+    updatedAt: '2026-10-07T13:00:00.000Z',
   },
 ];
 
@@ -67,15 +37,15 @@ export const INITIAL_TEAMS: SchoolTeam[] = [
   {
     id: 'team-1',
     name: 'Tổ Khối 4 & 5',
-    leaderIds: ['teacher-2'],
-    memberIds: ['teacher-2', 'teacher-3'],
+    leaderIds: [],
+    memberIds: [],
     createdAt: '2026-09-01T08:30:00.000Z',
   },
   {
     id: 'team-2',
     name: 'Tổ Khối 1, 2 & 3',
-    leaderIds: ['teacher-1'],
-    memberIds: ['teacher-1', 'teacher-4'],
+    leaderIds: [],
+    memberIds: [],
     createdAt: '2026-09-01T08:30:00.000Z',
   },
   {
@@ -87,36 +57,6 @@ export const INITIAL_TEAMS: SchoolTeam[] = [
   },
 ];
 
-export const INITIAL_JOIN_REQUESTS: SchoolJoinRequest[] = [
-  {
-    id: 'req-101',
-    uid: 'req-101',
-    displayName: 'Cô Vũ Hải Yến',
-    email: 'yen.vu@nguyentrai.edu.vn',
-    status: 'PENDING',
-    requestedAt: '2026-10-06T15:30:00.000Z',
-  },
-];
+export const INITIAL_JOIN_REQUESTS: SchoolJoinRequest[] = [];
 
-export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
-  {
-    id: 'log-1',
-    action: 'ROLE_CHANGED',
-    actorUid: 'teacher-1',
-    actorName: 'Cô Nguyễn Thị Hương',
-    targetUid: 'teacher-2',
-    targetName: 'Thầy Trần Văn Minh',
-    metadata: { oldRole: 'TEACHER', newRole: 'TEAM_LEADER' },
-    createdAt: '2026-10-05T14:00:00.000Z',
-  },
-  {
-    id: 'log-2',
-    action: 'MEMBER_DISABLED',
-    actorUid: 'teacher-1',
-    actorName: 'Cô Nguyễn Thị Hương',
-    targetUid: 'teacher-4',
-    targetName: 'Thầy Phạm Hoàng Nam',
-    metadata: { reason: 'Chuyển công tác' },
-    createdAt: '2026-10-01T09:00:00.000Z',
-  },
-];
+export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [];
