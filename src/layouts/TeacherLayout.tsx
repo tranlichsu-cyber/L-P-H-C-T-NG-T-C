@@ -1,17 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Users, BookOpen, Radio, LogOut, Sparkles, History, HeartHandshake, Building2, Crown, GraduationCap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSchool } from '../context/SchoolContext';
 import { SCHOOL_LOGO_SRC } from '../assets/schoolLogo';
+import { SchoolService } from '../services/school/SchoolService';
+import type { UserProfile } from '../services/school/types';
 
 export const TeacherLayout: React.FC = () => {
   const location = useLocation();
   const { currentUser, signOutTeacher } = useAuth();
   const { logoUrl, settings } = useSchool();
   const accountLabel = currentUser?.displayName || currentUser?.email || 'Trần Lịch Sử';
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  const navItems = [
+  useEffect(() => {
+    let cancelled = false;
+    if (!currentUser?.uid || currentUser.isAnonymous) {
+      setProfile(null);
+      return;
+    }
+
+    SchoolService.getUser(currentUser.uid)
+      .then((data) => {
+        if (!cancelled) setProfile(data);
+      })
+      .catch(() => {
+        if (!cancelled) setProfile(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.uid, currentUser?.isAnonymous]);
+
+  const allNavItems = [
     { path: '/teacher', label: 'Tổng quan', icon: LayoutDashboard, idle: 'bg-sky-50 text-sky-700 border-sky-200', active: 'bg-sky-600 text-white border-sky-600 shadow-sky-200' },
     { path: '/teacher/classes', label: 'Quản lý lớp', icon: Users, idle: 'bg-emerald-50 text-emerald-700 border-emerald-200', active: 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-200' },
     { path: '/teacher/quizzes', label: 'Ngân hàng câu hỏi', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
@@ -22,6 +45,12 @@ export const TeacherLayout: React.FC = () => {
     { path: '/team', label: 'Tổ chuyên môn', icon: Crown, idle: 'bg-orange-50 text-orange-700 border-orange-200', active: 'bg-orange-500 text-white border-orange-500 shadow-orange-200' },
     { path: '/admin', label: 'Quản trị trường', icon: Building2, idle: 'bg-indigo-50 text-indigo-700 border-indigo-200', active: 'bg-indigo-700 text-white border-indigo-700 shadow-indigo-200' },
   ];
+
+  const navItems = allNavItems.filter((item) => {
+    if (item.path === '/admin') return profile?.role === 'SCHOOL_ADMIN';
+    if (item.path === '/team') return profile?.role === 'TEAM_LEADER' || profile?.role === 'SCHOOL_ADMIN';
+    return true;
+  });
 
   const currentLogoSrc = logoUrl || SCHOOL_LOGO_SRC;
 
