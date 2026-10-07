@@ -13,3 +13,4 @@ Deploy real Firestore dashboard counts and richer action colors.
 Retry after Firestore loader type fix.
 Deploy correct admin identity and exclude legacy demo records.
 Deploy real school dashboard metrics from Firestore.
+Retry real school metrics after Firestore type fix.
