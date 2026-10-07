@@ -6,15 +6,15 @@ export const TeacherLayout: React.FC = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: '/teacher', label: 'Tổng quan', icon: LayoutDashboard },
-    { path: '/teacher/classes', label: 'Quản lý lớp', icon: Users },
-    { path: '/teacher/quizzes', label: 'Ngân hàng câu hỏi', icon: BookOpen },
-    { path: '/teacher/ai', label: 'Trợ lý AI', icon: Sparkles },
-    { path: '/teacher/remediation', label: 'Ôn tập & Củng cố', icon: HeartHandshake },
-    { path: '/teacher/room', label: 'Phòng học Live', icon: Radio },
-    { path: '/teacher/history', label: 'Lịch sử dạy học', icon: History },
-    { path: '/team', label: 'Tổ chuyên môn', icon: Crown },
-    { path: '/admin', label: 'Quản trị trường', icon: Building2 },
+    { path: '/teacher', label: 'Tổng quan', icon: LayoutDashboard, idle: 'bg-sky-50 text-sky-700 border-sky-200', active: 'bg-sky-600 text-white border-sky-600 shadow-sky-200' },
+    { path: '/teacher/classes', label: 'Quản lý lớp', icon: Users, idle: 'bg-emerald-50 text-emerald-700 border-emerald-200', active: 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-200' },
+    { path: '/teacher/quizzes', label: 'Ngân hàng câu hỏi', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
+    { path: '/teacher/ai', label: 'Trợ lý AI', icon: Sparkles, idle: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200', active: 'bg-fuchsia-600 text-white border-fuchsia-600 shadow-fuchsia-200' },
+    { path: '/teacher/remediation', label: 'Ôn tập & Củng cố', icon: HeartHandshake, idle: 'bg-amber-50 text-amber-800 border-amber-200', active: 'bg-amber-500 text-slate-950 border-amber-500 shadow-amber-200' },
+    { path: '/teacher/room', label: 'Phòng học Live', icon: Radio, idle: 'bg-rose-50 text-rose-700 border-rose-200', active: 'bg-rose-600 text-white border-rose-600 shadow-rose-200' },
+    { path: '/teacher/history', label: 'Lịch sử dạy học', icon: History, idle: 'bg-cyan-50 text-cyan-700 border-cyan-200', active: 'bg-cyan-600 text-white border-cyan-600 shadow-cyan-200' },
+    { path: '/team', label: 'Tổ chuyên môn', icon: Crown, idle: 'bg-orange-50 text-orange-700 border-orange-200', active: 'bg-orange-500 text-white border-orange-500 shadow-orange-200' },
+    { path: '/admin', label: 'Quản trị trường', icon: Building2, idle: 'bg-indigo-50 text-indigo-700 border-indigo-200', active: 'bg-indigo-700 text-white border-indigo-700 shadow-indigo-200' },
   ];
 
   return (
@@ -42,13 +42,13 @@ export const TeacherLayout: React.FC = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm transition-all duration-150 ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm transition-all duration-150 border ${
                       isActive
-                        ? 'bg-gradient-to-r from-sky-50 to-indigo-50 text-sky-700 font-extrabold border border-sky-200/80 shadow-xs'
-                        : 'text-slate-600 font-medium hover:text-slate-900 hover:bg-slate-100/80'
+                        ? `${item.active} font-extrabold shadow-md`
+                        : `${item.idle} font-bold hover:-translate-y-0.5 hover:shadow-sm`
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-sky-600' : 'text-slate-400'}`} />
+                    <Icon className="w-4 h-4" />
                     {item.label}
                   </Link>
                 );
@@ -80,8 +80,8 @@ export const TeacherLayout: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                  isActive ? 'text-sky-600 font-bold bg-sky-50' : 'text-slate-500'
+                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all border ${
+                  isActive ? `${item.active} font-bold shadow-sm` : `${item.idle} font-semibold`
                 }`}
               >
                 <Icon className="w-4 h-4" />
