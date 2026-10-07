@@ -4,6 +4,8 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { GraduationCap, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { SchoolService } from '../../services/school/SchoolService';
+import { auth } from '../../services/firebase/firebase';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,7 +19,18 @@ export const LoginPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const ok = await signInTeacher(email.trim(), password);
-      if (ok) navigate('/admin');
+      if (ok) {
+        const uid = auth?.currentUser?.uid;
+        const profile = uid ? await SchoolService.getUser(uid) : null;
+
+        if (profile?.role === 'SCHOOL_ADMIN') {
+          navigate('/admin');
+        } else if (profile?.role === 'TEAM_LEADER') {
+          navigate('/team');
+        } else {
+          navigate('/teacher');
+        }
+      }
     } finally {
       setIsSubmitting(false);
     }
