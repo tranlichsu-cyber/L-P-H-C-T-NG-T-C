@@ -35,15 +35,19 @@ export const ClassesPage: React.FC = () => {
     setIsCreateOpen(true);
   };
 
-  const handleSaveCreate = (e: React.FormEvent) => {
+  const handleSaveCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!classNameInput.trim()) {
       setFormError('Vui lòng nhập tên lớp học!');
       return;
     }
-    const created = addClass(classNameInput, gradeInput);
-    showToast(`Đã tạo ${created.name} thành công!`, 'success');
-    setIsCreateOpen(false);
+    try {
+      const created = await addClass(classNameInput, gradeInput);
+      showToast(`Đã tạo ${created.name} và lưu vào hệ thống!`, 'success');
+      setIsCreateOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể lưu lớp học. Vui lòng thử lại.', 'error');
+    }
   };
 
   // Handle Edit
@@ -55,16 +59,20 @@ export const ClassesPage: React.FC = () => {
     setIsEditOpen(true);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeClass) return;
     if (!classNameInput.trim()) {
       setFormError('Tên lớp học không được để trống!');
       return;
     }
-    updateClass(activeClass.id, classNameInput, gradeInput);
-    showToast(`Đã cập nhật thông tin lớp ${classNameInput.trim()}!`, 'success');
-    setIsEditOpen(false);
+    try {
+      await updateClass(activeClass.id, classNameInput, gradeInput);
+      showToast(`Đã cập nhật thông tin lớp ${classNameInput.trim()}!`, 'success');
+      setIsEditOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể cập nhật lớp học.', 'error');
+    }
   };
 
   // Handle Delete Confirm
@@ -73,11 +81,15 @@ export const ClassesPage: React.FC = () => {
     setIsDeleteOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!activeClass) return;
-    deleteClass(activeClass.id);
-    showToast(`Đã xóa ${activeClass.name}!`, 'info');
-    setIsDeleteOpen(false);
+    try {
+      await deleteClass(activeClass.id);
+      showToast(`Đã xóa ${activeClass.name} khỏi hệ thống!`, 'info');
+      setIsDeleteOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể xóa lớp học.', 'error');
+    }
   };
 
   return (
