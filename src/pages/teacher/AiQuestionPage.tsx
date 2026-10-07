@@ -17,26 +17,30 @@ export const AiQuestionPage: React.FC = () => {
 
   const targetQuiz = quizzes.find((q) => q.id === selectedQuizId) || quizzes[0];
 
-  const handleAddAiQuestions = (newQuestions: AIGeneratedQuestion[]) => {
+  const handleAddAiQuestions = async (newQuestions: AIGeneratedQuestion[]) => {
     if (!targetQuiz) {
       showToast('Chưa có bộ đề nào để thêm câu hỏi!', 'error');
       return;
     }
 
-    newQuestions.forEach((q) => {
-      addQuestion(targetQuiz.id, {
-        type: q.type,
-        content: q.content,
-        options: q.options,
-        correctAnswer: q.correctAnswer,
-        explanation: q.explanation,
-        difficulty: q.difficulty,
-        source: 'AI',
-        aiReviewed: true,
-      });
-    });
+    try {
+      for (const q of newQuestions) {
+        await addQuestion(targetQuiz.id, {
+          type: q.type,
+          content: q.content,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          difficulty: q.difficulty,
+          source: 'AI',
+          aiReviewed: true,
+        });
+      }
 
-    showToast(`Đã thêm ${newQuestions.length} câu hỏi vào bộ đề "${targetQuiz.title}"!`, 'success');
+      showToast(`Đã thêm và lưu ${newQuestions.length} câu hỏi vào bộ đề "${targetQuiz.title}"!`, 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể lưu các câu hỏi AI vào Firestore.', 'error');
+    }
   };
 
   return (
