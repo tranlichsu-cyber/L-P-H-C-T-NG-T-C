@@ -396,6 +396,48 @@ export class FirestoreRealtimeService {
     return { success: true };
   }
 
+  // 10. Finish Room (Teacher)
+  public async finishRoom(roomId: string): Promise<boolean> {
+    if (!db) return false;
+
+    const firestore = db;
+    const roomRef = doc(firestore, 'rooms', roomId);
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists()) {
+      throw new Error('Không tìm thấy phòng học.');
+    }
+
+    const roomData = roomSnap.data() as MockRoomData;
+    if (roomData.status === 'FINISHED') {
+      return true;
+    }
+
+    const finishedAt = new Date().toISOString();
+    const batch = writeBatch(firestore);
+
+    // Close any still-open live questions so students cannot submit after finish.
+    const questionsSnap = await getDocs(collection(firestore, 'rooms', roomId, 'liveQuestions'));
+    questionsSnap.docs.forEach((questionDoc) => {
+      const data = questionDoc.data() as LiveQuestionPublic;
+      if (data.status === 'OPEN') {
+        batch.update(questionDoc.ref, {
+          status: 'CLOSED',
+        });
+      }
+    });
+
+    batch.update(roomRef, {
+      status: 'FINISHED',
+      finishedAt,
+      activeGameId: null,
+      activeGame: null,
+      calledStudent: null,
+    });
+
+    await batch.commit();
+    return true;
+  }
+
   // 11. GAME CONTROL METHODS (Milestone 7)
   public async createGameSession(
     roomId: string,
