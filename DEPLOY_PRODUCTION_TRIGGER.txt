@@ -25,3 +25,4 @@ Deploy admin branding control layout cleanup.
 Deploy real student live-room data and realtime counts.
 Deploy anonymous student Firestore room access fix.
 Deploy persistent quizzes and quiz questions.
+Deploy Firestore undefined-field sanitizer for quiz questions.
