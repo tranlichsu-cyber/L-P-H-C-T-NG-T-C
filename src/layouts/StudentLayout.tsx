@@ -3,6 +3,7 @@ import { Outlet, Link } from 'react-router-dom';
 import { Sparkles, Home, UserCheck } from 'lucide-react';
 import { useStudentSession, StudentSessionProvider } from '../context/StudentSessionContext';
 import { DevTestPanel } from '../components/student/DevTestPanel';
+import { isFirebaseActive } from '../services/realtime/realtimeServiceSwitch';
 
 const StudentLayoutInner: React.FC = () => {
   const { session } = useStudentSession();
@@ -10,7 +11,7 @@ const StudentLayoutInner: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 flex flex-col justify-between select-none">
       {/* Dev Test Panel for simulation */}
-      <DevTestPanel />
+      {!isFirebaseActive && <DevTestPanel />}
 
       {/* Student Top Bar */}
       <header className="bg-white/95 backdrop-blur-md border-b-2 border-sky-200/90 sticky top-0 z-30 shadow-sm">
