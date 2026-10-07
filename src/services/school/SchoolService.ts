@@ -103,7 +103,12 @@ export class SchoolService {
           const normalized = normalizeSchoolSettings(settings);
           if (normalized !== settings) {
             try {
-              await updateDoc(sRef, normalized);
+              await updateDoc(sRef, {
+                schoolName: normalized.schoolName,
+                displayName: normalized.displayName,
+                campusName: normalized.campusName,
+                updatedAt: normalized.updatedAt,
+              });
             } catch {}
           }
           return normalized;
