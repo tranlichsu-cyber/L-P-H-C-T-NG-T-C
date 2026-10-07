@@ -44,6 +44,7 @@ export const QuizzesPage: React.FC = () => {
   const { showToast } = useToast();
   const { currentUser } = useAuth();
   const [availableTeams, setAvailableTeams] = useState<SchoolTeam[]>([]);
+  const [isSchoolAdmin, setIsSchoolAdmin] = useState(false);
 
   // Scope Tab filter
   const [scopeFilter, setScopeFilter] = useState<'ALL' | 'PRIVATE' | 'TEAM' | 'SCHOOL'>('ALL');
@@ -73,8 +74,11 @@ export const QuizzesPage: React.FC = () => {
         if (cancelled) return;
         if (!profile) {
           setAvailableTeams([]);
+          setIsSchoolAdmin(false);
           return;
         }
+
+        setIsSchoolAdmin(profile.role === 'SCHOOL_ADMIN');
 
         const visible =
           profile.role === 'SCHOOL_ADMIN'
@@ -83,7 +87,10 @@ export const QuizzesPage: React.FC = () => {
         setAvailableTeams(visible);
       })
       .catch(() => {
-        if (!cancelled) setAvailableTeams([]);
+        if (!cancelled) {
+          setAvailableTeams([]);
+          setIsSchoolAdmin(false);
+        }
       });
 
     return () => {
@@ -282,7 +289,8 @@ export const QuizzesPage: React.FC = () => {
                   className="flex-1"
                   onClick={() => navigate(`/teacher/quizzes/${quiz.id}`)}
                 >
-                  <Edit3 className="w-4 h-4 mr-1" /> Mở & Sửa
+                  <Edit3 className="w-4 h-4 mr-1" />
+                  {quiz.teacherId === currentUser?.uid || isSchoolAdmin ? 'Mở & Sửa' : 'Xem nội dung'}
                 </Button>
 
                 <Button
@@ -294,15 +302,17 @@ export const QuizzesPage: React.FC = () => {
                   <Copy className="w-4 h-4 text-slate-600" />
                 </Button>
 
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleOpenDelete(quiz)}
-                  title="Xóa bộ câu hỏi"
-                  className="hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
-                >
-                  <Trash2 className="w-4 h-4 text-rose-500" />
-                </Button>
+                {(quiz.teacherId === currentUser?.uid || isSchoolAdmin) && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleOpenDelete(quiz)}
+                    title="Xóa bộ câu hỏi"
+                    className="hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                  </Button>
+                )}
               </div>
 
               {/* Copy to My Bank Button for Shared Quizzes */}
