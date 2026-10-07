@@ -7,6 +7,7 @@ import {
   updateDoc,
   deleteDoc,
   onSnapshot,
+  writeBatch,
 } from 'firebase/firestore';
 import { deleteApp, initializeApp } from 'firebase/app';
 import {
@@ -307,9 +308,25 @@ export class SchoolService {
         };
 
         try {
-          await setDoc(doc(db, 'users', uid), profile);
+          const batch = writeBatch(db);
+          batch.set(doc(db, 'users', uid), profile);
+
+          for (const teamId of teamIds) {
+            const teamRef = doc(db, 'teams', teamId);
+            const teamSnap = await getDoc(teamRef);
+            if (!teamSnap.exists()) {
+              throw new Error('Tổ chuyên môn đã chọn không còn tồn tại.');
+            }
+
+            const team = teamSnap.data() as SchoolTeam;
+            batch.update(teamRef, {
+              memberIds: Array.from(new Set([...(team.memberIds || []), uid])),
+            });
+          }
+
+          await batch.commit();
         } catch (profileError) {
-          // Roll back the just-created Firebase Auth account if its profile cannot be created.
+          // Roll back the just-created Firebase Auth account if profile/team assignment cannot be committed.
           await deleteUser(credential.user).catch(() => undefined);
           throw profileError;
         }
