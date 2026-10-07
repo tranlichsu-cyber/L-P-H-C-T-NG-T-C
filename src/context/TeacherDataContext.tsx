@@ -26,6 +26,331 @@ interface TeacherDataContextType {
   updateStudent: (classId: string, studentId: string, newName: string) => Promise<void>;
   deleteStudent: (classId: string, studentId: string) => Promise<void>;
 
+  // Quiz Actions
+  addQuiz: (title: string, subject: string, grade: string, visibility?: 'PRIVATE' | 'TEAM' | 'SCHOOL', teamId?: string) => Promise<Quiz>;
+  updateQuiz: (quizId: string, title: string, subject: string, grade: string, visibility?: 'PRIVATE' | 'TEAM' | 'SCHOOL', teamId?: string) => Promise<void>;
+  updateQuizVisibility: (quizId: string, visibility: 'PRIVATE' | 'TEAM' | 'SCHOOL', teamId?: string) => Promise<void>;
+  duplicateQuiz: (quizId: string) => Promise<Quiz>;
+  deleteQuiz: (quizId: string) => Promise<void>;
+
+  // Question Actions
+  addQuestion: (quizId: string, questionData: Omit<Question, 'id'>) => Promise<void>;
+  updateQuestion: (quizId: string, questionId: string, questionData: Omit<Question, 'id'>) => Promise<void>;
+  duplicateQuestion: (quizId: string, questionId: string) => Promise<void>;
+  deleteQuestion: (quizId: string, questionId: string) => Promise<void>;
+  moveQuestion: (quizId: string, questionId: string, direction: 'up' | 'down') => Promise<void>;
+}
+
+const TeacherDataContext = createContext<TeacherDataContextType | undefined>(undefined);
+
+export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [classes, setClasses] = useState<ClassGroup[]>(
+    isFirebaseConfigured ? [] : INITIAL_CLASSES
+  );
+  const [quizzes, setQuizzes] = useState<Quiz[]>(
+    isFirebaseConfigured ? [] : INITIAL_QUIZZES
+  );
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !db) return;
+
+    const firestore = db;
+    let cancelled = false;
+
+    const loadRealTeacherData = async () => {
+      try {
+        const classSnap = await getDocs(collection(firestore, 'classes'));
+        const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
+        const realClasses = await Promise.all(
+          classSnap.docs
+            .filter((classDoc) => !legacyClassIds.has(classDoc.id))
+            .map(async (classDoc) => {
+            const data = classDoc.data() as Partial<ClassGroup> & { className?: string };
+            const studentsSnap = await getDocs(collection(firestore, 'classes', classDoc.id, 'students'));
+            const students = studentsSnap.docs.map((studentDoc) => ({
+              id: studentDoc.id,
+              ...(studentDoc.data() as Omit<Student, 'id'>),
+            }));
+
+            return {
+              id: classDoc.id,
+              name: data.name || data.className || 'Lớp chưa đặt tên',
+              grade: data.grade || '',
+              studentCount: students.length,
+              students,
+              createdAt: data.createdAt || '',
+            } as ClassGroup;
+          })
+        );
+
+        const quizSnap = await getDocs(collection(firestore, 'quizzes'));
+        const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
+        const realQuizzes = await Promise.all(
+          quizSnap.docs
+            .filter((quizDoc) => !legacyQuizIds.has(quizDoc.id))
+            .map(async (quizDoc) => {
+            const data = quizDoc.data() as Partial<Quiz>;
+            const questionsSnap = await getDocs(collection(firestore, 'quizzes', quizDoc.id, 'questions'));
+            const questions = questionsSnap.docs
+              .map((questionDoc) => ({
+                id: questionDoc.id,
+                ...(questionDoc.data() as Omit<Question, 'id'> & { order?: number }),
+              }))
+              .sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
+
+            return {
+              id: quizDoc.id,
+              title: data.title || 'Bộ câu hỏi chưa đặt tên',
+              subject: data.subject || '',
+              grade: data.grade || '',
+              questionCount: questions.length,
+              questions,
+              createdAt: data.createdAt || '',
+              visibility: data.visibility || 'PRIVATE',
+              teamId: data.teamId,
+            } as Quiz;
+          })
+        );
+
+        if (!cancelled) {
+          setClasses(realClasses);
+          setQuizzes(realQuizzes);
+        }
+      } catch (error) {
+        console.error('Không thể tải dữ liệu lớp/bộ câu hỏi từ Firestore', error);
+        if (!cancelled) {
+          setClasses([]);
+          setQuizzes([]);
+        }
+      }
+    };
+
+    void loadRealTeacherData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // --- CLASS ACTIONS ---
+  const addClass = async (name: string, grade: string): Promise<ClassGroup> => {
+    const now = new Date().toISOString();
+    const newClass: ClassGroup = {
+      id: `class-${Date.now()}`,
+      name: name.trim(),
+      grade,
+      studentCount: 0,
+      students: [],
+      createdAt: now,
+    };
+
+    if (isFirebaseConfigured && db) {
+      const teacherId = auth?.currentUser?.uid;
+      if (!teacherId) {
+        throw new Error('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại trước khi tạo lớp.');
+      }
+
+      await setDoc(doc(db, 'classes', newClass.id), {
+        teacherId,
+        coTeacherIds: [],
+        className: newClass.name,
+        name: newClass.name,
+        grade: newClass.grade,
+        studentCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
+    setClasses((prev) => [newClass, ...prev]);
+    return newClass;
+  };
+
+  const updateClass = async (classId: string, name: string, grade: string): Promise<void> => {
+    const cleanName = name.trim();
+    if (isFirebaseConfigured && db) {
+      await updateDoc(doc(db, 'classes', classId), {
+        className: cleanName,
+        name: cleanName,
+        grade,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    setClasses((prev) =>
+      prev.map((cls) => (cls.id === classId ? { ...cls, name: cleanName, grade } : cls))
+    );
+  };
+
+  const deleteClass = async (classId: string): Promise<void> => {
+    if (isFirebaseConfigured && db) {
+      const studentsSnap = await getDocs(collection(db, 'classes', classId, 'students'));
+      const batch = writeBatch(db);
+      studentsSnap.docs.forEach((studentDoc) => batch.delete(studentDoc.ref));
+      batch.delete(doc(db, 'classes', classId));
+      await batch.commit();
+    }
+
+    setClasses((prev) => prev.filter((cls) => cls.id !== classId));
+  };
+
+  // --- STUDENT ACTIONS ---
+  const addStudent = async (classId: string, studentName: string): Promise<boolean> => {
+    const trimmed = studentName.trim();
+    if (!trimmed) return false;
+
+    const targetClass = classes.find((cls) => cls.id === classId);
+    if (!targetClass) throw new Error('Không tìm thấy lớp học.');
+
+    const normalizedNew = normalizeVietnameseText(trimmed);
+    const exists = targetClass.students.some(
+      (s) => normalizeVietnameseText(s.name) === normalizedNew
+    );
+    if (exists) return false;
+
+    const newStudent: Student = {
+      id: `std-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      name: trimmed,
+      studentCode: `${targetClass.name.replace(/\s+/g, '')}-${targetClass.students.length + 1}`,
+    };
+    const nextCount = targetClass.students.length + 1;
+
+    if (isFirebaseConfigured && db) {
+      await setDoc(doc(db, 'classes', classId, 'students', newStudent.id), {
+        ...newStudent,
+        createdAt: new Date().toISOString(),
+      });
+      await updateDoc(doc(db, 'classes', classId), {
+        studentCount: nextCount,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    setClasses((prev) =>
+      prev.map((cls) =>
+        cls.id === classId
+          ? { ...cls, students: [...cls.students, newStudent], studentCount: nextCount }
+          : cls
+      )
+    );
+
+    return true;
+  };
+
+  const bulkAddStudents = async (
+    classId: string,
+    studentNames: string[]
+  ): Promise<BulkAddResult> => {
+    const targetClass = classes.find((cls) => cls.id === classId);
+    if (!targetClass) throw new Error('Không tìm thấy lớp học.');
+
+    const existingNormalized = new Set(
+      targetClass.students.map((s) => normalizeVietnameseText(s.name))
+    );
+    const duplicateNames: string[] = [];
+    const newStudents: Student[] = [];
+
+    studentNames.forEach((name, index) => {
+      const trimmed = name.trim();
+      if (!trimmed) return;
+      const norm = normalizeVietnameseText(trimmed);
+      if (existingNormalized.has(norm)) {
+        duplicateNames.push(trimmed);
+        return;
+      }
+      existingNormalized.add(norm);
+      newStudents.push({
+        id: `std-${Date.now()}-${index}-${Math.floor(Math.random() * 10000)}`,
+        name: trimmed,
+        studentCode: `${targetClass.name.replace(/\s+/g, '')}-${targetClass.students.length + newStudents.length + 1}`,
+      });
+    });
+
+    if (newStudents.length === 0) {
+      return { addedCount: 0, duplicateNames };
+    }
+
+    const nextCount = targetClass.students.length + newStudents.length;
+
+    if (isFirebaseConfigured && db) {
+      const firestore = db;
+      const batch = writeBatch(firestore);
+      newStudents.forEach((student) => {
+        batch.set(doc(firestore, 'classes', classId, 'students', student.id), {
+          ...student,
+          createdAt: new Date().toISOString(),
+        });
+      });
+      batch.update(doc(firestore, 'classes', classId), {
+        studentCount: nextCount,
+        updatedAt: new Date().toISOString(),
+      });
+      await batch.commit();
+    }
+
+    setClasses((prev) =>
+      prev.map((cls) =>
+        cls.id === classId
+          ? {
+              ...cls,
+              students: [...cls.students, ...newStudents],
+              studentCount: nextCount,
+            }
+          : cls
+      )
+    );
+
+    return { addedCount: newStudents.length, duplicateNames };
+  };
+
+  const updateStudent = async (
+    classId: string,
+    studentId: string,
+    newName: string
+  ): Promise<void> => {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+
+    if (isFirebaseConfigured && db) {
+      await updateDoc(doc(db, 'classes', classId, 'students', studentId), {
+        name: trimmed,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    setClasses((prev) =>
+      prev.map((cls) => {
+        if (cls.id !== classId) return cls;
+        return {
+          ...cls,
+          students: cls.students.map((s) => (s.id === studentId ? { ...s, name: trimmed } : s)),
+        };
+      })
+    );
+  };
+
+  const deleteStudent = async (classId: string, studentId: string): Promise<void> => {
+    const targetClass = classes.find((cls) => cls.id === classId);
+    if (!targetClass) throw new Error('Không tìm thấy lớp học.');
+    const nextCount = Math.max(0, targetClass.students.length - 1);
+
+    if (isFirebaseConfigured && db) {
+      await deleteDoc(doc(db, 'classes', classId, 'students', studentId));
+      await updateDoc(doc(db, 'classes', classId), {
+        studentCount: nextCount,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    setClasses((prev) =>
+      prev.map((cls) => {
+        if (cls.id !== classId) return cls;
+        const updated = cls.students.filter((s) => s.id !== studentId);
+        return { ...cls, students: updated, studentCount: updated.length };
+      })
+    );
+  };
+
   // --- QUIZ ACTIONS ---
   const addQuiz = async (
     title: string,
@@ -80,7 +405,6 @@ interface TeacherDataContextType {
   ): Promise<void> => {
     const target = quizzes.find((q) => q.id === quizId);
     if (!target) throw new Error('Không tìm thấy bộ câu hỏi.');
-
     const nextVisibility = visibility || target.visibility || 'PRIVATE';
     const nextTeamId = teamId !== undefined ? teamId : target.teamId;
 
@@ -116,22 +440,17 @@ interface TeacherDataContextType {
         updatedAt: new Date().toISOString(),
       });
     }
-
-    setQuizzes((prev) =>
-      prev.map((q) => (q.id === quizId ? { ...q, visibility, teamId } : q))
-    );
+    setQuizzes((prev) => prev.map((q) => (q.id === quizId ? { ...q, visibility, teamId } : q)));
   };
 
   const duplicateQuiz = async (quizId: string): Promise<Quiz> => {
     const original = quizzes.find((q) => q.id === quizId);
     if (!original) throw new Error('Không tìm thấy bộ câu hỏi.');
 
-    const now = new Date().toISOString();
     const teacherId = auth?.currentUser?.uid;
-    if (isFirebaseConfigured && db && !teacherId) {
-      throw new Error('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.');
-    }
+    if (isFirebaseConfigured && db && !teacherId) throw new Error('Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.');
 
+    const now = new Date().toISOString();
     const copy: Quiz = {
       ...original,
       id: `quiz-${Date.now()}`,
@@ -158,7 +477,6 @@ interface TeacherDataContextType {
         createdAt: now,
         updatedAt: now,
       });
-
       copy.questions.forEach((question, index) => {
         batch.set(doc(firestore, 'quizzes', copy.id, 'questions', question.id), {
           ...question,
@@ -167,7 +485,6 @@ interface TeacherDataContextType {
           updatedAt: now,
         });
       });
-
       await batch.commit();
     }
 
@@ -184,15 +501,11 @@ interface TeacherDataContextType {
       batch.delete(doc(firestore, 'quizzes', quizId));
       await batch.commit();
     }
-
     setQuizzes((prev) => prev.filter((q) => q.id !== quizId));
   };
 
   // --- QUESTION ACTIONS ---
-  const addQuestion = async (
-    quizId: string,
-    questionData: Omit<Question, 'id'>
-  ): Promise<void> => {
+  const addQuestion = async (quizId: string, questionData: Omit<Question, 'id'>): Promise<void> => {
     const targetQuiz = quizzes.find((quiz) => quiz.id === quizId);
     if (!targetQuiz) throw new Error('Không tìm thấy bộ câu hỏi.');
 
@@ -243,10 +556,12 @@ interface TeacherDataContextType {
     setQuizzes((prev) =>
       prev.map((quiz) => {
         if (quiz.id !== quizId) return quiz;
-        const updated = quiz.questions.map((q) =>
-          q.id === questionId ? { ...questionData, id: questionId } : q
-        );
-        return { ...quiz, questions: updated };
+        return {
+          ...quiz,
+          questions: quiz.questions.map((q) =>
+            q.id === questionId ? { ...questionData, id: questionId } : q
+          ),
+        };
       })
     );
   };
@@ -254,16 +569,14 @@ interface TeacherDataContextType {
   const duplicateQuestion = async (quizId: string, questionId: string): Promise<void> => {
     const targetQuiz = quizzes.find((quiz) => quiz.id === quizId);
     if (!targetQuiz) throw new Error('Không tìm thấy bộ câu hỏi.');
-
     const index = targetQuiz.questions.findIndex((q) => q.id === questionId);
     if (index === -1) throw new Error('Không tìm thấy câu hỏi.');
 
     const now = new Date().toISOString();
-    const original = targetQuiz.questions[index];
     const copy: Question = {
-      ...original,
+      ...targetQuiz.questions[index],
       id: `q-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      content: `${original.content} (Bản sao)`,
+      content: `${targetQuiz.questions[index].content} (Bản sao)`,
     };
     const updated = [...targetQuiz.questions];
     updated.splice(index + 1, 0, copy);
