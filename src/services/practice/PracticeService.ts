@@ -6,11 +6,13 @@ import {
   getDocs,
   updateDoc,
   query,
+  where,
   writeBatch,
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 import type { PracticeSet, PracticeAssignment, PracticeSubmission } from './types';
+import type { UserProfile } from '../school/types';
 import { INITIAL_MOCK_PRACTICE_SETS } from './mockPracticeData';
 
 const LOCAL_PRACTICE_KEY = 'lhtt_practice_sets';
@@ -168,7 +170,22 @@ export class PracticeService {
     let sets: PracticeSet[];
 
     if (isFirebaseConfigured && db) {
-      const snap = await getDocs(query(collection(db, 'practiceSets')));
+      const uid = auth?.currentUser?.uid;
+      if (!uid || auth?.currentUser?.isAnonymous) {
+        throw new Error('Phiên giáo viên không hợp lệ.');
+      }
+
+      const profileSnap = await getDoc(doc(db, 'users', uid));
+      const profile = profileSnap.exists() ? (profileSnap.data() as UserProfile) : null;
+      if (!profile || profile.status !== 'ACTIVE') {
+        throw new Error('Tài khoản giáo viên không còn hoạt động.');
+      }
+
+      const snap =
+        profile.role === 'SCHOOL_ADMIN'
+          ? await getDocs(collection(db, 'practiceSets'))
+          : await getDocs(query(collection(db, 'practiceSets'), where('teacherId', '==', uid)));
+
       sets = await Promise.all(
         snap.docs.map(async (d) => {
           const base = { ...(d.data() as PracticeSet), id: d.id };
@@ -202,10 +219,44 @@ export class PracticeService {
     activeTasks: { practiceSet: PracticeSet; assignment: PracticeAssignment }[];
     completedTasks: { practiceSet: PracticeSet; assignment: PracticeAssignment }[];
   }> {
-    const sets = await this.getTeacherPracticeSets(undefined, undefined, false);
     const activeTasks: { practiceSet: PracticeSet; assignment: PracticeAssignment }[] = [];
     const completedTasks: { practiceSet: PracticeSet; assignment: PracticeAssignment }[] = [];
     const now = new Date().toISOString();
+
+    let sets: PracticeSet[] = [];
+
+    if (isFirebaseConfigured && db) {
+      const authUid = await this.ensureStudentAuth();
+      const setSnap = await getDocs(collection(db, 'practiceSets'));
+
+      for (const setDoc of setSnap.docs) {
+        const setItem = { ...(setDoc.data() as PracticeSet), id: setDoc.id };
+        if (setItem.archived) continue;
+
+        const progressRef = doc(db, 'practiceSets', setDoc.id, 'studentProgress', studentId);
+        const progressSnap = await getDoc(progressRef);
+        if (!progressSnap.exists()) continue;
+
+        const progress = progressSnap.data() as StudentProgress;
+        if (progress.authUid && progress.authUid !== authUid) {
+          continue;
+        }
+
+        if (!progress.authUid) {
+          await updateDoc(progressRef, { authUid });
+          progress.authUid = authUid;
+        }
+
+        const { authUid: _authUid, ...assignment } = progress;
+        setItem.assignments = {
+          ...(setItem.assignments || {}),
+          [studentId]: assignment,
+        };
+        sets.push(setItem);
+      }
+    } else {
+      sets = this.loadLocalPracticeSets();
+    }
 
     sets.forEach((setItem) => {
       const assignment = setItem.assignments?.[studentId];
@@ -217,7 +268,9 @@ export class PracticeService {
       }
 
       const sanitizedQuestions = setItem.questions.map((q) => {
-        if (currentAssignmentStatus === 'COMPLETED' && setItem.feedbackMode !== 'TEACHER_ONLY') return q;
+        if (currentAssignmentStatus === 'COMPLETED' && setItem.feedbackMode !== 'TEACHER_ONLY') {
+          return q;
+        }
         const { correctAnswer: _correctAnswer, explanation: _explanation, ...publicQ } = q;
         return publicQ as any;
       });
@@ -312,7 +365,12 @@ export class PracticeService {
       const [setSnap, progressSnap, responsesSnap] = await Promise.all([
         getDoc(doc(db, 'practiceSets', practiceSetId)),
         getDoc(doc(db, 'practiceSets', practiceSetId, 'studentProgress', studentId)),
-        getDocs(collection(db, 'practiceSets', practiceSetId, 'responses')),
+        getDocs(
+          query(
+            collection(db, 'practiceSets', practiceSetId, 'responses'),
+            where('authUid', '==', authUid)
+          )
+        ),
       ]);
 
       if (!setSnap.exists()) throw new Error('Bài ôn không tồn tại.');
@@ -326,7 +384,7 @@ export class PracticeService {
 
       const ownResponses = responsesSnap.docs
         .map((d) => d.data() as PracticeSubmission & { authUid?: string })
-        .filter((r) => r.studentId === studentId && (!r.authUid || r.authUid === authUid));
+        .filter((r) => r.studentId === studentId);
 
       let correctCount = 0;
       const batch = writeBatch(db);
