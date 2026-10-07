@@ -11,3 +11,4 @@ Deploy staff cleanup and real Firebase login.
 Deploy PWA cache invalidation after admin reset.
 Deploy real Firestore dashboard counts and richer action colors.
 Retry after Firestore loader type fix.
+Deploy correct admin identity and exclude legacy demo records.
