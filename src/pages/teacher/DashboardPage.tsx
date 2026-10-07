@@ -140,7 +140,7 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {/* Overview Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="flex items-center gap-4 bg-white border-l-4 border-l-sky-500 border-slate-200/80 shadow-sm hover:shadow-md transition-all">
           <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold shrink-0">
             <Users className="w-6 h-6" />
@@ -171,15 +171,6 @@ export const DashboardPage: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-4 bg-white border-l-4 border-l-purple-500 border-slate-200/80 shadow-sm hover:shadow-md transition-all">
-          <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold shrink-0">
-            <Radio className="w-6 h-6 animate-pulse text-purple-600" />
-          </div>
-          <div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Trạng thái phiên</span>
-            <span className="text-xl font-black text-emerald-600">Sẵn sàng v1.1</span>
-          </div>
-        </Card>
       </div>
 
       {/* Core Action Cards */}
