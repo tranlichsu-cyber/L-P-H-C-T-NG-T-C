@@ -19,3 +19,4 @@ Deploy removal of teacher version labels.
 Deploy Trường Tiểu học Sông Công logo branding.
 Deploy admin teacher account creation and team management permissions.
 Deploy Firestore persistence for classes and students.
+Deploy realtime school settings hardening fixes.
