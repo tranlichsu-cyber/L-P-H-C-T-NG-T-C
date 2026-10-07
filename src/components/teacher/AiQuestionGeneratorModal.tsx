@@ -12,7 +12,7 @@ import { Sparkles, FileText, Upload, RefreshCw, CheckCircle2, AlertCircle, Trash
 interface AiQuestionGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddQuestionsToQuiz: (questions: AIGeneratedQuestion[]) => void;
+  onAddQuestionsToQuiz: (questions: AIGeneratedQuestion[]) => void | Promise<void>;
   initialSubject?: string;
   initialGrade?: string;
 }
@@ -128,16 +128,20 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
   };
 
   // 4. Save Approved Questions to Quiz Bank
-  const handleSaveToQuiz = () => {
+  const handleSaveToQuiz = async () => {
     const selectedList = generatedQuestions.filter((q) => q.selected);
     if (selectedList.length === 0) {
       showToast('Hãy chọn ít nhất 1 câu hỏi để lưu vào Ngân hàng!', 'info');
       return;
     }
 
-    onAddQuestionsToQuiz(selectedList);
-    showToast(`Đã thêm ${selectedList.length} câu hỏi vào Ngân hàng!`, 'success');
-    onClose();
+    try {
+      await Promise.resolve(onAddQuestionsToQuiz(selectedList));
+      showToast(`Đã thêm và lưu ${selectedList.length} câu hỏi vào Ngân hàng!`, 'success');
+      onClose();
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể lưu các câu hỏi đã chọn.', 'error');
+    }
   };
 
   return (
