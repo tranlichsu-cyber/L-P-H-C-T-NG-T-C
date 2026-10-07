@@ -232,10 +232,13 @@ export class HistoryService {
         const rSnap = await getDoc(rRef);
         if (rSnap.exists()) {
           const r = rSnap.data() as MockRoomData;
-          const pSnap = await getDocs(collection(db, 'rooms', roomId, 'participants'));
-          const qSnap = await getDocs(collection(db, 'rooms', roomId, 'liveQuestions'));
-          const sSnap = await getDocs(collection(db, 'rooms', roomId, 'submissions'));
-          const scoreSnap = await getDocs(collection(db, 'rooms', roomId, 'scores'));
+          const [pSnap, qSnap, sSnap, scoreSnap, rosterSnap] = await Promise.all([
+            getDocs(collection(db, 'rooms', roomId, 'participants')),
+            getDocs(collection(db, 'rooms', roomId, 'liveQuestions')),
+            getDocs(collection(db, 'rooms', roomId, 'submissions')),
+            getDocs(collection(db, 'rooms', roomId, 'scores')),
+            getDocs(collection(db, 'rooms', roomId, 'roster')),
+          ]);
 
           const participants: any = {};
           pSnap.docs.forEach((d) => (participants[d.id] = d.data()));
@@ -249,6 +252,8 @@ export class HistoryService {
           const scores: any = {};
           scoreSnap.docs.forEach((d) => (scores[d.id] = d.data()));
 
+          const roster = rosterSnap.docs.map((d) => d.data());
+
           roomData = {
             ...r,
             id: rSnap.id,
@@ -256,6 +261,7 @@ export class HistoryService {
             liveQuestions,
             submissions,
             scores,
+            roster,
           };
         }
       } catch (err) {
