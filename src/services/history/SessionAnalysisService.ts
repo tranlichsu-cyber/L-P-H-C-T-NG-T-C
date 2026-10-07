@@ -63,11 +63,11 @@ export class SessionAnalysisService {
 
     return {
       roomId: room.id,
-      teacherId: room.teacherId || 'teacher-1',
+      teacherId: room.teacherId || '',
       classId: room.classId,
       className: room.className,
       subject: room.subject,
-      grade: room.grade || '4',
+      grade: room.grade || '',
       quizId: room.quizId,
       quizTitle: room.quizTitle || 'Bài kiểm tra',
       startedAt: room.createdAt,
@@ -105,7 +105,7 @@ export class SessionAnalysisService {
       const qSubmissions = submissions.filter((s) => s.questionId === q.id);
       
       const priv = privateQuestions?.[q.id];
-      const correctAnswer = q.correctAnswer || priv?.correctAnswer || 'A';
+      const correctAnswer = q.correctAnswer || priv?.correctAnswer || '';
       const explanation = q.explanation || priv?.explanation || '';
 
       let qCorrect = 0;
