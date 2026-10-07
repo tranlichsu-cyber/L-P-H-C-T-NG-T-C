@@ -8,6 +8,7 @@ import { Input } from '../../components/common/Input';
 import { SchoolService } from '../../services/school/SchoolService';
 import { useSchool } from '../../context/SchoolContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { SCHOOL_LOGO_SRC } from '../../assets/schoolLogo';
 import {
   Building2,
@@ -33,7 +34,13 @@ const PRESET_LOGOS = [
 export const SchoolDashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
   const { school, logoUrl, updateLogo } = useSchool();
+
+  const actor = {
+    uid: currentUser?.uid || 'admin-current',
+    name: currentUser?.displayName || currentUser?.email || 'Quản trị trường',
+  };
 
   const [metrics, setMetrics] = useState<{
     activeTeacherCount: number;
@@ -79,8 +86,10 @@ export const SchoolDashboardPage: React.FC = () => {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      showToast('Kích thước ảnh không vượt quá 2MB.', 'info');
+    if (file.size > 500 * 1024) {
+      showToast('Ảnh logo tải trực tiếp phải nhỏ hơn 500 KB để lưu an toàn trên Firestore. Với ảnh lớn hơn, hãy dùng URL ảnh.', 'error');
+      e.target.value = '';
+      return;
     }
 
     const reader = new FileReader();
@@ -97,10 +106,7 @@ export const SchoolDashboardPage: React.FC = () => {
     const finalUrl = selectedLogo.trim() || urlInput.trim();
     setIsSavingLogo(true);
     try {
-      await updateLogo(finalUrl, {
-        uid: 'teacher-1',
-        name: 'Cô Nguyễn Thị Hương',
-      });
+      await updateLogo(finalUrl, actor);
       showToast('Cập nhật logo trường thành công!', 'success');
       setIsLogoModalOpen(false);
     } catch (err: any) {
@@ -113,10 +119,7 @@ export const SchoolDashboardPage: React.FC = () => {
   const handleRemoveLogo = async () => {
     setIsSavingLogo(true);
     try {
-      await updateLogo('', {
-        uid: 'teacher-1',
-        name: 'Cô Nguyễn Thị Hương',
-      });
+      await updateLogo('', actor);
       setSelectedLogo('');
       setUrlInput('');
       showToast('Đã xóa logo trường, sử dụng biểu tượng mặc định.', 'info');
@@ -391,7 +394,7 @@ export const SchoolDashboardPage: React.FC = () => {
                 <div className="flex flex-col items-center justify-center pt-3 pb-4">
                   <Upload className="w-6 h-6 text-sky-600 mb-1" />
                   <p className="text-xs font-bold text-sky-900">Bấm để chọn hình ảnh logo</p>
-                  <p className="text-[11px] text-slate-500">Khuyên dùng ảnh vuông 200x200px (tối đa 2MB)</p>
+                  <p className="text-[11px] text-slate-500">Khuyên dùng ảnh vuông 200x200px (tối đa 500 KB khi tải trực tiếp)</p>
                 </div>
                 <input
                   type="file"
