@@ -66,6 +66,9 @@ export interface AuditLogEntry {
     | 'MEMBER_ACTIVATED'
     | 'TEAM_ASSIGNED'
     | 'JOIN_REQUEST_APPROVED'
+    | 'TEACHER_ACCOUNT_CREATED'
+    | 'TEAM_CREATED'
+    | 'TEAM_DELETED'
     | 'SETTING_UPDATED';
   actorUid: string;
   actorName: string;
