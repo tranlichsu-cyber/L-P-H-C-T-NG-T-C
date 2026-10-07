@@ -255,6 +255,27 @@ export class FirestoreRealtimeService {
     const correctAnswer = String(privateData.correctAnswer);
     const explanation = privateData.explanation ? String(privateData.explanation) : '';
 
+    const answersMatch = (answer: string, expected: string): boolean => {
+      if (privateData.type !== 'SHORT_ANSWER') {
+        return answer.trim().toLowerCase() === expected.trim().toLowerCase();
+      }
+
+      let actual = answer;
+      let target = expected;
+
+      if (privateData.trimWhitespace !== false) {
+        actual = actual.trim();
+        target = target.trim();
+      }
+
+      if (privateData.caseInsensitive !== false) {
+        actual = actual.toLocaleLowerCase('vi-VN');
+        target = target.toLocaleLowerCase('vi-VN');
+      }
+
+      return actual === target;
+    };
+
     const qRef = doc(db!, 'rooms', roomId, 'liveQuestions', questionId);
     await updateDoc(
       qRef,
@@ -267,11 +288,14 @@ export class FirestoreRealtimeService {
 
     // Idempotent Auto-Scoring for correct submissions in Firestore
     const sSnap = await getDocs(collection(db!, 'rooms', roomId, 'submissions'));
-    const targetCorrect = correctAnswer.trim().toLowerCase();
 
     for (const d of sSnap.docs) {
       const sub = d.data();
-      if (sub.questionId === questionId && sub.answer?.trim().toLowerCase() === targetCorrect) {
+      if (
+        sub.questionId === questionId &&
+        typeof sub.answer === 'string' &&
+        answersMatch(sub.answer, correctAnswer)
+      ) {
         const eventId = `question_${questionId}_student_${sub.studentId}`;
         const eventRef = doc(db!, 'rooms', roomId, 'scoreEvents', eventId);
         const eventSnap = await getDoc(eventRef);
