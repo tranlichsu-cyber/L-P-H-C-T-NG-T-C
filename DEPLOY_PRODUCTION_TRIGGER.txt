@@ -8,3 +8,4 @@ Deploy school name correction to Trường Tiểu học Sông Công.
 Retry after type-safe school name migration fix.
 Deploy colorful navigation and admin dashboard UI.
 Deploy staff cleanup and real Firebase login.
+Deploy PWA cache invalidation after admin reset.
