@@ -42,6 +42,11 @@ service cloud.firestore {
       return isSchoolAdmin() || request.auth.uid == quizData.teacherId;
     }
 
+    function canManageRoom(roomId) {
+      let roomData = get(/databases/$(database)/documents/rooms/$(roomId)).data;
+      return isSchoolAdmin() || (isTeacher() && request.auth.uid == roomData.teacherId);
+    }
+
     function isSameTeam(teamIds) {
       return isTeacher() && getUserData().teamIds.hasAny(teamIds);
     }
@@ -110,37 +115,58 @@ service cloud.firestore {
     match /rooms/{roomId} {
       allow read: if isAuthenticated();
       allow create: if isTeacher();
-      allow update, delete: if isSchoolAdmin() || isOwner(resource.data.teacherId);
+      allow update, delete: if canManageRoom(roomId);
 
       match /roster/{studentId} {
         allow read: if isAuthenticated();
-        allow write: if isTeacher();
+        allow write: if canManageRoom(roomId);
       }
 
       match /participants/{studentId} {
         allow read: if isAuthenticated();
-        allow write: if isAuthenticated();
+        allow create: if isAuthenticated()
+          && request.resource.data.mockAuthUid == request.auth.uid;
+        allow update: if canManageRoom(roomId) || (
+          isAuthenticated()
+          && resource.data.mockAuthUid == request.auth.uid
+          && request.resource.data.mockAuthUid == request.auth.uid
+        );
+        allow delete: if canManageRoom(roomId);
       }
 
       match /liveQuestions/{questionId} {
         allow read: if isAuthenticated();
-        allow write: if isTeacher();
+        allow write: if canManageRoom(roomId);
       }
 
       match /submissions/{submissionId} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated();
-        allow update, delete: if isTeacher();
+        allow read: if isTeacher() || (
+          isAuthenticated()
+          && resource.data.authUid == request.auth.uid
+        );
+        allow create: if isAuthenticated()
+          && request.resource.data.authUid == request.auth.uid;
+        allow update, delete: if canManageRoom(roomId);
       }
 
       match /scores/{studentId} {
         allow read: if isAuthenticated();
-        allow write: if isTeacher();
+        allow write: if canManageRoom(roomId);
+      }
+
+      match /scoreEvents/{eventId} {
+        allow read: if isTeacher();
+        allow write: if canManageRoom(roomId);
+      }
+
+      match /summary/{summaryId} {
+        allow read: if isTeacher();
+        allow write: if canManageRoom(roomId);
       }
 
       match /games/{gameId} {
         allow read: if isAuthenticated();
-        allow write: if isTeacher();
+        allow write: if canManageRoom(roomId);
       }
     }
 
