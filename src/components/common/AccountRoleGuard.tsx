@@ -10,7 +10,7 @@ interface AccountRoleGuardProps {
 }
 
 export const AccountRoleGuard: React.FC<AccountRoleGuardProps> = ({ children, allowedRoles }) => {
-  const { currentUser, isTeacherAuthenticated } = useAuth();
+  const { currentUser, authReady, isTeacherAuthenticated } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null | undefined>(undefined);
 
   useEffect(() => {
@@ -33,6 +33,14 @@ export const AccountRoleGuard: React.FC<AccountRoleGuardProps> = ({ children, al
       cancelled = true;
     };
   }, [currentUser?.uid, currentUser?.isAnonymous]);
+
+  if (!authReady) {
+    return (
+      <div className="flex items-center justify-center p-12 text-slate-500 font-bold">
+        Đang khôi phục phiên đăng nhập...
+      </div>
+    );
+  }
 
   if (!isTeacherAuthenticated) {
     return <Navigate to="/login" replace />;
