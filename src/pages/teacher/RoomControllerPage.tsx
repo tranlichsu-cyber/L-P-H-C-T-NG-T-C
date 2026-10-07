@@ -263,8 +263,21 @@ export const RoomControllerPage: React.FC = () => {
         clearInterval(interval);
         setSpinningName(finalSelected.name);
         setIsSpinning(false);
-        activeRealtimeService.callStudent(room.id, finalSelected.studentId, finalSelected.name, 'Phát biểu ngẫu nhiên');
-        showToast(`Đã gọi học sinh ${finalSelected.name}!`, 'success');
+        void Promise.resolve(
+          activeRealtimeService.callStudent(
+            room.id,
+            finalSelected.studentId,
+            finalSelected.name,
+            'Phát biểu ngẫu nhiên'
+          )
+        )
+          .then((ok) => {
+            if (!ok) throw new Error('Không thể gọi học sinh.');
+            showToast(`Đã gọi học sinh ${finalSelected.name}!`, 'success');
+          })
+          .catch((err: any) => {
+            showToast(err?.message || 'Không thể gọi học sinh.', 'error');
+          });
       }
     }, 100);
   };
@@ -280,24 +293,40 @@ export const RoomControllerPage: React.FC = () => {
     }
   };
 
-  const handleOralScore = (points: number, reason: string) => {
+  const handleOralScore = async (points: number, reason: string) => {
     if (!room.calledStudent) return;
-    if (points !== 0) {
-      activeRealtimeService.addManualScore(
-        room.id,
-        room.calledStudent.studentId,
-        room.calledStudent.studentName,
-        points,
-        reason
-      );
-      showToast(`Đã ghi nhận ${points > 0 ? `+${points}` : points} điểm cho ${room.calledStudent.studentName}!`, 'success');
+
+    try {
+      if (points !== 0) {
+        const ok = await Promise.resolve(
+          activeRealtimeService.addManualScore(
+            room.id,
+            room.calledStudent.studentId,
+            room.calledStudent.studentName,
+            points,
+            reason
+          )
+        );
+        if (!ok) throw new Error('Không thể cập nhật điểm.');
+        showToast(
+          `Đã ghi nhận ${points > 0 ? `+${points}` : points} điểm cho ${room.calledStudent.studentName}!`,
+          'success'
+        );
+      }
+
+      await Promise.resolve(activeRealtimeService.clearCalledStudent(room.id));
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể cập nhật lượt trả lời.', 'error');
     }
-    activeRealtimeService.clearCalledStudent(room.id);
   };
 
-  const handleTransferAnswer = () => {
-    activeRealtimeService.clearCalledStudent(room.id);
-    handleRandomCall();
+  const handleTransferAnswer = async () => {
+    try {
+      await Promise.resolve(activeRealtimeService.clearCalledStudent(room.id));
+      handleRandomCall();
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể chuyển lượt trả lời.', 'error');
+    }
   };
 
   // --- SCOREBOARD CALCS ---
@@ -730,9 +759,14 @@ export const RoomControllerPage: React.FC = () => {
                   <Button
                     variant={isCurrent ? 'primary' : 'outline'}
                     size="sm"
-                    onClick={() => {
-                      activeRealtimeService.openQuestion(room.id, qId);
-                      showToast(`Đã chuyển sang Câu ${idx + 1}`, 'info');
+                    onClick={async () => {
+                      try {
+                        const ok = await Promise.resolve(activeRealtimeService.openQuestion(room.id, qId));
+                        if (!ok) throw new Error('Không thể phát câu hỏi.');
+                        showToast(`Đã chuyển sang Câu ${idx + 1}`, 'info');
+                      } catch (err: any) {
+                        showToast(err?.message || 'Không thể phát câu hỏi.', 'error');
+                      }
                     }}
                   >
                     {isCurrent ? 'Đang chọn' : 'Phát câu này'}
@@ -960,9 +994,14 @@ export const RoomControllerPage: React.FC = () => {
             <Button variant="secondary" onClick={() => setIsManualScoreModalOpen(false)}>Hủy</Button>
             <Button
               variant="primary"
-              onClick={() => {
+              onClick={async () => {
                 if (selectedStudentForScore) {
-                  handleAddManualPoint(selectedStudentForScore.id, selectedStudentForScore.name, customPoints, selectedReason);
+                  await handleAddManualPoint(
+                    selectedStudentForScore.id,
+                    selectedStudentForScore.name,
+                    customPoints,
+                    selectedReason
+                  );
                   setIsManualScoreModalOpen(false);
                 }
               }}
