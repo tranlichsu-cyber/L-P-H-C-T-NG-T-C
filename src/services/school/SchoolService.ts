@@ -786,7 +786,11 @@ export class SchoolService {
     sharedQuizCount: number;
   }> {
     const users = await this.getUsers();
-    const activeTeacherCount = users.filter((u) => u.status === 'ACTIVE').length;
+    const activeTeacherCount = users.filter(
+      (u) =>
+        u.status === 'ACTIVE' &&
+        (u.role === 'TEACHER' || u.role === 'TEAM_LEADER')
+    ).length;
 
     if (!db) {
       return {
@@ -832,7 +836,8 @@ export class SchoolService {
       const currentMonth = now.getMonth();
 
       const monthlyRoomsCount = roomsSnap.docs.filter((d) => {
-        const data = d.data() as { createdAt?: unknown };
+        const data = d.data() as { createdAt?: unknown; status?: string };
+        if (data.status !== 'ACTIVE' && data.status !== 'FINISHED') return false;
         const raw = data.createdAt;
 
         let created: Date | null = null;
@@ -859,13 +864,7 @@ export class SchoolService {
       };
     } catch (error) {
       console.error('Không thể tải số liệu Dashboard cấp trường từ Firestore', error);
-      return {
-        activeTeacherCount,
-        totalClassesCount: 0,
-        totalStudentsCount: 0,
-        monthlyRoomsCount: 0,
-        sharedQuizCount: 0,
-      };
+      throw new Error('Không thể tải số liệu thực của Dashboard cấp trường từ Firestore.');
     }
   }
 
