@@ -65,27 +65,35 @@ export const QuizzesPage: React.FC = () => {
     setIsCreateOpen(true);
   };
 
-  const handleSaveCreate = (e: React.FormEvent) => {
+  const handleSaveCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!titleInput.trim()) {
       setFormError('Vui lòng nhập tên bài học!');
       return;
     }
 
-    const newQuiz = addQuiz(titleInput, subjectInput, gradeInput, visibilityInput);
-    showToast(`Đã tạo bộ câu hỏi "${newQuiz.title}"!`, 'success');
-    setIsCreateOpen(false);
-    navigate(`/teacher/quizzes/${newQuiz.id}`);
+    try {
+      const newQuiz = await addQuiz(titleInput, subjectInput, gradeInput, visibilityInput);
+      showToast(`Đã tạo và lưu bộ câu hỏi "${newQuiz.title}"!`, 'success');
+      setIsCreateOpen(false);
+      navigate(`/teacher/quizzes/${newQuiz.id}`);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể lưu bộ câu hỏi.', 'error');
+    }
   };
 
   // Handle Duplicate / Copy to My Bank
-  const handleDuplicate = (quizId: string, isCopyToMyBank: boolean = false) => {
-    const copy = duplicateQuiz(quizId);
-    if (isCopyToMyBank) {
-      updateQuizVisibility(copy.id, 'PRIVATE');
-      showToast(`Đã sao chép bộ câu hỏi về Ngân hàng cá nhân của bạn!`, 'success');
-    } else {
-      showToast(`Đã nhân bản thành "${copy.title}"!`, 'success');
+  const handleDuplicate = async (quizId: string, isCopyToMyBank: boolean = false) => {
+    try {
+      const copy = await duplicateQuiz(quizId);
+      if (isCopyToMyBank) {
+        await updateQuizVisibility(copy.id, 'PRIVATE');
+        showToast('Đã sao chép bộ câu hỏi về Ngân hàng cá nhân của bạn!', 'success');
+      } else {
+        showToast(`Đã nhân bản và lưu thành "${copy.title}"!`, 'success');
+      }
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể nhân bản bộ câu hỏi.', 'error');
     }
   };
 
@@ -95,11 +103,15 @@ export const QuizzesPage: React.FC = () => {
     setIsDeleteOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!activeQuiz) return;
-    deleteQuiz(activeQuiz.id);
-    showToast(`Đã xóa bộ câu hỏi "${activeQuiz.title}"!`, 'info');
-    setIsDeleteOpen(false);
+    try {
+      await deleteQuiz(activeQuiz.id);
+      showToast(`Đã xóa bộ câu hỏi "${activeQuiz.title}" khỏi hệ thống!`, 'info');
+      setIsDeleteOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể xóa bộ câu hỏi.', 'error');
+    }
   };
 
   const filteredQuizzes = quizzes.filter((q) => {
