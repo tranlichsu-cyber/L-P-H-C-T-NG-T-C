@@ -245,16 +245,11 @@ export class SchoolService {
 
   // 2. Get Users (users/{uid})
   public static async getUsers(): Promise<UserProfile[]> {
-    if (db) {
-      try {
-        const uSnap = await getDocs(collection(db, 'users'));
-        if (!uSnap.empty) {
-          return uSnap.docs.map((d) => d.data() as UserProfile);
-        }
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const uSnap = await getDocs(collection(db, 'users'));
+      return uSnap.docs.map((d) => d.data() as UserProfile);
     }
-    const local = this.loadLocalStorage();
-    return local.users;
+    return this.loadLocalStorage().users;
   }
 
   // Backward compatibility alias
@@ -366,15 +361,12 @@ export class SchoolService {
 
   // 4. Get User Profile
   public static async getUser(uid: string): Promise<UserProfile | null> {
-    if (db) {
-      try {
-        const uRef = doc(db, 'users', uid);
-        const snap = await getDoc(uRef);
-        if (snap.exists()) return snap.data() as UserProfile;
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const uRef = doc(db, 'users', uid);
+      const snap = await getDoc(uRef);
+      return snap.exists() ? (snap.data() as UserProfile) : null;
     }
-    const local = this.loadLocalStorage();
-    return local.users.find((u) => u.uid === uid) || null;
+    return this.loadLocalStorage().users.find((u) => u.uid === uid) || null;
   }
 
   // 4. Update Member Role (with Last Admin Protection!)
@@ -405,11 +397,9 @@ export class SchoolService {
     target.role = newRole;
     target.updatedAt = new Date().toISOString();
 
-    if (db) {
-      try {
-        const uRef = doc(db, 'users', targetUid);
-        await updateDoc(uRef, { role: newRole, updatedAt: target.updatedAt });
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const uRef = doc(db, 'users', targetUid);
+      await updateDoc(uRef, { role: newRole, updatedAt: target.updatedAt });
     }
 
     const local = this.loadLocalStorage();
@@ -455,11 +445,9 @@ export class SchoolService {
     target.status = status;
     target.updatedAt = new Date().toISOString();
 
-    if (db) {
-      try {
-        const uRef = doc(db, 'users', targetUid);
-        await updateDoc(uRef, { status, updatedAt: target.updatedAt });
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const uRef = doc(db, 'users', targetUid);
+      await updateDoc(uRef, { status, updatedAt: target.updatedAt });
     }
 
     const local = this.loadLocalStorage();
@@ -490,11 +478,9 @@ export class SchoolService {
     target.teamIds = teamIds;
     target.updatedAt = new Date().toISOString();
 
-    if (db) {
-      try {
-        const uRef = doc(db, 'users', targetUid);
-        await updateDoc(uRef, { teamIds, updatedAt: target.updatedAt });
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const uRef = doc(db, 'users', targetUid);
+      await updateDoc(uRef, { teamIds, updatedAt: target.updatedAt });
     }
 
     const local = this.loadLocalStorage();
@@ -512,16 +498,11 @@ export class SchoolService {
 
   // 7. Get Teams (teams/{teamId})
   public static async getTeams(): Promise<SchoolTeam[]> {
-    if (db) {
-      try {
-        const tSnap = await getDocs(collection(db, 'teams'));
-        if (!tSnap.empty) {
-          return tSnap.docs.map((d) => d.data() as SchoolTeam);
-        }
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const tSnap = await getDocs(collection(db, 'teams'));
+      return tSnap.docs.map((d) => d.data() as SchoolTeam);
     }
-    const local = this.loadLocalStorage();
-    return local.teams;
+    return this.loadLocalStorage().teams;
   }
 
   // 8. Create Team
@@ -602,16 +583,11 @@ export class SchoolService {
 
   // 10. Get Join Requests (joinRequests/{requestId})
   public static async getJoinRequests(): Promise<SchoolJoinRequest[]> {
-    if (db) {
-      try {
-        const rSnap = await getDocs(collection(db, 'joinRequests'));
-        if (!rSnap.empty) {
-          return rSnap.docs.map((d) => d.data() as SchoolJoinRequest);
-        }
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const rSnap = await getDocs(collection(db, 'joinRequests'));
+      return rSnap.docs.map((d) => d.data() as SchoolJoinRequest);
     }
-    const local = this.loadLocalStorage();
-    return local.joinRequests;
+    return this.loadLocalStorage().joinRequests;
   }
 
   // 10. Approve Join Request
@@ -620,52 +596,60 @@ export class SchoolService {
     actor: { uid: string; name: string },
     _deprecatedSchoolId?: string
   ): Promise<boolean> {
+    let req: SchoolJoinRequest | null = null;
+
+    if (isFirebaseConfigured && db) {
+      const reqRef = doc(db, 'joinRequests', requestId);
+      const reqSnap = await getDoc(reqRef);
+      if (!reqSnap.exists()) return false;
+      req = reqSnap.data() as SchoolJoinRequest;
+
+      const now = new Date().toISOString();
+      const newUser: UserProfile = {
+        uid: req.uid,
+        displayName: req.displayName,
+        email: req.email,
+        role: 'TEACHER',
+        teamIds: [],
+        status: 'ACTIVE',
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      await updateDoc(reqRef, { status: 'ACCEPTED' });
+      await setDoc(doc(db, 'users', req.uid), newUser);
+      await this.logAuditEvent('JOIN_REQUEST_APPROVED', actor, req.uid, req.displayName, { email: req.email });
+      return true;
+    }
+
     const local = this.loadLocalStorage();
-    const req = local.joinRequests.find((r) => r.id === requestId);
+    req = local.joinRequests.find((r) => r.id === requestId) || null;
     if (!req) return false;
 
     req.status = 'ACCEPTED';
-
-    const newUser: UserProfile = {
+    const now = new Date().toISOString();
+    local.users.push({
       uid: req.uid,
       displayName: req.displayName,
       email: req.email,
       role: 'TEACHER',
       teamIds: [],
       status: 'ACTIVE',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    local.users.push(newUser);
-
-    if (db) {
-      try {
-        const reqRef = doc(db, 'joinRequests', requestId);
-        const uRef = doc(db, 'users', req.uid);
-        await updateDoc(reqRef, { status: 'ACCEPTED' });
-        await setDoc(uRef, newUser);
-      } catch {}
-    }
-
-    await this.logAuditEvent('JOIN_REQUEST_APPROVED', actor, req.uid, req.displayName, { email: req.email });
-
+      createdAt: now,
+      updatedAt: now,
+    });
     this.saveLocalStorage(local);
+    await this.logAuditEvent('JOIN_REQUEST_APPROVED', actor, req.uid, req.displayName, { email: req.email });
     return true;
   }
 
   // 11. Audit Logs (auditLogs/{logId})
   public static async getAuditLogs(): Promise<AuditLogEntry[]> {
-    if (db) {
-      try {
-        const lSnap = await getDocs(collection(db, 'auditLogs'));
-        if (!lSnap.empty) {
-          return lSnap.docs.map((d) => d.data() as AuditLogEntry);
-        }
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const lSnap = await getDocs(collection(db, 'auditLogs'));
+      return lSnap.docs.map((d) => d.data() as AuditLogEntry);
     }
-    const local = this.loadLocalStorage();
-    return local.auditLogs;
+    return this.loadLocalStorage().auditLogs;
   }
 
   public static async logAuditEvent(
