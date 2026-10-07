@@ -337,7 +337,20 @@ export class PracticeService {
       });
 
       const sanitizedSet: PracticeSet = { ...setItem, questions: sanitizedQuestions };
-      const updatedAssignment = { ...assignment, status: currentAssignmentStatus };
+      let updatedAssignment: PracticeAssignment = { ...assignment, status: currentAssignmentStatus };
+
+      if (
+        currentAssignmentStatus === 'COMPLETED' &&
+        setItem.feedbackMode === 'TEACHER_ONLY'
+      ) {
+        const {
+          score: _score,
+          correctCount: _correctCount,
+          totalQuestions: _totalQuestions,
+          ...withoutResult
+        } = updatedAssignment;
+        updatedAssignment = withoutResult;
+      }
 
       if (currentAssignmentStatus === 'COMPLETED') {
         completedTasks.push({ practiceSet: sanitizedSet, assignment: updatedAssignment });
@@ -439,6 +452,9 @@ export class PracticeService {
 
       const setItem = { ...(setSnap.data() as PracticeSet), id: setSnap.id };
       const progress = progressSnap.data() as StudentProgress;
+      if (progress.status === 'COMPLETED') {
+        throw new Error('Bài ôn tập này đã được nộp.');
+      }
       if (progress.authUid && progress.authUid !== authUid) {
         throw new Error('Bài ôn này đang được gắn với một phiên học sinh khác.');
       }
@@ -511,7 +527,90 @@ export class PracticeService {
     return { score, correctCount, totalCount };
   }
 
-  // 8. Archive
+  // 8. Restart a completed assignment when retry is allowed
+  public static async restartStudentAssignment(
+    practiceSetId: string,
+    studentId: string
+  ): Promise<boolean> {
+    if (isFirebaseConfigured && db) {
+      const authUid = await this.ensureStudentAuth();
+      const [setSnap, progressSnap] = await Promise.all([
+        getDoc(doc(db, 'practiceSets', practiceSetId)),
+        getDoc(doc(db, 'practiceSets', practiceSetId, 'studentProgress', studentId)),
+      ]);
+
+      if (!setSnap.exists() || !progressSnap.exists()) return false;
+
+      const setItem = { ...(setSnap.data() as PracticeSet), id: setSnap.id };
+      const progress = progressSnap.data() as StudentProgress;
+
+      if (progress.authUid && progress.authUid !== authUid) {
+        throw new Error('Bài ôn này đang được gắn với một phiên học sinh khác.');
+      }
+
+      const maxAttempts = setItem.maxAttempts || 1;
+      if (!setItem.allowRetry || (progress.attemptCount || 0) >= maxAttempts) {
+        throw new Error('Bài ôn tập này không còn lượt làm lại.');
+      }
+
+      const responsesSnap = await getDocs(
+        query(
+          collection(db, 'practiceSets', practiceSetId, 'responses'),
+          where('authUid', '==', authUid)
+        )
+      );
+
+      const batch = writeBatch(db);
+      responsesSnap.docs
+        .filter((responseDoc) => responseDoc.data()?.studentId === studentId)
+        .forEach((responseDoc) => batch.delete(responseDoc.ref));
+
+      batch.set(
+        doc(db, 'practiceSets', practiceSetId, 'studentProgress', studentId),
+        {
+          authUid,
+          status: 'NOT_STARTED',
+          startedAt: null,
+          completedAt: null,
+          score: null,
+          correctCount: null,
+          totalQuestions: null,
+        },
+        { merge: true }
+      );
+
+      await batch.commit();
+      return true;
+    }
+
+    const sets = this.loadLocalPracticeSets();
+    const setItem = sets.find((s) => s.id === practiceSetId);
+    const assignment = setItem?.assignments?.[studentId];
+    if (!setItem || !assignment) return false;
+
+    const maxAttempts = setItem.maxAttempts || 1;
+    if (!setItem.allowRetry || (assignment.attemptCount || 0) >= maxAttempts) {
+      return false;
+    }
+
+    assignment.status = 'NOT_STARTED';
+    assignment.startedAt = undefined;
+    assignment.completedAt = undefined;
+    assignment.score = undefined;
+    assignment.correctCount = undefined;
+    assignment.totalQuestions = undefined;
+
+    Object.keys(setItem.responses || {}).forEach((key) => {
+      if (setItem.responses?.[key]?.studentId === studentId) {
+        delete setItem.responses[key];
+      }
+    });
+
+    this.saveLocalPracticeSets(sets);
+    return true;
+  }
+
+  // 9. Archive
   public static async archivePracticeSet(practiceSetId: string, archived: boolean): Promise<boolean> {
     if (isFirebaseConfigured && db) {
       await updateDoc(doc(db, 'practiceSets', practiceSetId), { archived });
