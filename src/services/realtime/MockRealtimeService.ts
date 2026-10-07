@@ -19,7 +19,7 @@ export class MockRealtimeService {
     const db = loadMockDatabase();
 
     const roomId = `room-${Date.now()}`;
-    const roomCode = '839201'; // Default test pin 839201 or generated
+    const roomCode = String(Math.floor(100000 + Math.random() * 900000));
     const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 12 * 3600 * 1000).toISOString();
 
