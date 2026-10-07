@@ -6,6 +6,7 @@ import { Badge } from '../../components/common/Badge';
 import { SchoolService } from '../../services/school/SchoolService';
 import type { School } from '../../services/school/types';
 import { useToast } from '../../context/ToastContext';
+import { SCHOOL_LOGO_SRC } from '../../assets/schoolLogo';
 import {
   Building2,
   Users,
@@ -66,8 +67,12 @@ export const SchoolDashboardPage: React.FC = () => {
       {/* School Header Banner */}
       <div className="bg-gradient-to-r from-sky-900 via-indigo-900 to-slate-900 text-white p-8 rounded-3xl shadow-xl border-2 border-sky-700 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-3xl shadow-lg shrink-0">
-            <Building2 className="w-10 h-10" />
+          <div className="w-20 h-20 rounded-full bg-white p-1.5 shadow-xl shrink-0 ring-2 ring-amber-300">
+            <img
+              src={SCHOOL_LOGO_SRC}
+              alt="Logo Trường Tiểu học Sông Công"
+              className="w-full h-full rounded-full object-cover object-center"
+            />
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
