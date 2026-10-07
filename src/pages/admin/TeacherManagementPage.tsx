@@ -8,17 +8,26 @@ import { Modal } from '../../components/common/Modal';
 import { SchoolService } from '../../services/school/SchoolService';
 import type { SchoolMember, SchoolTeam, UserRole, MemberStatus } from '../../services/school/types';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Users,
   Search,
   Edit,
   RefreshCw,
   ArrowLeft,
+  UserPlus,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export const TeacherManagementPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
+  const actor = {
+    uid: currentUser?.uid || 'admin-current',
+    name: currentUser?.displayName || currentUser?.email || 'Quản trị trường',
+  };
 
   const [members, setMembers] = useState<SchoolMember[]>([]);
   const [teams, setTeams] = useState<SchoolTeam[]>([]);
@@ -35,6 +44,15 @@ export const TeacherManagementPage: React.FC = () => {
   const [editStatus, setEditStatus] = useState<MemberStatus>('ACTIVE');
   const [editTeamIds, setEditTeamIds] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  // Create Teacher Account Modal
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [newDisplayName, setNewDisplayName] = useState<string>('');
+  const [newEmail, setNewEmail] = useState<string>('');
+  const [newPassword, setNewPassword] = useState<string>('');
+  const [newTeamIds, setNewTeamIds] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -66,8 +84,6 @@ export const TeacherManagementPage: React.FC = () => {
   const handleSaveMemberChanges = async () => {
     if (!editingMember) return;
     setIsSaving(true);
-    const actor = { uid: 'admin-1', name: 'Hiệu trưởng Nguyễn Văn A' };
-
     try {
       // 1. Role Update
       if (editingMember.role !== editRole) {
@@ -114,6 +130,53 @@ export const TeacherManagementPage: React.FC = () => {
     }
   };
 
+  const handleCreateTeacherAccount = async () => {
+    if (!newDisplayName.trim()) {
+      showToast('Vui lòng nhập họ và tên giáo viên.', 'info');
+      return;
+    }
+    if (!newEmail.trim()) {
+      showToast('Vui lòng nhập email giáo viên.', 'info');
+      return;
+    }
+    if (newPassword.length < 6) {
+      showToast('Mật khẩu phải có ít nhất 6 ký tự.', 'info');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await SchoolService.createTeacherAccount(
+        newDisplayName,
+        newEmail,
+        newPassword,
+        newTeamIds,
+        actor
+      );
+      showToast(`Đã tạo tài khoản cho ${newDisplayName.trim()}.`, 'success');
+      setNewDisplayName('');
+      setNewEmail('');
+      setNewPassword('');
+      setNewTeamIds([]);
+      setShowPassword(false);
+      setIsCreateModalOpen(false);
+      await loadData();
+    } catch (err: any) {
+      const code = err?.code || '';
+      const message =
+        code === 'auth/email-already-in-use'
+          ? 'Email này đã có tài khoản trên hệ thống.'
+          : code === 'auth/invalid-email'
+          ? 'Email không đúng định dạng.'
+          : code === 'auth/weak-password'
+          ? 'Mật khẩu chưa đủ mạnh. Hãy nhập ít nhất 6 ký tự.'
+          : err?.message || 'Không thể tạo tài khoản giáo viên.';
+      showToast(message, 'error');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   const filteredMembers = members.filter((m) => {
     const matchesSearch =
       m.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,10 +216,19 @@ export const TeacherManagementPage: React.FC = () => {
         </Button>
       </div>
 
-      <PageHeader
-        title="QUẢN LÝ GIÁO VIÊN & PHÂN QUYỀN"
-        description="Quản lý danh sách giáo viên, phân vai trò, gán tổ chuyên môn và bảo vệ tài khoản Quản trị viên"
-      />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <PageHeader
+          title="QUẢN LÝ GIÁO VIÊN & PHÂN QUYỀN"
+          description="Admin tạo tài khoản giáo viên, phân vai trò, gán tổ chuyên môn và quản lý trạng thái truy cập"
+        />
+        <Button
+          variant="primary"
+          onClick={() => setIsCreateModalOpen(true)}
+          className="shrink-0 font-black bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-600"
+        >
+          <UserPlus className="w-4 h-4 mr-1" /> TẠO TÀI KHOẢN GIÁO VIÊN
+        </Button>
+      </div>
 
       {/* FILTER & SEARCH BAR */}
       <Card className="p-4 bg-white border-2 border-slate-200">
@@ -268,6 +340,114 @@ export const TeacherManagementPage: React.FC = () => {
             </table>
           </div>
         </Card>
+      )}
+
+      {/* CREATE TEACHER ACCOUNT MODAL */}
+      {isCreateModalOpen && (
+        <Modal
+          isOpen={true}
+          onClose={() => !isCreating && setIsCreateModalOpen(false)}
+          title="TẠO TÀI KHOẢN GIÁO VIÊN"
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs text-emerald-900">
+              Admin cấp tài khoản ban đầu cho giáo viên. Mật khẩu có thể chỉnh sửa tự do trước khi bấm <b>Tạo tài khoản</b> và không được lưu trong Firestore.
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                Họ và tên
+              </label>
+              <input
+                type="text"
+                value={newDisplayName}
+                onChange={(e) => setNewDisplayName(e.target.value)}
+                placeholder="Ví dụ: Nguyễn Thị Lan"
+                autoComplete="off"
+                className="w-full p-2.5 border-2 border-slate-200 rounded-xl font-semibold text-slate-800 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="giaovien@..."
+                autoComplete="off"
+                className="w-full p-2.5 border-2 border-slate-200 rounded-xl font-semibold text-slate-800 text-sm focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                Mật khẩu do Admin cấp
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu ban đầu (ít nhất 6 ký tự)"
+                  autoComplete="new-password"
+                  className="w-full p-2.5 pr-11 border-2 border-slate-200 rounded-xl font-semibold text-slate-800 text-sm focus:border-emerald-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-800"
+                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Có thể xóa, sửa và nhập lại mật khẩu ngay tại ô này trước khi tạo tài khoản.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-2">
+                Gán tổ chuyên môn ngay (tùy chọn)
+              </label>
+              <div className="space-y-2 max-h-36 overflow-y-auto p-3 border-2 border-slate-200 rounded-xl bg-slate-50">
+                {teams.length === 0 ? (
+                  <span className="text-xs text-slate-400 italic">Chưa có tổ chuyên môn.</span>
+                ) : (
+                  teams.map((t) => (
+                    <label key={t.id} className="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newTeamIds.includes(t.id)}
+                        onChange={(e) =>
+                          setNewTeamIds(
+                            e.target.checked
+                              ? [...newTeamIds, t.id]
+                              : newTeamIds.filter((id) => id !== t.id)
+                          )
+                        }
+                        className="w-4 h-4 text-emerald-600 rounded border-slate-300"
+                      />
+                      {t.name}
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} disabled={isCreating}>
+                Hủy
+              </Button>
+              <Button variant="primary" onClick={handleCreateTeacherAccount} disabled={isCreating}>
+                {isCreating ? 'Đang tạo...' : 'Tạo tài khoản'}
+              </Button>
+            </div>
+          </div>
+        </Modal>
       )}
 
       {/* EDIT MEMBER MODAL */}
