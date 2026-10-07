@@ -171,7 +171,7 @@ export class PracticeService {
       const snap = await getDocs(query(collection(db, 'practiceSets')));
       sets = await Promise.all(
         snap.docs.map(async (d) => {
-          const base = { id: d.id, ...(d.data() as PracticeSet) };
+          const base = { ...(d.data() as PracticeSet), id: d.id };
           return this.mergeProgress(base);
         })
       );
@@ -191,7 +191,7 @@ export class PracticeService {
     if (isFirebaseConfigured && db) {
       const pSnap = await getDoc(doc(db, 'practiceSets', practiceSetId));
       if (!pSnap.exists()) return null;
-      return this.mergeProgress({ id: pSnap.id, ...(pSnap.data() as PracticeSet) });
+      return this.mergeProgress({ ...(pSnap.data() as PracticeSet), id: pSnap.id });
     }
 
     return this.loadLocalPracticeSets().find((s) => s.id === practiceSetId) || null;
@@ -318,7 +318,7 @@ export class PracticeService {
       if (!setSnap.exists()) throw new Error('Bài ôn không tồn tại.');
       if (!progressSnap.exists()) throw new Error('Không tìm thấy nhiệm vụ của học sinh.');
 
-      const setItem = { id: setSnap.id, ...(setSnap.data() as PracticeSet) };
+      const setItem = { ...(setSnap.data() as PracticeSet), id: setSnap.id };
       const progress = progressSnap.data() as StudentProgress;
       if (progress.authUid && progress.authUid !== authUid) {
         throw new Error('Bài ôn này đang được gắn với một phiên học sinh khác.');
