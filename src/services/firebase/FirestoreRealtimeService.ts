@@ -25,6 +25,7 @@ import type {
   GameSessionData,
 } from '../realtime/types';
 import { buildInitialGameSession } from '../realtime/gameHelpers';
+import { SessionAnalysisService } from '../history/SessionAnalysisService';
 
 export class FirestoreRealtimeService {
   private async ensureAuthenticated(): Promise<string> {
@@ -407,22 +408,91 @@ export class FirestoreRealtimeService {
       throw new Error('Không tìm thấy phòng học.');
     }
 
-    const roomData = roomSnap.data() as MockRoomData;
-    if (roomData.status === 'FINISHED') {
+    const rawRoomData = roomSnap.data() as MockRoomData & { createdAt?: any };
+    if (rawRoomData.status === 'FINISHED' && rawRoomData.finishedAt) {
       return true;
     }
 
     const finishedAt = new Date().toISOString();
+    const [
+      rosterSnap,
+      participantsSnap,
+      questionsSnap,
+      submissionsSnap,
+      scoresSnap,
+    ] = await Promise.all([
+      getDocs(collection(firestore, 'rooms', roomId, 'roster')),
+      getDocs(collection(firestore, 'rooms', roomId, 'participants')),
+      getDocs(collection(firestore, 'rooms', roomId, 'liveQuestions')),
+      getDocs(collection(firestore, 'rooms', roomId, 'submissions')),
+      getDocs(collection(firestore, 'rooms', roomId, 'scores')),
+    ]);
+
+    const roster = rosterSnap.docs.map((d) => d.data() as MockRoomData['roster'][number]);
+    const participants: MockRoomData['participants'] = {};
+    participantsSnap.docs.forEach((d) => {
+      participants[d.id] = d.data() as MockParticipant;
+    });
+
+    const liveQuestions: MockRoomData['liveQuestions'] = {};
+    questionsSnap.docs.forEach((d) => {
+      liveQuestions[d.id] = d.data() as LiveQuestionPublic;
+    });
+
+    const submissions: MockRoomData['submissions'] = {};
+    submissionsSnap.docs.forEach((d) => {
+      submissions[d.id] = d.data() as MockSubmission;
+    });
+
+    const scores: MockRoomData['scores'] = {};
+    scoresSnap.docs.forEach((d) => {
+      scores[d.id] = d.data() as MockRoomData['scores'][string];
+    });
+
+    const privateQuestions: Record<string, { correctAnswer: string; explanation?: string }> = {};
+    if (rawRoomData.quizId) {
+      const privateSnap = await getDocs(collection(firestore, 'quizzes', rawRoomData.quizId, 'questions'));
+      privateSnap.docs.forEach((d) => {
+        const data = d.data() as { correctAnswer?: string; explanation?: string };
+        if (data.correctAnswer) {
+          privateQuestions[d.id] = {
+            correctAnswer: data.correctAnswer,
+            ...(data.explanation ? { explanation: data.explanation } : {}),
+          };
+        }
+      });
+    }
+
+    const rawCreatedAt = rawRoomData.createdAt;
+    const createdAt =
+      typeof rawCreatedAt === 'string'
+        ? rawCreatedAt
+        : rawCreatedAt && typeof rawCreatedAt.toDate === 'function'
+          ? rawCreatedAt.toDate().toISOString()
+          : finishedAt;
+
+    const fullRoom: MockRoomData = {
+      ...rawRoomData,
+      id: roomId,
+      createdAt,
+      status: 'FINISHED',
+      finishedAt,
+      roster,
+      participants,
+      liveQuestions,
+      submissions,
+      scores,
+      scoreEvents: rawRoomData.scoreEvents || {},
+    };
+
+    const summary = SessionAnalysisService.generateSessionSummary(fullRoom, privateQuestions);
     const batch = writeBatch(firestore);
 
     // Close any still-open live questions so students cannot submit after finish.
-    const questionsSnap = await getDocs(collection(firestore, 'rooms', roomId, 'liveQuestions'));
     questionsSnap.docs.forEach((questionDoc) => {
       const data = questionDoc.data() as LiveQuestionPublic;
       if (data.status === 'OPEN') {
-        batch.update(questionDoc.ref, {
-          status: 'CLOSED',
-        });
+        batch.update(questionDoc.ref, { status: 'CLOSED' });
       }
     });
 
@@ -432,7 +502,10 @@ export class FirestoreRealtimeService {
       activeGameId: null,
       activeGame: null,
       calledStudent: null,
+      summaryReady: true,
+      archived: rawRoomData.archived || false,
     });
+    batch.set(doc(firestore, 'rooms', roomId, 'summary', 'main'), summary, { merge: true });
 
     await batch.commit();
     return true;
