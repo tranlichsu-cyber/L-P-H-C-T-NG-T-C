@@ -7,7 +7,7 @@ import { Modal } from '../../components/common/Modal';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
-import { realtimeService } from '../../services/realtime/MockRealtimeService';
+import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { Users, BookOpen, Radio, Sparkles, Zap, Play, History } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -56,7 +56,7 @@ export const DashboardPage: React.FC = () => {
     setIsCreateRoomOpen(true);
   };
 
-  const createRoomWithSelection = (cId: string, qId: string) => {
+  const createRoomWithSelection = async (cId: string, qId: string) => {
     const cls = classes.find((c) => c.id === cId);
     const quiz = quizzes.find((q) => q.id === qId);
 
@@ -66,7 +66,8 @@ export const DashboardPage: React.FC = () => {
     localStorage.setItem('lhtt_last_class_id', cId);
     localStorage.setItem('lhtt_last_quiz_id', qId);
 
-    const newRoom = realtimeService.createRoom({
+    try {
+      const newRoom = await Promise.resolve(activeRealtimeService.createRoom({
       teacherId: currentUser?.uid || 'unknown-teacher',
       classId: cls.id,
       className: cls.name,
@@ -74,19 +75,23 @@ export const DashboardPage: React.FC = () => {
       quizId: quiz.id,
       quizTitle: quiz.title,
       questions: quiz.questions,
-      roster: cls.students.map((s) => ({ id: s.id, name: s.name })),
-    });
+        roster: cls.students.map((s) => ({ id: s.id, name: s.name })),
+      }));
 
-    showToast(`Khởi tạo phòng dạy cho ${cls.name} thành công! Mã PIN: ${newRoom.roomCode}`, 'success');
-    navigate(`/teacher/room/${newRoom.id}`);
+      showToast(`Khởi tạo phòng dạy cho ${cls.name} thành công! Mã PIN: ${newRoom.roomCode}`, 'success');
+      setIsCreateRoomOpen(false);
+      navigate(`/teacher/room/${newRoom.id}`);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể tạo phòng học Live.', 'error');
+    }
   };
 
-  const handleQuickStartLesson = () => {
+  const handleQuickStartLesson = async () => {
     if (!lastClassId || !lastQuizId) {
       handleOpenCreateRoom();
       return;
     }
-    createRoomWithSelection(lastClassId, lastQuizId);
+    await createRoomWithSelection(lastClassId, lastQuizId);
   };
 
   const lastClass = classes.find((c) => c.id === lastClassId);
@@ -244,7 +249,7 @@ export const DashboardPage: React.FC = () => {
             <Button variant="secondary" onClick={() => setIsCreateRoomOpen(false)}>Hủy</Button>
             <Button
               variant="primary"
-              onClick={() => createRoomWithSelection(selectedClassId, selectedQuizId)}
+              onClick={() => void createRoomWithSelection(selectedClassId, selectedQuizId)}
             >
               BẮT ĐẦU TẠO PHÒNG
             </Button>
