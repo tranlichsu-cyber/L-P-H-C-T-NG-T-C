@@ -10,6 +10,7 @@ import { PracticeService } from '../../services/practice/PracticeService';
 import type { PracticeQuestion, PracticeType, PracticeFeedbackMode } from '../../services/practice/types';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import {
   Sparkles,
   BookOpen,
@@ -25,6 +26,7 @@ export const PracticeEditorPage: React.FC = () => {
   const { practiceSetId } = useParams<{ practiceSetId?: string }>();
   const { classes, quizzes } = useTeacherData();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
 
   const stateData = location.state || {};
 
@@ -145,7 +147,7 @@ export const PracticeEditorPage: React.FC = () => {
     setIsSaving(true);
     try {
       const practiceSet = await PracticeService.createPracticeSet({
-        teacherId: 'teacher-1',
+        teacherId: currentUser?.uid || 'teacher-current',
         classId: targetClass.id,
         className: targetClass.name,
         subject,
@@ -157,7 +159,7 @@ export const PracticeEditorPage: React.FC = () => {
         allowRetry,
         maxAttempts: allowRetry ? 2 : 1,
         feedbackMode,
-        createdBy: 'Thầy Hương',
+        createdBy: currentUser?.displayName || currentUser?.email || 'Giáo viên',
         source: stateData.topic ? 'HISTORY_REMEDIATION' : 'QUESTION_BANK',
         questions,
       });
@@ -167,8 +169,8 @@ export const PracticeEditorPage: React.FC = () => {
       showToast(`Đã giao thành công bài ôn cho ${finalStudentList.length} học sinh lớp ${targetClass.name}!`, 'success');
       setIsAssignConfirmOpen(false);
       navigate('/teacher/practice');
-    } catch {
-      showToast('Lỗi khi giao bài ôn tập. Hãy thử lại.', 'error');
+    } catch (err: any) {
+      showToast(err?.message || 'Lỗi khi giao bài ôn tập. Hãy thử lại.', 'error');
     } finally {
       setIsSaving(false);
     }
