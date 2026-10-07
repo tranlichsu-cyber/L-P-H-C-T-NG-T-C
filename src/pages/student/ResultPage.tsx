@@ -6,7 +6,7 @@ import { PartyPopper, Lightbulb, ArrowRight, HelpCircle } from 'lucide-react';
 
 export const ResultPage: React.FC = () => {
   const navigate = useNavigate();
-  const { session, devControls } = useStudentSession();
+  const { session, room, devControls } = useStudentSession();
 
   // Route Guards
   if (!session.roomCode) {
@@ -21,6 +21,10 @@ export const ResultPage: React.FC = () => {
 
   const q = session.liveQuestion;
   const isCorrect = session.isCorrect;
+  const currentScore =
+    session.studentId && room?.scores?.[session.studentId]
+      ? room.scores[session.studentId].score
+      : 0;
 
   const handleContinue = () => {
     // Reset submitted state for next question and return to waiting
@@ -74,6 +78,11 @@ export const ResultPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        <div className="p-4 rounded-2xl bg-sky-50 border-2 border-sky-200 text-sky-950 mb-6">
+          <span className="text-xs font-bold text-sky-700 uppercase block">Điểm hiện tại của em</span>
+          <span className="text-3xl font-black">{currentScore} điểm</span>
+        </div>
 
         {/* Explanation Section */}
         {q.explanation && (
