@@ -54,15 +54,16 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     if (!isFirebaseConfigured || !db) return;
 
+    const firestore = db;
     let cancelled = false;
 
     const loadRealTeacherData = async () => {
       try {
-        const classSnap = await getDocs(collection(db, 'classes'));
+        const classSnap = await getDocs(collection(firestore, 'classes'));
         const realClasses = await Promise.all(
           classSnap.docs.map(async (classDoc) => {
-            const data = classDoc.data() as Partial<ClassGroup>;
-            const studentsSnap = await getDocs(collection(db, 'classes', classDoc.id, 'students'));
+            const data = classDoc.data() as Partial<ClassGroup> & { className?: string };
+            const studentsSnap = await getDocs(collection(firestore, 'classes', classDoc.id, 'students'));
             const students = studentsSnap.docs.map((studentDoc) => ({
               id: studentDoc.id,
               ...(studentDoc.data() as Omit<Student, 'id'>),
@@ -79,11 +80,11 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
           })
         );
 
-        const quizSnap = await getDocs(collection(db, 'quizzes'));
+        const quizSnap = await getDocs(collection(firestore, 'quizzes'));
         const realQuizzes = await Promise.all(
           quizSnap.docs.map(async (quizDoc) => {
             const data = quizDoc.data() as Partial<Quiz>;
-            const questionsSnap = await getDocs(collection(db, 'quizzes', quizDoc.id, 'questions'));
+            const questionsSnap = await getDocs(collection(firestore, 'quizzes', quizDoc.id, 'questions'));
             const questions = questionsSnap.docs.map((questionDoc) => ({
               id: questionDoc.id,
               ...(questionDoc.data() as Omit<Question, 'id'>),
