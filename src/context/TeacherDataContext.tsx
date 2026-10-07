@@ -11,6 +11,22 @@ interface BulkAddResult {
   duplicateNames: string[];
 }
 
+const sanitizeFirestoreData = (value: unknown): any => {
+  if (Array.isArray(value)) {
+    return value.map((item) => (item === undefined ? null : sanitizeFirestoreData(item)));
+  }
+
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .map(([key, item]) => [key, sanitizeFirestoreData(item)])
+    );
+  }
+
+  return value;
+};
+
 interface TeacherDataContextType {
   classes: ClassGroup[];
   quizzes: Quiz[];
@@ -478,12 +494,15 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         updatedAt: now,
       });
       copy.questions.forEach((question, index) => {
-        batch.set(doc(firestore, 'quizzes', copy.id, 'questions', question.id), {
-          ...question,
-          order: index,
-          createdAt: now,
-          updatedAt: now,
-        });
+        batch.set(
+          doc(firestore, 'quizzes', copy.id, 'questions', question.id),
+          sanitizeFirestoreData({
+            ...question,
+            order: index,
+            createdAt: now,
+            updatedAt: now,
+          })
+        );
       });
       await batch.commit();
     }
@@ -519,12 +538,15 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (isFirebaseConfigured && db) {
       const firestore = db;
       const batch = writeBatch(firestore);
-      batch.set(doc(firestore, 'quizzes', quizId, 'questions', newQuestion.id), {
-        ...newQuestion,
-        order: targetQuiz.questions.length,
-        createdAt: now,
-        updatedAt: now,
-      });
+      batch.set(
+        doc(firestore, 'quizzes', quizId, 'questions', newQuestion.id),
+        sanitizeFirestoreData({
+          ...newQuestion,
+          order: targetQuiz.questions.length,
+          createdAt: now,
+          updatedAt: now,
+        })
+      );
       batch.update(doc(firestore, 'quizzes', quizId), {
         questionCount: nextCount,
         updatedAt: now,
@@ -547,10 +569,13 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     questionData: Omit<Question, 'id'>
   ): Promise<void> => {
     if (isFirebaseConfigured && db) {
-      await updateDoc(doc(db, 'quizzes', quizId, 'questions', questionId), {
-        ...questionData,
-        updatedAt: new Date().toISOString(),
-      });
+      await updateDoc(
+        doc(db, 'quizzes', quizId, 'questions', questionId),
+        sanitizeFirestoreData({
+          ...questionData,
+          updatedAt: new Date().toISOString(),
+        })
+      );
     }
 
     setQuizzes((prev) =>
@@ -587,7 +612,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
       updated.forEach((question, order) => {
         batch.set(
           doc(firestore, 'quizzes', quizId, 'questions', question.id),
-          { ...question, order, updatedAt: now },
+          sanitizeFirestoreData({ ...question, order, updatedAt: now }),
           { merge: true }
         );
       });
