@@ -8,7 +8,8 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { db } from '../firebase/firebase';
+import { auth, db } from '../firebase/firebase';
+import type { UserProfile } from '../school/types';
 import type { MockRoomData } from '../realtime/types';
 import type {
   RoomSummary,
@@ -93,11 +94,24 @@ export class HistoryService {
 
     if (db) {
       try {
-        const qConstraints: any[] = [where('status', '==', 'FINISHED')];
-        if (filters.classId) qConstraints.push(where('classId', '==', filters.classId));
-        if (filters.subject) qConstraints.push(where('subject', '==', filters.subject));
+        const uid = auth?.currentUser?.uid;
+        if (!uid || auth?.currentUser?.isAnonymous) {
+          throw new Error('Phiên giáo viên không hợp lệ.');
+        }
 
-        const q = query(collection(db, 'rooms'), ...qConstraints);
+        const profileSnap = await getDoc(doc(db, 'users', uid));
+        const profile = profileSnap.exists() ? (profileSnap.data() as UserProfile) : null;
+        if (!profile || profile.status !== 'ACTIVE') {
+          throw new Error('Tài khoản giáo viên không còn hoạt động.');
+        }
+
+        // Avoid composite-index dependencies: non-admin teachers query only their own rooms,
+        // then all other filters are applied client-side below.
+        const q =
+          profile.role === 'SCHOOL_ADMIN'
+            ? query(collection(db, 'rooms'), where('status', '==', 'FINISHED'))
+            : query(collection(db, 'rooms'), where('teacherId', '==', uid));
+
         const snap = await getDocs(q);
 
         const list: RoomSummary[] = [];
@@ -158,6 +172,8 @@ export class HistoryService {
     }
 
     // Apply Client-Side Filters
+    summaries = summaries.filter((s) => Boolean(s.endedAt));
+
     if (filters.classId) {
       summaries = summaries.filter((s) => s.classId === filters.classId);
     }
