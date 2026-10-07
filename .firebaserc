@@ -2,6 +2,6 @@
   "projects": {
     "default": "lhtt-dev",
     "dev": "lhtt-dev",
-    "prod": "lophoctuongtac-prod"
+    "prod": "lop-hoc-tuong-tac-a62a5"
   }
 }
