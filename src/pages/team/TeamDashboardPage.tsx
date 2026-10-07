@@ -143,7 +143,7 @@ export const TeamDashboardPage: React.FC = () => {
                   onClick={() => navigate('/teacher/history')}
                   className="text-xs font-bold text-slate-700 hover:bg-slate-100"
                 >
-                  <BarChart2 className="w-3.5 h-3.5 mr-1" /> Xem lịch sử giảng dạy các thành viên
+                  <BarChart2 className="w-3.5 h-3.5 mr-1" /> Xem lịch sử dạy học của tôi
                 </Button>
               </div>
             </Card>
