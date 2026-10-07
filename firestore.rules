@@ -12,14 +12,14 @@ service cloud.firestore {
     }
 
     function isTeacher() {
-      return isAuthenticated() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+      return isAuthenticated()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && getUserData().status == 'ACTIVE';
     }
 
     function isSchoolAdmin() {
-      return isTeacher() && (
-        !exists(/databases/$(database)/documents/users/$(request.auth.uid)) ||
-        getUserData().role == 'SCHOOL_ADMIN'
-      );
+      return isTeacher() && getUserData().role == 'SCHOOL_ADMIN';
     }
 
     function isTeamLeader() {
@@ -27,7 +27,19 @@ service cloud.firestore {
     }
 
     function isOwner(teacherId) {
-      return isAuthenticated() && request.auth.uid == teacherId;
+      return isTeacher() && request.auth.uid == teacherId;
+    }
+
+    function canManageClass(classId) {
+      let classData = get(/databases/$(database)/documents/classes/$(classId)).data;
+      return isSchoolAdmin()
+        || request.auth.uid == classData.teacherId
+        || (classData.coTeacherIds != null && classData.coTeacherIds.hasAny([request.auth.uid]));
+    }
+
+    function canManageQuiz(quizId) {
+      let quizData = get(/databases/$(database)/documents/quizzes/$(quizId)).data;
+      return isSchoolAdmin() || request.auth.uid == quizData.teacherId;
     }
 
     function isSameTeam(teamIds) {
@@ -36,8 +48,8 @@ service cloud.firestore {
 
     // 1. Single School User Profiles (users/{uid})
     match /users/{uid} {
-      allow read: if isAuthenticated();
-      allow write: if isSchoolAdmin() || isOwner(uid);
+      allow read: if isTeacher();
+      allow write: if isSchoolAdmin();
     }
 
     // 2. Single School Settings (settings/school)
@@ -48,7 +60,7 @@ service cloud.firestore {
 
     // 3. Single School Teams (teams/{teamId})
     match /teams/{teamId} {
-      allow read: if isAuthenticated();
+      allow read: if isTeacher();
       allow write: if isSchoolAdmin();
     }
 
@@ -68,24 +80,25 @@ service cloud.firestore {
 
     // 6. Classes (classes/{classId})
     match /classes/{classId} {
-      allow read: if isAuthenticated();
-      allow write: if isTeacher();
+      allow read: if isTeacher();
+      allow create: if isTeacher();
+      allow update, delete: if canManageClass(classId);
 
       match /students/{studentId} {
-        allow read: if isAuthenticated();
-        allow write: if isTeacher();
+        allow read: if isTeacher();
+        allow write: if canManageClass(classId);
       }
     }
 
     // 7. Quizzes (quizzes/{quizId})
     match /quizzes/{quizId} {
-      allow read: if isAuthenticated();
+      allow read: if isTeacher();
       allow create: if isTeacher();
-      allow update, delete: if isSchoolAdmin() || isOwner(resource.data.teacherId);
+      allow update, delete: if canManageQuiz(quizId);
 
       match /questions/{questionId} {
-        allow read: if isAuthenticated();
-        allow create, update, delete: if isTeacher();
+        allow read: if isTeacher();
+        allow create, update, delete: if canManageQuiz(quizId);
       }
     }
 
