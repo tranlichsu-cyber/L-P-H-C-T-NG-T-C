@@ -328,7 +328,9 @@ export const PracticeEditorPage: React.FC = () => {
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         {q.options.map((opt, oIdx) => {
                           const letter = String.fromCharCode(65 + oIdx);
-                          const isCorrect = q.correctAnswer === letter;
+                          const isCorrect =
+                            q.correctAnswer === letter ||
+                            q.correctAnswer === opt;
                           return (
                             <div
                               key={oIdx}
