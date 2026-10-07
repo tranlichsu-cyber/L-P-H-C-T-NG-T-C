@@ -21,3 +21,4 @@ Deploy admin teacher account creation and team management permissions.
 Deploy Firestore persistence for classes and students.
 Deploy realtime school settings hardening fixes.
 Deploy real Firestore school usage reports.
+Deploy admin branding control layout cleanup.
