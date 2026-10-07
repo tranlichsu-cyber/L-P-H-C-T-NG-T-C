@@ -84,10 +84,10 @@ export const SchoolDashboardPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <Button variant="warning" size="md" onClick={() => navigate('/admin/teachers')} className="font-bold text-slate-950">
+          <Button variant="warning" size="md" onClick={() => navigate('/admin/teachers')} className="font-black text-slate-950 shadow-lg shadow-amber-500/20">
             <Users className="w-4 h-4 mr-1" /> QUẢN LÝ GIÁO VIÊN
           </Button>
-          <Button variant="outline" size="md" onClick={() => navigate('/admin/teams')} className="text-white border-white/30 hover:bg-white/10 font-bold">
+          <Button variant="primary" size="md" onClick={() => navigate('/admin/teams')} className="font-black bg-gradient-to-r from-violet-500 to-fuchsia-500 border-violet-400 shadow-lg shadow-violet-500/20">
             <Building2 className="w-4 h-4 mr-1" /> TỔ CHUYÊN MÔN
           </Button>
         </div>
@@ -95,28 +95,28 @@ export const SchoolDashboardPage: React.FC = () => {
 
       {/* OVERVIEW CARDS METRICS */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="p-4 border-2 border-slate-200 bg-white">
+        <Card className="p-4 border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-sm">
           <span className="text-xs font-bold text-slate-500 block">Giáo viên hoạt động</span>
           <span className="text-2xl font-black text-slate-900 flex items-center gap-2 mt-1">
             <UserCheck className="w-6 h-6 text-sky-600" /> {metrics.activeTeacherCount} thầy/cô
           </span>
         </Card>
 
-        <Card className="p-4 border-2 border-slate-200 bg-white">
+        <Card className="p-4 border-2 border-violet-200 bg-gradient-to-br from-violet-50 to-white shadow-sm">
           <span className="text-xs font-bold text-slate-500 block">Tổng số lớp học</span>
           <span className="text-2xl font-black text-slate-900 flex items-center gap-2 mt-1">
             <Users className="w-6 h-6 text-indigo-600" /> {metrics.totalClassesCount} lớp
           </span>
         </Card>
 
-        <Card className="p-4 border-2 border-slate-200 bg-white">
+        <Card className="p-4 border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-white shadow-sm">
           <span className="text-xs font-bold text-slate-500 block">Tổng số học sinh</span>
           <span className="text-2xl font-black text-emerald-600 flex items-center gap-2 mt-1">
             <Award className="w-6 h-6" /> {metrics.totalStudentsCount} em
           </span>
         </Card>
 
-        <Card className="p-4 border-2 border-slate-200 bg-white">
+        <Card className="p-4 border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white shadow-sm">
           <span className="text-xs font-bold text-slate-500 block">Phòng dạy Live tháng này</span>
           <span className="text-2xl font-black text-amber-500 flex items-center gap-2 mt-1">
             <Radio className="w-6 h-6" /> {metrics.monthlyRoomsCount} buổi
@@ -127,7 +127,7 @@ export const SchoolDashboardPage: React.FC = () => {
       {/* QUICK ADMIN NAVIGATION GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <Card
-          className="p-6 border-2 border-slate-200 hover:border-sky-500 transition-all cursor-pointer space-y-3 bg-white"
+          className="p-6 border-2 border-sky-200 hover:border-sky-500 transition-all cursor-pointer space-y-3 bg-gradient-to-br from-sky-50 via-white to-sky-100/60 hover:-translate-y-1 hover:shadow-lg"
           onClick={() => navigate('/admin/teachers')}
         >
           <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
@@ -140,7 +140,7 @@ export const SchoolDashboardPage: React.FC = () => {
         </Card>
 
         <Card
-          className="p-6 border-2 border-slate-200 hover:border-sky-500 transition-all cursor-pointer space-y-3 bg-white"
+          className="p-6 border-2 border-violet-200 hover:border-violet-500 transition-all cursor-pointer space-y-3 bg-gradient-to-br from-violet-50 via-white to-violet-100/60 hover:-translate-y-1 hover:shadow-lg"
           onClick={() => navigate('/admin/teams')}
         >
           <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
@@ -153,7 +153,7 @@ export const SchoolDashboardPage: React.FC = () => {
         </Card>
 
         <Card
-          className="p-6 border-2 border-slate-200 hover:border-sky-500 transition-all cursor-pointer space-y-3 bg-white"
+          className="p-6 border-2 border-amber-200 hover:border-amber-500 transition-all cursor-pointer space-y-3 bg-gradient-to-br from-amber-50 via-white to-orange-100/60 hover:-translate-y-1 hover:shadow-lg"
           onClick={() => navigate('/admin/requests')}
         >
           <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
@@ -166,7 +166,7 @@ export const SchoolDashboardPage: React.FC = () => {
         </Card>
 
         <Card
-          className="p-6 border-2 border-slate-200 hover:border-sky-500 transition-all cursor-pointer space-y-3 bg-white"
+          className="p-6 border-2 border-emerald-200 hover:border-emerald-500 transition-all cursor-pointer space-y-3 bg-gradient-to-br from-emerald-50 via-white to-teal-100/60 hover:-translate-y-1 hover:shadow-lg"
           onClick={() => navigate('/admin/reports')}
         >
           <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
@@ -179,7 +179,7 @@ export const SchoolDashboardPage: React.FC = () => {
         </Card>
 
         <Card
-          className="p-6 border-2 border-slate-200 hover:border-sky-500 transition-all cursor-pointer space-y-3 bg-white"
+          className="p-6 border-2 border-rose-200 hover:border-rose-500 transition-all cursor-pointer space-y-3 bg-gradient-to-br from-rose-50 via-white to-pink-100/60 hover:-translate-y-1 hover:shadow-lg"
           onClick={() => navigate('/admin/logs')}
         >
           <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold">
