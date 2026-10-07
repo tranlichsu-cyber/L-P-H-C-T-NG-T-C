@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-app-v1.1.0';
+const CACHE_NAME = 'lhtt-app-v1.1.1-admin-reset';
 
 const STATIC_SHELL_ASSETS = [
   '/',
