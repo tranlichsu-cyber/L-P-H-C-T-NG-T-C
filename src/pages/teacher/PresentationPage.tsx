@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PresentationView } from '../../components/teacher/PresentationView';
 import { useRoomRealtime } from '../../hooks/useRoomRealtime';
-import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
+import { activeRealtimeService, isFirebaseActive } from '../../services/realtime/realtimeServiceSwitch';
 import { loadMockDatabase } from '../../services/realtime/mockStorage';
 import { useToast } from '../../context/ToastContext';
 
@@ -16,15 +16,17 @@ export const PresentationPage: React.FC = () => {
   useEffect(() => {
     if (paramRoomId) {
       setActiveRoomId(paramRoomId);
-    } else {
+    } else if (!isFirebaseActive) {
       const db = loadMockDatabase();
       const rooms = Object.values(db.rooms);
       const active = rooms.find((r) => r.status !== 'FINISHED');
       if (active) {
         setActiveRoomId(active.id);
       }
+    } else {
+      navigate('/teacher/room', { replace: true });
     }
-  }, [paramRoomId]);
+  }, [paramRoomId, navigate]);
 
   const room = useRoomRealtime(activeRoomId);
 
@@ -48,28 +50,44 @@ export const PresentationPage: React.FC = () => {
   const questionIds = Object.keys(room.liveQuestions);
   const currentIndex = questionIds.indexOf(currentQuestionId);
 
-  const handleOpenQuestion = (qId: string) => {
-    activeRealtimeService.openQuestion(room.id, qId);
+  const handleOpenQuestion = async (qId: string) => {
+    try {
+      await Promise.resolve(activeRealtimeService.openQuestion(room.id, qId));
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể mở câu hỏi.', 'error');
+    }
   };
 
-  const handleCloseQuestion = (qId: string) => {
-    activeRealtimeService.closeQuestion(room.id, qId);
+  const handleCloseQuestion = async (qId: string) => {
+    try {
+      await Promise.resolve(activeRealtimeService.closeQuestion(room.id, qId));
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể đóng câu hỏi.', 'error');
+    }
   };
 
-  const handleShowResult = (qId: string) => {
-    activeRealtimeService.showQuestionResult(room.id, qId);
+  const handleShowResult = async (qId: string) => {
+    try {
+      await Promise.resolve(activeRealtimeService.showQuestionResult(room.id, qId));
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể công bố kết quả.', 'error');
+    }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     if (currentIndex < questionIds.length - 1) {
       const nextId = questionIds[currentIndex + 1];
-      activeRealtimeService.openQuestion(room.id, nextId);
+      try {
+        await Promise.resolve(activeRealtimeService.openQuestion(room.id, nextId));
+      } catch (err: any) {
+        showToast(err?.message || 'Không thể chuyển câu hỏi.', 'error');
+      }
     } else {
       showToast('Đã hết câu hỏi trong bộ đề này!', 'info');
     }
   };
 
-  const handleCallRandomStudent = () => {
+  const handleCallRandomStudent = async () => {
     const participantsList = Object.values(room.participants || {});
     if (participantsList.length === 0) {
       showToast('Chưa có học sinh nào tham gia phòng!', 'info');
@@ -81,8 +99,14 @@ export const PresentationPage: React.FC = () => {
     const pool = uncalled.length > 0 ? uncalled : participantsList;
     const selected = pool[Math.floor(Math.random() * pool.length)];
 
-    activeRealtimeService.callStudent(room.id, selected.studentId, selected.name, 'Phát biểu ý kiến');
-    showToast(`Đã mời học sinh ${selected.name} phát biểu!`, 'success');
+    try {
+      await Promise.resolve(
+        activeRealtimeService.callStudent(room.id, selected.studentId, selected.name, 'Phát biểu ý kiến')
+      );
+      showToast(`Đã mời học sinh ${selected.name} phát biểu!`, 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể gọi học sinh.', 'error');
+    }
   };
 
   return (
