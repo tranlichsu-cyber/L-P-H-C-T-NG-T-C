@@ -85,14 +85,51 @@ export const StudentPracticeHubPage: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      for (const [questionId, answer] of Object.entries(studentAnswers)) {
+        if (answer.trim()) {
+          await PracticeService.submitStudentAnswer(
+            takingSet.id,
+            studentId,
+            questionId,
+            answer
+          );
+        }
+      }
+
       const res = await PracticeService.completeStudentAssignment(takingSet.id, studentId);
-      setTestResult(res);
-      showToast('Chúc mừng em đã hoàn thành bài ôn tập!', 'success');
-      fetchStudentTasks();
-    } catch {
-      showToast('Lỗi khi gửi bài làm.', 'error');
+
+      if (takingSet.feedbackMode === 'TEACHER_ONLY') {
+        setTestResult(null);
+        setTakingSet(null);
+        showToast('Em đã nộp bài thành công. Kết quả sẽ do giáo viên theo dõi.', 'success');
+      } else {
+        setTestResult(res);
+        showToast('Chúc mừng em đã hoàn thành bài ôn tập!', 'success');
+      }
+
+      await fetchStudentTasks();
+    } catch (err: any) {
+      showToast(err?.message || 'Lỗi khi gửi bài làm.', 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleRetryTask = async (task: {
+    practiceSet: PracticeSet;
+    assignment: PracticeAssignment;
+  }) => {
+    try {
+      const ok = await PracticeService.restartStudentAssignment(
+        task.practiceSet.id,
+        studentId
+      );
+      if (!ok) throw new Error('Không thể mở lượt làm lại.');
+
+      showToast('Đã mở lượt làm lại. Em có thể làm bài lại từ đầu!', 'success');
+      await fetchStudentTasks();
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể làm lại bài này.', 'error');
     }
   };
 
@@ -232,7 +269,17 @@ export const StudentPracticeHubPage: React.FC = () => {
               <input
                 type="text"
                 value={selectedAns}
-                onChange={(e) => handleSelectAnswer(currentQ.id, e.target.value)}
+                onChange={(e) =>
+                  setStudentAnswers((prev) => ({
+                    ...prev,
+                    [currentQ.id]: e.target.value,
+                  }))
+                }
+                onBlur={() => {
+                  if (selectedAns.trim()) {
+                    void handleSelectAnswer(currentQ.id, selectedAns);
+                  }
+                }}
                 placeholder="Ví dụ: 25..."
                 className="w-full p-3 rounded-xl border border-slate-300 text-base font-bold bg-white focus:border-sky-500 focus:outline-none"
               />
@@ -343,13 +390,37 @@ export const StudentPracticeHubPage: React.FC = () => {
               <Card key={t.practiceSet.id} className="p-5 border border-slate-200 bg-slate-50 space-y-2">
                 <div className="flex justify-between items-center">
                   <Badge variant="neutral">Môn {t.practiceSet.subject}</Badge>
-                  <span className="text-sm font-black text-emerald-600">{t.assignment.score}% đúng</span>
+                  {typeof t.assignment.score === 'number' ? (
+                    <span className="text-sm font-black text-emerald-600">
+                      {t.assignment.score}% đúng
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold text-slate-500">
+                      Đã nộp • Giáo viên theo dõi
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="font-bold text-slate-900 text-sm">{t.practiceSet.title}</h3>
-                <p className="text-xs text-slate-500">
-                  Làm đúng {t.assignment.correctCount}/{t.practiceSet.questions.length} câu
-                </p>
+
+                {typeof t.assignment.correctCount === 'number' && (
+                  <p className="text-xs text-slate-500">
+                    Làm đúng {t.assignment.correctCount}/{t.practiceSet.questions.length} câu
+                  </p>
+                )}
+
+                {t.practiceSet.allowRetry &&
+                  (t.assignment.attemptCount || 0) < (t.practiceSet.maxAttempts || 1) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      fullWidth
+                      onClick={() => handleRetryTask(t)}
+                      className="font-bold"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" /> LÀM LẠI
+                    </Button>
+                  )}
               </Card>
             ))}
           </div>
