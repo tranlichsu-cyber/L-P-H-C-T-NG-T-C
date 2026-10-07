@@ -22,3 +22,4 @@ Deploy Firestore persistence for classes and students.
 Deploy realtime school settings hardening fixes.
 Deploy real Firestore school usage reports.
 Deploy admin branding control layout cleanup.
+Deploy real student live-room data and realtime counts.
