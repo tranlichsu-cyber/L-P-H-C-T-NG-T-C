@@ -82,6 +82,11 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isTeacher();
       allow update, delete: if isSchoolAdmin() || isOwner(resource.data.teacherId);
+
+      match /questions/{questionId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isTeacher();
+      }
     }
 
     // 8. Rooms (rooms/{roomId})
