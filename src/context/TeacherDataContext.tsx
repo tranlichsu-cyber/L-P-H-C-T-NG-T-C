@@ -5,6 +5,8 @@ import { INITIAL_QUIZZES } from '../data/mockQuizzes';
 import { normalizeVietnameseText } from '../utils/normalizeVietnamese';
 import { collection, deleteDoc, doc, getDocs, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../services/firebase/firebase';
+import { useAuth } from './AuthContext';
+import { SchoolService } from '../services/school/SchoolService';
 
 interface BulkAddResult {
   addedCount: number;
@@ -60,6 +62,7 @@ interface TeacherDataContextType {
 const TeacherDataContext = createContext<TeacherDataContextType | undefined>(undefined);
 
 export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { currentUser, authReady, isTeacherAuthenticated } = useAuth();
   const [classes, setClasses] = useState<ClassGroup[]>(
     isFirebaseConfigured ? [] : INITIAL_CLASSES
   );
@@ -69,20 +72,46 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     if (!isFirebaseConfigured || !db) return;
+    if (!authReady) return;
+
+    if (!isTeacherAuthenticated || !currentUser?.uid) {
+      setClasses([]);
+      setQuizzes([]);
+      return;
+    }
 
     const firestore = db;
+    const uid = currentUser.uid;
     let cancelled = false;
 
     const loadRealTeacherData = async () => {
       try {
+        const profile = await SchoolService.getUser(uid);
+        if (!profile || profile.status !== 'ACTIVE') {
+          if (!cancelled) {
+            setClasses([]);
+            setQuizzes([]);
+          }
+          return;
+        }
+
+        const isAdmin = profile.role === 'SCHOOL_ADMIN';
+
         const classSnap = await getDocs(collection(firestore, 'classes'));
         const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
+        const visibleClassDocs = classSnap.docs.filter((classDoc) => {
+          if (legacyClassIds.has(classDoc.id)) return false;
+          if (isAdmin) return true;
+          const data = classDoc.data() as { teacherId?: string; coTeacherIds?: string[] };
+          return data.teacherId === uid || (data.coTeacherIds || []).includes(uid);
+        });
+
         const realClasses = await Promise.all(
-          classSnap.docs
-            .filter((classDoc) => !legacyClassIds.has(classDoc.id))
-            .map(async (classDoc) => {
+          visibleClassDocs.map(async (classDoc) => {
             const data = classDoc.data() as Partial<ClassGroup> & { className?: string };
-            const studentsSnap = await getDocs(collection(firestore, 'classes', classDoc.id, 'students'));
+            const studentsSnap = await getDocs(
+              collection(firestore, 'classes', classDoc.id, 'students')
+            );
             const students = studentsSnap.docs.map((studentDoc) => ({
               id: studentDoc.id,
               ...(studentDoc.data() as Omit<Student, 'id'>),
@@ -90,6 +119,8 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
             return {
               id: classDoc.id,
+              teacherId: data.teacherId,
+              coTeacherIds: data.coTeacherIds || [],
               name: data.name || data.className || 'Lớp chưa đặt tên',
               grade: data.grade || '',
               studentCount: students.length,
@@ -101,12 +132,30 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         const quizSnap = await getDocs(collection(firestore, 'quizzes'));
         const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
+        const visibleQuizDocs = quizSnap.docs.filter((quizDoc) => {
+          if (legacyQuizIds.has(quizDoc.id)) return false;
+          if (isAdmin) return true;
+
+          const data = quizDoc.data() as {
+            teacherId?: string;
+            visibility?: 'PRIVATE' | 'TEAM' | 'SCHOOL';
+            teamId?: string;
+          };
+
+          if (data.teacherId === uid) return true;
+          if (data.visibility === 'SCHOOL') return true;
+          if (data.visibility === 'TEAM' && data.teamId) {
+            return (profile.teamIds || []).includes(data.teamId);
+          }
+          return false;
+        });
+
         const realQuizzes = await Promise.all(
-          quizSnap.docs
-            .filter((quizDoc) => !legacyQuizIds.has(quizDoc.id))
-            .map(async (quizDoc) => {
+          visibleQuizDocs.map(async (quizDoc) => {
             const data = quizDoc.data() as Partial<Quiz>;
-            const questionsSnap = await getDocs(collection(firestore, 'quizzes', quizDoc.id, 'questions'));
+            const questionsSnap = await getDocs(
+              collection(firestore, 'quizzes', quizDoc.id, 'questions')
+            );
             const questions = questionsSnap.docs
               .map((questionDoc) => ({
                 id: questionDoc.id,
@@ -116,6 +165,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
             return {
               id: quizDoc.id,
+              teacherId: data.teacherId,
               title: data.title || 'Bộ câu hỏi chưa đặt tên',
               subject: data.subject || '',
               grade: data.grade || '',
@@ -146,13 +196,15 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authReady, isTeacherAuthenticated, currentUser?.uid]);
 
   // --- CLASS ACTIONS ---
   const addClass = async (name: string, grade: string): Promise<ClassGroup> => {
     const now = new Date().toISOString();
     const newClass: ClassGroup = {
       id: `class-${Date.now()}`,
+      teacherId: auth?.currentUser?.uid,
+      coTeacherIds: [],
       name: name.trim(),
       grade,
       studentCount: 0,
@@ -383,6 +435,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const now = new Date().toISOString();
     const newQuiz: Quiz = {
       id: `quiz-${Date.now()}`,
+      teacherId,
       title: title.trim(),
       subject,
       grade,
@@ -470,6 +523,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const copy: Quiz = {
       ...original,
       id: `quiz-${Date.now()}`,
+      teacherId,
       title: `${original.title} (Bản sao)`,
       createdAt: now,
       questions: original.questions.map((question, index) => ({
