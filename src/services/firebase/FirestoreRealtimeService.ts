@@ -174,15 +174,46 @@ export class FirestoreRealtimeService {
     if (!db) throw new Error('Firestore is not initialized');
 
     const realAuthUid = await this.ensureAuthenticated();
-    const participantRef = doc(db, 'rooms', roomId, 'participants', studentId);
-    const now = new Date().toISOString();
+    const rosterRef = doc(db, 'rooms', roomId, 'roster', studentId);
+    const rosterSnap = await getDoc(rosterRef);
 
+    if (!rosterSnap.exists()) {
+      return {
+        participant: null,
+        error: 'Học sinh này không có trong danh sách của lớp đang học.',
+      };
+    }
+
+    const rosterData = rosterSnap.data() as {
+      id?: string;
+      studentId?: string;
+      name?: string;
+      studentName?: string;
+    };
+    const canonicalName = rosterData.name || rosterData.studentName || name;
+
+    const participantRef = doc(db, 'rooms', roomId, 'participants', studentId);
+    const existingParticipant = await getDoc(participantRef);
+    if (
+      existingParticipant.exists() &&
+      existingParticipant.data()?.mockAuthUid &&
+      existingParticipant.data()?.mockAuthUid !== realAuthUid
+    ) {
+      return {
+        participant: null,
+        error: 'Tên học sinh này đang được sử dụng trên một thiết bị khác.',
+      };
+    }
+
+    const now = new Date().toISOString();
     const participantData = {
       studentId,
-      name,
+      name: canonicalName,
       mockAuthUid: realAuthUid || authUid,
       sessionToken: `token-${Date.now()}`,
-      joinedAt: serverTimestamp(),
+      joinedAt: existingParticipant.exists()
+        ? existingParticipant.data()?.joinedAt || serverTimestamp()
+        : serverTimestamp(),
       lastSeenAt: serverTimestamp(),
     };
 
@@ -422,6 +453,27 @@ export class FirestoreRealtimeService {
     const submissionId = `${params.questionId}_${params.studentId}`;
     const subRef = doc(db!, 'rooms', params.roomId, 'submissions', submissionId);
 
+    const participantSnap = await getDoc(
+      doc(db!, 'rooms', params.roomId, 'participants', params.studentId)
+    );
+    if (
+      !participantSnap.exists() ||
+      participantSnap.data()?.mockAuthUid !== realAuthUid
+    ) {
+      return {
+        success: false,
+        error: 'Phiên học sinh không hợp lệ. Hãy vào lại phòng và chọn đúng tên.',
+      };
+    }
+
+    const existingSubmission = await getDoc(subRef);
+    if (existingSubmission.exists()) {
+      return {
+        success: false,
+        error: 'Em đã gửi câu trả lời cho câu này rồi.',
+      };
+    }
+
     // Race Condition Check: Ensure question is OPEN
     const liveQSnap = await getDoc(doc(db!, 'rooms', params.roomId, 'liveQuestions', params.questionId));
     if (!liveQSnap.exists() || liveQSnap.data()?.status !== 'OPEN') {
@@ -431,7 +483,7 @@ export class FirestoreRealtimeService {
     const submissionData = {
       questionId: params.questionId,
       studentId: params.studentId,
-      studentName: params.studentName,
+      studentName: participantSnap.data()?.name || params.studentName,
       authUid: realAuthUid || params.mockAuthUid,
       answer: params.answer.trim(),
       submittedAt: serverTimestamp(),
