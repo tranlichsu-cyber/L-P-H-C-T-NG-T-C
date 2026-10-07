@@ -3,14 +3,13 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { useStudentSession } from '../../context/StudentSessionContext';
-import { getRoomByCode } from '../../services/realtime/mockStorage';
-import { realtimeService } from '../../services/realtime/MockRealtimeService';
+import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { matchVietnameseText } from '../../utils/normalizeVietnamese';
 import { User, ArrowLeft, Search, RefreshCw, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export const SelectNamePage: React.FC = () => {
   const navigate = useNavigate();
-  const { session, selectStudent, resetStudent } = useStudentSession();
+  const { session, room: activeRoom, selectStudent, resetStudent } = useStudentSession();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingStudent, setPendingStudent] = useState<{ id: string; name: string } | null>(null);
@@ -19,12 +18,6 @@ export const SelectNamePage: React.FC = () => {
 
   // Student Device Memory (v1.1 IMP-03)
   const [rememberedStudent, setRememberedStudent] = useState<{ id: string; name: string } | null>(null);
-
-  // Fetch active room from storage using room code
-  const activeRoom = useMemo(() => {
-    if (!session.roomCode) return null;
-    return getRoomByCode(session.roomCode);
-  }, [session.roomCode]);
 
   useEffect(() => {
     if (!activeRoom) return;
@@ -65,7 +58,7 @@ export const SelectNamePage: React.FC = () => {
   };
 
   // Confirm Name Choice -> Registers Participant & Saves to Device Memory
-  const handleConfirmStudent = (targetStudent?: { id: string; name: string }) => {
+  const handleConfirmStudent = async (targetStudent?: { id: string; name: string }) => {
     const studentToJoin = targetStudent || pendingStudent;
     if (!studentToJoin || !activeRoom) return;
 
@@ -75,12 +68,18 @@ export const SelectNamePage: React.FC = () => {
 
     const mockAuthUid = `mock-user-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
-    realtimeService.joinParticipant(
-      activeRoom.id,
-      studentToJoin.id,
-      studentToJoin.name,
-      mockAuthUid
+    const result = await Promise.resolve(
+      activeRealtimeService.joinParticipant(
+        activeRoom.id,
+        studentToJoin.id,
+        studentToJoin.name,
+        mockAuthUid
+      )
     );
+
+    if (!result.participant) {
+      return;
+    }
 
     selectStudent(studentToJoin.id, studentToJoin.name);
     setIsConfirmOpen(false);
