@@ -32,7 +32,7 @@ export class FirestoreRealtimeService {
 
     const roomRef = doc(collection(db!, 'rooms'));
     const roomId = roomRef.id;
-    const roomCode = '839201'; // Default pin or generated
+    const roomCode = String(Math.floor(100000 + Math.random() * 900000));
     const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 12 * 3600 * 1000).toISOString();
 
