@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
+import { SchoolService } from '../../services/school/SchoolService';
 import {
   BarChart3,
   ArrowLeft,
@@ -21,20 +22,67 @@ export const SchoolReportsPage: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  const [timeRange, setTimeRange] = useState<string>('THIS_MONTH');
+  type TimeRange = 'THIS_WEEK' | 'THIS_MONTH' | 'THIS_SEMESTER';
 
-  const mockSubjectStats = [
-    { subject: 'Toán học', sessions: 22, quizzes: 18, totalStudents: 340, avgParticipation: '94%' },
-    { subject: 'Tiếng Việt', sessions: 15, quizzes: 14, totalStudents: 310, avgParticipation: '91%' },
-    { subject: 'Tự nhiên & Xã hội', sessions: 12, quizzes: 10, totalStudents: 280, avgParticipation: '89%' },
-    { subject: 'Tiếng Anh', sessions: 10, quizzes: 8, totalStudents: 250, avgParticipation: '92%' },
-    { subject: 'Tin học', sessions: 8, quizzes: 6, totalStudents: 200, avgParticipation: '96%' },
-  ];
+  const [timeRange, setTimeRange] = useState<TimeRange>('THIS_MONTH');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [report, setReport] = useState<{
+    totalSessions: number;
+    totalParticipants: number;
+    totalRoster: number;
+    avgParticipation: number;
+    sharedQuizCount: number;
+    subjectStats: Array<{
+      subject: string;
+      sessions: number;
+      quizzes: number;
+      totalStudents: number;
+      totalRoster: number;
+      avgParticipation: number;
+    }>;
+  }>({
+    totalSessions: 0,
+    totalParticipants: 0,
+    totalRoster: 0,
+    avgParticipation: 0,
+    sharedQuizCount: 0,
+    subjectStats: [],
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+
+    SchoolService.getSchoolUsageReport(timeRange)
+      .then((data) => {
+        if (!cancelled) setReport(data);
+      })
+      .catch((err: any) => {
+        if (!cancelled) {
+          setReport({
+            totalSessions: 0,
+            totalParticipants: 0,
+            totalRoster: 0,
+            avgParticipation: 0,
+            sharedQuizCount: 0,
+            subjectStats: [],
+          });
+          showToast(err?.message || 'Không thể tải số liệu thống kê thực.', 'error');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [timeRange]);
 
   const handleExportCSV = () => {
-    let csv = 'Môn học,Số buổi Live,Số bộ câu hỏi,Học sinh tham gia,Tỷ lệ tương tác\n';
-    mockSubjectStats.forEach((s) => {
-      csv += `"${s.subject}",${s.sessions},${s.quizzes},${s.totalStudents},"${s.avgParticipation}"\n`;
+    let csv = 'Môn học,Số buổi Live,Số bộ câu hỏi,Học sinh tham gia,Sĩ số các phòng,Tỷ lệ tham gia\n';
+    report.subjectStats.forEach((s) => {
+      csv += `"${s.subject}",${s.sessions},${s.quizzes},${s.totalStudents},${s.totalRoster},"${s.avgParticipation}%"\n`;
     });
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -45,7 +93,8 @@ export const SchoolReportsPage: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast('Đã xuất báo cáo CSV cấp trường thành công!', 'success');
+    URL.revokeObjectURL(url);
+    showToast('Đã xuất báo cáo CSV từ dữ liệu thực!', 'success');
   };
 
   return (
@@ -91,7 +140,7 @@ export const SchoolReportsPage: React.FC = () => {
           <span className="font-bold text-slate-800 text-sm">Khoảng thời gian báo cáo:</span>
         </div>
         <div className="flex items-center gap-2">
-          {['THIS_WEEK', 'THIS_MONTH', 'THIS_SEMESTER'].map((range) => (
+          {(['THIS_WEEK', 'THIS_MONTH', 'THIS_SEMESTER'] as TimeRange[]).map((range) => (
             <button
               key={range}
               onClick={() => setTimeRange(range)}
@@ -116,25 +165,27 @@ export const SchoolReportsPage: React.FC = () => {
         <Card className="p-6 bg-gradient-to-br from-sky-500 to-blue-700 text-white space-y-2">
           <span className="text-xs font-bold text-sky-100 uppercase block">Tổng số buổi dạy tương tác</span>
           <span className="text-3xl font-black flex items-center gap-2">
-            <Radio className="w-8 h-8 text-amber-300" /> 67 buổi
+            <Radio className="w-8 h-8 text-amber-300" /> {isLoading ? '...' : report.totalSessions} buổi
           </span>
-          <p className="text-xs text-sky-100 font-medium">+15% so với tháng trước</p>
+          <p className="text-xs text-sky-100 font-medium">Số buổi Live thực tế trong khoảng thời gian đã chọn</p>
         </Card>
 
         <Card className="p-6 bg-gradient-to-br from-indigo-500 to-purple-700 text-white space-y-2">
           <span className="text-xs font-bold text-indigo-100 uppercase block">Tỷ lệ học sinh tham gia trung bình</span>
           <span className="text-3xl font-black flex items-center gap-2">
-            <Award className="w-8 h-8 text-amber-300" /> 92.4%
+            <Award className="w-8 h-8 text-amber-300" /> {isLoading ? '...' : `${report.avgParticipation}%`}
           </span>
-          <p className="text-xs text-indigo-100 font-medium">Mức độ hào hứng tích cực cao</p>
+          <p className="text-xs text-indigo-100 font-medium">
+            {isLoading ? 'Đang tính từ dữ liệu phòng học...' : `${report.totalParticipants}/${report.totalRoster} lượt tham gia theo sĩ số phòng`}
+          </p>
         </Card>
 
         <Card className="p-6 bg-gradient-to-br from-emerald-500 to-teal-700 text-white space-y-2">
           <span className="text-xs font-bold text-emerald-100 uppercase block">Ngân hàng câu hỏi chung</span>
           <span className="text-3xl font-black flex items-center gap-2">
-            <BookOpen className="w-8 h-8 text-amber-300" /> 56 bộ câu hỏi
+            <BookOpen className="w-8 h-8 text-amber-300" /> {isLoading ? '...' : report.sharedQuizCount} bộ câu hỏi
           </span>
-          <p className="text-xs text-emerald-100 font-medium">Chia sẻ toàn trường & các Tổ chuyên môn</p>
+          <p className="text-xs text-emerald-100 font-medium">Bộ câu hỏi TEAM/SCHOOL được tạo trong khoảng thời gian đã chọn</p>
         </Card>
       </div>
 
@@ -144,7 +195,7 @@ export const SchoolReportsPage: React.FC = () => {
           <h3 className="font-black text-slate-800 text-base flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-sky-600" /> BẢNG THỐNG KÊ THEO MÔN HỌC
           </h3>
-          <Badge variant="info">Tổng cộng 5 bộ môn</Badge>
+          <Badge variant="info">Tổng cộng {report.subjectStats.length} bộ môn</Badge>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
@@ -158,19 +209,33 @@ export const SchoolReportsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 font-medium">
-              {mockSubjectStats.map((s, idx) => (
-                <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-4 font-bold text-slate-900">{s.subject}</td>
-                  <td className="p-4 text-center font-bold text-sky-700">{s.sessions} buổi</td>
-                  <td className="p-4 text-center font-semibold text-slate-700">{s.quizzes} bộ</td>
-                  <td className="p-4 text-center font-semibold text-slate-700">{s.totalStudents} em</td>
-                  <td className="p-4 text-center">
-                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">
-                      {s.avgParticipation}
-                    </span>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-slate-500 font-semibold">
+                    Đang tải số liệu thực từ Firestore...
                   </td>
                 </tr>
-              ))}
+              ) : report.subjectStats.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-slate-500 font-semibold">
+                    Chưa có dữ liệu dạy học trong khoảng thời gian đã chọn.
+                  </td>
+                </tr>
+              ) : (
+                report.subjectStats.map((s) => (
+                  <tr key={s.subject} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-bold text-slate-900">{s.subject}</td>
+                    <td className="p-4 text-center font-bold text-sky-700">{s.sessions} buổi</td>
+                    <td className="p-4 text-center font-semibold text-slate-700">{s.quizzes} bộ</td>
+                    <td className="p-4 text-center font-semibold text-slate-700">{s.totalStudents} em</td>
+                    <td className="p-4 text-center">
+                      <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">
+                        {s.avgParticipation}%
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
