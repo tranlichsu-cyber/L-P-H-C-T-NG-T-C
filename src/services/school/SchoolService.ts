@@ -461,12 +461,82 @@ export class SchoolService {
     const users = await this.getUsers();
     const activeTeacherCount = users.filter((u) => u.status === 'ACTIVE').length;
 
-    return {
-      activeTeacherCount,
-      totalClassesCount: 12,
-      totalStudentsCount: 380,
-      monthlyRoomsCount: 45,
-      sharedQuizCount: 24,
-    };
+    if (!db) {
+      return {
+        activeTeacherCount,
+        totalClassesCount: 0,
+        totalStudentsCount: 0,
+        monthlyRoomsCount: 0,
+        sharedQuizCount: 0,
+      };
+    }
+
+    try {
+      const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
+      const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
+
+      const [classesSnap, quizzesSnap, roomsSnap] = await Promise.all([
+        getDocs(collection(db, 'classes')),
+        getDocs(collection(db, 'quizzes')),
+        getDocs(collection(db, 'rooms')),
+      ]);
+
+      const realClassDocs = classesSnap.docs.filter((d) => !legacyClassIds.has(d.id));
+      const totalClassesCount = realClassDocs.length;
+
+      const studentCounts = await Promise.all(
+        realClassDocs.map(async (classDoc) => {
+          const studentsSnap = await getDocs(collection(db, 'classes', classDoc.id, 'students'));
+          return studentsSnap.size;
+        })
+      );
+      const totalStudentsCount = studentCounts.reduce((sum, count) => sum + count, 0);
+
+      const realQuizDocs = quizzesSnap.docs.filter((d) => !legacyQuizIds.has(d.id));
+      const sharedQuizCount = realQuizDocs.filter((d) => {
+        const data = d.data() as { visibility?: string };
+        return data.visibility === 'TEAM' || data.visibility === 'SCHOOL';
+      }).length;
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+
+      const monthlyRoomsCount = roomsSnap.docs.filter((d) => {
+        const data = d.data() as { createdAt?: unknown };
+        const raw = data.createdAt;
+
+        let created: Date | null = null;
+        if (typeof raw === 'string') {
+          const parsed = new Date(raw);
+          if (!Number.isNaN(parsed.getTime())) created = parsed;
+        } else if (raw && typeof (raw as { toDate?: () => Date }).toDate === 'function') {
+          created = (raw as { toDate: () => Date }).toDate();
+        }
+
+        return Boolean(
+          created &&
+          created.getFullYear() === currentYear &&
+          created.getMonth() === currentMonth
+        );
+      }).length;
+
+      return {
+        activeTeacherCount,
+        totalClassesCount,
+        totalStudentsCount,
+        monthlyRoomsCount,
+        sharedQuizCount,
+      };
+    } catch (error) {
+      console.error('Không thể tải số liệu Dashboard cấp trường từ Firestore', error);
+      return {
+        activeTeacherCount,
+        totalClassesCount: 0,
+        totalStudentsCount: 0,
+        monthlyRoomsCount: 0,
+        sharedQuizCount: 0,
+      };
+    }
   }
 }
