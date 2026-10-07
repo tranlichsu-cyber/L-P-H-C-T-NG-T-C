@@ -85,22 +85,26 @@ export const ClassDetailsPage: React.FC = () => {
   }
 
   // --- SINGLE ADD HANDLER ---
-  const handleSaveSingleStudent = (e: React.FormEvent) => {
+  const handleSaveSingleStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!singleNameInput.trim()) {
       setSingleError('Vui lòng nhập họ và tên học sinh!');
       return;
     }
 
-    const success = addStudent(currentClass.id, singleNameInput);
-    if (!success) {
-      setSingleError('Học sinh này đã có trong lớp!');
-      return;
-    }
+    try {
+      const success = await addStudent(currentClass.id, singleNameInput);
+      if (!success) {
+        setSingleError('Học sinh này đã có trong lớp!');
+        return;
+      }
 
-    showToast(`Đã thêm học sinh ${singleNameInput.trim()}!`, 'success');
-    setSingleNameInput('');
-    setIsAddOpen(false);
+      showToast(`Đã thêm học sinh ${singleNameInput.trim()} và lưu vào hệ thống!`, 'success');
+      setSingleNameInput('');
+      setIsAddOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể lưu học sinh.', 'error');
+    }
   };
 
   // --- BULK IMPORT HANDLERS ---
@@ -138,7 +142,7 @@ export const ClassDetailsPage: React.FC = () => {
     setBulkStep('preview');
   };
 
-  const handleConfirmBulkAdd = () => {
+  const handleConfirmBulkAdd = async () => {
     const validNames = bulkPreviewList.filter((item) => !item.isDuplicate).map((item) => item.name);
 
     if (validNames.length === 0) {
@@ -146,9 +150,13 @@ export const ClassDetailsPage: React.FC = () => {
       return;
     }
 
-    const result = bulkAddStudents(currentClass.id, validNames);
-    showToast(`Đã thêm thành công ${result.addedCount} học sinh vào ${currentClass.name}!`, 'success');
-    setIsBulkOpen(false);
+    try {
+      const result = await bulkAddStudents(currentClass.id, validNames);
+      showToast(`Đã thêm và lưu ${result.addedCount} học sinh vào ${currentClass.name}!`, 'success');
+      setIsBulkOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể lưu danh sách học sinh.', 'error');
+    }
   };
 
   // --- EDIT STUDENT HANDLERS ---
@@ -159,7 +167,7 @@ export const ClassDetailsPage: React.FC = () => {
     setIsEditOpen(true);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeStudent) return;
     if (!singleNameInput.trim()) {
@@ -167,9 +175,13 @@ export const ClassDetailsPage: React.FC = () => {
       return;
     }
 
-    updateStudent(currentClass.id, activeStudent.id, singleNameInput);
-    showToast(`Đã cập nhật thông tin học sinh thành ${singleNameInput.trim()}!`, 'success');
-    setIsEditOpen(false);
+    try {
+      await updateStudent(currentClass.id, activeStudent.id, singleNameInput);
+      showToast(`Đã cập nhật thông tin học sinh thành ${singleNameInput.trim()}!`, 'success');
+      setIsEditOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể cập nhật học sinh.', 'error');
+    }
   };
 
   // --- DELETE STUDENT HANDLERS ---
@@ -178,11 +190,15 @@ export const ClassDetailsPage: React.FC = () => {
     setIsDeleteOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!activeStudent) return;
-    deleteStudent(currentClass.id, activeStudent.id);
-    showToast(`Đã xóa học sinh ${activeStudent.name}!`, 'info');
-    setIsDeleteOpen(false);
+    try {
+      await deleteStudent(currentClass.id, activeStudent.id);
+      showToast(`Đã xóa học sinh ${activeStudent.name}!`, 'info');
+      setIsDeleteOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể xóa học sinh.', 'error');
+    }
   };
 
   return (
