@@ -117,6 +117,8 @@ export class HistoryService {
         const list: RoomSummary[] = [];
         for (const docSnap of snap.docs) {
           const rData = docSnap.data();
+          if (rData.status !== 'FINISHED') continue;
+
           const sRef = doc(db, 'rooms', docSnap.id, 'summary', 'main');
           const sSnap = await getDoc(sRef);
           if (sSnap.exists()) {
