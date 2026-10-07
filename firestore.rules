@@ -48,7 +48,11 @@ service cloud.firestore {
 
     // 1. Single School User Profiles (users/{uid})
     match /users/{uid} {
-      allow read: if isTeacher();
+      allow read: if isTeacher() || (
+        isAuthenticated()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.auth.uid == uid
+      );
       allow write: if isSchoolAdmin();
     }
 
