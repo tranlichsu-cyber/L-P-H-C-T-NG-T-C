@@ -68,8 +68,18 @@ export class SchoolService {
       }
       const parsed = JSON.parse(raw) as LocalSchoolStorage;
       const normalizedSettings = normalizeSchoolSettings(parsed.settings);
-      const migrated = { ...parsed, settings: normalizedSettings };
-      if (normalizedSettings !== parsed.settings) {
+      const hasLegacySampleStaff = parsed.users?.some((u) =>
+        ['teacher-1', 'teacher-2', 'teacher-3', 'teacher-4'].includes(u.uid) ||
+        u.email?.includes('@nguyentrai.edu.vn')
+      );
+      const migrated: LocalSchoolStorage = {
+        ...parsed,
+        settings: normalizedSettings,
+        users: hasLegacySampleStaff ? INITIAL_MEMBERS : parsed.users,
+        joinRequests: hasLegacySampleStaff ? [] : parsed.joinRequests,
+        auditLogs: hasLegacySampleStaff ? [] : parsed.auditLogs,
+      };
+      if (normalizedSettings !== parsed.settings || hasLegacySampleStaff) {
         localStorage.setItem(LOCAL_SCHOOL_KEY, JSON.stringify(migrated));
       }
       return migrated;
