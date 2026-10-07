@@ -146,7 +146,7 @@ export const PracticeEditorPage: React.FC = () => {
 
     setIsSaving(true);
     try {
-      const practiceSet = await PracticeService.createPracticeSet({
+      const payload = {
         teacherId: currentUser?.uid || 'teacher-current',
         classId: targetClass.id,
         className: targetClass.name,
@@ -154,19 +154,32 @@ export const PracticeEditorPage: React.FC = () => {
         grade,
         title: title.trim(),
         type,
-        status: 'ASSIGNED',
+        status: 'ASSIGNED' as const,
         dueAt: dueAt ? `${dueAt}T23:59:59.000Z` : undefined,
         allowRetry,
         maxAttempts: allowRetry ? 2 : 1,
         feedbackMode,
         createdBy: currentUser?.displayName || currentUser?.email || 'Giáo viên',
-        source: stateData.topic ? 'HISTORY_REMEDIATION' : 'QUESTION_BANK',
+        source: stateData.topic ? 'HISTORY_REMEDIATION' as const : 'QUESTION_BANK' as const,
         questions,
-      });
+      };
 
-      await PracticeService.assignPracticeSet(practiceSet.id, finalStudentList, practiceSet.dueAt);
+      const practiceSet = practiceSetId
+        ? await PracticeService.updatePracticeSet(practiceSetId, payload)
+        : await PracticeService.createPracticeSet(payload);
 
-      showToast(`Đã giao thành công bài ôn cho ${finalStudentList.length} học sinh lớp ${targetClass.name}!`, 'success');
+      await PracticeService.assignPracticeSet(
+        practiceSet.id,
+        finalStudentList,
+        practiceSet.dueAt
+      );
+
+      showToast(
+        practiceSetId
+          ? `Đã cập nhật và giao lại bài ôn cho ${finalStudentList.length} học sinh lớp ${targetClass.name}!`
+          : `Đã giao thành công bài ôn cho ${finalStudentList.length} học sinh lớp ${targetClass.name}!`,
+        'success'
+      );
       setIsAssignConfirmOpen(false);
       navigate('/teacher/practice');
     } catch (err: any) {
