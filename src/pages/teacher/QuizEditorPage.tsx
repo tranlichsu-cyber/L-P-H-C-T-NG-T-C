@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
@@ -7,6 +7,8 @@ import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { SchoolService } from '../../services/school/SchoolService';
 import type { Question, QuestionType } from '../../types';
 import {
   ArrowLeft,
@@ -26,6 +28,8 @@ export const QuizEditorPage: React.FC = () => {
   const { quizzes, addQuestion, updateQuestion, duplicateQuestion, deleteQuestion, moveQuestion } =
     useTeacherData();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
+  const [isSchoolAdmin, setIsSchoolAdmin] = useState(false);
 
   const currentQuiz = quizzes.find((q) => q.id === quizId);
 
@@ -47,6 +51,31 @@ export const QuizEditorPage: React.FC = () => {
   const [caseInsensitive, setCaseInsensitive] = useState(true);
   const [trimWhitespace, setTrimWhitespace] = useState(true);
   const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!currentUser?.uid) {
+      setIsSchoolAdmin(false);
+      return;
+    }
+
+    SchoolService.getUser(currentUser.uid)
+      .then((profile) => {
+        if (!cancelled) setIsSchoolAdmin(profile?.role === 'SCHOOL_ADMIN');
+      })
+      .catch(() => {
+        if (!cancelled) setIsSchoolAdmin(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.uid]);
+
+  const canEdit = Boolean(
+    currentQuiz &&
+    (currentQuiz.teacherId === currentUser?.uid || isSchoolAdmin)
+  );
 
   if (!currentQuiz) {
     return (
@@ -217,9 +246,13 @@ export const QuizEditorPage: React.FC = () => {
         title={currentQuiz.title.toUpperCase()}
         description={`Môn: ${currentQuiz.subject} • Khối: ${currentQuiz.grade} • Tổng số: ${currentQuiz.questions.length} câu hỏi`}
         action={
-          <Button variant="primary" size="lg" onClick={handleOpenAdd}>
-            <Plus className="w-5 h-5 mr-1" /> THÊM CÂU HỎI
-          </Button>
+          canEdit ? (
+            <Button variant="primary" size="lg" onClick={handleOpenAdd}>
+              <Plus className="w-5 h-5 mr-1" /> THÊM CÂU HỎI
+            </Button>
+          ) : (
+            <Badge variant="info">CHỈ XEM • Bộ câu hỏi được chia sẻ</Badge>
+          )
         }
       />
 
@@ -227,7 +260,9 @@ export const QuizEditorPage: React.FC = () => {
       <div className="space-y-4">
         {currentQuiz.questions.length === 0 ? (
           <Card className="text-center py-12 text-slate-400 font-medium">
-            Bộ đề này chưa có câu hỏi nào. Bấm nút "+ THÊM CÂU HỎI" ở trên để tạo câu hỏi đầu tiên.
+            {canEdit
+              ? 'Bộ đề này chưa có câu hỏi nào. Bấm nút "+ THÊM CÂU HỎI" ở trên để tạo câu hỏi đầu tiên.'
+              : 'Bộ câu hỏi được chia sẻ hiện chưa có câu hỏi.'}
           </Card>
         ) : (
           currentQuiz.questions.map((q, idx) => {
@@ -260,44 +295,46 @@ export const QuizEditorPage: React.FC = () => {
                   </div>
 
                   {/* Move Up/Down & Action Buttons */}
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleMove(q.id, 'up')}
-                      disabled={isFirst}
-                      title="Di chuyển lên"
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                    </Button>
+                  {canEdit && (
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleMove(q.id, 'up')}
+                        disabled={isFirst}
+                        title="Di chuyển lên"
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </Button>
 
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleMove(q.id, 'down')}
-                      disabled={isLast}
-                      title="Di chuyển xuống"
-                    >
-                      <ArrowDown className="w-4 h-4" />
-                    </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleMove(q.id, 'down')}
+                        disabled={isLast}
+                        title="Di chuyển xuống"
+                      >
+                        <ArrowDown className="w-4 h-4" />
+                      </Button>
 
-                    <Button variant="outline" size="sm" onClick={() => handleOpenEdit(q)}>
-                      <Edit2 className="w-3.5 h-3.5 mr-1" /> Sửa
-                    </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleOpenEdit(q)}>
+                        <Edit2 className="w-3.5 h-3.5 mr-1" /> Sửa
+                      </Button>
 
-                    <Button variant="outline" size="sm" onClick={() => handleDuplicate(q.id)}>
-                      <Copy className="w-3.5 h-3.5 mr-1" /> Nhân bản
-                    </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleDuplicate(q.id)}>
+                        <Copy className="w-3.5 h-3.5 mr-1" /> Nhân bản
+                      </Button>
 
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleOpenDelete(q)}
-                      className="hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 text-rose-500 mr-1" /> Xóa
-                    </Button>
-                  </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleOpenDelete(q)}
+                        className="hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-500 mr-1" /> Xóa
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Content */}
