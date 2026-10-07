@@ -1,18 +1,21 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { StudentSession, LiveQuestionPublic } from '../types/student';
-import { MOCK_ROOM_839201, MOCK_STUDENT_QUESTIONS } from '../data/mockRooms';
+import type { MockRoomData } from '../services/realtime/types';
+import { MOCK_STUDENT_QUESTIONS } from '../data/mockRooms';
 import { normalizeVietnameseText } from '../utils/normalizeVietnamese';
+import { activeRealtimeService } from '../services/realtime/realtimeServiceSwitch';
 
 interface StudentSessionContextType {
   session: StudentSession;
-  joinRoom: (pin: string) => { success: boolean; message?: string };
+  room: MockRoomData | null;
+  joinRoom: (pin: string) => Promise<{ success: boolean; message?: string }>;
   selectStudent: (id: string, name: string) => void;
   resetStudent: () => void;
   resetSession: () => void;
   setSelectedAnswer: (answer: string) => void;
   submitAnswer: () => boolean;
 
-  // Dev Test Controls
+  // Dev Test Controls (used only by the development test panel)
   devControls: {
     setWaiting: () => void;
     openQuestion: (qId: 'q1' | 'q2' | 'q3') => void;
@@ -41,9 +44,71 @@ const INITIAL_SESSION: StudentSession = {
 
 export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<StudentSession>(INITIAL_SESSION);
+  const [room, setRoom] = useState<MockRoomData | null>(null);
 
-  // 1. Join Room
-  const joinRoom = (pin: string) => {
+  // Keep the student UI synchronized with the real room and its live subcollections.
+  useEffect(() => {
+    if (!session.roomId) {
+      setRoom(null);
+      return;
+    }
+
+    const unsubscribe = activeRealtimeService.subscribeRoom(session.roomId, (updatedRoom) => {
+      setRoom(updatedRoom);
+
+      setSession((prev) => {
+        const questionId = updatedRoom.activeQuestionId || null;
+        const liveQuestion = questionId
+          ? (updatedRoom.liveQuestions?.[questionId] as LiveQuestionPublic | undefined) || null
+          : null;
+        const questionChanged = questionId !== prev.currentQuestionId;
+
+        const realSubmission =
+          prev.studentId && questionId
+            ? Object.values(updatedRoom.submissions || {}).find(
+                (submission) =>
+                  submission.studentId === prev.studentId &&
+                  submission.questionId === questionId
+              )
+            : undefined;
+
+        const submittedAnswer =
+          realSubmission?.answer ?? (questionChanged ? null : prev.submittedAnswer);
+        const hasSubmitted = Boolean(realSubmission) || (!questionChanged && prev.hasSubmitted);
+
+        let isCorrect: boolean | null = null;
+        if (
+          liveQuestion?.status === 'RESULT' &&
+          liveQuestion.correctAnswer &&
+          submittedAnswer
+        ) {
+          isCorrect =
+            normalizeVietnameseText(submittedAnswer) ===
+            normalizeVietnameseText(liveQuestion.correctAnswer);
+        }
+
+        return {
+          ...prev,
+          roomCode: updatedRoom.roomCode || prev.roomCode,
+          className: updatedRoom.className || prev.className,
+          subject: updatedRoom.subject || prev.subject,
+          currentQuestionId: questionId,
+          liveQuestion,
+          selectedAnswer: questionChanged ? null : prev.selectedAnswer,
+          hasSubmitted,
+          submittedAnswer,
+          isCorrect,
+        };
+      });
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [session.roomId]);
+
+  // 1. Join a real room by its current 6-digit code.
+  const joinRoom = async (pin: string): Promise<{ success: boolean; message?: string }> => {
     const trimmedPin = pin.trim();
     if (!trimmedPin) {
       return { success: false, message: 'Vui lòng nhập mã phòng.' };
@@ -51,19 +116,39 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
     if (trimmedPin.length !== 6) {
       return { success: false, message: 'Mã phòng gồm 6 chữ số.' };
     }
-    if (trimmedPin !== MOCK_ROOM_839201.roomCode) {
-      return { success: false, message: 'Không tìm thấy phòng học. Hãy kiểm tra lại mã.' };
+
+    try {
+      const result = await Promise.resolve(activeRealtimeService.joinRoomByCode(trimmedPin));
+      if (!result.room) {
+        return {
+          success: false,
+          message: result.error || 'Không tìm thấy phòng học. Hãy kiểm tra lại mã.',
+        };
+      }
+
+      setRoom(result.room);
+      setSession((prev) => ({
+        ...prev,
+        roomCode: result.room!.roomCode,
+        roomId: result.room!.id,
+        className: result.room!.className,
+        subject: result.room!.subject,
+        currentQuestionId: result.room!.activeQuestionId || null,
+        liveQuestion:
+          result.room!.activeQuestionId && result.room!.liveQuestions
+            ? (result.room!.liveQuestions[result.room!.activeQuestionId] as LiveQuestionPublic | undefined) || null
+            : null,
+        selectedAnswer: null,
+        hasSubmitted: false,
+        submittedAnswer: null,
+        isCorrect: null,
+      }));
+
+      return { success: true };
+    } catch (error) {
+      console.error('Không thể tham gia phòng học', error);
+      return { success: false, message: 'Không thể kết nối phòng học. Vui lòng thử lại.' };
     }
-
-    setSession((prev) => ({
-      ...prev,
-      roomCode: MOCK_ROOM_839201.roomCode,
-      roomId: MOCK_ROOM_839201.roomId,
-      className: MOCK_ROOM_839201.className,
-      subject: MOCK_ROOM_839201.subject,
-    }));
-
-    return { success: true };
   };
 
   // 2. Select Student Name
@@ -83,24 +168,27 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
       studentName: null,
       hasSubmitted: false,
       selectedAnswer: null,
+      submittedAnswer: null,
+      isCorrect: null,
     }));
   };
 
   // 4. Reset Session
   const resetSession = () => {
+    setRoom(null);
     setSession(INITIAL_SESSION);
   };
 
   // 5. Select Answer
   const setSelectedAnswer = (answer: string) => {
-    if (session.hasSubmitted) return; // Locked if already submitted
+    if (session.hasSubmitted) return;
     setSession((prev) => ({
       ...prev,
       selectedAnswer: answer,
     }));
   };
 
-  // 6. Submit Answer
+  // 6. Mark the answer as submitted after Firestore accepts it.
   const submitAnswer = (): boolean => {
     if (!session.selectedAnswer || session.hasSubmitted) return false;
     if (!session.liveQuestion || session.liveQuestion.status !== 'OPEN') return false;
@@ -113,7 +201,7 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
     return true;
   };
 
-  // --- DEV CONTROLS FOR TESTING STAGES ---
+  // --- DEV CONTROLS FOR LOCAL TESTING ONLY ---
   const devControls = {
     setWaiting: () => {
       setSession((prev) => ({
@@ -131,7 +219,6 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
       const q = MOCK_STUDENT_QUESTIONS[qId];
       if (!q) return;
 
-      // Privacy: omit correctAnswer & explanation during OPEN
       const publicQ: LiveQuestionPublic = {
         id: q.id,
         type: q.type,
@@ -168,29 +255,23 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
     showResult: () => {
       setSession((prev) => {
         if (!prev.liveQuestion || !prev.currentQuestionId) return prev;
-
         const q = MOCK_STUDENT_QUESTIONS[prev.currentQuestionId];
         if (!q) return prev;
 
-        // Check correctness based on submitted answer vs correct answer
-        let correct = false;
-        if (prev.submittedAnswer) {
-          const submittedNorm = normalizeVietnameseText(prev.submittedAnswer);
-          const correctNorm = normalizeVietnameseText(q.correctAnswer);
-          correct = submittedNorm === correctNorm;
-        }
-
-        // Attach correctAnswer & explanation now that status is RESULT
-        const resultQ: LiveQuestionPublic = {
-          ...prev.liveQuestion,
-          status: 'RESULT',
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation,
-        };
+        const correct = Boolean(
+          prev.submittedAnswer &&
+            normalizeVietnameseText(prev.submittedAnswer) ===
+              normalizeVietnameseText(q.correctAnswer)
+        );
 
         return {
           ...prev,
-          liveQuestion: resultQ,
+          liveQuestion: {
+            ...prev.liveQuestion,
+            status: 'RESULT',
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation,
+          },
           isCorrect: correct,
         };
       });
@@ -205,6 +286,7 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
     <StudentSessionContext.Provider
       value={{
         session,
+        room,
         joinRoom,
         selectStudent,
         resetStudent,
