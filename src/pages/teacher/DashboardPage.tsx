@@ -95,7 +95,7 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="LỚP HỌC TƯƠNG TÁC v1.1"
+        title=""
         description={`Xin chào, ${teacherName} 👋`}
         action={
           <Button variant="primary" size="lg" onClick={handleOpenCreateRoom}>
