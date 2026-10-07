@@ -6,6 +6,7 @@ import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { realtimeService } from '../../services/realtime/MockRealtimeService';
 import { Users, BookOpen, Radio, Sparkles, Zap, Play, History } from 'lucide-react';
 
@@ -13,6 +14,8 @@ export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { classes, quizzes } = useTeacherData();
   const { showToast } = useToast();
+  const { currentUser } = useAuth();
+  const teacherName = currentUser?.displayName || currentUser?.email || 'Trần Lịch Sử';
 
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id || '');
@@ -64,7 +67,7 @@ export const DashboardPage: React.FC = () => {
     localStorage.setItem('lhtt_last_quiz_id', qId);
 
     const newRoom = realtimeService.createRoom({
-      teacherId: 'teacher-1',
+      teacherId: currentUser?.uid || 'unknown-teacher',
       classId: cls.id,
       className: cls.name,
       subject: quiz.subject,
@@ -93,7 +96,7 @@ export const DashboardPage: React.FC = () => {
     <div className="space-y-6">
       <PageHeader
         title="LỚP HỌC TƯƠNG TÁC v1.1"
-        description="Xin chào, Cô Nguyễn Thị Hương 👋"
+        description={`Xin chào, ${teacherName} 👋`}
         action={
           <Button variant="primary" size="lg" onClick={handleOpenCreateRoom}>
             <Radio className="w-5 h-5 mr-2 animate-pulse text-amber-300" />
