@@ -187,52 +187,52 @@ export const DashboardPage: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card
-            className="p-6 border-2 border-slate-200 hover:border-sky-500 hover:-translate-y-1 hover:shadow-lg cursor-pointer transition-all space-y-3 bg-gradient-to-b from-white to-sky-50/30"
+            className="p-6 border-2 border-sky-200 hover:border-sky-500 hover:-translate-y-1 hover:shadow-xl cursor-pointer transition-all space-y-3 bg-gradient-to-br from-sky-50 via-white to-blue-100"
             onClick={handleOpenCreateRoom}
           >
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-sky-600/30">
               <Radio className="w-6 h-6 animate-pulse" />
             </div>
-            <h3 className="font-black text-slate-900 text-base">BẮT ĐẦU TIẾT HỌC LIVE</h3>
+            <h3 className="font-black text-sky-800 text-base">BẮT ĐẦU TIẾT HỌC LIVE</h3>
             <p className="text-xs text-slate-500 font-medium">
               Khởi tạo phòng dạy tương tác trực tiếp, chiếu mã QR cho học sinh.
             </p>
           </Card>
 
           <Card
-            className="p-6 border-2 border-slate-200 hover:border-emerald-500 hover:-translate-y-1 hover:shadow-lg cursor-pointer transition-all space-y-3 bg-gradient-to-b from-white to-emerald-50/30"
+            className="p-6 border-2 border-emerald-200 hover:border-emerald-500 hover:-translate-y-1 hover:shadow-xl cursor-pointer transition-all space-y-3 bg-gradient-to-br from-emerald-50 via-white to-teal-100"
             onClick={() => navigate('/teacher/classes')}
           >
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/30">
               <Users className="w-6 h-6" />
             </div>
-            <h3 className="font-black text-slate-900 text-base">QUẢN LÝ LỚP HỌC</h3>
+            <h3 className="font-black text-emerald-800 text-base">QUẢN LÝ LỚP HỌC</h3>
             <p className="text-xs text-slate-500 font-medium">
               Quản lý danh sách các lớp học và nhập danh sách học sinh.
             </p>
           </Card>
 
           <Card
-            className="p-6 border-2 border-slate-200 hover:border-amber-500 hover:-translate-y-1 hover:shadow-lg cursor-pointer transition-all space-y-3 bg-gradient-to-b from-white to-amber-50/30"
+            className="p-6 border-2 border-amber-200 hover:border-amber-500 hover:-translate-y-1 hover:shadow-xl cursor-pointer transition-all space-y-3 bg-gradient-to-br from-amber-50 via-white to-orange-100"
             onClick={() => navigate('/teacher/quizzes')}
           >
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/30 border border-amber-300">
               <BookOpen className="w-6 h-6 fill-slate-950" />
             </div>
-            <h3 className="font-black text-slate-900 text-base">NGÂN HÀNG CÂU HỎI</h3>
+            <h3 className="font-black text-amber-800 text-base">NGÂN HÀNG CÂU HỎI</h3>
             <p className="text-xs text-slate-500 font-medium">
               Soạn bài tập thủ công, dùng trợ lý AI hoặc chia sẻ bộ đề nội bộ.
             </p>
           </Card>
 
           <Card
-            className="p-6 border-2 border-slate-200 hover:border-indigo-500 hover:-translate-y-1 hover:shadow-lg cursor-pointer transition-all space-y-3 bg-gradient-to-b from-white to-indigo-50/30"
+            className="p-6 border-2 border-indigo-200 hover:border-indigo-500 hover:-translate-y-1 hover:shadow-xl cursor-pointer transition-all space-y-3 bg-gradient-to-br from-indigo-50 via-white to-violet-100"
             onClick={() => navigate('/teacher/history')}
           >
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/30">
               <History className="w-6 h-6" />
             </div>
-            <h3 className="font-black text-slate-900 text-base">LỊCH SỬ DẠY HỌC</h3>
+            <h3 className="font-black text-indigo-800 text-base">LỊCH SỬ DẠY HỌC</h3>
             <p className="text-xs text-slate-500 font-medium">
               Xem lại kết quả tương tác từng buổi dạy và theo dõi tiến bộ.
             </p>
