@@ -102,7 +102,7 @@ export const QuizEditorPage: React.FC = () => {
   };
 
   // --- SAVE QUESTION (CREATE / UPDATE) ---
-  const handleSaveQuestion = (e: React.FormEvent) => {
+  const handleSaveQuestion = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!qContent.trim()) {
@@ -145,21 +145,29 @@ export const QuizEditorPage: React.FC = () => {
       explanation: qExplanation.trim() || undefined,
     };
 
-    if (editingQuestion) {
-      updateQuestion(currentQuiz.id, editingQuestion.id, questionData);
-      showToast('Đã cập nhật câu hỏi!', 'success');
-    } else {
-      addQuestion(currentQuiz.id, questionData);
-      showToast('Đã thêm câu hỏi mới thành công!', 'success');
-    }
+    try {
+      if (editingQuestion) {
+        await updateQuestion(currentQuiz.id, editingQuestion.id, questionData);
+        showToast('Đã cập nhật và lưu câu hỏi!', 'success');
+      } else {
+        await addQuestion(currentQuiz.id, questionData);
+        showToast('Đã thêm và lưu câu hỏi mới!', 'success');
+      }
 
-    setIsFormOpen(false);
+      setIsFormOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể lưu câu hỏi.', 'error');
+    }
   };
 
   // --- QUESTION ACTIONS ---
-  const handleDuplicate = (questionId: string) => {
-    duplicateQuestion(currentQuiz.id, questionId);
-    showToast('Đã nhân bản câu hỏi!', 'success');
+  const handleDuplicate = async (questionId: string) => {
+    try {
+      await duplicateQuestion(currentQuiz.id, questionId);
+      showToast('Đã nhân bản và lưu câu hỏi!', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể nhân bản câu hỏi.', 'error');
+    }
   };
 
   const handleOpenDelete = (q: Question) => {
@@ -167,15 +175,23 @@ export const QuizEditorPage: React.FC = () => {
     setIsDeleteOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingQuestion) return;
-    deleteQuestion(currentQuiz.id, deletingQuestion.id);
-    showToast('Đã xóa câu hỏi!', 'info');
-    setIsDeleteOpen(false);
+    try {
+      await deleteQuestion(currentQuiz.id, deletingQuestion.id);
+      showToast('Đã xóa câu hỏi khỏi hệ thống!', 'info');
+      setIsDeleteOpen(false);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể xóa câu hỏi.', 'error');
+    }
   };
 
-  const handleMove = (questionId: string, direction: 'up' | 'down') => {
-    moveQuestion(currentQuiz.id, questionId, direction);
+  const handleMove = async (questionId: string, direction: 'up' | 'down') => {
+    try {
+      await moveQuestion(currentQuiz.id, questionId, direction);
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể thay đổi thứ tự câu hỏi.', 'error');
+    }
   };
 
   return (
