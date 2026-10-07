@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { PracticeService } from '../../services/practice/PracticeService';
 import type { PracticeSet, PracticeAssignment, PracticeQuestion } from '../../services/practice/types';
 import { useToast } from '../../context/ToastContext';
+import { useStudentSession } from '../../context/StudentSessionContext';
 import {
   CheckCircle2,
   Clock,
@@ -16,10 +18,11 @@ import {
 
 export const StudentPracticeHubPage: React.FC = () => {
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const { session } = useStudentSession();
 
-  // Mock active student identity (e.g. std-3 Lê Thu Cúc or student in session)
-  const studentId = localStorage.getItem('student_id') || 'std-3';
-  const studentName = localStorage.getItem('student_name') || 'Lê Thu Cúc';
+  const studentId = session.studentId || localStorage.getItem('student_id') || '';
+  const studentName = session.studentName || localStorage.getItem('student_name') || '';
 
   const [activeTasks, setActiveTasks] = useState<{ practiceSet: PracticeSet; assignment: PracticeAssignment }[]>([]);
   const [completedTasks, setCompletedTasks] = useState<{ practiceSet: PracticeSet; assignment: PracticeAssignment }[]>([]);
@@ -33,6 +36,13 @@ export const StudentPracticeHubPage: React.FC = () => {
   const [testResult, setTestResult] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null);
 
   const fetchStudentTasks = async () => {
+    if (!studentId) {
+      setActiveTasks([]);
+      setCompletedTasks([]);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await PracticeService.getStudentAssignments(studentId);
@@ -58,10 +68,14 @@ export const StudentPracticeHubPage: React.FC = () => {
   };
 
   // Submit single question answer
-  const handleSelectAnswer = (qId: string, ans: string) => {
+  const handleSelectAnswer = async (qId: string, ans: string) => {
     setStudentAnswers((prev) => ({ ...prev, [qId]: ans }));
     if (takingSet) {
-      PracticeService.submitStudentAnswer(takingSet.id, studentId, qId, ans);
+      try {
+        await PracticeService.submitStudentAnswer(takingSet.id, studentId, qId, ans);
+      } catch (err: any) {
+        showToast(err?.message || 'Không thể lưu câu trả lời.', 'error');
+      }
     }
   };
 
@@ -81,6 +95,20 @@ export const StudentPracticeHubPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (!studentId || !studentName) {
+    return (
+      <Card className="max-w-xl mx-auto p-8 text-center space-y-5">
+        <h2 className="text-xl font-black text-slate-900">CHƯA XÁC ĐỊNH HỌC SINH</h2>
+        <p className="text-sm text-slate-600 font-medium">
+          Em cần tham gia lớp và chọn đúng tên của mình trước khi mở bài ôn tập.
+        </p>
+        <Button variant="student" size="lg" fullWidth onClick={() => navigate('/student/join')}>
+          VÀO LỚP & CHỌN TÊN
+        </Button>
+      </Card>
+    );
+  }
 
   if (isLoading) {
     return (
