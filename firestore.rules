@@ -216,7 +216,11 @@ service cloud.firestore {
           && resource.data.authUid == request.auth.uid
           && request.resource.data.authUid == request.auth.uid
         );
-        allow delete: if isTeacher();
+        allow delete: if isTeacher() || (
+          isAuthenticated()
+          && request.auth.token.firebase.sign_in_provider == 'anonymous'
+          && resource.data.authUid == request.auth.uid
+        );
       }
     }
 
