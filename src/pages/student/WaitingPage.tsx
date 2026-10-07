@@ -5,7 +5,14 @@ import { Clock, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export const WaitingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { session } = useStudentSession();
+  const { session, room } = useStudentSession();
+
+  const participantCount = Object.keys(room?.participants || {}).length;
+  const rosterCount = room?.roster?.length || 0;
+  const currentScore =
+    session.studentId && room?.scores?.[session.studentId]
+      ? room.scores[session.studentId].score
+      : 0;
 
   // Automatic Navigation when status changes via devControls or Teacher
   useEffect(() => {
@@ -41,8 +48,21 @@ export const WaitingPage: React.FC = () => {
 
         <h1 className="text-2xl font-black text-sky-950">Xin chào, {session.studentName}! 🎉</h1>
         <p className="text-sm font-bold text-slate-500">
-          {session.className || 'Lớp 4A'} • Môn {session.subject || 'Toán'}
+          {session.className || 'Đang tải lớp...'} • Môn {session.subject || 'Đang tải...'}
         </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-200">
+          <span className="text-[11px] font-bold text-emerald-700 uppercase block">Đã vào phòng</span>
+          <span className="text-2xl font-black text-emerald-900">{participantCount}/{rosterCount}</span>
+          <span className="text-xs text-emerald-700 block">học sinh</span>
+        </div>
+        <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-200">
+          <span className="text-[11px] font-bold text-amber-700 uppercase block">Điểm của em</span>
+          <span className="text-2xl font-black text-amber-900">{currentScore}</span>
+          <span className="text-xs text-amber-700 block">điểm hiện tại</span>
+        </div>
       </div>
 
       <div className="p-6 rounded-2xl bg-sky-50 border-2 border-sky-100 space-y-3">
