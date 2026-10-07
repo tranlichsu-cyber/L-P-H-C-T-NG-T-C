@@ -1,10 +1,10 @@
 import type { School, SchoolSettings, UserProfile, SchoolTeam, SchoolJoinRequest, AuditLogEntry } from './types';
 
 export const INITIAL_SCHOOL_SETTINGS: SchoolSettings = {
-  schoolName: 'Trường Tiểu học Nguyễn Trãi',
+  schoolName: 'Trường Tiểu học Sông Công',
   schoolYear: '2026-2027',
-  displayName: 'Trường TH Nguyễn Trãi',
-  campusName: 'Phân hiệu 1 - Cơ sở chính',
+  displayName: 'Trường TH Sông Công',
+  campusName: 'Phân hiệu Lý Tự Trọng',
   defaultPoints: 5,
   supportThreshold: 60,
   createdAt: '2026-09-01T08:00:00.000Z',
@@ -13,7 +13,7 @@ export const INITIAL_SCHOOL_SETTINGS: SchoolSettings = {
 
 export const INITIAL_SCHOOL: School = {
   id: 'school-default',
-  name: 'Trường Tiểu học Nguyễn Trãi',
+  name: 'Trường Tiểu học Sông Công',
   code: 'SC2026',
   status: 'ACTIVE',
   academicYear: '2026-2027',
