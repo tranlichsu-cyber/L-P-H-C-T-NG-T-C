@@ -21,7 +21,7 @@ import {
 import { aiService } from '../../services/ai/AIService';
 
 export const AiQuestionPage: React.FC = () => {
-  const { quizzes, addQuestion } = useTeacherData();
+  const { quizzes, addQuiz, addQuestion } = useTeacherData();
   const { showToast } = useToast();
 
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -45,23 +45,32 @@ export const AiQuestionPage: React.FC = () => {
   );
 
   const handleOpenAi = (mode: 'topic' | 'text' | 'file' = 'topic') => {
-    if (!targetQuiz) {
-      showToast('Hãy tạo ít nhất một bộ câu hỏi trước khi dùng Trợ lý AI.', 'info');
-      return;
-    }
     setInitialSourceMode(mode);
     setIsAiModalOpen(true);
   };
 
-  const handleAddAiQuestions = async (newQuestions: AIGeneratedQuestion[]) => {
-    if (!targetQuiz) {
-      showToast('Chưa có bộ đề nào để thêm câu hỏi!', 'error');
-      return;
-    }
-
+  const handleAddAiQuestions = async (
+    newQuestions: AIGeneratedQuestion[],
+    meta: { subject: string; grade: string; sourceName?: string }
+  ) => {
     try {
+      const destinationQuiz =
+        targetQuiz ||
+        (await addQuiz(
+          meta.sourceName
+            ? `AI - ${meta.sourceName.replace(/\.[^.]+$/, '').slice(0, 60)}`
+            : `Bộ câu hỏi AI - ${meta.subject} lớp ${meta.grade}`,
+          meta.subject,
+          meta.grade,
+          'PRIVATE'
+        ));
+
+      if (!targetQuiz) {
+        setSelectedQuizId(destinationQuiz.id);
+      }
+
       for (const q of newQuestions) {
-        await addQuestion(targetQuiz.id, {
+        await addQuestion(destinationQuiz.id, {
           type: q.type,
           content: q.content,
           options: q.options,
@@ -74,7 +83,7 @@ export const AiQuestionPage: React.FC = () => {
       }
 
       showToast(
-        `Đã thêm và lưu ${newQuestions.length} câu hỏi vào bộ đề "${targetQuiz.title}"!`,
+        `Đã thêm và lưu ${newQuestions.length} câu hỏi vào bộ đề "${destinationQuiz.title}"!`,
         'success'
       );
     } catch (err: any) {
@@ -164,7 +173,6 @@ export const AiQuestionPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOpenAi('topic')}
-              disabled={!targetQuiz}
               className="text-left rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-white to-sky-50 p-4 hover:border-sky-400 hover:shadow-md transition disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
@@ -184,7 +192,6 @@ export const AiQuestionPage: React.FC = () => {
             <button
               type="button"
               onClick={() => handleOpenAi('file')}
-              disabled={!targetQuiz}
               className="text-left rounded-2xl border-2 border-violet-300 bg-gradient-to-br from-white to-violet-50 p-4 hover:border-violet-500 hover:shadow-md transition disabled:opacity-50"
             >
               <div className="flex items-center gap-3">
@@ -287,7 +294,7 @@ export const AiQuestionPage: React.FC = () => {
                 <BookOpen className="w-9 h-9 text-slate-300 mx-auto" />
                 <h4 className="mt-3 font-black text-slate-800">Chưa có bộ câu hỏi</h4>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
-                  Hãy tạo một bộ câu hỏi trong Ngân hàng câu hỏi trước, sau đó quay lại dùng Trợ lý AI.
+                  Chưa cần tạo bộ trước. Thầy/Cô có thể tải tài liệu hoặc tạo bằng AI ngay; khi lưu, hệ thống sẽ tự tạo một bộ câu hỏi cá nhân mới.
                 </p>
               </div>
             )}
@@ -302,6 +309,7 @@ export const AiQuestionPage: React.FC = () => {
         initialSubject={targetQuiz?.subject || 'Toán'}
         initialGrade={targetQuiz?.grade || '4'}
         initialSourceMode={initialSourceMode}
+        autoOpenFilePicker={initialSourceMode === 'file'}
       />
     </div>
   );
