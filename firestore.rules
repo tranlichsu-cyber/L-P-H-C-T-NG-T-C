@@ -125,6 +125,17 @@ service cloud.firestore {
       }
     }
 
+    // 8. Public room-code lookup (direct get only; list/query is denied)
+    match /roomCodes/{roomCode} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow create: if isTeacher()
+        && request.resource.data.teacherId == request.auth.uid;
+      allow update, delete: if isSchoolAdmin() || (
+        isTeacher() && resource.data.teacherId == request.auth.uid
+      );
+    }
+
     // 8. Rooms (rooms/{roomId})
     match /rooms/{roomId} {
       allow read: if (
