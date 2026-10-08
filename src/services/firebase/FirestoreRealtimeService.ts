@@ -503,54 +503,41 @@ export class FirestoreRealtimeService {
     return true;
   }
 
-  // 8. Submit Answer (Student) - Idempotent Key & Race Condition Enforcement
-  public async submitAnswer(params: SubmitAnswerParams): Promise<{ success: boolean; error?: string }> {
+  // 8. Submit Answer (Student)
+  // Security Rules validate participant ownership, OPEN question state and prevent overwrites.
+  // This keeps the hot student path to one Firestore write.
+  public async submitAnswer(
+    params: SubmitAnswerParams
+  ): Promise<{ success: boolean; error?: string }> {
     if (!db) return { success: false, error: 'Firestore is not initialized' };
 
     const realAuthUid = await this.ensureAuthenticated();
     const submissionId = `${params.questionId}_${params.studentId}`;
-    const subRef = doc(db!, 'rooms', params.roomId, 'submissions', submissionId);
-
-    const participantSnap = await getDoc(
-      doc(db!, 'rooms', params.roomId, 'participants', params.studentId)
-    );
-    if (
-      !participantSnap.exists() ||
-      participantSnap.data()?.mockAuthUid !== realAuthUid
-    ) {
-      return {
-        success: false,
-        error: 'Phiên học sinh không hợp lệ. Hãy vào lại phòng và chọn đúng tên.',
-      };
-    }
-
-    const existingSubmission = await getDoc(subRef);
-    if (existingSubmission.exists()) {
-      return {
-        success: false,
-        error: 'Em đã gửi câu trả lời cho câu này rồi.',
-      };
-    }
-
-    // Race Condition Check: Ensure question is OPEN
-    const liveQSnap = await getDoc(doc(db!, 'rooms', params.roomId, 'liveQuestions', params.questionId));
-    if (!liveQSnap.exists() || liveQSnap.data()?.status !== 'OPEN') {
-      return { success: false, error: 'Câu hỏi đã đóng nhận câu trả lời.' };
-    }
+    const subRef = doc(db, 'rooms', params.roomId, 'submissions', submissionId);
 
     const submissionData = {
       questionId: params.questionId,
       studentId: params.studentId,
-      studentName: participantSnap.data()?.name || params.studentName,
+      studentName: params.studentName,
       authUid: realAuthUid || params.mockAuthUid,
       answer: params.answer.trim(),
       submittedAt: serverTimestamp(),
     };
 
-    await setDoc(subRef, submissionData);
-
-    return { success: true };
-  }
+    try {
+      await setDoc(subRef, submissionData);
+      return { success: true };
+    } catch (error: any) {
+      if (error?.code === 'permission-denied') {
+        return {
+          success: false,
+          error:
+            'Không thể gửi câu trả lời. Câu hỏi có thể đã đóng hoặc em đã gửi câu này rồi.',
+        };
+      }
+      throw error;
+    }
+  };
 
   // 10. Finish Room (Teacher)
   public async finishRoom(roomId: string): Promise<boolean> {
