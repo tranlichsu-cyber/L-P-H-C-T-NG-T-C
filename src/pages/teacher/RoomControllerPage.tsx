@@ -661,7 +661,13 @@ export const RoomControllerPage: React.FC = () => {
                 <Button variant="success" size="sm" onClick={handleShowResult} disabled={!canShowResult}>
                   <Eye className="w-4 h-4 mr-1" /> Hiện đáp án
                 </Button>
-                <Button variant="secondary" size="sm" onClick={handleNextQuestion} disabled={!canNextQuestion}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleNextQuestion}
+                  disabled={!canNextQuestion}
+                  className="disabled:opacity-70 disabled:text-white"
+                >
                   <SkipForward className="w-4 h-4 mr-1" /> Câu tiếp theo
                 </Button>
               </div>
