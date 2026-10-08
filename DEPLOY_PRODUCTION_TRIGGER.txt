@@ -34,3 +34,4 @@ Deploy Firebase password reset on login.
 Deploy PWA stale-chunk recovery and cache fixes.
 Deploy optimized student realtime listeners and batched scoring.
 Deploy removal of monthly live room metric card.
+Deploy audited realtime room-code scoring and student-flow fixes.
