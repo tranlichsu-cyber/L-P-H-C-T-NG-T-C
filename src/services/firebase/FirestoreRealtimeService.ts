@@ -12,6 +12,7 @@ import {
   writeBatch,
   serverTimestamp,
   runTransaction,
+  increment,
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { signInAnonymously } from 'firebase/auth';
@@ -354,45 +355,64 @@ export class FirestoreRealtimeService {
       })
     );
 
-    // Idempotent Auto-Scoring for correct submissions in Firestore
-    const sSnap = await getDocs(collection(db!, 'rooms', roomId, 'submissions'));
+    // Idempotent auto-scoring optimized for a whole class:
+    // read only this question's submissions/events, then commit all score updates in one batch.
+    const [submissionSnap, scoredEventSnap] = await Promise.all([
+      getDocs(
+        query(
+          collection(db!, 'rooms', roomId, 'submissions'),
+          where('questionId', '==', questionId)
+        )
+      ),
+      getDocs(
+        query(
+          collection(db!, 'rooms', roomId, 'scoreEvents'),
+          where('questionId', '==', questionId)
+        )
+      ),
+    ]);
 
-    for (const d of sSnap.docs) {
-      const sub = d.data();
+    const existingEventIds = new Set(scoredEventSnap.docs.map((eventDoc) => eventDoc.id));
+    const scoreBatch = writeBatch(db!);
+    let pendingWrites = 0;
+
+    submissionSnap.docs.forEach((submissionDoc) => {
+      const sub = submissionDoc.data();
       if (
-        sub.questionId === questionId &&
-        typeof sub.answer === 'string' &&
-        answersMatch(sub.answer, correctAnswer)
+        typeof sub.answer !== 'string' ||
+        !answersMatch(sub.answer, correctAnswer)
       ) {
-        const eventId = `question_${questionId}_student_${sub.studentId}`;
-        const eventRef = doc(db!, 'rooms', roomId, 'scoreEvents', eventId);
-        const eventSnap = await getDoc(eventRef);
-
-        if (!eventSnap.exists()) {
-          const batch = writeBatch(db!);
-          batch.set(eventRef, {
-            id: eventId,
-            studentId: sub.studentId,
-            type: 'QUESTION_CORRECT',
-            points: 10,
-            questionId,
-            createdAt: serverTimestamp(),
-          });
-
-          const scoreRef = doc(db!, 'rooms', roomId, 'scores', sub.studentId);
-          const scoreSnap = await getDoc(scoreRef);
-          const currentScore = scoreSnap.exists() ? scoreSnap.data()?.score || 0 : 0;
-
-          batch.set(scoreRef, {
-            studentId: sub.studentId,
-            studentName: sub.studentName,
-            score: currentScore + 10,
-            updatedAt: serverTimestamp(),
-          }, { merge: true });
-
-          await batch.commit();
-        }
+        return;
       }
+
+      const eventId = `question_${questionId}_student_${sub.studentId}`;
+      if (existingEventIds.has(eventId)) return;
+
+      scoreBatch.set(doc(db!, 'rooms', roomId, 'scoreEvents', eventId), {
+        id: eventId,
+        studentId: sub.studentId,
+        type: 'QUESTION_CORRECT',
+        points: 10,
+        questionId,
+        createdAt: serverTimestamp(),
+      });
+
+      scoreBatch.set(
+        doc(db!, 'rooms', roomId, 'scores', sub.studentId),
+        {
+          studentId: sub.studentId,
+          studentName: sub.studentName,
+          score: increment(10),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      pendingWrites += 2;
+    });
+
+    if (pendingWrites > 0) {
+      await scoreBatch.commit();
     }
 
     return true;
