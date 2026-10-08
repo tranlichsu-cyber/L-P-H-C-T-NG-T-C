@@ -595,6 +595,49 @@ export class MockRealtimeService {
       }
     });
   }
+
+  public subscribeStudentRoom(
+    roomId: string,
+    studentId: string,
+    callback: (room: MockRoomData) => void
+  ): () => void {
+    const emitStudentView = () => {
+      const room = getRoomById(roomId);
+      if (!room) return;
+
+      const activeQuestionId = room.activeQuestionId;
+      const liveQuestions = activeQuestionId && room.liveQuestions[activeQuestionId]
+        ? { [activeQuestionId]: room.liveQuestions[activeQuestionId] }
+        : {};
+      const submissions = Object.fromEntries(
+        Object.entries(room.submissions || {}).filter(([, submission]) =>
+          submission.studentId === studentId
+        )
+      );
+      const scores = room.scores?.[studentId]
+        ? { [studentId]: room.scores[studentId] }
+        : {};
+
+      callback({
+        ...room,
+        rosterCount: room.rosterCount ?? room.roster.length,
+        participantCount:
+          room.participantCount ?? Object.keys(room.participants || {}).length,
+        roster: [],
+        participants: {},
+        liveQuestions,
+        submissions,
+        scores,
+        scoreEvents: {},
+      });
+    };
+
+    emitStudentView();
+
+    return eventBus.subscribe((event: RealtimeEvent) => {
+      if (event.roomId === roomId) emitStudentView();
+    });
+  }
 }
 
 export const realtimeService = new MockRealtimeService();
