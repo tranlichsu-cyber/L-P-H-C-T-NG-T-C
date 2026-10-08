@@ -210,6 +210,7 @@ export class FirestoreRealtimeService {
           liveQuestions: {},
           submissions: {},
           scores: {},
+          scoreEvents: {},
         },
       };
     }
