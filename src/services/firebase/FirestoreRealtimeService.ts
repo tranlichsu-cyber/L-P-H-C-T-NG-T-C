@@ -464,6 +464,12 @@ export class FirestoreRealtimeService {
     const privateData = privateSnap.data();
     const correctAnswer = String(privateData.correctAnswer);
     const explanation = privateData.explanation ? String(privateData.explanation) : '';
+    const correctPoints = Number.isFinite(Number(privateData.correctPoints))
+      ? Math.max(0, Number(privateData.correctPoints))
+      : 10;
+    const wrongPenalty = Number.isFinite(Number(privateData.wrongPenalty))
+      ? Math.max(0, Number(privateData.wrongPenalty))
+      : 5;
 
     const normalizeChoiceValue = (
       value: string,
@@ -526,6 +532,8 @@ export class FirestoreRealtimeService {
       sanitizeFirestoreData({
         status: 'RESULT',
         correctAnswer,
+        correctPoints,
+        wrongPenalty,
         ...(explanation ? { explanation } : {}),
       })
     );
@@ -553,37 +561,44 @@ export class FirestoreRealtimeService {
 
     submissionSnap.docs.forEach((submissionDoc) => {
       const sub = submissionDoc.data();
-      if (
-        typeof sub.answer !== 'string' ||
-        !answersMatch(sub.answer, correctAnswer)
-      ) {
-        return;
-      }
+      if (typeof sub.answer !== 'string') return;
 
       const eventId = `question_${questionId}_student_${sub.studentId}`;
       if (existingEventIds.has(eventId)) return;
 
+      const isCorrect = answersMatch(sub.answer, correctAnswer);
+      const points = isCorrect ? correctPoints : -wrongPenalty;
+
       scoreBatch.set(doc(db!, 'rooms', roomId, 'scoreEvents', eventId), {
         id: eventId,
         studentId: sub.studentId,
-        type: 'QUESTION_CORRECT',
-        points: 10,
+        type: isCorrect ? 'QUESTION_CORRECT' : 'QUESTION_WRONG',
+        points,
         questionId,
         createdAt: serverTimestamp(),
       });
 
       scoreBatch.set(
-        doc(db!, 'rooms', roomId, 'scores', sub.studentId),
-        {
-          studentId: sub.studentId,
-          studentName: sub.studentName,
-          score: increment(10),
-          updatedAt: serverTimestamp(),
-        },
+        submissionDoc.ref,
+        { isCorrect },
         { merge: true }
       );
 
-      pendingWrites += 2;
+      if (points !== 0) {
+        scoreBatch.set(
+          doc(db!, 'rooms', roomId, 'scores', sub.studentId),
+          {
+            studentId: sub.studentId,
+            studentName: sub.studentName,
+            score: increment(points),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+        pendingWrites += 3;
+      } else {
+        pendingWrites += 2;
+      }
     });
 
     if (pendingWrites > 0) {
