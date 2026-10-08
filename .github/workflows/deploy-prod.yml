@@ -51,6 +51,36 @@ jobs:
             exit 1
           fi
 
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+          create_credentials_file: true
+          export_environment_variables: true
+
+      - name: Verify authentication environment
+        shell: bash
+        run: |
+          test -n "$GOOGLE_APPLICATION_CREDENTIALS"
+          test -f "$GOOGLE_APPLICATION_CREDENTIALS"
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: lop-hoc-tuong-tac-a62a5
+
+      - name: Enable Gemini API
+        shell: bash
+        run: |
+          gcloud services enable generativelanguage.googleapis.com --project=lop-hoc-tuong-tac-a62a5 --quiet
+
       - name: Probe Gemini API permission
         shell: bash
         run: |
@@ -87,26 +117,6 @@ jobs:
           fi
 
           echo "Gemini production key is authorized."
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Build
-        run: npm run build
-
-      - name: Authenticate to Google Cloud
-        id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
-          create_credentials_file: true
-          export_environment_variables: true
-
-      - name: Verify authentication environment
-        shell: bash
-        run: |
-          test -n "$GOOGLE_APPLICATION_CREDENTIALS"
-          test -f "$GOOGLE_APPLICATION_CREDENTIALS"
 
       - name: Deploy PRODUCTION
         run: npx firebase-tools@15.32.1 deploy --only hosting,firestore:rules,firestore:indexes --project lop-hoc-tuong-tac-a62a5 --non-interactive
