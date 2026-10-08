@@ -21,6 +21,32 @@ export const ResultPage: React.FC = () => {
 
   const q = session.liveQuestion;
   const isCorrect = session.isCorrect;
+
+  const displayCorrectAnswer = (() => {
+    const raw = q.correctAnswer || '';
+    if (
+      q.type === 'MULTIPLE_CHOICE' &&
+      /^[A-D]$/i.test(raw.trim()) &&
+      q.options?.length
+    ) {
+      const index = raw.trim().toUpperCase().charCodeAt(0) - 65;
+      return q.options[index] || raw;
+    }
+
+    if (q.type === 'TRUE_FALSE') {
+      const normalized = raw
+        .trim()
+        .toLocaleLowerCase('vi-VN')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd');
+
+      if (['dung', 'true', '1', 'yes'].includes(normalized)) return 'Đúng';
+      if (['sai', 'false', '0', 'no'].includes(normalized)) return 'Sai';
+    }
+
+    return raw;
+  })();
   const currentScore =
     session.studentId && room?.scores?.[session.studentId]
       ? room.scores[session.studentId].score
@@ -53,7 +79,7 @@ export const ResultPage: React.FC = () => {
 
             <div className="p-4 rounded-2xl bg-emerald-100/80 border-2 border-emerald-300 text-emerald-950 text-sm font-bold mb-6">
               <span className="text-xs text-emerald-800 block mb-1">Đáp án đúng chuẩn:</span>
-              <span className="text-xl font-black">{q.correctAnswer}</span>
+              <span className="text-xl font-black">{displayCorrectAnswer}</span>
             </div>
           </div>
         ) : (
@@ -69,7 +95,7 @@ export const ResultPage: React.FC = () => {
 
             <div className="p-4 rounded-2xl bg-amber-100/80 border-2 border-amber-300 text-amber-950 text-sm font-bold mb-6">
               <span className="text-xs text-amber-800 block mb-1">Đáp án đúng là:</span>
-              <span className="text-xl font-black">{q.correctAnswer}</span>
+              <span className="text-xl font-black">{displayCorrectAnswer}</span>
               {session.submittedAnswer && (
                 <div className="text-xs font-normal text-slate-600 mt-1 border-t border-amber-200/60 pt-1">
                   Câu trả lời của em: <span className="line-through">{session.submittedAnswer}</span>
