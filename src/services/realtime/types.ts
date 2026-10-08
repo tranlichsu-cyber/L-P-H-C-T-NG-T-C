@@ -117,6 +117,8 @@ export interface LiveQuestionPublic {
   startedAt?: string;
   correctAnswer?: string; // Omitted until status === RESULT
   explanation?: string;   // Omitted until status === RESULT
+  correctPoints?: number;
+  wrongPenalty?: number;
 }
 
 export interface MockSubmission {
@@ -141,7 +143,7 @@ export interface MockScore {
 export interface ScoreEvent {
   id: string; // question_q1_student_s1 or manual_<timestamp>_<rand> or game_<gameId>_<rand>
   studentId: string;
-  type: 'QUESTION_CORRECT' | 'MANUAL' | 'GAME_CORRECT' | 'GAME_BONUS' | 'TEAM_GAME_REWARD';
+  type: 'QUESTION_CORRECT' | 'QUESTION_WRONG' | 'MANUAL' | 'GAME_CORRECT' | 'GAME_BONUS' | 'TEAM_GAME_REWARD';
   points: number;
   questionId?: string;
   reason?: string;
@@ -203,6 +205,8 @@ export interface CreateRoomParams {
     options?: string[];
     correctAnswer: string;
     explanation?: string;
+    correctPoints?: number;
+    wrongPenalty?: number;
   }[];
   roster: { id: string; name: string }[];
 }
