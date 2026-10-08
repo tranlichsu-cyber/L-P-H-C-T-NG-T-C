@@ -53,6 +53,18 @@ export class FirestoreRealtimeService {
     return credential.user.uid;
   }
 
+  private async generateUniqueRoomCode(): Promise<string> {
+    if (!db) throw new Error('Firestore is not initialized');
+
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const codeSnap = await getDoc(doc(db, 'roomCodes', code));
+      if (!codeSnap.exists()) return code;
+    }
+
+    throw new Error('Không thể tạo mã phòng duy nhất. Vui lòng thử lại.');
+  }
+
   // 1. Create Room (Teacher) - Uses writeBatch for cost optimization
   public async createRoom(params: CreateRoomParams): Promise<MockRoomData> {
     if (!db) throw new Error('Firestore is not initialized');
@@ -62,7 +74,7 @@ export class FirestoreRealtimeService {
 
     const roomRef = doc(collection(db!, 'rooms'));
     const roomId = roomRef.id;
-    const roomCode = String(Math.floor(100000 + Math.random() * 900000));
+    const roomCode = await this.generateUniqueRoomCode();
     const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 12 * 3600 * 1000).toISOString();
 
@@ -84,13 +96,26 @@ export class FirestoreRealtimeService {
       expiresAt,
       rosterCount: params.roster.length,
       participantCount: 0,
+    };
+    batch.set(roomRef, roomData);
+
+    batch.set(doc(db!, 'roomCodes', roomCode), {
+      roomId,
+      roomCode,
+      teacherId: params.teacherId,
+      classId: params.classId,
+      className: params.className,
+      subject: params.subject,
+      status: 'WAITING',
+      expiresAt,
+      rosterCount: params.roster.length,
       rosterPreview: params.roster.map((student) => ({
         id: student.id,
         studentId: student.id,
         name: student.name,
       })),
-    };
-    batch.set(roomRef, roomData);
+      createdAt: serverTimestamp(),
+    });
 
     // Copy Roster into rooms/{roomId}/roster subcollection via batch
     params.roster.forEach((student) => {
@@ -128,31 +153,89 @@ export class FirestoreRealtimeService {
   }
 
   // 2. Join Room by Code (Student)
-  // Authenticate anonymously first so Firestore Rules allow room reads.
-  // Query only by roomCode to avoid requiring a composite index.
-  public async joinRoomByCode(code: string): Promise<{ room: MockRoomData | null; error?: string }> {
+  // New rooms use a direct roomCodes/{code} lookup (one document read).
+  // A legacy query fallback remains temporarily for rooms created before this upgrade.
+  public async joinRoomByCode(
+    code: string
+  ): Promise<{ room: MockRoomData | null; error?: string }> {
     if (!db) throw new Error('Firestore is not initialized');
 
     await this.ensureAuthenticated();
 
-    const q = query(
+    const normalizedCode = code.trim();
+    const codeSnap = await getDoc(doc(db, 'roomCodes', normalizedCode));
+
+    if (codeSnap.exists()) {
+      const access = codeSnap.data() as {
+        roomId: string;
+        roomCode: string;
+        classId: string;
+        className: string;
+        subject: string;
+        status: MockRoomData['status'];
+        expiresAt?: string;
+        rosterCount?: number;
+        rosterPreview?: MockRoomData['roster'];
+      };
+
+      if (access.status !== 'WAITING' && access.status !== 'ACTIVE') {
+        return {
+          room: null,
+          error: 'Phòng học đã kết thúc hoặc không còn hoạt động.',
+        };
+      }
+
+      if (access.expiresAt && new Date(access.expiresAt).getTime() < Date.now()) {
+        return { room: null, error: 'Phòng học đã hết hạn.' };
+      }
+
+      return {
+        room: {
+          id: access.roomId,
+          roomCode: access.roomCode,
+          teacherId: '',
+          classId: access.classId,
+          className: access.className,
+          subject: access.subject,
+          quizId: '',
+          quizTitle: '',
+          status: access.status,
+          activeQuestionId: null,
+          createdAt: '',
+          expiresAt: access.expiresAt || '',
+          rosterCount: access.rosterCount ?? access.rosterPreview?.length ?? 0,
+          participantCount: 0,
+          roster: access.rosterPreview || [],
+          participants: {},
+          liveQuestions: {},
+          submissions: {},
+          scores: {},
+        },
+      };
+    }
+
+    // Compatibility for rooms created before roomCodes/{code} was introduced.
+    const legacyQuery = query(
       collection(db, 'rooms'),
-      where('roomCode', '==', code),
+      where('roomCode', '==', normalizedCode),
       limit(1)
     );
+    const legacySnap = await getDocs(legacyQuery);
 
-    const snap = await getDocs(q);
-    if (snap.empty) {
+    if (legacySnap.empty) {
       return { room: null, error: 'Không tìm thấy phòng học. Hãy kiểm tra lại mã.' };
     }
 
-    const docSnap = snap.docs[0];
-    const roomData = docSnap.data() as MockRoomData & {
+    const roomDoc = legacySnap.docs[0];
+    const roomData = roomDoc.data() as MockRoomData & {
       rosterPreview?: MockRoomData['roster'];
     };
 
     if (roomData.status !== 'WAITING' && roomData.status !== 'ACTIVE') {
-      return { room: null, error: 'Phòng học đã kết thúc hoặc không còn hoạt động.' };
+      return {
+        room: null,
+        error: 'Phòng học đã kết thúc hoặc không còn hoạt động.',
+      };
     }
 
     if (roomData.expiresAt && new Date(roomData.expiresAt).getTime() < Date.now()) {
@@ -160,19 +243,17 @@ export class FirestoreRealtimeService {
     }
 
     let roster = roomData.rosterPreview || [];
-
-    // Compatibility for rooms created before rosterPreview was introduced.
     if (roster.length === 0) {
-      const rosterSnap = await getDocs(collection(db, 'rooms', docSnap.id, 'roster'));
+      const rosterSnap = await getDocs(collection(db, 'rooms', roomDoc.id, 'roster'));
       roster = rosterSnap.docs.map(
-        (d) => d.data() as MockRoomData['roster'][number]
+        (rosterDoc) => rosterDoc.data() as MockRoomData['roster'][number]
       );
     }
 
     return {
       room: {
         ...roomData,
-        id: docSnap.id,
+        id: roomDoc.id,
         roster,
         participants: {},
         liveQuestions: {},
@@ -271,7 +352,20 @@ export class FirestoreRealtimeService {
   public async startRoomSession(roomId: string): Promise<boolean> {
     if (!db) return false;
     const roomRef = doc(db!, 'rooms', roomId);
-    await updateDoc(roomRef, { status: 'ACTIVE' });
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists()) return false;
+
+    const roomCode = roomSnap.data()?.roomCode as string | undefined;
+    const batch = writeBatch(db!);
+    batch.update(roomRef, { status: 'ACTIVE' });
+    if (roomCode) {
+      batch.set(
+        doc(db!, 'roomCodes', roomCode),
+        { status: 'ACTIVE' },
+        { merge: true }
+      );
+    }
+    await batch.commit();
     return true;
   }
 
@@ -291,6 +385,16 @@ export class FirestoreRealtimeService {
       activeQuestionId: questionId,
       status: 'ACTIVE',
     });
+
+    const roomSnap = await getDoc(roomRef);
+    const roomCode = roomSnap.exists() ? (roomSnap.data()?.roomCode as string | undefined) : undefined;
+    if (roomCode) {
+      batch.set(
+        doc(db!, 'roomCodes', roomCode),
+        { status: 'ACTIVE' },
+        { merge: true }
+      );
+    }
 
     await batch.commit();
     return true;
@@ -681,6 +785,18 @@ export class FirestoreRealtimeService {
       summaryReady: true,
       archived: rawRoomData.archived || false,
     });
+
+    if (rawRoomData.roomCode) {
+      batch.set(
+        doc(firestore, 'roomCodes', rawRoomData.roomCode),
+        {
+          status: 'FINISHED',
+          finishedAt,
+        },
+        { merge: true }
+      );
+    }
+
     batch.set(doc(firestore, 'rooms', roomId, 'summary', 'main'), summary, { merge: true });
 
     await batch.commit();
