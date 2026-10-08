@@ -10,20 +10,48 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  isRecoveringChunk: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
     error: null,
+    isRecoveringChunk: false,
   };
 
-  public static getDerivedStateFromError(error: Error): State {
+  public static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Unhandled UI Exception caught by ErrorBoundary:', error, errorInfo);
+
+    const message = String(error?.message || error || '');
+    const isChunkLoadError =
+      /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(
+        message
+      );
+
+    if (isChunkLoadError) {
+      const key = 'lhtt_chunk_recovery_once';
+      const alreadyRetried = sessionStorage.getItem(key) === '1';
+
+      if (!alreadyRetried) {
+        sessionStorage.setItem(key, '1');
+        this.setState({ isRecoveringChunk: true });
+
+        navigator.serviceWorker?.getRegistrations?.()
+          .then((registrations) => Promise.all(registrations.map((reg) => reg.update())))
+          .catch(() => undefined)
+          .finally(() => {
+            window.location.reload();
+          });
+        return;
+      }
+
+      sessionStorage.removeItem(key);
+    }
   }
 
   private handleReload = () => {
@@ -31,6 +59,18 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public render() {
+    if (this.state.isRecoveringChunk) {
+      return (
+        <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-6 text-center">
+          <div className="max-w-md w-full bg-slate-800 border border-sky-500/30 p-8 rounded-3xl shadow-2xl space-y-4">
+            <RefreshCw className="w-10 h-10 animate-spin text-sky-400 mx-auto" />
+            <h1 className="text-xl font-black text-white">ĐANG CẬP NHẬT PHIÊN BẢN MỚI</h1>
+            <p className="text-sm text-slate-300">Ứng dụng đang tự đồng bộ lại dữ liệu giao diện. Vui lòng chờ trong giây lát.</p>
+          </div>
+        </div>
+      );
+    }
+
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center p-6 text-center">
