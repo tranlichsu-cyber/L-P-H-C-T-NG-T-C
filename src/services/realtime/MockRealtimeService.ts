@@ -24,13 +24,20 @@ export class MockRealtimeService {
     const expiresAt = new Date(Date.now() + 12 * 3600 * 1000).toISOString();
 
     // Store private answers securely
-    const privateAnswers: Record<string, { correctAnswer: string; explanation?: string }> = {};
+    const privateAnswers: Record<string, {
+      correctAnswer: string;
+      explanation?: string;
+      correctPoints?: number;
+      wrongPenalty?: number;
+    }> = {};
     const liveQuestions: Record<string, LiveQuestionPublic> = {};
 
     params.questions.forEach((q) => {
       privateAnswers[q.id] = {
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
+        correctPoints: q.correctPoints ?? 10,
+        wrongPenalty: q.wrongPenalty ?? 5,
       };
 
       // Initial public question state (READY)
@@ -220,39 +227,46 @@ export class MockRealtimeService {
     liveQ.status = 'RESULT';
     liveQ.correctAnswer = privateAns.correctAnswer;
     liveQ.explanation = privateAns.explanation;
+    liveQ.correctPoints = privateAns.correctPoints ?? 10;
+    liveQ.wrongPenalty = privateAns.wrongPenalty ?? 5;
 
-    // Idempotent Auto-Scoring for correct submissions
+    // Idempotent auto-scoring: correct adds points, wrong subtracts penalty.
     if (!room.scores) room.scores = {};
     if (!room.scoreEvents) room.scoreEvents = {};
 
-    const submissions = Object.values(room.submissions).filter((s) => s.questionId === questionId);
-    const targetCorrect = privateAns.correctAnswer.trim().toLowerCase();
+    const submissions = Object.values(room.submissions).filter(
+      (submission) => submission.questionId === questionId
+    );
+    const targetCorrect = privateAns.correctAnswer.trim().toLocaleLowerCase('vi-VN');
+    const correctPoints = privateAns.correctPoints ?? 10;
+    const wrongPenalty = privateAns.wrongPenalty ?? 5;
 
     submissions.forEach((sub) => {
-      const isCorrect = sub.answer.trim().toLowerCase() === targetCorrect;
-      if (isCorrect) {
-        const eventId = `question_${questionId}_student_${sub.studentId}`;
-        // Enforce Idempotency: Only award points if event does NOT already exist
-        if (!room.scoreEvents[eventId]) {
-          const now = new Date().toISOString();
-          room.scoreEvents[eventId] = {
-            id: eventId,
-            studentId: sub.studentId,
-            type: 'QUESTION_CORRECT',
-            points: 10,
-            questionId,
-            createdAt: now,
-          };
+      const eventId = `question_${questionId}_student_${sub.studentId}`;
+      if (room.scoreEvents[eventId]) return;
 
-          const currentScore = room.scores[sub.studentId]?.score || 0;
-          room.scores[sub.studentId] = {
-            studentId: sub.studentId,
-            studentName: sub.studentName,
-            score: currentScore + 10,
-            updatedAt: now,
-          };
-        }
-      }
+      const isCorrect =
+        sub.answer.trim().toLocaleLowerCase('vi-VN') === targetCorrect;
+      const points = isCorrect ? correctPoints : -wrongPenalty;
+      const now = new Date().toISOString();
+
+      sub.isCorrect = isCorrect;
+      room.scoreEvents[eventId] = {
+        id: eventId,
+        studentId: sub.studentId,
+        type: isCorrect ? 'QUESTION_CORRECT' : 'QUESTION_WRONG',
+        points,
+        questionId,
+        createdAt: now,
+      };
+
+      const currentScore = room.scores[sub.studentId]?.score || 0;
+      room.scores[sub.studentId] = {
+        studentId: sub.studentId,
+        studentName: sub.studentName,
+        score: currentScore + points,
+        updatedAt: now,
+      };
     });
 
     saveMockDatabase(db);
