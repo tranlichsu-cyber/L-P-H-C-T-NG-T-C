@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
@@ -15,6 +15,7 @@ interface AiQuestionGeneratorModalProps {
   onAddQuestionsToQuiz: (questions: AIGeneratedQuestion[]) => void | Promise<void>;
   initialSubject?: string;
   initialGrade?: string;
+  initialSourceMode?: 'topic' | 'text' | 'file';
 }
 
 export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> = ({
@@ -23,11 +24,12 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
   onAddQuestionsToQuiz,
   initialSubject = 'Toán',
   initialGrade = '4',
+  initialSourceMode = 'topic',
 }) => {
   const { showToast } = useToast();
 
   // Form State
-  const [sourceMode, setSourceMode] = useState<'topic' | 'text' | 'file'>('topic');
+  const [sourceMode, setSourceMode] = useState<'topic' | 'text' | 'file'>(initialSourceMode);
   const [grade, setGrade] = useState(initialGrade);
   const [subject, setSubject] = useState(initialSubject);
   const [topic, setTopic] = useState('');
@@ -36,6 +38,15 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
   const [questionCount, setQuestionCount] = useState<number>(5);
   const [questionType, setQuestionType] = useState<'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'MIXED'>('MIXED');
   const [difficulty, setDifficulty] = useState<'KNOWLEDGE' | 'UNDERSTANDING' | 'APPLICATION' | 'BALANCED'>('BALANCED');
+
+  useEffect(() => {
+    if (isOpen) {
+      setSourceMode(initialSourceMode);
+      setGrade(initialGrade);
+      setSubject(initialSubject);
+      setGeneratedQuestions([]);
+    }
+  }, [isOpen, initialSourceMode, initialGrade, initialSubject]);
 
   // Document Upload State
   const [fileName, setFileName] = useState('');
