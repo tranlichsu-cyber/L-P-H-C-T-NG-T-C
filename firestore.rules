@@ -184,9 +184,17 @@ service cloud.firestore {
         );
         allow create: if isAuthenticated()
           && request.resource.data.authUid == request.auth.uid
+          && request.resource.data.questionId is string
+          && request.resource.data.studentId is string
           && get(
             /databases/$(database)/documents/rooms/$(roomId)/participants/$(request.resource.data.studentId)
-          ).data.mockAuthUid == request.auth.uid;
+          ).data.mockAuthUid == request.auth.uid
+          && request.resource.data.studentName == get(
+            /databases/$(database)/documents/rooms/$(roomId)/participants/$(request.resource.data.studentId)
+          ).data.name
+          && get(
+            /databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)
+          ).data.status == 'OPEN';
         allow update, delete: if canManageRoom(roomId);
       }
 
