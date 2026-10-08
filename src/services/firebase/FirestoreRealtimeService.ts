@@ -253,6 +253,7 @@ export class FirestoreRealtimeService {
         const roomData = roomSnap.data() as { participantCount?: number };
         transaction.update(roomRef, {
           participantCount: (roomData.participantCount || 0) + 1,
+          lastParticipantId: studentId,
         });
       }
     });
