@@ -5,14 +5,12 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
-import { AiQuestionGeneratorModal } from '../../components/teacher/AiQuestionGeneratorModal';
 import { PracticeService } from '../../services/practice/PracticeService';
 import type { PracticeQuestion, PracticeType, PracticeFeedbackMode } from '../../services/practice/types';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import {
-  Sparkles,
   BookOpen,
   Trash2,
   Users,
@@ -42,7 +40,6 @@ export const PracticeEditorPage: React.FC = () => {
 
   // Questions State
   const [questions, setQuestions] = useState<PracticeQuestion[]>([]);
-  const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
   const [isQuizBankModalOpen, setIsQuizBankModalOpen] = useState<boolean>(false);
 
   // Student Assignment Target State
@@ -76,22 +73,6 @@ export const PracticeEditorPage: React.FC = () => {
       });
     }
   }, [practiceSetId]);
-
-  // Handle AI question proposals addition
-  const handleAddAiQuestions = (aiQuestions: any[]) => {
-    const formatted: PracticeQuestion[] = aiQuestions.map((q, idx) => ({
-      id: `pq-${Date.now()}-${idx}`,
-      type: q.type,
-      content: q.content,
-      options: q.options,
-      correctAnswer: q.correctAnswer,
-      explanation: q.explanation,
-      difficulty: q.difficulty,
-    }));
-
-    setQuestions((prev) => [...prev, ...formatted]);
-    showToast(`Đã thêm ${formatted.length} câu hỏi AI đề xuất vào bài ôn!`, 'success');
-  };
 
   // Handle Quiz Bank question selection
   const handleImportQuizQuestions = (quizId: string) => {
@@ -276,15 +257,12 @@ export const PracticeEditorPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
               <div>
                 <h3 className="font-bold text-slate-900 text-base">2. DANH SÁCH CÂU HỎI ({questions.length} CÂU)</h3>
-                <p className="text-xs text-slate-500 font-medium">Thêm câu hỏi từ AI hoặc Ngân hàng câu hỏi</p>
+                <p className="text-xs text-slate-500 font-medium">Thêm câu hỏi từ Ngân hàng câu hỏi</p>
               </div>
 
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setIsQuizBankModalOpen(true)}>
                   <BookOpen className="w-4 h-4 mr-1 text-sky-600" /> Ngân hàng câu hỏi
-                </Button>
-                <Button variant="warning" size="sm" onClick={() => setIsAiModalOpen(true)} className="text-slate-950 font-bold">
-                  <Sparkles className="w-4 h-4 mr-1" /> AI đề xuất
                 </Button>
               </div>
             </div>
@@ -294,12 +272,9 @@ export const PracticeEditorPage: React.FC = () => {
                 <p className="text-xs text-slate-500 font-medium">
                   Chưa có câu hỏi nào trong bài ôn tập này.
                 </p>
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center">
                   <Button variant="outline" size="sm" onClick={() => setIsQuizBankModalOpen(true)}>
                     <BookOpen className="w-4 h-4 mr-1" /> Dùng câu hỏi có sẵn
-                  </Button>
-                  <Button variant="warning" size="sm" onClick={() => setIsAiModalOpen(true)} className="text-slate-950">
-                    <Sparkles className="w-4 h-4 mr-1" /> AI sinh câu hỏi
                   </Button>
                 </div>
               </div>
@@ -489,14 +464,6 @@ export const PracticeEditorPage: React.FC = () => {
         </div>
       </Modal>
 
-      {/* MODAL: AI QUESTION GENERATOR */}
-      <AiQuestionGeneratorModal
-        isOpen={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        onAddQuestionsToQuiz={handleAddAiQuestions}
-        initialSubject={subject}
-        initialGrade={grade}
-      />
 
       {/* MODAL: CONFIRM ASSIGNMENT */}
       <Modal
