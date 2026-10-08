@@ -7,8 +7,10 @@ export const WaitingPage: React.FC = () => {
   const navigate = useNavigate();
   const { session, room } = useStudentSession();
 
-  const participantCount = Object.keys(room?.participants || {}).length;
-  const rosterCount = room?.roster?.length || 0;
+  const participantCount =
+    room?.participantCount ?? Object.keys(room?.participants || {}).length;
+  const rosterCount =
+    room?.rosterCount ?? room?.roster?.length ?? 0;
   const currentScore =
     session.studentId && room?.scores?.[session.studentId]
       ? room.scores[session.studentId].score
