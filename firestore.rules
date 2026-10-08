@@ -58,7 +58,21 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider != 'anonymous'
         && request.auth.uid == uid
       );
-      allow write: if isSchoolAdmin();
+
+      // One-time bootstrap for the school's original administrator.
+      // The authenticated Google/Email identity must own the exact configured admin email.
+      allow create: if isSchoolAdmin() || (
+        isAuthenticated()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && request.auth.uid == uid
+        && request.auth.token.email == 'tranlichsu@gmail.com'
+        && request.resource.data.uid == uid
+        && request.resource.data.email == 'tranlichsu@gmail.com'
+        && request.resource.data.role == 'SCHOOL_ADMIN'
+        && request.resource.data.status == 'ACTIVE'
+      );
+
+      allow update, delete: if isSchoolAdmin();
     }
 
     // 2. Single School Settings (settings/school)
