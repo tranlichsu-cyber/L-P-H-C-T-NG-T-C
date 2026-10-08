@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { StudentSessionProvider } from './context/StudentSessionContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
 import { SchoolProvider } from './context/SchoolContext';
@@ -111,6 +112,7 @@ export const App: React.FC = () => {
             <OfflineBanner />
             <PWAInstallPrompt />
             <BrowserRouter>
+              <StudentSessionProvider>
               <Suspense fallback={<LoadingFallback />}>
                 <Routes>
                   {/* Role Selection Landing */}
@@ -190,6 +192,7 @@ export const App: React.FC = () => {
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Suspense>
+                          </StudentSessionProvider>
             </BrowserRouter>
           </TeacherDataProvider>
         </SchoolProvider>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Sparkles, Home, UserCheck } from 'lucide-react';
-import { useStudentSession, StudentSessionProvider } from '../context/StudentSessionContext';
+import { useStudentSession } from '../context/StudentSessionContext';
 import { DevTestPanel } from '../components/student/DevTestPanel';
 import { isFirebaseActive } from '../services/realtime/realtimeServiceSwitch';
 
@@ -68,8 +68,6 @@ const StudentLayoutInner: React.FC = () => {
 
 export const StudentLayout: React.FC = () => {
   return (
-    <StudentSessionProvider>
-      <StudentLayoutInner />
-    </StudentSessionProvider>
+    <StudentLayoutInner />
   );
 };
