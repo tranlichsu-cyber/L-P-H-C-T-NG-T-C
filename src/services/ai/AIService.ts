@@ -2,20 +2,19 @@ import type { AIProvider } from './providers/AIProvider';
 import { MockAIProvider } from './providers/MockAIProvider';
 import { GeminiProvider } from './providers/GeminiProvider';
 import type { AIGenerationOptions, AIGeneratedQuestion } from './types';
+import { isFirebaseConfigured } from '../firebase/firebase';
 
 const aiMode = import.meta.env.VITE_AI_MODE || 'mock';
 const aiEnabled = import.meta.env.VITE_AI_ENABLED !== 'false';
-const hasGeminiApiKey = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
-
 export const isRealAIMode =
   aiEnabled &&
   (aiMode === 'real' || aiMode === 'gemini') &&
-  hasGeminiApiKey;
+  isFirebaseConfigured;
 
 export const isAIConfigured =
   !aiEnabled ||
   aiMode === 'mock' ||
-  hasGeminiApiKey;
+  isFirebaseConfigured;
 
 const activeProvider: AIProvider = isRealAIMode ? new GeminiProvider() : new MockAIProvider();
 
@@ -42,10 +41,10 @@ export class AIService {
     if (
       aiEnabled &&
       (aiMode === 'real' || aiMode === 'gemini') &&
-      !hasGeminiApiKey
+      !isFirebaseConfigured
     ) {
       throw new Error(
-        'Trợ lý AI chưa được cấu hình Gemini API Key trên máy chủ Production.'
+        'Trợ lý AI chưa được kết nối đúng Firebase project.'
       );
     }
   }
