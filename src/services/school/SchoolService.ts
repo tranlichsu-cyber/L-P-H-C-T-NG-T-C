@@ -825,6 +825,9 @@ export class SchoolService {
     this.saveLocalStorage(local);
   }
 
+    this.saveLocalStorage(local);
+  }
+
   // 12. Single School Dashboard Metrics
   public static async getSchoolDashboardMetrics(): Promise<{
     activeTeacherCount: number;
@@ -854,10 +857,9 @@ export class SchoolService {
       const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
       const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
 
-      const [classesSnap, quizzesSnap, roomsSnap] = await Promise.all([
+      const [classesSnap, quizzesSnap] = await Promise.all([
         getDocs(collection(firestore, 'classes')),
         getDocs(collection(firestore, 'quizzes')),
-        getDocs(collection(firestore, 'rooms')),
       ]);
 
       const realClassDocs = classesSnap.docs.filter((d) => !legacyClassIds.has(d.id));
@@ -876,6 +878,112 @@ export class SchoolService {
         const data = d.data() as { visibility?: string };
         return data.visibility === 'TEAM' || data.visibility === 'SCHOOL';
       }).length;
+
+      return {
+        activeTeacherCount,
+        totalClassesCount,
+        totalStudentsCount,
+        sharedQuizCount,
+      };
+    } catch (error) {
+      console.error('Không thể tải số liệu Dashboard cấp trường từ Firestore', error);
+      throw new Error('Không thể tải số liệu thực của Dashboard cấp trường từ Firestore.');
+    }
+  }
+
+  // 13. Real school usage report from Firestore
+  public static async getSchoolUsageReport(
+    timeRange: 'THIS_WEEK' | 'THIS_MONTH' | 'THIS_SEMESTER'
+  ): Promise<{
+    totalSessions: number;
+    totalParticipants: number;
+    totalRoster: number;
+    avgParticipation: number;
+    sharedQuizCount: number;
+    subjectStats: Array<{
+      subject: string;
+      sessions: number;
+      quizzes: number;
+      totalStudents: number;
+      totalRoster: number;
+      avgParticipation: number;
+    }>;
+  }> {
+    const emptyReport = {
+      totalSessions: 0,
+      totalParticipants: 0,
+      totalRoster: 0,
+      avgParticipation: 0,
+      sharedQuizCount: 0,
+      subjectStats: [],
+    };
+
+    if (!isFirebaseConfigured || !db) return emptyReport;
+
+    const firestore = db;
+
+    const toDate = (raw: unknown): Date | null => {
+      if (typeof raw === 'string') {
+        const parsed = new Date(raw);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+      }
+      if (raw instanceof Date) return raw;
+      if (raw && typeof (raw as { toDate?: () => Date }).toDate === 'function') {
+        return (raw as { toDate: () => Date }).toDate();
+      }
+      return null;
+    };
+
+    const now = new Date();
+    let start: Date;
+
+    if (timeRange === 'THIS_WEEK') {
+      start = new Date(now);
+      const day = start.getDay();
+      const distanceToMonday = day === 0 ? 6 : day - 1;
+      start.setDate(start.getDate() - distanceToMonday);
+      start.setHours(0, 0, 0, 0);
+    } else if (timeRange === 'THIS_MONTH') {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    } else {
+      // Học kỳ I: 01/09 -> 31/01 of the active school year.
+      const semesterStartYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
+      start = new Date(semesterStartYear, 8, 1, 0, 0, 0, 0);
+    }
+
+    try {
+      const [roomsSnap, quizzesSnap] = await Promise.all([
+        getDocs(collection(firestore, 'rooms')),
+        getDocs(collection(firestore, 'quizzes')),
+      ]);
+
+      const relevantRooms = roomsSnap.docs.filter((roomDoc) => {
+        const data = roomDoc.data() as { createdAt?: unknown; status?: string };
+        const created = toDate(data.createdAt);
+        if (!created || created < start || created > now) return false;
+        // A WAITING room that was never started is not counted as a teaching session.
+        return data.status === 'ACTIVE' || data.status === 'FINISHED';
+      });
+
+      const roomDetails = await Promise.all(
+        relevantRooms.map(async (roomDoc) => {
+          const data = roomDoc.data() as {
+            subject?: string;
+            classId?: string;
+          };
+
+          const [participantsSnap, rosterSnap] = await Promise.all([
+            getDocs(collection(firestore, 'rooms', roomDoc.id, 'participants')),
+            getDocs(collection(firestore, 'rooms', roomDoc.id, 'roster')),
+          ]);
+
+          return {
+            subject: (data.subject || 'Chưa xác định').trim() || 'Chưa xác định',
+            participants: participantsSnap.size,
+            roster: rosterSnap.size,
+          };
+        })
+      );
 
       const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
       const relevantQuizzes = quizzesSnap.docs.filter((quizDoc) => {
