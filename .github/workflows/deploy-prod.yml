@@ -81,6 +81,22 @@ jobs:
         run: |
           gcloud services enable generativelanguage.googleapis.com --project=lop-hoc-tuong-tac-a62a5 --quiet
 
+      - name: Allow Gemini API on production API key
+        shell: bash
+        run: |
+          KEY_NAME=$(gcloud services api-keys lookup "$VITE_GEMINI_API_KEY" --format='value(name)')
+          if [ -z "$KEY_NAME" ]; then
+            echo "::error::Could not resolve the production Gemini API key resource."
+            exit 1
+          fi
+
+          gcloud services api-keys update "$KEY_NAME" \
+            --append \
+            --api-target=service=generativelanguage.googleapis.com \
+            --allowed-referrers="https://lop-hoc-tuong-tac-a62a5.web.app/*,https://lop-hoc-tuong-tac-a62a5.firebaseapp.com/*" \
+            --no-check-existing-usage \
+            --quiet
+
       - name: Probe Gemini API permission
         shell: bash
         run: |
