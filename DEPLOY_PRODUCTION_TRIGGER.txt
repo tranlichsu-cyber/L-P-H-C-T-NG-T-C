@@ -1,1 +1,1 @@
-Deploy fix: share StudentSessionProvider across landing and student routes. 2026-10-08T18:12Z
+Deploy compact landing layout 2026-10-08T18:16Z
