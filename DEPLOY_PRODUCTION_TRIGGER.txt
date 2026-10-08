@@ -39,3 +39,4 @@ Deploy per-question correct points and wrong penalties.
 Deploy next-question button contrast fix.
 Deploy Gemini AI production configuration.
 Deploy redesigned AI assistant workspace.
+Deploy compact AI page with visible document upload entry.
