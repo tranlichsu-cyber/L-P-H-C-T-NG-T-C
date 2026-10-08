@@ -32,3 +32,4 @@ Deploy Google sign-in linking and password change.
 Deploy original admin UID bootstrap repair.
 Deploy Firebase password reset on login.
 Deploy PWA stale-chunk recovery and cache fixes.
+Deploy optimized student realtime listeners and batched scoring.
