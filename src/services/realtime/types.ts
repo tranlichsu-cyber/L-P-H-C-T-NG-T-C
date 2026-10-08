@@ -173,6 +173,8 @@ export interface MockRoomData {
   finishedAt?: string;
   archived?: boolean;
   expiresAt: string;
+  rosterCount?: number;
+  participantCount?: number;
 
   roster: MockRoomRosterItem[];
   participants: Record<string, MockParticipant>; // studentId -> Participant
