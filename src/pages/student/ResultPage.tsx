@@ -51,6 +51,8 @@ export const ResultPage: React.FC = () => {
     session.studentId && room?.scores?.[session.studentId]
       ? room.scores[session.studentId].score
       : 0;
+  const correctPoints = q.correctPoints ?? 10;
+  const wrongPenalty = q.wrongPenalty ?? 5;
 
   const handleContinue = () => {
     continueAfterResult();
@@ -72,9 +74,12 @@ export const ResultPage: React.FC = () => {
             </div>
 
             <h1 className="text-3xl font-black text-emerald-950 mb-1">CHÍNH XÁC! 🎉</h1>
-            <p className="text-slate-600 font-bold text-base mb-6">
+            <p className="text-slate-600 font-bold text-base mb-2">
               Em đã trả lời đúng! Xuất sắc lắm! 🌟
             </p>
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-emerald-600 text-white font-black text-lg mb-6">
+              +{correctPoints} điểm
+            </div>
 
             <div className="p-4 rounded-2xl bg-emerald-100/80 border-2 border-emerald-300 text-emerald-950 text-sm font-bold mb-6">
               <span className="text-xs text-emerald-800 block mb-1">Đáp án đúng chuẩn:</span>
@@ -88,9 +93,12 @@ export const ResultPage: React.FC = () => {
             </div>
 
             <h1 className="text-3xl font-black text-amber-950 mb-1">TIẾC QUÁ 💡</h1>
-            <p className="text-slate-600 font-bold text-base mb-6">
+            <p className="text-slate-600 font-bold text-base mb-2">
               Em chưa chọn đúng lần này, cố gắng hơn ở câu tiếp theo nhé!
             </p>
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-rose-600 text-white font-black text-lg mb-6">
+              -{wrongPenalty} điểm
+            </div>
 
             <div className="p-4 rounded-2xl bg-amber-100/80 border-2 border-amber-300 text-amber-950 text-sm font-bold mb-6">
               <span className="text-xs text-amber-800 block mb-1">Đáp án đúng là:</span>
