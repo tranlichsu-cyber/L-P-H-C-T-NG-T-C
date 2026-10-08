@@ -125,9 +125,13 @@ export const QuizEditorPage: React.FC = () => {
       setOptB(q.options[1] || '');
       setOptC(q.options[2] || '');
       setOptD(q.options[3] || '');
-      // Match option value to A, B, C, D
-      const foundIdx = q.options.indexOf(q.correctAnswer);
-      setCorrectChoice(foundIdx !== -1 ? String.fromCharCode(65 + foundIdx) : 'A');
+      // Support both legacy A/B/C/D keys and newer stored option text.
+      if (/^[A-D]$/i.test(q.correctAnswer.trim())) {
+        setCorrectChoice(q.correctAnswer.trim().toUpperCase());
+      } else {
+        const foundIdx = q.options.indexOf(q.correctAnswer);
+        setCorrectChoice(foundIdx !== -1 ? String.fromCharCode(65 + foundIdx) : 'A');
+      }
     } else if (q.type === 'TRUE_FALSE') {
       setCorrectChoice(q.correctAnswer || 'Đúng');
     } else if (q.type === 'SHORT_ANSWER') {
@@ -363,7 +367,9 @@ export const QuizEditorPage: React.FC = () => {
                 {q.type === 'MULTIPLE_CHOICE' && q.options && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
                     {q.options.map((opt, i) => {
-                      const isCorrect = opt === q.correctAnswer;
+                      const isCorrect =
+                        opt === q.correctAnswer ||
+                        q.correctAnswer.trim().toUpperCase() === String.fromCharCode(65 + i);
                       return (
                         <div
                           key={i}
