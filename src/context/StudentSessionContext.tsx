@@ -90,9 +90,40 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
             liveQuestion.correctAnswer &&
             submittedAnswer
           ) {
-            isCorrect =
-              normalizeVietnameseText(submittedAnswer) ===
-              normalizeVietnameseText(liveQuestion.correctAnswer);
+            const normalizeChoiceValue = (
+              value: string,
+              options?: string[]
+            ): string => {
+              const trimmed = value.trim();
+              if (/^[A-D]$/i.test(trimmed) && options?.length) {
+                const index = trimmed.toUpperCase().charCodeAt(0) - 65;
+                if (index >= 0 && index < options.length) {
+                  return normalizeVietnameseText(options[index]);
+                }
+              }
+              return normalizeVietnameseText(trimmed);
+            };
+
+            const normalizeTrueFalse = (value: string): string => {
+              const normalized = normalizeVietnameseText(value);
+              if (['dung', 'true', '1', 'yes'].includes(normalized)) return 'true';
+              if (['sai', 'false', '0', 'no'].includes(normalized)) return 'false';
+              return normalized;
+            };
+
+            if (liveQuestion.type === 'MULTIPLE_CHOICE') {
+              isCorrect =
+                normalizeChoiceValue(submittedAnswer, liveQuestion.options) ===
+                normalizeChoiceValue(liveQuestion.correctAnswer, liveQuestion.options);
+            } else if (liveQuestion.type === 'TRUE_FALSE') {
+              isCorrect =
+                normalizeTrueFalse(submittedAnswer) ===
+                normalizeTrueFalse(liveQuestion.correctAnswer);
+            } else {
+              isCorrect =
+                normalizeVietnameseText(submittedAnswer) ===
+                normalizeVietnameseText(liveQuestion.correctAnswer);
+            }
           }
 
           return {
