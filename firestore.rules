@@ -132,7 +132,24 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'anonymous'
       ) || canManageRoom(roomId);
       allow create: if isTeacher();
-      allow update, delete: if canManageRoom(roomId);
+      allow update: if canManageRoom(roomId) || (
+        isAuthenticated()
+        && request.auth.token.firebase.sign_in_provider == 'anonymous'
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['participantCount', 'lastParticipantId'])
+        && request.resource.data.participantCount == resource.data.participantCount + 1
+        && request.resource.data.lastParticipantId is string
+        && !exists(
+          /databases/$(database)/documents/rooms/$(roomId)/participants/$(request.resource.data.lastParticipantId)
+        )
+        && existsAfter(
+          /databases/$(database)/documents/rooms/$(roomId)/participants/$(request.resource.data.lastParticipantId)
+        )
+        && getAfter(
+          /databases/$(database)/documents/rooms/$(roomId)/participants/$(request.resource.data.lastParticipantId)
+        ).data.mockAuthUid == request.auth.uid
+      );
+      allow delete: if canManageRoom(roomId);
 
       match /roster/{studentId} {
         allow read: if isAuthenticated();
@@ -174,7 +191,13 @@ service cloud.firestore {
       }
 
       match /scores/{studentId} {
-        allow read: if isAuthenticated();
+        allow read: if canManageRoom(roomId) || (
+          isAuthenticated()
+          && request.auth.token.firebase.sign_in_provider == 'anonymous'
+          && get(
+            /databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)
+          ).data.mockAuthUid == request.auth.uid
+        );
         allow write: if canManageRoom(roomId);
       }
 
