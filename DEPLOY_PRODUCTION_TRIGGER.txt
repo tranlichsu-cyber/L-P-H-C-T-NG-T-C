@@ -38,3 +38,4 @@ Deploy audited realtime room-code scoring and student-flow fixes.
 Deploy per-question correct points and wrong penalties.
 Deploy next-question button contrast fix.
 Deploy Gemini AI production configuration.
+Deploy redesigned AI assistant workspace.
