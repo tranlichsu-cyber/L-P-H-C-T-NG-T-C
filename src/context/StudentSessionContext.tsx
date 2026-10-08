@@ -46,66 +46,75 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
   const [session, setSession] = useState<StudentSession>(INITIAL_SESSION);
   const [room, setRoom] = useState<MockRoomData | null>(null);
 
-  // Keep the student UI synchronized with the real room and its live subcollections.
+  // Keep student UI synchronized through the lightweight student-only listener.
+  // Before a name is selected we keep the one-time room/roster data returned by joinRoomByCode.
   useEffect(() => {
     if (!session.roomId) {
       setRoom(null);
       return;
     }
 
-    const unsubscribe = activeRealtimeService.subscribeRoom(session.roomId, (updatedRoom) => {
-      setRoom(updatedRoom);
+    if (!session.studentId) {
+      return;
+    }
 
-      setSession((prev) => {
-        const questionId = updatedRoom.activeQuestionId || null;
-        const liveQuestion = questionId
-          ? (updatedRoom.liveQuestions?.[questionId] as LiveQuestionPublic | undefined) || null
-          : null;
-        const questionChanged = questionId !== prev.currentQuestionId;
+    const unsubscribe = activeRealtimeService.subscribeStudentRoom(
+      session.roomId,
+      session.studentId,
+      (updatedRoom) => {
+        setRoom(updatedRoom);
 
-        const realSubmission =
-          prev.studentId && questionId
-            ? Object.values(updatedRoom.submissions || {}).find(
-                (submission) =>
-                  submission.studentId === prev.studentId &&
-                  submission.questionId === questionId
-              )
-            : undefined;
+        setSession((prev) => {
+          const questionId = updatedRoom.activeQuestionId || null;
+          const liveQuestion = questionId
+            ? (updatedRoom.liveQuestions?.[questionId] as LiveQuestionPublic | undefined) || null
+            : null;
+          const questionChanged = questionId !== prev.currentQuestionId;
 
-        const submittedAnswer =
-          realSubmission?.answer ?? (questionChanged ? null : prev.submittedAnswer);
-        const hasSubmitted = Boolean(realSubmission) || (!questionChanged && prev.hasSubmitted);
+          const realSubmission =
+            prev.studentId && questionId
+              ? Object.values(updatedRoom.submissions || {}).find(
+                  (submission) =>
+                    submission.studentId === prev.studentId &&
+                    submission.questionId === questionId
+                )
+              : undefined;
 
-        let isCorrect: boolean | null = null;
-        if (
-          liveQuestion?.status === 'RESULT' &&
-          liveQuestion.correctAnswer &&
-          submittedAnswer
-        ) {
-          isCorrect =
-            normalizeVietnameseText(submittedAnswer) ===
-            normalizeVietnameseText(liveQuestion.correctAnswer);
-        }
+          const submittedAnswer =
+            realSubmission?.answer ?? (questionChanged ? null : prev.submittedAnswer);
+          const hasSubmitted = Boolean(realSubmission) || (!questionChanged && prev.hasSubmitted);
 
-        return {
-          ...prev,
-          roomCode: updatedRoom.roomCode || prev.roomCode,
-          className: updatedRoom.className || prev.className,
-          subject: updatedRoom.subject || prev.subject,
-          currentQuestionId: questionId,
-          liveQuestion,
-          selectedAnswer: questionChanged ? null : prev.selectedAnswer,
-          hasSubmitted,
-          submittedAnswer,
-          isCorrect,
-        };
-      });
-    });
+          let isCorrect: boolean | null = null;
+          if (
+            liveQuestion?.status === 'RESULT' &&
+            liveQuestion.correctAnswer &&
+            submittedAnswer
+          ) {
+            isCorrect =
+              normalizeVietnameseText(submittedAnswer) ===
+              normalizeVietnameseText(liveQuestion.correctAnswer);
+          }
+
+          return {
+            ...prev,
+            roomCode: updatedRoom.roomCode || prev.roomCode,
+            className: updatedRoom.className || prev.className,
+            subject: updatedRoom.subject || prev.subject,
+            currentQuestionId: questionId,
+            liveQuestion,
+            selectedAnswer: questionChanged ? null : prev.selectedAnswer,
+            hasSubmitted,
+            submittedAnswer,
+            isCorrect,
+          };
+        });
+      }
+    );
 
     return () => {
       unsubscribe();
     };
-  }, [session.roomId]);
+  }, [session.roomId, session.studentId]);
 
   // 1. Join a real room by its current 6-digit code.
   const joinRoom = async (pin: string): Promise<{ success: boolean; message?: string }> => {
