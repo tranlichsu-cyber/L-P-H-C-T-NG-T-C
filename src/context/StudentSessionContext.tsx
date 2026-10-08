@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { StudentSession, LiveQuestionPublic } from '../types/student';
 import type { MockRoomData } from '../services/realtime/types';
 import { MOCK_STUDENT_QUESTIONS } from '../data/mockRooms';
@@ -14,6 +14,7 @@ interface StudentSessionContextType {
   resetSession: () => void;
   setSelectedAnswer: (answer: string) => void;
   submitAnswer: () => boolean;
+  continueAfterResult: () => void;
 
   // Dev Test Controls (used only by the development test panel)
   devControls: {
@@ -45,6 +46,7 @@ const INITIAL_SESSION: StudentSession = {
 export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<StudentSession>(INITIAL_SESSION);
   const [room, setRoom] = useState<MockRoomData | null>(null);
+  const dismissedResultQuestionIdRef = useRef<string | null>(null);
 
   // Keep student UI synchronized through the lightweight student-only listener.
   // Before a name is selected we keep the one-time room/roster data returned by joinRoomByCode.
@@ -66,9 +68,23 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
 
         setSession((prev) => {
           const questionId = updatedRoom.activeQuestionId || null;
-          const liveQuestion = questionId
+          const rawLiveQuestion = questionId
             ? (updatedRoom.liveQuestions?.[questionId] as LiveQuestionPublic | undefined) || null
             : null;
+
+          if (
+            dismissedResultQuestionIdRef.current &&
+            questionId !== dismissedResultQuestionIdRef.current
+          ) {
+            dismissedResultQuestionIdRef.current = null;
+          }
+
+          const liveQuestion =
+            rawLiveQuestion?.status === 'RESULT' &&
+            questionId === dismissedResultQuestionIdRef.current
+              ? null
+              : rawLiveQuestion;
+
           const questionChanged = questionId !== prev.currentQuestionId;
 
           const realSubmission =
@@ -217,6 +233,7 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
 
   // 4. Reset Session
   const resetSession = () => {
+    dismissedResultQuestionIdRef.current = null;
     setRoom(null);
     setSession(INITIAL_SESSION);
   };
@@ -241,6 +258,21 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
       submittedAnswer: prev.selectedAnswer,
     }));
     return true;
+  };
+
+  const continueAfterResult = () => {
+    if (session.currentQuestionId) {
+      dismissedResultQuestionIdRef.current = session.currentQuestionId;
+    }
+
+    setSession((prev) => ({
+      ...prev,
+      liveQuestion: null,
+      selectedAnswer: null,
+      hasSubmitted: false,
+      submittedAnswer: null,
+      isCorrect: null,
+    }));
   };
 
   // --- DEV CONTROLS FOR LOCAL TESTING ONLY ---
@@ -335,6 +367,7 @@ export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = (
         resetSession,
         setSelectedAnswer,
         submitAnswer,
+        continueAfterResult,
         devControls,
       }}
     >
