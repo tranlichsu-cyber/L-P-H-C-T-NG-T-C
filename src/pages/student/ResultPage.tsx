@@ -6,7 +6,7 @@ import { PartyPopper, Lightbulb, ArrowRight, HelpCircle } from 'lucide-react';
 
 export const ResultPage: React.FC = () => {
   const navigate = useNavigate();
-  const { session, room, devControls } = useStudentSession();
+  const { session, room, continueAfterResult } = useStudentSession();
 
   // Route Guards
   if (!session.roomCode) {
@@ -53,8 +53,7 @@ export const ResultPage: React.FC = () => {
       : 0;
 
   const handleContinue = () => {
-    // Reset submitted state for next question and return to waiting
-    devControls.setWaiting();
+    continueAfterResult();
     navigate('/student/waiting');
   };
 
