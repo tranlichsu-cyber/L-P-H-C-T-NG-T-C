@@ -60,7 +60,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     try {
       const credential = await signInWithEmailAndPassword(auth, email, pass);
-      const profile = await SchoolService.getUser(credential.user.uid);
+      let profile = await SchoolService.getUser(credential.user.uid);
+
+      if (!profile) {
+        profile = await SchoolService.ensureBootstrapAdminProfile(
+          credential.user.uid,
+          credential.user.email,
+          credential.user.displayName
+        );
+      }
 
       if (!profile) {
         await signOut(auth);
@@ -89,7 +97,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const validateTeacherProfile = async (user: User): Promise<boolean> => {
-    const profile = await SchoolService.getUser(user.uid);
+    let profile = await SchoolService.getUser(user.uid);
+
+    if (!profile) {
+      profile = await SchoolService.ensureBootstrapAdminProfile(
+        user.uid,
+        user.email,
+        user.displayName
+      );
+    }
 
     if (!profile) {
       if (auth) await signOut(auth);
