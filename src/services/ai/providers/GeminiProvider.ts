@@ -1,54 +1,60 @@
+import { getAI, getGenerativeModel, GoogleAIBackend } from 'firebase/ai';
 import type { AIProvider } from './AIProvider';
 import type { AIGenerationOptions, AIGeneratedQuestion } from '../types';
 import { buildQuestionGenerationPrompt, buildSingleQuestionRegenPrompt } from '../prompts/questionGenerationPrompt';
 import { validateAIQuestions } from '../schemas/questionSchema';
+import { app } from '../../firebase/firebase';
 
 export class GeminiProvider implements AIProvider {
-  public name = 'Google Gemini API Provider';
+  public name = 'Firebase AI Logic • Gemini';
 
-  private get apiKey(): string {
-    return import.meta.env.VITE_GEMINI_API_KEY || '';
+  private getModel(jsonMode: boolean = true) {
+    if (!app) {
+      throw new Error('Firebase chưa được khởi tạo.');
+    }
+
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
+
+    return getGenerativeModel(ai, {
+      model: 'gemini-2.5-flash',
+      generationConfig: jsonMode
+        ? {
+            responseMimeType: 'application/json',
+            temperature: 0.3,
+          }
+        : {
+            temperature: 0.3,
+          },
+    });
+  }
+
+  private mapError(err: any): Error {
+    const message = String(err?.message || err || '');
+
+    if (/app.?check|attestation|403|permission.?denied/i.test(message)) {
+      return new Error(
+        'Firebase AI Logic/App Check chưa được cấu hình hoặc chưa cho phép ứng dụng Production.'
+      );
+    }
+
+    if (/429|quota|resource.?exhausted/i.test(message)) {
+      return new Error('Đã đạt giới hạn sử dụng AI tạm thời. Hãy thử lại sau.');
+    }
+
+    return new Error(message || 'Không thể kết nối dịch vụ AI. Hãy thử lại.');
   }
 
   public async generateQuestions(options: AIGenerationOptions): Promise<AIGeneratedQuestion[]> {
-    if (!this.apiKey) {
-      throw new Error('Chưa cấu hình VITE_GEMINI_API_KEY trong file .env.local.');
-    }
-
-    const promptText = buildQuestionGenerationPrompt(options);
-
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.3,
-            },
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 429) {
-          throw new Error('Đã đạt giới hạn sử dụng AI tạm thời. Hãy thử lại sau.');
-        }
-        throw new Error(`Lỗi kết nối Gemini API (HTTP ${response.status}).`);
-      }
-
-      const data = await response.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+      const model = this.getModel(true);
+      const result = await model.generateContent(buildQuestionGenerationPrompt(options));
+      const rawText = result.response.text() || '[]';
       const parsedJSON = JSON.parse(rawText);
-
       const { validQuestions } = validateAIQuestions(parsedJSON);
       return validQuestions;
     } catch (err: any) {
-      console.error('[GeminiProvider Error]', err);
-      throw new Error(err.message || 'Không thể kết nối dịch vụ AI. Hãy thử lại.');
+      console.error('[Firebase AI Logic Error]', err);
+      throw this.mapError(err);
     }
   }
 
@@ -57,71 +63,33 @@ export class GeminiProvider implements AIProvider {
     action: string,
     options: AIGenerationOptions
   ): Promise<AIGeneratedQuestion> {
-    if (!this.apiKey) {
-      throw new Error('Chưa cấu hình VITE_GEMINI_API_KEY trong file .env.local.');
-    }
-
-    const promptText = buildSingleQuestionRegenPrompt(question, action, options);
-
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: {
-              responseMimeType: 'application/json',
-              temperature: 0.3,
-            },
-          }),
-        }
+      const model = this.getModel(true);
+      const result = await model.generateContent(
+        buildSingleQuestionRegenPrompt(question, action, options)
       );
-
-      if (!response.ok) {
-        throw new Error(`Lỗi kết nối Gemini API (HTTP ${response.status}).`);
-      }
-
-      const data = await response.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-      const parsedJSON = JSON.parse(rawText);
-
+      const parsedJSON = JSON.parse(result.response.text() || '{}');
       const { validQuestions } = validateAIQuestions([parsedJSON]);
       return validQuestions[0] || question;
     } catch (err: any) {
-      console.error('[GeminiProvider Refine Error]', err);
-      return question;
+      console.error('[Firebase AI Logic Refine Error]', err);
+      throw this.mapError(err);
     }
   }
 
-  public async generateExplanation(questionContent: string, correctAnswer: string): Promise<string> {
-    if (!this.apiKey) return 'Giải thích cho câu hỏi.';
-
+  public async generateExplanation(
+    questionContent: string,
+    correctAnswer: string
+  ): Promise<string> {
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  {
-                    text: `Tạo đoạn giải thích 1-2 câu ngắn gọn phù hợp học sinh tiểu học cho câu hỏi: "${questionContent}". Đáp án đúng: ${correctAnswer}.`,
-                  },
-                ],
-              },
-            ],
-          }),
-        }
+      const model = this.getModel(false);
+      const result = await model.generateContent(
+        `Tạo đoạn giải thích 1-2 câu ngắn gọn phù hợp học sinh tiểu học cho câu hỏi: "${questionContent}". Đáp án đúng: ${correctAnswer}.`
       );
-
-      const data = await response.json();
-      return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Giải thích ngắn gọn cho câu hỏi.';
-    } catch {
-      return 'Giải thích ngắn gọn cho câu hỏi.';
+      return result.response.text()?.trim() || 'Giải thích ngắn gọn cho câu hỏi.';
+    } catch (err: any) {
+      console.error('[Firebase AI Logic Explanation Error]', err);
+      throw this.mapError(err);
     }
   }
 }
