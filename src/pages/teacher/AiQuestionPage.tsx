@@ -25,6 +25,7 @@ export const AiQuestionPage: React.FC = () => {
   const { showToast } = useToast();
 
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [initialSourceMode, setInitialSourceMode] = useState<'topic' | 'text' | 'file'>('topic');
   const [selectedQuizId, setSelectedQuizId] = useState('');
 
   useEffect(() => {
@@ -43,11 +44,12 @@ export const AiQuestionPage: React.FC = () => {
     [quizzes, selectedQuizId]
   );
 
-  const handleOpenAi = () => {
+  const handleOpenAi = (mode: 'topic' | 'text' | 'file' = 'topic') => {
     if (!targetQuiz) {
       showToast('Hãy tạo ít nhất một bộ câu hỏi trước khi dùng Trợ lý AI.', 'info');
       return;
     }
+    setInitialSourceMode(mode);
     setIsAiModalOpen(true);
   };
 
@@ -94,15 +96,15 @@ export const AiQuestionPage: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.75fr)] gap-5 items-start">
         <div className="space-y-5">
           <Card className="overflow-hidden border-0 p-0 shadow-xl shadow-slate-900/10">
-            <div className="relative bg-gradient-to-br from-sky-950 via-blue-950 to-slate-950 text-white p-6 lg:p-7">
+            <div className="relative bg-gradient-to-br from-sky-950 via-blue-950 to-slate-950 text-white p-4 lg:p-5">
               <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-sky-500/10 blur-2xl" />
               <div className="absolute -bottom-20 left-1/3 w-64 h-64 rounded-full bg-violet-500/10 blur-3xl" />
 
               <div className="relative">
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
                   <div className="flex items-start gap-4 max-w-2xl">
-                    <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br from-amber-300 to-orange-400 text-slate-950 flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
-                      <Bot className="w-8 h-8 lg:w-9 lg:h-9" />
+                    <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-amber-300 to-orange-400 text-slate-950 flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
+                      <Bot className="w-6 h-6 lg:w-7 lg:h-7" />
                     </div>
 
                     <div>
@@ -130,12 +132,12 @@ export const AiQuestionPage: React.FC = () => {
                         </span>
                       </div>
 
-                      <h2 className="text-2xl lg:text-3xl font-black leading-tight text-white">
+                      <h2 className="text-xl lg:text-2xl font-black leading-tight text-white">
                         Tạo câu hỏi bằng AI,
                         <span className="text-amber-300"> giáo viên duyệt trước khi dùng</span>
                       </h2>
 
-                      <p className="mt-3 text-sm leading-6 text-slate-300 max-w-xl">
+                      <p className="mt-2 text-xs lg:text-sm leading-5 text-slate-300 max-w-xl">
                         Chọn nguồn nội dung, khối lớp, môn học và mức độ. AI đề xuất câu hỏi,
                         đáp án và giải thích; Thầy/Cô xem lại rồi mới đưa vào bộ câu hỏi.
                       </p>
@@ -145,7 +147,7 @@ export const AiQuestionPage: React.FC = () => {
                   <Button
                     variant="warning"
                     size="lg"
-                    onClick={handleOpenAi}
+                    onClick={() => handleOpenAi('topic')}
                     disabled={!targetQuiz}
                     className="shrink-0 font-black px-6"
                   >
@@ -154,69 +156,50 @@ export const AiQuestionPage: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                    <div className="flex items-center gap-2 text-sky-200 font-black text-sm">
-                      <BookOpen className="w-4 h-4 text-amber-300" />
-                      1. Chọn nguồn
-                    </div>
-                    <p className="mt-1.5 text-xs leading-5 text-slate-300">
-                      Chủ đề bài học, văn bản hoặc file PDF/DOCX/TXT.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                    <div className="flex items-center gap-2 text-sky-200 font-black text-sm">
-                      <Sparkles className="w-4 h-4 text-amber-300" />
-                      2. AI đề xuất
-                    </div>
-                    <p className="mt-1.5 text-xs leading-5 text-slate-300">
-                      Sinh câu hỏi theo môn, khối, dạng câu và mức độ tư duy.
-                    </p>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.07] p-4">
-                    <div className="flex items-center gap-2 text-sky-200 font-black text-sm">
-                      <ShieldCheck className="w-4 h-4 text-amber-300" />
-                      3. Giáo viên duyệt
-                    </div>
-                    <p className="mt-1.5 text-xs leading-5 text-slate-300">
-                      Kiểm tra, tinh chỉnh và chỉ lưu những câu đã chọn.
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border border-sky-100 bg-gradient-to-br from-white to-sky-50/70">
-              <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => handleOpenAi('topic')}
+              disabled={!targetQuiz}
+              className="text-left rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-white to-sky-50 p-4 hover:border-sky-400 hover:shadow-md transition disabled:opacity-50"
+            >
+              <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
                   <Sparkles className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-900">Tạo theo chủ đề & khối lớp</h3>
-                  <p className="mt-1 text-sm leading-5 text-slate-600">
-                    Phù hợp khi Thầy/Cô muốn tạo nhanh câu hỏi cho một bài học hoặc nội dung cụ thể.
+                <div className="flex-1">
+                  <h3 className="font-black text-slate-900">Tạo theo chủ đề</h3>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">
+                    Nhập tên bài học/chủ đề rồi để Gemini đề xuất câu hỏi.
                   </p>
                 </div>
+                <ArrowRight className="w-5 h-5 text-sky-600" />
               </div>
-            </Card>
+            </button>
 
-            <Card className="border border-violet-100 bg-gradient-to-br from-white to-violet-50/60">
-              <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={() => handleOpenAi('file')}
+              disabled={!targetQuiz}
+              className="text-left rounded-2xl border-2 border-violet-300 bg-gradient-to-br from-white to-violet-50 p-4 hover:border-violet-500 hover:shadow-md transition disabled:opacity-50"
+            >
+              <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center shrink-0">
                   <FileText className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-black text-slate-900">Bám sát tài liệu nguồn</h3>
-                  <p className="mt-1 text-sm leading-5 text-slate-600">
-                    Dán văn bản hoặc tải tài liệu để AI ưu tiên nội dung Thầy/Cô cung cấp.
+                <div className="flex-1">
+                  <h3 className="font-black text-violet-950">TẢI TÀI LIỆU LÊN</h3>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">
+                    PDF, DOCX hoặc TXT — AI tạo câu hỏi bám sát nội dung tài liệu.
                   </p>
                 </div>
+                <ArrowRight className="w-5 h-5 text-violet-700" />
               </div>
-            </Card>
+            </button>
           </div>
         </div>
 
@@ -283,7 +266,7 @@ export const AiQuestionPage: React.FC = () => {
                   variant="student"
                   size="lg"
                   fullWidth
-                  onClick={handleOpenAi}
+                  onClick={() => handleOpenAi('topic')}
                   className="mt-1"
                 >
                   <Sparkles className="w-5 h-5 mr-2" />
@@ -318,6 +301,7 @@ export const AiQuestionPage: React.FC = () => {
         onAddQuestionsToQuiz={handleAddAiQuestions}
         initialSubject={targetQuiz?.subject || 'Toán'}
         initialGrade={targetQuiz?.grade || '4'}
+        initialSourceMode={initialSourceMode}
       />
     </div>
   );
