@@ -325,9 +325,43 @@ export class FirestoreRealtimeService {
     const correctAnswer = String(privateData.correctAnswer);
     const explanation = privateData.explanation ? String(privateData.explanation) : '';
 
+    const normalizeChoiceValue = (
+      value: string,
+      options?: string[]
+    ): string => {
+      const trimmed = value.trim();
+      if (/^[A-D]$/i.test(trimmed) && options?.length) {
+        const index = trimmed.toUpperCase().charCodeAt(0) - 65;
+        if (index >= 0 && index < options.length) {
+          return options[index].trim().toLocaleLowerCase('vi-VN');
+        }
+      }
+      return trimmed.toLocaleLowerCase('vi-VN');
+    };
+
+    const normalizeTrueFalse = (value: string): string => {
+      const normalized = value
+        .trim()
+        .toLocaleLowerCase('vi-VN')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd');
+
+      if (['dung', 'true', '1', 'yes'].includes(normalized)) return 'true';
+      if (['sai', 'false', '0', 'no'].includes(normalized)) return 'false';
+      return normalized;
+    };
+
     const answersMatch = (answer: string, expected: string): boolean => {
-      if (privateData.type !== 'SHORT_ANSWER') {
-        return answer.trim().toLowerCase() === expected.trim().toLowerCase();
+      if (privateData.type === 'MULTIPLE_CHOICE') {
+        return (
+          normalizeChoiceValue(answer, privateData.options) ===
+          normalizeChoiceValue(expected, privateData.options)
+        );
+      }
+
+      if (privateData.type === 'TRUE_FALSE') {
+        return normalizeTrueFalse(answer) === normalizeTrueFalse(expected);
       }
 
       let actual = answer;
