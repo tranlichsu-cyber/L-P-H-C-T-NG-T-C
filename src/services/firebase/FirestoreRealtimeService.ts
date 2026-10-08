@@ -189,6 +189,17 @@ export class FirestoreRealtimeService {
         return { room: null, error: 'Phòng học đã hết hạn.' };
       }
 
+      let roster = access.rosterPreview || [];
+      if (roster.length === 0) {
+        const rosterSnap = await getDocs(
+          collection(db, 'rooms', access.roomId, 'roster')
+        );
+        roster = rosterSnap.docs.map(
+          (rosterDoc) =>
+            rosterDoc.data() as MockRoomData['roster'][number]
+        );
+      }
+
       return {
         room: {
           id: access.roomId,
@@ -203,9 +214,9 @@ export class FirestoreRealtimeService {
           activeQuestionId: null,
           createdAt: '',
           expiresAt: access.expiresAt || '',
-          rosterCount: access.rosterCount ?? access.rosterPreview?.length ?? 0,
+          rosterCount: access.rosterCount ?? roster.length,
           participantCount: 0,
-          roster: access.rosterPreview || [],
+          roster,
           participants: {},
           liveQuestions: {},
           submissions: {},
@@ -356,13 +367,24 @@ export class FirestoreRealtimeService {
     const roomSnap = await getDoc(roomRef);
     if (!roomSnap.exists()) return false;
 
-    const roomCode = roomSnap.data()?.roomCode as string | undefined;
+    const roomData = roomSnap.data() as MockRoomData;
+    const roomCode = roomData.roomCode;
     const batch = writeBatch(db!);
     batch.update(roomRef, { status: 'ACTIVE' });
     if (roomCode) {
       batch.set(
         doc(db!, 'roomCodes', roomCode),
-        { status: 'ACTIVE' },
+        {
+          roomId,
+          roomCode,
+          teacherId: roomData.teacherId,
+          classId: roomData.classId,
+          className: roomData.className,
+          subject: roomData.subject,
+          status: 'ACTIVE',
+          expiresAt: roomData.expiresAt,
+          rosterCount: roomData.rosterCount ?? 0,
+        },
         { merge: true }
       );
     }
@@ -388,13 +410,26 @@ export class FirestoreRealtimeService {
     });
 
     const roomSnap = await getDoc(roomRef);
-    const roomCode = roomSnap.exists() ? (roomSnap.data()?.roomCode as string | undefined) : undefined;
-    if (roomCode) {
-      batch.set(
-        doc(db!, 'roomCodes', roomCode),
-        { status: 'ACTIVE' },
-        { merge: true }
-      );
+    if (roomSnap.exists()) {
+      const roomData = roomSnap.data() as MockRoomData;
+      const roomCode = roomData.roomCode;
+      if (roomCode) {
+        batch.set(
+          doc(db!, 'roomCodes', roomCode),
+          {
+            roomId,
+            roomCode,
+            teacherId: roomData.teacherId,
+            classId: roomData.classId,
+            className: roomData.className,
+            subject: roomData.subject,
+            status: 'ACTIVE',
+            expiresAt: roomData.expiresAt,
+            rosterCount: roomData.rosterCount ?? 0,
+          },
+          { merge: true }
+        );
+      }
     }
 
     await batch.commit();
@@ -791,7 +826,15 @@ export class FirestoreRealtimeService {
       batch.set(
         doc(firestore, 'roomCodes', rawRoomData.roomCode),
         {
+          roomId,
+          roomCode: rawRoomData.roomCode,
+          teacherId: rawRoomData.teacherId,
+          classId: rawRoomData.classId,
+          className: rawRoomData.className,
+          subject: rawRoomData.subject,
           status: 'FINISHED',
+          expiresAt: rawRoomData.expiresAt,
+          rosterCount: rawRoomData.rosterCount ?? roster.length,
           finishedAt,
         },
         { merge: true }
