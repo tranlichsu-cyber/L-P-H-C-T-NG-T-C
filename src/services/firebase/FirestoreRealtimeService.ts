@@ -824,6 +824,126 @@ export class FirestoreRealtimeService {
     };
   }
 
+  public subscribeStudentRoom(
+    roomId: string,
+    studentId: string,
+    callback: (room: MockRoomData) => void
+  ): () => void {
+    if (!db) return () => {};
+
+    const firestore = db;
+    const authUid = auth?.currentUser?.uid || '';
+
+    let roomMeta: MockRoomData | null = null;
+    let activeQuestionId: string | null = null;
+    let liveQuestion: LiveQuestionPublic | null = null;
+    let submissions: MockRoomData['submissions'] = {};
+    let score: MockRoomData['scores'][string] | null = null;
+
+    let unsubscribeQuestion: (() => void) | null = null;
+
+    const emit = () => {
+      if (!roomMeta) return;
+
+      const liveQuestions =
+        activeQuestionId && liveQuestion
+          ? { [activeQuestionId]: liveQuestion }
+          : {};
+
+      callback({
+        ...roomMeta,
+        id: roomId,
+        roster: [],
+        participants: {},
+        liveQuestions,
+        submissions,
+        scores: score ? { [studentId]: score } : {},
+        scoreEvents: {},
+        calledStudent: roomMeta.calledStudent || null,
+        callHistory: [],
+        activeGameId: roomMeta.activeGameId || null,
+        activeGame: roomMeta.activeGame || null,
+      });
+    };
+
+    const bindActiveQuestion = (questionId: string | null) => {
+      if (questionId === activeQuestionId && unsubscribeQuestion) return;
+
+      if (unsubscribeQuestion) {
+        unsubscribeQuestion();
+        unsubscribeQuestion = null;
+      }
+
+      activeQuestionId = questionId;
+      liveQuestion = null;
+
+      if (!questionId) {
+        emit();
+        return;
+      }
+
+      unsubscribeQuestion = onSnapshot(
+        doc(firestore, 'rooms', roomId, 'liveQuestions', questionId),
+        (snap) => {
+          liveQuestion = snap.exists()
+            ? ({ id: snap.id, ...(snap.data() as Omit<LiveQuestionPublic, 'id'>) } as LiveQuestionPublic)
+            : null;
+          emit();
+        }
+      );
+    };
+
+    const unsubscribeRoom = onSnapshot(doc(firestore, 'rooms', roomId), (snap) => {
+      if (!snap.exists()) return;
+
+      roomMeta = { ...(snap.data() as MockRoomData), id: snap.id };
+      const nextQuestionId = roomMeta.activeQuestionId || null;
+
+      if (nextQuestionId !== activeQuestionId) {
+        bindActiveQuestion(nextQuestionId);
+      }
+
+      emit();
+    });
+
+    const unsubscribeSubmissions = authUid
+      ? onSnapshot(
+          query(
+            collection(firestore, 'rooms', roomId, 'submissions'),
+            where('authUid', '==', authUid)
+          ),
+          (snap) => {
+            const next: MockRoomData['submissions'] = {};
+            snap.docs.forEach((submissionDoc) => {
+              next[submissionDoc.id] = {
+                id: submissionDoc.id,
+                ...(submissionDoc.data() as Omit<MockSubmission, 'id'>),
+              };
+            });
+            submissions = next;
+            emit();
+          }
+        )
+      : () => {};
+
+    const unsubscribeScore = onSnapshot(
+      doc(firestore, 'rooms', roomId, 'scores', studentId),
+      (snap) => {
+        score = snap.exists()
+          ? (snap.data() as MockRoomData['scores'][string])
+          : null;
+        emit();
+      }
+    );
+
+    return () => {
+      unsubscribeRoom();
+      unsubscribeSubmissions();
+      unsubscribeScore();
+      if (unsubscribeQuestion) unsubscribeQuestion();
+    };
+  }
+
 }
 
 export const firestoreRealtimeService = new FirestoreRealtimeService();
