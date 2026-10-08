@@ -51,6 +51,43 @@ jobs:
             exit 1
           fi
 
+      - name: Probe Gemini API permission
+        shell: bash
+        run: |
+          set +e
+          BODY_FILE="$(mktemp)"
+          HTTP_CODE=$(curl -sS -o "$BODY_FILE" -w "%{http_code}"             -X POST             -H "Content-Type: application/json"             -H "x-goog-api-key: $VITE_GEMINI_API_KEY"             "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"             -d '{"contents":[{"parts":[{"text":"Reply with the single word OK."}]}]}')
+          echo "Gemini probe HTTP status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            node -e "
+              const fs=require('fs');
+              try {
+                const j=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
+                const e=j.error||{};
+                console.log('Gemini error status:', e.status||'unknown');
+                console.log('Gemini error message:', e.message||'unknown');
+                if (Array.isArray(e.details)) {
+                  for (const d of e.details) {
+                    if (d.reason) console.log('Gemini error reason:', d.reason);
+                    if (d.metadata) {
+                      const safe={};
+                      for (const [k,v] of Object.entries(d.metadata)) {
+                        if (!/key|credential|token/i.test(k)) safe[k]=v;
+                      }
+                      if (Object.keys(safe).length) console.log('Gemini error metadata:', JSON.stringify(safe));
+                    }
+                  }
+                }
+              } catch {
+                console.log('Gemini returned a non-JSON error body.');
+              }
+            " "$BODY_FILE"
+            exit 1
+          fi
+
+          echo "Gemini production key is authorized."
+
       - name: Lint
         run: npm run lint
 
