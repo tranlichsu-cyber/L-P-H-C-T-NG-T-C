@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
@@ -12,10 +12,14 @@ import { Sparkles, FileText, Upload, RefreshCw, CheckCircle2, AlertCircle, Trash
 interface AiQuestionGeneratorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddQuestionsToQuiz: (questions: AIGeneratedQuestion[]) => void | Promise<void>;
+  onAddQuestionsToQuiz: (
+    questions: AIGeneratedQuestion[],
+    meta: { subject: string; grade: string; sourceName?: string }
+  ) => void | Promise<void>;
   initialSubject?: string;
   initialGrade?: string;
   initialSourceMode?: 'topic' | 'text' | 'file';
+  autoOpenFilePicker?: boolean;
 }
 
 export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> = ({
@@ -25,6 +29,7 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
   initialSubject = 'Toán',
   initialGrade = '4',
   initialSourceMode = 'topic',
+  autoOpenFilePicker = false,
 }) => {
   const { showToast } = useToast();
 
@@ -45,13 +50,27 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
       setGrade(initialGrade);
       setSubject(initialSubject);
       setGeneratedQuestions([]);
+
+      if (initialSourceMode === 'file' && autoOpenFilePicker) {
+        window.setTimeout(() => {
+          fileInputRef.current?.click();
+        }, 150);
+      }
     }
-  }, [isOpen, initialSourceMode, initialGrade, initialSubject]);
+  }, [
+    isOpen,
+    initialSourceMode,
+    initialGrade,
+    initialSubject,
+    autoOpenFilePicker,
+  ]);
 
   // Document Upload State
   const [fileName, setFileName] = useState('');
   const [charCount, setCharCount] = useState(0);
   const [extractError, setExtractError] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Generation & Review State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -63,7 +82,9 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
     if (!file) return;
 
     setExtractError('');
+    setIsExtracting(true);
     const res = await DocumentExtractionService.extractTextFromFile(file);
+    setIsExtracting(false);
 
     if (res.error) {
       setExtractError(res.error);
@@ -147,7 +168,13 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
     }
 
     try {
-      await Promise.resolve(onAddQuestionsToQuiz(selectedList));
+      await Promise.resolve(
+        onAddQuestionsToQuiz(selectedList, {
+          subject,
+          grade,
+          sourceName: fileName || topic || undefined,
+        })
+      );
       showToast(`Đã thêm và lưu ${selectedList.length} câu hỏi vào Ngân hàng!`, 'success');
       onClose();
     } catch (err: any) {
@@ -259,11 +286,27 @@ export const AiQuestionGeneratorModal: React.FC<AiQuestionGeneratorModalProps> =
               <div className="space-y-3">
                 <label className="text-xs font-bold text-slate-700 block mb-1">Tải file tài liệu (.TXT, .DOCX, .PDF):</label>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept=".txt,.docx,.pdf"
                   onChange={handleFileUpload}
-                  className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-sky-100 file:text-sky-800 hover:file:bg-sky-200"
+                  className="hidden"
                 />
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isExtracting}
+                  className="w-full rounded-2xl border-2 border-dashed border-violet-300 bg-violet-50 px-5 py-6 text-center hover:border-violet-500 hover:bg-violet-100 transition disabled:opacity-60"
+                >
+                  <Upload className="w-8 h-8 mx-auto text-violet-700 mb-2" />
+                  <div className="font-black text-violet-950">
+                    {isExtracting ? 'ĐANG ĐỌC TÀI LIỆU...' : 'CHỌN TÀI LIỆU TỪ MÁY'}
+                  </div>
+                  <div className="text-xs text-slate-600 mt-1">
+                    PDF, DOCX hoặc TXT • tối đa 15 MB
+                  </div>
+                </button>
                 {fileName && (
                   <div className="p-3 bg-slate-50 border rounded-xl text-xs flex justify-between items-center">
                     <span>📄 File: <strong>{fileName}</strong></span>
