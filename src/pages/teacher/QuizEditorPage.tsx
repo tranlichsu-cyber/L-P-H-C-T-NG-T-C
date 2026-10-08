@@ -50,6 +50,8 @@ export const QuizEditorPage: React.FC = () => {
   const [qExplanation, setQExplanation] = useState('');
   const [caseInsensitive, setCaseInsensitive] = useState(true);
   const [trimWhitespace, setTrimWhitespace] = useState(true);
+  const [correctPoints, setCorrectPoints] = useState(10);
+  const [wrongPenalty, setWrongPenalty] = useState(5);
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
@@ -101,6 +103,8 @@ export const QuizEditorPage: React.FC = () => {
     setQExplanation('');
     setCaseInsensitive(true);
     setTrimWhitespace(true);
+    setCorrectPoints(10);
+    setWrongPenalty(5);
     setFormError('');
     setIsFormOpen(true);
   };
@@ -113,6 +117,8 @@ export const QuizEditorPage: React.FC = () => {
     setQExplanation(q.explanation || '');
     setCaseInsensitive(q.caseInsensitive ?? true);
     setTrimWhitespace(q.trimWhitespace ?? true);
+    setCorrectPoints(q.correctPoints ?? 10);
+    setWrongPenalty(q.wrongPenalty ?? 5);
 
     if (q.type === 'MULTIPLE_CHOICE' && q.options) {
       setOptA(q.options[0] || '');
@@ -168,12 +174,19 @@ export const QuizEditorPage: React.FC = () => {
       finalCorrectAnswer = correctChoice.trim();
     }
 
+    if (correctPoints < 0 || wrongPenalty < 0) {
+      setFormError('Điểm cộng và điểm trừ phải là số từ 0 trở lên.');
+      return;
+    }
+
     const questionData: Omit<Question, 'id'> = {
       type: qType,
       content: qContent.trim(),
       options: finalOptions,
       correctAnswer: finalCorrectAnswer,
       explanation: qExplanation.trim() || undefined,
+      correctPoints,
+      wrongPenalty,
       ...(qType === 'SHORT_ANSWER'
         ? {
             caseInsensitive,
@@ -292,6 +305,12 @@ export const QuizEditorPage: React.FC = () => {
                         ? 'Đúng / Sai'
                         : 'Trả lời ngắn'}
                     </Badge>
+                    <span className="text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                      Đúng +{q.correctPoints ?? 10}
+                    </span>
+                    <span className="text-xs font-black text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-full">
+                      Sai -{q.wrongPenalty ?? 5}
+                    </span>
                   </div>
 
                   {/* Move Up/Down & Action Buttons */}
@@ -591,6 +610,38 @@ export const QuizEditorPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-indigo-50 border border-indigo-200">
+            <div>
+              <label className="block text-xs font-bold text-emerald-800 mb-1.5">
+                Điểm cộng khi đúng
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={correctPoints}
+                onChange={(e) => setCorrectPoints(Math.max(0, Number(e.target.value) || 0))}
+                className="w-full rounded-xl border border-emerald-300 px-3 py-2 text-base font-black text-emerald-900"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-rose-800 mb-1.5">
+                Điểm trừ khi sai
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={wrongPenalty}
+                onChange={(e) => setWrongPenalty(Math.max(0, Number(e.target.value) || 0))}
+                className="w-full rounded-xl border border-rose-300 px-3 py-2 text-base font-black text-rose-900"
+              />
+            </div>
+            <p className="col-span-2 text-[11px] text-slate-600 font-semibold">
+              Học sinh không trả lời sẽ không cộng hoặc trừ điểm.
+            </p>
+          </div>
 
           {/* Explanation */}
           <div>
