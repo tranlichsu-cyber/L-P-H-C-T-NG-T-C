@@ -376,6 +376,44 @@ export class SchoolService {
     return profile;
   }
 
+  // One-time bootstrap for the school's original administrator.
+  // This is only used when Firebase Auth has the correct admin email
+  // but Firestore does not yet have users/{realFirebaseUid}.
+  public static async ensureBootstrapAdminProfile(
+    uid: string,
+    email: string | null,
+    displayName?: string | null
+  ): Promise<UserProfile | null> {
+    if (!isFirebaseConfigured || !db || !email) return null;
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const bootstrapAdmin = INITIAL_MEMBERS.find(
+      (member) =>
+        member.role === 'SCHOOL_ADMIN' &&
+        member.email.trim().toLowerCase() === normalizedEmail
+    );
+
+    if (!bootstrapAdmin) return null;
+
+    const existing = await getDoc(doc(db, 'users', uid));
+    if (existing.exists()) return existing.data() as UserProfile;
+
+    const now = new Date().toISOString();
+    const profile: UserProfile = {
+      uid,
+      displayName: displayName?.trim() || bootstrapAdmin.displayName,
+      email: normalizedEmail,
+      role: 'SCHOOL_ADMIN',
+      teamIds: [],
+      status: 'ACTIVE',
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await setDoc(doc(db, 'users', uid), profile);
+    return profile;
+  }
+
   // 4. Get User Profile
   public static async getUser(uid: string): Promise<UserProfile | null> {
     if (isFirebaseConfigured && db) {
