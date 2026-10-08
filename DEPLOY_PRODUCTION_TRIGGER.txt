@@ -41,3 +41,4 @@ Deploy Gemini AI production configuration.
 Deploy redesigned AI assistant workspace.
 Deploy compact AI page with visible document upload entry.
 Deploy working AI document upload and extraction.
+Run Gemini permission diagnostic.
