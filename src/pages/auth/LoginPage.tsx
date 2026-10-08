@@ -9,7 +9,7 @@ import { auth } from '../../services/firebase/firebase';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signInTeacher, signInTeacherWithGoogle } = useAuth();
+  const { signInTeacher, signInTeacherWithGoogle, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,6 +43,20 @@ export const LoginPage: React.FC = () => {
     try {
       const ok = await signInTeacherWithGoogle();
       if (ok) await navigateAfterLogin();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await resetPassword(cleanEmail);
     } finally {
       setIsSubmitting(false);
     }
@@ -87,6 +101,16 @@ export const LoginPage: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <div className="mt-2 text-right">
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={isSubmitting || !email.trim()}
+                className="text-xs font-bold text-sky-700 hover:text-sky-900 disabled:text-slate-300"
+              >
+                Quên mật khẩu?
+              </button>
+            </div>
           </div>
 
           <Button type="submit" variant="primary" fullWidth size="lg" className="mt-2" disabled={isSubmitting}>
