@@ -12,6 +12,7 @@ import {
   reauthenticateWithCredential,
   updatePassword,
   unlink,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../services/firebase/firebase';
@@ -27,6 +28,7 @@ interface AuthContextType {
   signInTeacherWithGoogle: () => Promise<boolean>;
   linkGoogleAccount: () => Promise<boolean>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<boolean>;
   registerTeacher: (email: string, pass: string) => Promise<boolean>;
   signOutTeacher: () => Promise<void>;
   ensureStudentAnonymousAuth: () => Promise<User | null>;
@@ -87,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       const msg =
         err.code === 'auth/invalid-credential'
-          ? 'Email hoặc mật khẩu không đúng.'
+          ? 'Email hoặc mật khẩu Firebase không đúng. Nếu đây là Gmail, hãy dùng nút “Đăng nhập bằng Google” hoặc “Quên mật khẩu”.'
           : err.code === 'auth/user-not-found'
           ? 'Không tìm thấy tài khoản.'
           : 'Lỗi đăng nhập: ' + err.message;
@@ -257,6 +259,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetPassword = async (email: string): Promise<boolean> => {
+    if (!isFirebaseConfigured || !auth) {
+      showToast('Đặt lại mật khẩu chỉ hoạt động khi Firebase được cấu hình.', 'error');
+      return false;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      showToast('Vui lòng nhập email trước khi yêu cầu đặt lại mật khẩu.', 'error');
+      return false;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, cleanEmail);
+      showToast(
+        'Đã gửi email đặt lại mật khẩu. Hãy kiểm tra Hộp thư đến và thư Spam/Rác.',
+        'success'
+      );
+      return true;
+    } catch (err: any) {
+      const msg =
+        err.code === 'auth/invalid-email'
+          ? 'Địa chỉ email không hợp lệ.'
+          : err.code === 'auth/user-not-found'
+          ? 'Không tìm thấy tài khoản Firebase với email này.'
+          : 'Không thể gửi email đặt lại mật khẩu: ' + (err.message || 'Lỗi không xác định.');
+      showToast(msg, 'error');
+      return false;
+    }
+  };
+
   const registerTeacher = async (email: string, pass: string): Promise<boolean> => {
     if (!isFirebaseConfigured || !auth) return true;
     try {
@@ -310,6 +343,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInTeacherWithGoogle,
         linkGoogleAccount,
         changePassword,
+        resetPassword,
         registerTeacher,
         signOutTeacher,
         ensureStudentAnonymousAuth,
