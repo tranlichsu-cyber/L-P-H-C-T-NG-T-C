@@ -5,10 +5,12 @@ import { Modal } from '../../components/common/Modal';
 import { useStudentSession } from '../../context/StudentSessionContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { matchVietnameseText } from '../../utils/normalizeVietnamese';
+import { useToast } from '../../context/ToastContext';
 import { User, ArrowLeft, Search, RefreshCw, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 
 export const SelectNamePage: React.FC = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const { session, room: activeRoom, selectStudent, resetStudent } = useStudentSession();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,11 +42,6 @@ export const SelectNamePage: React.FC = () => {
     );
   }, [activeRoom, searchQuery]);
 
-  // Active Participants List (for Name Conflict Detection)
-  const activeParticipantNames = useMemo(() => {
-    if (!activeRoom || !activeRoom.participants) return new Set<string>();
-    return new Set(Object.values(activeRoom.participants).map((p: any) => p.name));
-  }, [activeRoom]);
 
   // Route Guard: Require valid room code
   if (!session.roomCode || !activeRoom) {
@@ -78,6 +75,10 @@ export const SelectNamePage: React.FC = () => {
     );
 
     if (!result.participant) {
+      showToast(
+        result.error || 'Không thể vào phòng bằng tên học sinh này.',
+        'error'
+      );
       return;
     }
 
@@ -178,7 +179,6 @@ export const SelectNamePage: React.FC = () => {
               </div>
             ) : (
               filteredStudents.map((std, idx) => {
-                const isConflict = activeParticipantNames.has(std.name);
                 const colorVariants = [
                   'bg-gradient-to-tr from-sky-500 to-indigo-600 text-white',
                   'bg-gradient-to-tr from-emerald-500 to-teal-600 text-white',
@@ -201,11 +201,6 @@ export const SelectNamePage: React.FC = () => {
                       </div>
                       <div>
                         <span className="text-lg block leading-snug font-black text-slate-900">{std.name}</span>
-                        {isConflict && (
-                          <span className="text-[11px] font-extrabold text-amber-700 block">
-                            * Tên này đang mở trên thiết bị khác
-                          </span>
-                        )}
                       </div>
                     </div>
                   </button>
