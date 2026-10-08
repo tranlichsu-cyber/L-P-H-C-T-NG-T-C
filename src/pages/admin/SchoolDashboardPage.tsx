@@ -14,7 +14,6 @@ import {
   Building2,
   Users,
   UserCheck,
-  Radio,
   BarChart3,
   ShieldCheck,
   Award,
@@ -46,13 +45,11 @@ export const SchoolDashboardPage: React.FC = () => {
     activeTeacherCount: number;
     totalClassesCount: number;
     totalStudentsCount: number;
-    monthlyRoomsCount: number;
     sharedQuizCount: number;
   }>({
     activeTeacherCount: 0,
     totalClassesCount: 0,
     totalStudentsCount: 0,
-    monthlyRoomsCount: 0,
     sharedQuizCount: 0,
   });
   const [isLoadingMetrics, setIsLoadingMetrics] = useState<boolean>(true);
@@ -214,7 +211,7 @@ export const SchoolDashboardPage: React.FC = () => {
       </div>
 
       {/* OVERVIEW CARDS METRICS */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 border-2 border-sky-200 bg-gradient-to-br from-sky-50 to-white shadow-sm">
           <span className="text-xs font-bold text-slate-500 block">Giáo viên hoạt động</span>
           <span className="text-2xl font-black text-slate-900 flex items-center gap-2 mt-1">
@@ -236,12 +233,6 @@ export const SchoolDashboardPage: React.FC = () => {
           </span>
         </Card>
 
-        <Card className="p-4 border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white shadow-sm">
-          <span className="text-xs font-bold text-slate-500 block">Phòng dạy Live tháng này</span>
-          <span className="text-2xl font-black text-amber-500 flex items-center gap-2 mt-1">
-            <Radio className="w-6 h-6" /> {metrics.monthlyRoomsCount} buổi
-          </span>
-        </Card>
       </div>
 
       {/* QUICK ADMIN NAVIGATION GRID */}
