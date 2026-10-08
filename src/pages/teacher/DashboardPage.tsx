@@ -220,7 +220,7 @@ export const DashboardPage: React.FC = () => {
             </div>
             <h3 className="font-black text-amber-800 text-base">NGÂN HÀNG CÂU HỎI</h3>
             <p className="text-xs text-slate-500 font-medium">
-              Soạn bài tập thủ công, dùng trợ lý AI hoặc chia sẻ bộ đề nội bộ.
+              Soạn bài tập thủ công hoặc chia sẻ bộ đề nội bộ.
             </p>
           </Card>
 
