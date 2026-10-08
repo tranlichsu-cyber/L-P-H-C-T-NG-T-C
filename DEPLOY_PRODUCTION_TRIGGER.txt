@@ -45,3 +45,4 @@ Run Gemini permission diagnostic.
 Enable Gemini API and verify production access.
 Authorize Gemini API key restrictions and verify production origin.
 Enable API Keys API and repair Gemini key restrictions.
+Deploy removal of AI assistant and Gemini integration.
