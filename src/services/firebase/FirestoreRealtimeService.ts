@@ -751,12 +751,14 @@ export class FirestoreRealtimeService {
       questionsSnap,
       submissionsSnap,
       scoresSnap,
+      scoreEventsSnap,
     ] = await Promise.all([
       getDocs(collection(firestore, 'rooms', roomId, 'roster')),
       getDocs(collection(firestore, 'rooms', roomId, 'participants')),
       getDocs(collection(firestore, 'rooms', roomId, 'liveQuestions')),
       getDocs(collection(firestore, 'rooms', roomId, 'submissions')),
       getDocs(collection(firestore, 'rooms', roomId, 'scores')),
+      getDocs(collection(firestore, 'rooms', roomId, 'scoreEvents')),
     ]);
 
     const roster = rosterSnap.docs.map((d) => d.data() as MockRoomData['roster'][number]);
@@ -778,6 +780,11 @@ export class FirestoreRealtimeService {
     const scores: MockRoomData['scores'] = {};
     scoresSnap.docs.forEach((d) => {
       scores[d.id] = d.data() as MockRoomData['scores'][string];
+    });
+
+    const scoreEvents: MockRoomData['scoreEvents'] = {};
+    scoreEventsSnap.docs.forEach((d) => {
+      scoreEvents[d.id] = d.data() as MockRoomData['scoreEvents'][string];
     });
 
     const privateQuestions: Record<string, { correctAnswer: string; explanation?: string }> = {};
@@ -813,7 +820,7 @@ export class FirestoreRealtimeService {
       liveQuestions,
       submissions,
       scores,
-      scoreEvents: rawRoomData.scoreEvents || {},
+      scoreEvents,
     };
 
     const summary = SessionAnalysisService.generateSessionSummary(fullRoom, privateQuestions);
