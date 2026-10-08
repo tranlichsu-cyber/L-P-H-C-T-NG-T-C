@@ -21,6 +21,8 @@ export interface LiveQuestionPublic {
   // Note: correctAnswer and explanation are omitted when status is OPEN/CLOSED
   correctAnswer?: string;
   explanation?: string;
+  correctPoints?: number;
+  wrongPenalty?: number;
 }
 
 export interface StudentSession {
