@@ -1,78 +1,89 @@
-const CACHE_NAME = 'lhtt-app-v1.1.1-admin-reset';
+const CACHE_NAME = 'lhtt-shell-v2';
 
-const STATIC_SHELL_ASSETS = [
-  '/',
-  '/index.html',
+const SHELL_ASSETS = [
   '/manifest.webmanifest',
   '/favicon.ico',
 ];
 
-// 1. Install Event - Cache Static App Shell
+// Install only tiny stable shell assets. Never pre-cache index.html or JS chunks.
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_SHELL_ASSETS);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS))
   );
   self.skipWaiting();
 });
 
-// 2. Activate Event - Clean Up Old Caches
+// Activate immediately and remove all older app caches.
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    caches.keys().then((cacheNames) =>
+      Promise.all(
         cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
-            return caches.delete(name);
-          }
+          if (name !== CACHE_NAME) return caches.delete(name);
+          return Promise.resolve(false);
         })
-      );
-    })
+      )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// 3. Fetch Event - Network-First for APIs/Realtime, Cache-First for Static Assets
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  const request = event.request;
+  const url = new URL(request.url);
 
-  // STRICT RULE: NEVER cache Firestore, Firebase Auth, or Gemini API network requests!
+  if (request.method !== 'GET') return;
+
+  // Never cache Firebase / Auth / Firestore / AI network traffic.
   if (
     url.hostname.includes('firestore.googleapis.com') ||
     url.hostname.includes('identitytoolkit.googleapis.com') ||
     url.hostname.includes('firebase') ||
     url.hostname.includes('generativelanguage.googleapis.com')
   ) {
-    return; // Pass through to network natively
+    return;
   }
 
-  // Network-first strategy for navigation / static assets
+  // Navigation must always prefer the latest deployed index.html.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' }).catch(async () => {
+        const cached = await caches.match('/index.html');
+        return cached || new Response('Không có kết nối mạng', {
+          status: 503,
+          statusText: 'Service Unavailable',
+        });
+      })
+    );
+    return;
+  }
+
+  // Vite chunks must always come from the network/browser HTTP cache.
+  // Do NOT put hashed JS/CSS into the Service Worker cache.
+  if (
+    url.pathname.startsWith('/assets/') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.map')
+  ) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Cache only stable public assets with network-first fallback.
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
-        // Cache valid HTTP responses for static assets
-        if (response.status === 200 && event.request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
       })
-      .catch(() => {
-        // If network offline, serve from cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          if (event.request.mode === 'navigate') {
-            return caches.match('/index.html');
-          }
-          return new Response('Không có kết nối mạng', {
-            status: 503,
-            statusText: 'Service Unavailable',
-          });
+      .catch(async () => {
+        const cached = await caches.match(request);
+        return cached || new Response('Không có kết nối mạng', {
+          status: 503,
+          statusText: 'Service Unavailable',
         });
       })
   );
