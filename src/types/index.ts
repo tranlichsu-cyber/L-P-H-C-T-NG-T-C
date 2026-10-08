@@ -32,6 +32,8 @@ export interface Question {
   explanation?: string;
   caseInsensitive?: boolean;
   trimWhitespace?: boolean;
+  correctPoints?: number;
+  wrongPenalty?: number;
   difficulty?: QuestionDifficulty;
   source?: 'MANUAL' | 'AI';
   aiReviewed?: boolean;
