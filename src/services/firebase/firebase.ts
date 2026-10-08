@@ -4,6 +4,8 @@ import { getAuth } from 'firebase/auth';
 import type { Auth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import type { AppCheck } from 'firebase/app-check';
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -23,10 +25,26 @@ export const isFirebaseConfigured = Boolean(
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
+let appCheck: AppCheck | null = null;
+
+const appCheckSiteKey =
+  import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY || '';
 
 if (isFirebaseConfigured) {
   try {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
+    if (appCheckSiteKey) {
+      appCheck = initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+    } else {
+      console.warn(
+        '[APP CHECK] Chưa có VITE_RECAPTCHA_ENTERPRISE_SITE_KEY. Firebase AI Logic có thể trả HTTP 403.'
+      );
+    }
+
     auth = getAuth(app);
     db = getFirestore(app);
   } catch (error) {
@@ -38,4 +56,4 @@ if (isFirebaseConfigured) {
   );
 }
 
-export { app, auth, db };
+export { app, auth, db, appCheck };
