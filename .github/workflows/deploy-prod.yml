@@ -76,10 +76,10 @@ jobs:
         with:
           project_id: lop-hoc-tuong-tac-a62a5
 
-      - name: Enable Gemini API
+      - name: Enable Gemini and API Keys APIs
         shell: bash
         run: |
-          gcloud services enable generativelanguage.googleapis.com --project=lop-hoc-tuong-tac-a62a5 --quiet
+          gcloud services enable generativelanguage.googleapis.com apikeys.googleapis.com --project=lop-hoc-tuong-tac-a62a5 --quiet
 
       - name: Allow Gemini API on production API key
         shell: bash
