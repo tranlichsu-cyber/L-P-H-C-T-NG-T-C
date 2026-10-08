@@ -44,9 +44,6 @@ const RoomControllerPage = lazy(() =>
 const PresentationPage = lazy(() =>
   import('./pages/teacher/PresentationPage').then((m) => ({ default: m.PresentationPage }))
 );
-const AiQuestionPage = lazy(() =>
-  import('./pages/teacher/AiQuestionPage').then((m) => ({ default: m.AiQuestionPage }))
-);
 const HistoryPage = lazy(() =>
   import('./pages/teacher/HistoryPage').then((m) => ({ default: m.HistoryPage }))
 );
@@ -137,7 +134,6 @@ export const App: React.FC = () => {
                     <Route path="classes/:classId/students/:studentId/history" element={<StudentHistoryPage />} />
                     <Route path="quizzes" element={<QuizzesPage />} />
                     <Route path="quizzes/:quizId" element={<QuizEditorPage />} />
-                    <Route path="ai" element={<AiQuestionPage />} />
                     <Route path="remediation" element={<RemediationHubPage />} />
                     <Route path="practice" element={<PracticeListPage />} />
                     <Route path="practice/new" element={<PracticeEditorPage />} />
