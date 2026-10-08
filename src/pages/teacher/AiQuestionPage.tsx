@@ -6,7 +6,8 @@ import { AiQuestionGeneratorModal } from '../../components/teacher/AiQuestionGen
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
 import type { AIGeneratedQuestion } from '../../services/ai/types';
-import { Sparkles, Bot, FileText } from 'lucide-react';
+import { Sparkles, Bot, FileText, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { aiService } from '../../services/ai/AIService';
 
 export const AiQuestionPage: React.FC = () => {
   const { quizzes, addQuestion } = useTeacherData();
@@ -54,6 +55,28 @@ export const AiQuestionPage: React.FC = () => {
           </Button>
         }
       />
+
+      <Card className={`border-2 ${aiService.isConfigured ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50'}`}>
+        <div className="flex items-start gap-3">
+          {aiService.isConfigured ? (
+            <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
+          ) : (
+            <AlertTriangle className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
+          )}
+          <div>
+            <div className="font-black text-slate-900">
+              {aiService.isRealMode
+                ? 'Gemini AI đang hoạt động'
+                : aiService.isConfigured
+                ? 'AI đang ở chế độ thử nghiệm'
+                : 'Gemini AI chưa được cấu hình'}
+            </div>
+            <div className="text-xs text-slate-600 mt-1">
+              Nhà cung cấp: {aiService.providerName}
+            </div>
+          </div>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: AI Capabilities */}
