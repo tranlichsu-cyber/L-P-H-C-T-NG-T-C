@@ -137,7 +137,7 @@ service cloud.firestore {
         && request.auth.token.firebase.sign_in_provider == 'anonymous'
         && request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['participantCount', 'lastParticipantId'])
-        && request.resource.data.participantCount == resource.data.participantCount + 1
+        && request.resource.data.participantCount == resource.data.get('participantCount', 0) + 1
         && request.resource.data.lastParticipantId is string
         && !exists(
           /databases/$(database)/documents/rooms/$(roomId)/participants/$(request.resource.data.lastParticipantId)
