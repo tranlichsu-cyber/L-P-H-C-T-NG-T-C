@@ -4,7 +4,12 @@ const STORAGE_KEY = 'lhtt_mock_database';
 
 export interface MockDatabase {
   rooms: Record<string, MockRoomData>; // roomId -> MockRoomData
-  privateQuestions: Record<string, Record<string, { correctAnswer: string; explanation?: string }>>; // roomId -> { questionId -> PrivateAnswer }
+  privateQuestions: Record<string, Record<string, {
+    correctAnswer: string;
+    explanation?: string;
+    correctPoints?: number;
+    wrongPenalty?: number;
+  }>>; // roomId -> { questionId -> PrivateAnswer }
 }
 
 const getInitialDB = (): MockDatabase => {
