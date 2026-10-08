@@ -43,3 +43,4 @@ Deploy compact AI page with visible document upload entry.
 Deploy working AI document upload and extraction.
 Run Gemini permission diagnostic.
 Enable Gemini API and verify production access.
+Authorize Gemini API key restrictions and verify production origin.
