@@ -11,6 +11,7 @@ import {
   onSnapshot,
   writeBatch,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { signInAnonymously } from 'firebase/auth';
@@ -80,6 +81,8 @@ export class FirestoreRealtimeService {
       activeQuestionId: params.questions[0]?.id || null,
       createdAt: serverTimestamp(),
       expiresAt,
+      rosterCount: params.roster.length,
+      participantCount: 0,
     };
     batch.set(roomRef, roomData);
 
@@ -193,31 +196,51 @@ export class FirestoreRealtimeService {
     const canonicalName = rosterData.name || rosterData.studentName || name;
 
     const participantRef = doc(db, 'rooms', roomId, 'participants', studentId);
-    const existingParticipant = await getDoc(participantRef);
-    if (
-      existingParticipant.exists() &&
-      existingParticipant.data()?.mockAuthUid &&
-      existingParticipant.data()?.mockAuthUid !== realAuthUid
-    ) {
-      return {
-        participant: null,
-        error: 'Tên học sinh này đang được sử dụng trên một thiết bị khác.',
-      };
-    }
-
+    const roomRef = doc(db, 'rooms', roomId);
     const now = new Date().toISOString();
-    const participantData = {
-      studentId,
-      name: canonicalName,
-      mockAuthUid: realAuthUid || authUid,
-      sessionToken: `token-${Date.now()}`,
-      joinedAt: existingParticipant.exists()
-        ? existingParticipant.data()?.joinedAt || serverTimestamp()
-        : serverTimestamp(),
-      lastSeenAt: serverTimestamp(),
-    };
 
-    await setDoc(participantRef, participantData, { merge: true });
+    let participantData: any = null;
+
+    await runTransaction(db, async (transaction) => {
+      const [participantSnap, roomSnap] = await Promise.all([
+        transaction.get(participantRef),
+        transaction.get(roomRef),
+      ]);
+
+      if (!roomSnap.exists()) {
+        throw new Error('Phòng học không còn tồn tại.');
+      }
+
+      if (
+        participantSnap.exists() &&
+        participantSnap.data()?.mockAuthUid &&
+        participantSnap.data()?.mockAuthUid !== realAuthUid
+      ) {
+        throw new Error('Tên học sinh này đang được sử dụng trên một thiết bị khác.');
+      }
+
+      participantData = {
+        studentId,
+        name: canonicalName,
+        mockAuthUid: realAuthUid || authUid,
+        sessionToken:
+          participantSnap.data()?.sessionToken || `token-${Date.now()}`,
+        joinedAt:
+          participantSnap.exists()
+            ? participantSnap.data()?.joinedAt || serverTimestamp()
+            : serverTimestamp(),
+        lastSeenAt: serverTimestamp(),
+      };
+
+      transaction.set(participantRef, participantData, { merge: true });
+
+      if (!participantSnap.exists()) {
+        const roomData = roomSnap.data() as { participantCount?: number };
+        transaction.update(roomRef, {
+          participantCount: (roomData.participantCount || 0) + 1,
+        });
+      }
+    });
 
     return {
       participant: {
