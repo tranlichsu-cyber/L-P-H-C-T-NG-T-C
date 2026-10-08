@@ -813,18 +813,14 @@ export class SchoolService {
       createdAt: new Date().toISOString(),
     };
 
-    if (db) {
-      try {
-        const lRef = doc(db, 'auditLogs', logId);
-        await setDoc(lRef, entry);
-      } catch {}
+    if (isFirebaseConfigured && db) {
+      const lRef = doc(db, 'auditLogs', logId);
+      await setDoc(lRef, entry);
+      return;
     }
 
     const local = this.loadLocalStorage();
     local.auditLogs.unshift(entry);
-    this.saveLocalStorage(local);
-  }
-
     this.saveLocalStorage(local);
   }
 
