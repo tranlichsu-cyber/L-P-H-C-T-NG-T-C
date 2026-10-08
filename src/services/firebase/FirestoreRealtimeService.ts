@@ -83,6 +83,11 @@ export class FirestoreRealtimeService {
       expiresAt,
       rosterCount: params.roster.length,
       participantCount: 0,
+      rosterPreview: params.roster.map((student) => ({
+        id: student.id,
+        studentId: student.id,
+        name: student.name,
+      })),
     };
     batch.set(roomRef, roomData);
 
@@ -141,7 +146,9 @@ export class FirestoreRealtimeService {
     }
 
     const docSnap = snap.docs[0];
-    const roomData = docSnap.data() as MockRoomData;
+    const roomData = docSnap.data() as MockRoomData & {
+      rosterPreview?: MockRoomData['roster'];
+    };
 
     if (roomData.status !== 'WAITING' && roomData.status !== 'ACTIVE') {
       return { room: null, error: 'Phòng học đã kết thúc hoặc không còn hoạt động.' };
@@ -151,8 +158,15 @@ export class FirestoreRealtimeService {
       return { room: null, error: 'Phòng học đã hết hạn.' };
     }
 
-    const rosterSnap = await getDocs(collection(db, 'rooms', docSnap.id, 'roster'));
-    const roster = rosterSnap.docs.map((d) => d.data() as MockRoomData['roster'][number]);
+    let roster = roomData.rosterPreview || [];
+
+    // Compatibility for rooms created before rosterPreview was introduced.
+    if (roster.length === 0) {
+      const rosterSnap = await getDocs(collection(db, 'rooms', docSnap.id, 'roster'));
+      roster = rosterSnap.docs.map(
+        (d) => d.data() as MockRoomData['roster'][number]
+      );
+    }
 
     return {
       room: {
