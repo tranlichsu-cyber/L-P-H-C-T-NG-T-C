@@ -181,7 +181,13 @@ export class SessionAnalysisService {
       const stdUnanswered = Math.max(0, totalQ - stdSubmissions.length);
       const accuracy = this.calculateAccuracy(stdCorrect, totalQ);
       const scoreObj = room.scores?.[std.id];
-      const score = scoreObj?.totalScore || scoreObj?.score || stdCorrect * 10;
+      const eventScore = Object.values(room.scoreEvents || {})
+        .filter((event) => event.studentId === std.id)
+        .reduce((sum, event) => sum + (event.points || 0), 0);
+      const score =
+        scoreObj?.totalScore ??
+        scoreObj?.score ??
+        eventScore;
 
       // Logic gợi ý học sinh cần quan tâm thêm (accuracy < 50% hoặc bỏ nhiều hơn 50% số câu)
       const needsSupport = accuracy < 50 || (stdUnanswered / totalQ) >= 0.5;
