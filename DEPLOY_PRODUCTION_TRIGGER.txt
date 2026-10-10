@@ -1,2 +1,2 @@
-Deploy local PPT/PDF lesson uploads and classroom projector integration
+Deploy compact PowerPoint teaching companion
 2026-10-10
