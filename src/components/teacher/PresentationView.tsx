@@ -267,7 +267,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             )}
 
             {/* Pure CSS Bar Chart Visualizer for RESULT */}
-            {qStatus === 'RESULT' && liveQ.options && (
+            {qStatus === 'RESULT' && liveQ.type === 'MULTIPLE_CHOICE' && liveQ.options && (
               <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
                 <h3 className="text-xl font-bold text-slate-300">Thống kê đáp án học sinh</h3>
                 <div className="space-y-3">
