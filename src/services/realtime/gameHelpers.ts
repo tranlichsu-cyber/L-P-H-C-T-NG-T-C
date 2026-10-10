@@ -25,6 +25,7 @@ export const buildInitialGameSession = (
       doorCount: settings.doorCount || 6,
       boxCount: settings.boxCount || 6,
       teamCount: settings.teamCount || 2,
+      teamNames: settings.teamNames || [],
       teamScoringMode: settings.teamScoringMode || 'CORRECT_COUNT',
     },
     currentRound: 1,
@@ -75,7 +76,7 @@ export const buildInitialGameSession = (
       const preset = teamPresets[i % teamPresets.length];
       teams[tId] = {
         id: tId,
-        name: preset.name,
+        name: settings.teamNames?.[i]?.trim() || preset.name,
         color: preset.color,
         memberIds: [],
         score: 0,
