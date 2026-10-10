@@ -1,2 +1,2 @@
-Deploy projector next-question contrast fix
+Deploy compact presentation with persistent controls
 2026-10-10
