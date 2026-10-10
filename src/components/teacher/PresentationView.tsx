@@ -339,7 +339,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           )}
 
           {qStatus === 'RESULT' && onNextQuestion && (
-            <Button variant="outline" size="lg" onClick={onNextQuestion} className="font-bold text-white border-slate-600">
+            <Button variant="primary" size="lg" onClick={onNextQuestion} className="font-bold">
               CÂU TIẾP THEO <ArrowRight className="w-5 h-5 ml-2 inline" />
             </Button>
           )}
