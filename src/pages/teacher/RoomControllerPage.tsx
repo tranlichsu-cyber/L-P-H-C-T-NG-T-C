@@ -8,6 +8,7 @@ import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { useLessonLibrary } from '../../services/lessons/lessonLibrary';
+import { PowerPointTeachingPanel } from '../../components/teacher/PowerPointTeachingPanel';
 import { PresentationView } from '../../components/teacher/PresentationView';
 import { useRoomRealtime } from '../../hooks/useRoomRealtime';
 import { activeRealtimeService, isFirebaseActive } from '../../services/realtime/realtimeServiceSwitch';
@@ -54,6 +55,7 @@ export const RoomControllerPage: React.FC = () => {
   const [lessonPage, setLessonPage] = useState(1);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const selectedLesson = lessons.items.find((lesson) => lesson.id === lessonId) || null;
+  const [powerPointMode, setPowerPointMode] = useState(() => new URLSearchParams(window.location.search).get('powerpoint') === '1');
   const [isPresenting, setIsPresenting] = useState(false);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -419,6 +421,14 @@ export const RoomControllerPage: React.FC = () => {
     );
   }
 
+  if (powerPointMode) {
+    return <PowerPointTeachingPanel room={room} lessons={lessons.items} spinning={isSpinning} spinningName={spinningName}
+      onExit={() => { setPowerPointMode(false); const url = new URL(window.location.href); url.searchParams.delete('powerpoint'); window.history.replaceState(null, '', url); }}
+      onProject={() => setIsPresenting(true)}
+      onStart={handleStartSession} onOpen={handleOpenQuestion} onClose={handleCloseQuestion}
+      onResult={handleShowResult} onNext={handleNextQuestion} onCall={handleRandomCall} onScore={handleOralScore} />;
+  }
+
   // --- SESSION SUMMARY CALCS ---
   const totalQuestionsCount = questionIds.length;
   const totalSubmissionsCount = allSubmissionsList.length;
@@ -446,6 +456,12 @@ export const RoomControllerPage: React.FC = () => {
               <Gamepad2 className="w-4 h-4 mr-1" /> GAME HUB TRÒ CHƠI
             </Button>
 
+            <Button variant="primary" size="sm" onClick={() => {
+              const url = new URL(`/teacher/room/${room.id}`, window.location.origin); url.searchParams.set('powerpoint', '1');
+              const panel = window.open(url.href, 'powerpoint-teaching-panel', 'popup=yes,width=480,height=780,resizable=yes,scrollbars=yes');
+              if (panel) panel.focus();
+              else { setPowerPointMode(true); showToast('Trình duyệt chặn cửa sổ mới; đã mở bảng điều khiển tại đây.', 'info'); }
+            }}>Dạy cùng PowerPoint</Button>
             <Button variant="primary" size="sm" onClick={() => setLessonPickerOpen(true)}>Chiếu bài giảng PDF</Button>
             <Button variant="outline" size="sm" onClick={() => setIsPresenting(true)}>
               <Maximize2 className="w-4 h-4 mr-1" /> Trình Chiếu Máy Chiếu
