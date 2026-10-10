@@ -15,6 +15,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
   const [timerSeconds, setTimerSeconds] = useState<number>(15);
   const [doorCount, setDoorCount] = useState<number>(6);
   const [boxCount, setBoxCount] = useState<number>(6);
+  const [teamNames, setTeamNames] = useState('');
   const [teamCount, setTeamCount] = useState<number>(2);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [enableSpeedScore] = useState<boolean>(true);
@@ -53,7 +54,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
     },
     {
       type: 'TEAM_RACE',
-      title: '4. Đua Xe Theo Đội',
+      title: '4. Học Theo Nhóm / Đua Đội',
       description: 'Chia lớp thành các đội đua (Mặt Trời, Ngôi Sao,...). Mỗi câu đúng đẩy xe đội tiến lên.',
       icon: <Flag className="w-8 h-8 text-rose-500" />,
       color: 'border-rose-400',
@@ -77,6 +78,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
       doorCount,
       boxCount,
       teamCount,
+      teamNames: teamNames.split('\n').map((name) => name.trim()).slice(0, teamCount),
       fairnessUncalled: true,
       showRanking: false,
     });
@@ -190,7 +192,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
             {selectedGame === 'TEAM_RACE' && (
               <div>
                 <label className="block mb-1 font-bold text-slate-800 flex items-center gap-1">
-                  <Users className="w-3.5 h-3.5 text-sky-600" /> Số lượng đội đua:
+                  <Users className="w-3.5 h-3.5 text-sky-600" /> Số nhóm học tập:
                 </label>
                 <select
                   value={teamCount}
@@ -201,6 +203,9 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
                   <option value={3}>3 Đội (+ Cầu Vồng)</option>
                   <option value={4}>4 Đội (+ Sấm Chớp)</option>
                 </select>
+                <label className="block mt-3 font-bold text-slate-800">Tên nhóm (mỗi dòng một tên, có thể bỏ trống)</label>
+                <textarea value={teamNames} onChange={(e) => setTeamNames(e.target.value)} rows={4} className="w-full p-3 border rounded-xl text-slate-900 bg-white" placeholder="Nhóm 1\nNhóm 2" />
+                <p className="text-xs text-slate-600 mt-2">Học sinh đã vào phòng được chia đều theo thứ tự tham gia. Hãy chờ đủ học sinh trước khi bắt đầu. Mỗi thành viên nộp riêng; mỗi câu đúng được 1 điểm nhóm.</p>
               </div>
             )}
           </div>
