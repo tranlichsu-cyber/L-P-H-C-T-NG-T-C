@@ -1,3 +1,4 @@
+import { OrderingAnswer } from '../../components/student/OrderingAnswer';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common/Card';
@@ -241,6 +242,7 @@ export const StudentPracticeHubPage: React.FC = () => {
             </div>
           )}
 
+          {currentQ.type === 'ORDERING' && <OrderingAnswer key={currentQ.id} options={currentQ.options || []} value={selectedAns} onChange={(answer) => { void handleSelectAnswer(currentQ.id, answer); }} />}
           {currentQ.type === 'TRUE_FALSE' && (
             <div className="grid grid-cols-2 gap-4">
               {['Đúng', 'Sai'].map((val) => {
@@ -263,7 +265,7 @@ export const StudentPracticeHubPage: React.FC = () => {
             </div>
           )}
 
-          {currentQ.type === 'SHORT_ANSWER' && (
+          {(currentQ.type === 'SHORT_ANSWER' || currentQ.type === 'FILL_BLANK') && (
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">Nhập câu trả lời của em:</label>
               <input
