@@ -1,4 +1,4 @@
-export type QuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+export type QuestionType = 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'FILL_BLANK' | 'ORDERING';
 
 export type RoomStatus = 'WAITING' | 'ACTIVE' | 'FINISHED';
 
