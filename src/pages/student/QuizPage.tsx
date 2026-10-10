@@ -1,3 +1,4 @@
+import { OrderingAnswer } from '../../components/student/OrderingAnswer';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
@@ -9,7 +10,7 @@ import { HelpCircle, CheckCircle2, Lock, Clock, Send } from 'lucide-react';
 
 export const QuizPage: React.FC = () => {
   const navigate = useNavigate();
-  const { session, setSelectedAnswer, submitAnswer } = useStudentSession();
+  const { session, room, setSelectedAnswer, submitAnswer } = useStudentSession();
   const { showToast } = useToast();
 
   const [shortInput, setShortInput] = useState('');
@@ -164,6 +165,7 @@ export const QuizPage: React.FC = () => {
           </div>
         )}
 
+        {q.type === 'ORDERING' && <OrderingAnswer key={q.id} options={q.options || []} value={session.selectedAnswer || ''} disabled={isSubmitted || isClosed} onChange={setSelectedAnswer} />}
         {/* 2. TRUE / FALSE UI */}
         {q.type === 'TRUE_FALSE' && (
           <div className="grid grid-cols-2 gap-4">
@@ -193,8 +195,13 @@ export const QuizPage: React.FC = () => {
           </div>
         )}
 
+        {room?.activeGame?.type === 'TEAM_RACE' && session.studentId && (() => {
+          const teamId = room.activeGame.studentTeamMap?.[session.studentId];
+          const team = teamId ? room.activeGame.teams?.[teamId] : null;
+          return <p className="p-3 bg-indigo-50 rounded-xl text-indigo-900 font-bold">{team ? 'Nhóm của em: ' + team.name + ' • Thảo luận trước khi mỗi bạn nộp câu trả lời.' : 'Em chưa được phân nhóm. Báo thầy/cô để được hướng dẫn.'}</p>;
+        })()}
         {/* 3. SHORT ANSWER UI */}
-        {q.type === 'SHORT_ANSWER' && (
+        {(q.type === 'SHORT_ANSWER' || q.type === 'FILL_BLANK') && (
           <div className="space-y-2">
             <textarea
               rows={3}
