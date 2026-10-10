@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { PdfLessonView } from './PdfLessonView';
+import { LessonSlideControls } from './LessonSlideControls';
+import type { Lesson } from '../../services/lessons/lessonLibrary';
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
@@ -7,6 +10,10 @@ import { Users, X, Sparkles, CheckCircle2, Award, ArrowRight } from 'lucide-reac
 
 interface PresentationViewProps {
   room: MockRoomData;
+  lesson?: Lesson | null;
+  lessonPage?: number;
+  onLessonPage?: (page: number) => void;
+  onChooseLesson?: () => void;
   onClose: () => void;
   onOpenQuestion?: (questionId: string) => void;
   onCloseQuestion?: (questionId: string) => void;
@@ -17,6 +24,10 @@ interface PresentationViewProps {
 
 export const PresentationView: React.FC<PresentationViewProps> = ({
   room,
+  lesson,
+  lessonPage = 1,
+  onLessonPage,
+  onChooseLesson,
   onClose,
   onOpenQuestion,
   onCloseQuestion,
@@ -24,6 +35,9 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   onNextQuestion,
   onCallRandomStudent,
 }) => {
+  const [showLesson, setShowLesson] = useState(Boolean(lesson));
+  const [pageCount, setPageCount] = useState(lesson?.pageCount || 1);
+  useEffect(() => { setShowLesson(Boolean(lesson)); setPageCount(lesson?.pageCount || 1); }, [lesson?.id, lesson?.pageCount]);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [showStudentName, setShowStudentName] = useState(true);
   const [showSubmissionPicker, setShowSubmissionPicker] = useState(false);
@@ -94,8 +108,17 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         </div>
       </div>
 
+      {onChooseLesson && <div className="shrink-0 flex flex-wrap gap-2 items-center">
+        <Button variant="primary" size="sm" onClick={onChooseLesson}>Chọn bài giảng</Button>
+        {lesson && <Button variant={showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(true)}>Bài giảng: {lesson.title}</Button>}
+        <Button variant={!showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(false)}>Câu hỏi / Bài học sinh</Button>
+      </div>}
       {/* Main Content Area */}
       <div className="flex-1 min-h-0 overflow-y-auto py-2">
+        {showLesson && lesson && onLessonPage ? <div className="h-full flex flex-col gap-2 min-h-0">
+          <div className="flex-1 min-h-0"><PdfLessonView lesson={lesson} page={lessonPage} onCount={setPageCount} /></div>
+          <LessonSlideControls page={lessonPage} count={pageCount} onPage={onLessonPage} />
+        </div> : <>
         {/* Called Student Banner Overlay if Active */}
         {!selectedSubmission && room.calledStudent && (
           <div className="mb-8 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 p-8 rounded-3xl text-slate-950 shadow-2xl text-center border-4 border-amber-300 animate-bounce">
@@ -299,6 +322,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             )}
           </div>
         )}
+        </>}
       </div>
 
       {/* Bottom Floating Control Bar for Teacher */}
@@ -310,36 +334,36 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
         <div className="flex flex-wrap items-center gap-4">
           {room.status !== 'WAITING' && liveQ && (
-            <Button variant="primary" size="md" onClick={() => setShowSubmissionPicker((v) => !v)}>
+            <Button variant="primary" size="md" onClick={() => { setShowLesson(false); setShowSubmissionPicker((v) => !v); }}>
               CHIẾU BÀI HỌC SINH ({answeredCount})
             </Button>
           )}
           {onCallRandomStudent && (
-            <Button variant="warning" size="md" onClick={onCallRandomStudent} className="font-bold text-slate-950">
+            <Button variant="warning" size="md" onClick={() => { setShowLesson(false); onCallRandomStudent(); }} className="font-bold text-slate-950">
               <Award className="w-5 h-5 mr-2 inline" /> GỌI HỌC SINH
             </Button>
           )}
 
           {qStatus === 'READY' && onOpenQuestion && (
-            <Button variant="success" size="md" onClick={() => onOpenQuestion(currentQuestionId)} className="font-bold">
+            <Button variant="success" size="md" onClick={() => { setShowLesson(false); onOpenQuestion(currentQuestionId); }} className="font-bold">
               PHÁT CÂU HỎI
             </Button>
           )}
 
           {qStatus === 'OPEN' && onCloseQuestion && (
-            <Button variant="danger" size="md" onClick={() => onCloseQuestion(currentQuestionId)} className="font-bold">
+            <Button variant="danger" size="md" onClick={() => { setShowLesson(false); onCloseQuestion(currentQuestionId); }} className="font-bold">
               ĐÓNG TRẢ LỜI
             </Button>
           )}
 
           {qStatus === 'CLOSED' && onShowResult && (
-            <Button variant="primary" size="md" onClick={() => onShowResult(currentQuestionId)} className="font-bold">
+            <Button variant="primary" size="md" onClick={() => { setShowLesson(false); onShowResult(currentQuestionId); }} className="font-bold">
               HIỂN THỊ ĐÁP ÁN
             </Button>
           )}
 
           {qStatus === 'RESULT' && onNextQuestion && (
-            <Button variant="primary" size="md" onClick={onNextQuestion} className="font-bold">
+            <Button variant="primary" size="md" onClick={() => { setShowLesson(false); onNextQuestion(); }} className="font-bold">
               CÂU TIẾP THEO <ArrowRight className="w-5 h-5 ml-2 inline" />
             </Button>
           )}
