@@ -95,8 +95,6 @@ export const TeacherLayout: React.FC = () => {
     { path: '/teacher', label: 'Tổng quan', icon: LayoutDashboard, idle: 'bg-sky-50 text-sky-700 border-sky-200', active: 'bg-sky-600 text-white border-sky-600 shadow-sky-200' },
     { path: '/teacher/classes', label: 'Quản lý lớp', icon: Users, idle: 'bg-emerald-50 text-emerald-700 border-emerald-200', active: 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-200' },
     { path: '/teacher/quizzes', label: 'Ngân hàng câu hỏi', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
-    { path: '/teacher/question-bank', label: 'Kho câu hỏi dùng lại', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
-    { path: '/teacher/lessons', label: 'Bài giảng PPT / PDF', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
     { path: '/teacher/remediation', label: 'Ôn tập & Củng cố', icon: HeartHandshake, idle: 'bg-amber-50 text-amber-800 border-amber-200', active: 'bg-amber-500 text-slate-950 border-amber-500 shadow-amber-200' },
     { path: '/teacher/room', label: 'Phòng học Live', icon: Radio, idle: 'bg-rose-50 text-rose-700 border-rose-200', active: 'bg-rose-600 text-white border-rose-600 shadow-rose-200' },
     { path: '/teacher/history', label: 'Lịch sử dạy học', icon: History, idle: 'bg-cyan-50 text-cyan-700 border-cyan-200', active: 'bg-cyan-600 text-white border-cyan-600 shadow-cyan-200' },
