@@ -1,2 +1,2 @@
-Deploy teacher menu without teaching history
+Deploy classroom without PDF presentation entry
 2026-10-10
