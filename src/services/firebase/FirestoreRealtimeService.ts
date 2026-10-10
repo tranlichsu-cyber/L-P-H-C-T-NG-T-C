@@ -774,7 +774,7 @@ export class FirestoreRealtimeService {
 
     const submissions: MockRoomData['submissions'] = {};
     submissionsSnap.docs.forEach((d) => {
-      submissions[d.id] = d.data() as MockSubmission;
+      submissions[d.id] = { ...d.data(), id: d.id } as MockSubmission;
     });
 
     const scores: MockRoomData['scores'] = {};
@@ -1029,7 +1029,7 @@ export class FirestoreRealtimeService {
         (snap) => {
           const next: MockRoomData['submissions'] = {};
           snap.docs.forEach((d) => {
-            next[d.id] = d.data() as MockSubmission;
+            next[d.id] = { ...d.data(), id: d.id } as MockSubmission;
           });
           submissions = next;
           emit();
