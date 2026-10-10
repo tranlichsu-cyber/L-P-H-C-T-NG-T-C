@@ -3,7 +3,7 @@ import type { ClassGroup, Student, Quiz, Question } from '../types';
 import { INITIAL_CLASSES } from '../data/mockClasses';
 import { INITIAL_QUIZZES } from '../data/mockQuizzes';
 import { normalizeVietnameseText } from '../utils/normalizeVietnamese';
-import { collection, deleteDoc, doc, getDocs, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, setDoc, updateDoc, writeBatch, runTransaction } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../services/firebase/firebase';
 import { useAuth } from './AuthContext';
 import { SchoolService } from '../services/school/SchoolService';
@@ -53,6 +53,7 @@ interface TeacherDataContextType {
 
   // Question Actions
   addQuestion: (quizId: string, questionData: Omit<Question, 'id'>) => Promise<void>;
+  addQuestions: (quizId: string, questions: Omit<Question, 'id'>[]) => Promise<void>;
   updateQuestion: (quizId: string, questionId: string, questionData: Omit<Question, 'id'>) => Promise<void>;
   duplicateQuestion: (quizId: string, questionId: string) => Promise<void>;
   deleteQuestion: (quizId: string, questionId: string) => Promise<void>;
@@ -578,44 +579,35 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // --- QUESTION ACTIONS ---
-  const addQuestion = async (quizId: string, questionData: Omit<Question, 'id'>): Promise<void> => {
-    const targetQuiz = quizzes.find((quiz) => quiz.id === quizId);
-    if (!targetQuiz) throw new Error('Không tìm thấy bộ câu hỏi.');
-
+  // Import copies in one atomic transaction; existing questions stay unchanged.
+  const addQuestions = async (quizId: string, items: Omit<Question, 'id'>[]): Promise<void> => {
+    const target = quizzes.find((quiz) => quiz.id === quizId);
+    if (!target) throw new Error('Không tìm thấy bộ câu hỏi.');
+    if (!items.length) return;
+    if (items.length > 400) throw new Error('Mỗi lần thêm tối đa 400 câu hỏi.');
     const now = new Date().toISOString();
-    const newQuestion: Question = {
-      ...questionData,
-      id: `q-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    };
-    const nextCount = targetQuiz.questions.length + 1;
-
+    const added = items.map((item) => ({ ...item, id: crypto.randomUUID() }));
     if (isFirebaseConfigured && db) {
       const firestore = db;
-      const batch = writeBatch(firestore);
-      batch.set(
-        doc(firestore, 'quizzes', quizId, 'questions', newQuestion.id),
-        sanitizeFirestoreData({
-          ...newQuestion,
-          order: targetQuiz.questions.length,
-          createdAt: now,
-          updatedAt: now,
-        })
-      );
-      batch.update(doc(firestore, 'quizzes', quizId), {
-        questionCount: nextCount,
-        updatedAt: now,
+      await runTransaction(firestore, async (transaction) => {
+        const quizRef = doc(firestore, 'quizzes', quizId);
+        const snapshot = await transaction.get(quizRef);
+        if (!snapshot.exists()) throw new Error('Bộ câu hỏi đã bị xoá.');
+        const count = snapshot.data().questionCount ?? target.questions.length;
+        added.forEach((item, index) => transaction.set(
+          doc(firestore, 'quizzes', quizId, 'questions', item.id),
+          sanitizeFirestoreData({ ...item, order: count + index, createdAt: now, updatedAt: now })
+        ));
+        transaction.update(quizRef, { questionCount: count + added.length, updatedAt: now });
       });
-      await batch.commit();
     }
-
-    setQuizzes((prev) =>
-      prev.map((quiz) => {
-        if (quiz.id !== quizId) return quiz;
-        const updated = [...quiz.questions, newQuestion];
-        return { ...quiz, questions: updated, questionCount: updated.length };
-      })
-    );
+    setQuizzes((prev) => prev.map((quiz) => quiz.id === quizId
+      ? { ...quiz, questions: [...quiz.questions, ...added], questionCount: quiz.questions.length + added.length }
+      : quiz));
   };
+
+  const addQuestion = (quizId: string, questionData: Omit<Question, 'id'>): Promise<void> =>
+    addQuestions(quizId, [questionData]);
 
   const updateQuestion = async (
     quizId: string,
@@ -769,6 +761,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         duplicateQuiz,
         deleteQuiz,
         addQuestion,
+        addQuestions,
         updateQuestion,
         duplicateQuestion,
         deleteQuestion,
