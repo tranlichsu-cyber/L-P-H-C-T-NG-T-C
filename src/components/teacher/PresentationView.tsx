@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
@@ -24,6 +24,9 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   onNextQuestion,
   onCallRandomStudent,
 }) => {
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
+  const [showStudentName, setShowStudentName] = useState(true);
+  const [showSubmissionPicker, setShowSubmissionPicker] = useState(false);
   const joinUrl = `${window.location.origin}/student/join?room=${room.roomCode}`;
   const participantsList = Object.values(room.participants || {});
   const totalRoster = room.roster?.length || 30;
@@ -35,6 +38,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
     (s) => s.questionId === currentQuestionId
   );
   const answeredCount = submissionsList.length;
+  const selectedSubmission = submissionsList.find((s) => s.id === selectedSubmissionId);
 
   const qStatus = liveQ?.status || 'READY';
 
@@ -93,7 +97,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       {/* Main Content Area */}
       <div className="my-auto py-8">
         {/* Called Student Banner Overlay if Active */}
-        {room.calledStudent && (
+        {!selectedSubmission && room.calledStudent && (
           <div className="mb-8 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 p-8 rounded-3xl text-slate-950 shadow-2xl text-center border-4 border-amber-300 animate-bounce">
             <div className="inline-flex items-center space-x-2 bg-slate-950/20 text-slate-950 px-4 py-1.5 rounded-full text-lg font-black uppercase tracking-wider mb-2">
               <Award className="w-6 h-6" /> MỜI HỌC SINH PHÁT BIỂU
@@ -107,6 +111,53 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           </div>
         )}
 
+        {selectedSubmission && room.status !== 'WAITING' && (
+          <section className="max-w-6xl mx-auto space-y-6" aria-label="Bài làm học sinh đang trình chiếu">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-2xl sm:text-4xl font-black text-sky-300">BÀI LÀM HỌC SINH</h2>
+              <div className="flex flex-wrap gap-3">
+                <button className="px-4 py-3 rounded-xl bg-slate-800 text-white" onClick={() => setShowStudentName((v) => !v)}>
+                  {showStudentName ? 'Ẩn tên học sinh' : 'Hiện tên học sinh'}
+                </button>
+                <button className="px-4 py-3 rounded-xl bg-sky-700 text-white" onClick={() => setSelectedSubmissionId(null)}>Quay lại câu hỏi</button>
+              </div>
+            </div>
+            <p className="text-xl sm:text-3xl text-amber-300 font-bold">{showStudentName ? selectedSubmission.studentName : 'Bài làm được chọn'}</p>
+            <p className="text-lg sm:text-2xl text-slate-300 whitespace-pre-wrap">{liveQ?.content}</p>
+            <div className="bg-white text-slate-950 rounded-3xl p-8 sm:p-12 shadow-2xl">
+              <p className="text-3xl sm:text-5xl leading-relaxed whitespace-pre-wrap break-words select-text">
+                {selectedSubmission.answer || '(Bài nộp không có nội dung)'}
+              </p>
+              {liveQ?.options && /^[A-Z]$/.test(selectedSubmission.answer.trim().toUpperCase()) && (
+                <p className="mt-6 text-2xl sm:text-3xl text-slate-700 whitespace-pre-wrap">
+                  {liveQ.options[selectedSubmission.answer.trim().toUpperCase().charCodeAt(0) - 65] || ''}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
+
+        {showSubmissionPicker && (
+          <section className="max-w-5xl mx-auto mb-8 bg-slate-900 border border-slate-700 rounded-2xl p-5" aria-label="Chọn bài học sinh">
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h2 className="text-xl font-bold">Chọn bài đã nộp của câu hỏi hiện tại</h2>
+              <button className="px-4 py-2 bg-slate-800 rounded-lg" onClick={() => setShowSubmissionPicker(false)}>Đóng danh sách</button>
+            </div>
+            {!submissionsList.length && <p className="text-slate-300">Chưa có học sinh nộp bài cho câu hỏi này.</p>}
+            <div className="grid sm:grid-cols-2 gap-3">
+              {submissionsList.map((submission) => (
+                <button key={submission.id} className="text-left p-4 rounded-xl bg-slate-800 hover:bg-sky-900 border border-slate-600" onClick={() => {
+                  setSelectedSubmissionId(submission.id);
+                  setShowSubmissionPicker(false);
+                }}>
+                  <span className="block font-bold text-amber-300">{showStudentName ? submission.studentName : 'Bài ' + (submissionsList.indexOf(submission) + 1)}</span>
+                  <span className="block text-white mt-2 whitespace-pre-wrap break-words line-clamp-2">{submission.answer}</span>
+                  <span className="block text-sky-300 mt-2 font-bold">Chiếu bài này →</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
         {/* State 1: WAITING */}
         {room.status === 'WAITING' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
@@ -140,7 +191,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         )}
 
         {/* State 2 & 3: LIVE QUESTION (OPEN / CLOSED / RESULT) */}
-        {room.status !== 'WAITING' && liveQ && (
+        {room.status !== 'WAITING' && liveQ && !selectedSubmission && (
           <div className="max-w-5xl mx-auto space-y-8">
             {/* Question Header & Status */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -257,7 +308,12 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           <span>Học sinh tham gia: <strong className="text-white text-lg">{participantsList.length}</strong></span>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-4">
+          {room.status !== 'WAITING' && liveQ && (
+            <Button variant="primary" size="lg" onClick={() => setShowSubmissionPicker((v) => !v)}>
+              CHIẾU BÀI HỌC SINH ({answeredCount})
+            </Button>
+          )}
           {onCallRandomStudent && (
             <Button variant="warning" size="lg" onClick={onCallRandomStudent} className="font-bold text-slate-950">
               <Award className="w-5 h-5 mr-2 inline" /> GỌI HỌC SINH
