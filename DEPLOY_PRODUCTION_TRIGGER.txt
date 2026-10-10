@@ -1,2 +1,2 @@
-Deploy simplified teacher menu
+Deploy teacher menu without teaching history
 2026-10-10
