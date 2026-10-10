@@ -520,8 +520,9 @@ export const RoomControllerPage: React.FC = () => {
           {activeGame.type === 'TEAM_RACE' && (
             <TeamRaceGame
               teams={activeGame.teams || {}}
+              participants={room.participants || {}}
               question={liveQ}
-              submissions={submissionsList}
+              submissions={allSubmissionsList.filter((s) => (typeof s.submittedAt === 'string' ? Date.parse(s.submittedAt) : (s.submittedAt as unknown as { toMillis?: () => number })?.toMillis?.() || 0) >= Date.parse(activeGame.createdAt))}
               onOpenQuestion={handleOpenQuestion}
               onCloseQuestion={handleCloseQuestion}
               onShowResult={handleShowResult}
