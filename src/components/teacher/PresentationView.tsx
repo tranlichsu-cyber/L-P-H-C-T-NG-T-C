@@ -58,18 +58,18 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col justify-between overflow-y-auto p-6 sm:p-10 select-none animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col h-[100dvh] overflow-hidden p-3 sm:p-4 gap-3 select-none animate-fade-in">
       {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-6">
+      <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold shadow-lg">
             <Sparkles className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-amber-400">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-amber-400">
               LỚP HỌC TƯƠNG TÁC
             </h1>
-            <p className="text-slate-400 text-lg font-medium">
+            <p className="text-slate-400 text-sm font-medium">
               {room.className} • {room.subject}
             </p>
           </div>
@@ -77,9 +77,9 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
         {/* Room Code Badge */}
         <div className="flex items-center space-x-6">
-          <div className="bg-slate-900 border-2 border-sky-500/40 rounded-2xl px-6 py-2.5 text-center shadow-xl">
+          <div className="bg-slate-900 border-2 border-sky-500/40 rounded-2xl px-4 py-2 text-center shadow-xl">
             <div className="text-xs uppercase font-bold tracking-widest text-sky-400">MÃ THAM GIA</div>
-            <div className="text-3xl sm:text-4xl font-mono font-black text-white tracking-widest">
+            <div className="text-2xl sm:text-3xl font-mono font-black text-white tracking-widest">
               {room.roomCode}
             </div>
           </div>
@@ -95,7 +95,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       </div>
 
       {/* Main Content Area */}
-      <div className="my-auto py-8">
+      <div className="flex-1 min-h-0 overflow-y-auto py-2">
         {/* Called Student Banner Overlay if Active */}
         {!selectedSubmission && room.calledStudent && (
           <div className="mb-8 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 p-8 rounded-3xl text-slate-950 shadow-2xl text-center border-4 border-amber-300 animate-bounce">
@@ -160,15 +160,15 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         )}
         {/* State 1: WAITING */}
         {room.status === 'WAITING' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
-            <div className="text-left space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-center max-w-5xl mx-auto">
+            <div className="text-left space-y-3">
               <Badge variant="warning" className="text-lg py-2 px-5 font-bold">
                 PHÒNG CHỜ HỌC SINH
               </Badge>
-              <h2 className="text-4xl sm:text-6xl font-black text-white leading-tight">
+              <h2 className="text-2xl sm:text-4xl font-black text-white leading-tight">
                 Hãy quét mã QR hoặc nhập mã phòng
               </h2>
-              <p className="text-2xl text-slate-300 leading-relaxed font-medium">
+              <p className="text-base sm:text-lg text-slate-300 leading-relaxed font-medium">
                 Dùng máy tính bảng hoặc điện thoại để tham gia tiết học tương tác ngay bây giờ!
               </p>
               <div className="inline-flex items-center space-x-3 bg-slate-900 border border-slate-700 rounded-2xl px-6 py-4 text-xl font-bold text-sky-300">
@@ -178,8 +178,8 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             </div>
 
             {/* Large QR Code Container */}
-            <div className="bg-white p-8 rounded-3xl shadow-2xl border-4 border-sky-400 text-slate-900 flex flex-col items-center justify-center space-y-4 max-w-sm mx-auto">
-              <QRCodeSVG value={joinUrl} size={260} level="H" includeMargin />
+            <div className="bg-white p-4 rounded-3xl shadow-2xl border-4 border-sky-400 text-slate-900 flex flex-col items-center justify-center space-y-4 max-w-sm mx-auto">
+              <QRCodeSVG value={joinUrl} size={180} level="H" includeMargin />
               <div className="text-center font-mono text-2xl font-black text-sky-950 tracking-wider">
                 PIN: {room.roomCode}
               </div>
@@ -192,7 +192,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
         {/* State 2 & 3: LIVE QUESTION (OPEN / CLOSED / RESULT) */}
         {room.status !== 'WAITING' && liveQ && !selectedSubmission && (
-          <div className="max-w-5xl mx-auto space-y-8">
+          <div className="max-w-5xl mx-auto space-y-4">
             {/* Question Header & Status */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <span className="text-xl sm:text-2xl font-black text-sky-400 uppercase tracking-widest">
@@ -209,8 +209,8 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
             </div>
 
             {/* Question Content */}
-            <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-8 sm:p-10 shadow-2xl">
-              <h2 className="text-3xl sm:text-5xl font-extrabold text-white leading-snug">
+            <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-snug">
                 {liveQ.content}
               </h2>
             </div>
@@ -302,7 +302,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       </div>
 
       {/* Bottom Floating Control Bar for Teacher */}
-      <div className="bg-slate-900/90 backdrop-blur-md border-t border-slate-800 pt-4 pb-2 px-6 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-slate-900/90 backdrop-blur-md border-t border-slate-800 shrink-0 py-3 px-3 rounded-2xl flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center space-x-3 text-slate-400 font-semibold text-base">
           <Users className="w-6 h-6 text-sky-400" />
           <span>Học sinh tham gia: <strong className="text-white text-lg">{participantsList.length}</strong></span>
@@ -310,36 +310,36 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
         <div className="flex flex-wrap items-center gap-4">
           {room.status !== 'WAITING' && liveQ && (
-            <Button variant="primary" size="lg" onClick={() => setShowSubmissionPicker((v) => !v)}>
+            <Button variant="primary" size="md" onClick={() => setShowSubmissionPicker((v) => !v)}>
               CHIẾU BÀI HỌC SINH ({answeredCount})
             </Button>
           )}
           {onCallRandomStudent && (
-            <Button variant="warning" size="lg" onClick={onCallRandomStudent} className="font-bold text-slate-950">
+            <Button variant="warning" size="md" onClick={onCallRandomStudent} className="font-bold text-slate-950">
               <Award className="w-5 h-5 mr-2 inline" /> GỌI HỌC SINH
             </Button>
           )}
 
           {qStatus === 'READY' && onOpenQuestion && (
-            <Button variant="success" size="lg" onClick={() => onOpenQuestion(currentQuestionId)} className="font-bold">
+            <Button variant="success" size="md" onClick={() => onOpenQuestion(currentQuestionId)} className="font-bold">
               PHÁT CÂU HỎI
             </Button>
           )}
 
           {qStatus === 'OPEN' && onCloseQuestion && (
-            <Button variant="danger" size="lg" onClick={() => onCloseQuestion(currentQuestionId)} className="font-bold">
+            <Button variant="danger" size="md" onClick={() => onCloseQuestion(currentQuestionId)} className="font-bold">
               ĐÓNG TRẢ LỜI
             </Button>
           )}
 
           {qStatus === 'CLOSED' && onShowResult && (
-            <Button variant="primary" size="lg" onClick={() => onShowResult(currentQuestionId)} className="font-bold">
+            <Button variant="primary" size="md" onClick={() => onShowResult(currentQuestionId)} className="font-bold">
               HIỂN THỊ ĐÁP ÁN
             </Button>
           )}
 
           {qStatus === 'RESULT' && onNextQuestion && (
-            <Button variant="primary" size="lg" onClick={onNextQuestion} className="font-bold">
+            <Button variant="primary" size="md" onClick={onNextQuestion} className="font-bold">
               CÂU TIẾP THEO <ArrowRight className="w-5 h-5 ml-2 inline" />
             </Button>
           )}
