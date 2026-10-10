@@ -125,6 +125,15 @@ service cloud.firestore {
       }
     }
 
+    // Personal reusable questions: teacher-only, scoped to the owner.
+    match /questionBank/{questionId} {
+      allow read, delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
+      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid;
+      allow update: if isTeacher()
+        && resource.data.teacherId == request.auth.uid
+        && request.resource.data.teacherId == resource.data.teacherId;
+    }
+
     // 8. Public room-code lookup (direct get only; list/query is denied)
     match /roomCodes/{roomCode} {
       allow get: if isAuthenticated();
