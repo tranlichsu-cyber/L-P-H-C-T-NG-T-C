@@ -70,6 +70,7 @@ export interface GameSessionData {
     doorCount?: number;
     boxCount?: number;
     teamCount?: number;
+    teamNames?: string[];
     teamScoringMode?: 'ACCURACY_RATE' | 'CORRECT_COUNT' | 'MANUAL';
   };
   currentRound: number;
