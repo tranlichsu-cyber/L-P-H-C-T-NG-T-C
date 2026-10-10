@@ -9,7 +9,9 @@ import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { SchoolService } from '../../services/school/SchoolService';
-import type { Question, QuestionType } from '../../types';
+import { useQuestionBank, copyQuestion, type BankQuestion } from '../../services/questionBank/useQuestionBank';
+import { QuestionBankBrowser } from '../../components/teacher/QuestionBankBrowser';
+import type { Question, QuestionDifficulty, QuestionType } from '../../types';
 import {
   ArrowLeft,
   Plus,
@@ -25,11 +27,19 @@ import {
 export const QuizEditorPage: React.FC = () => {
   const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
-  const { quizzes, addQuestion, updateQuestion, duplicateQuestion, deleteQuestion, moveQuestion } =
+  const { quizzes, addQuestion, addQuestions, updateQuestion, duplicateQuestion, deleteQuestion, moveQuestion } =
     useTeacherData();
   const { showToast } = useToast();
   const { currentUser } = useAuth();
   const [isSchoolAdmin, setIsSchoolAdmin] = useState(false);
+
+  const bank = useQuestionBank();
+  const [bankOpen, setBankOpen] = useState(false);
+  const [bankSelected, setBankSelected] = useState<string[]>([]);
+  const [bankBusy, setBankBusy] = useState(false);
+  const [savingToBank, setSavingToBank] = useState<Question | null>(null);
+  const [bankTopic, setBankTopic] = useState('');
+  const [bankDifficulty, setBankDifficulty] = useState<QuestionDifficulty | ''>('');
 
   const currentQuiz = quizzes.find((q) => q.id === quizId);
 
@@ -273,9 +283,10 @@ export const QuizEditorPage: React.FC = () => {
         description={`Môn: ${currentQuiz.subject} • Khối: ${currentQuiz.grade} • Tổng số: ${currentQuiz.questions.length} câu hỏi`}
         action={
           canEdit ? (
-            <Button variant="primary" size="lg" onClick={handleOpenAdd}>
-              <Plus className="w-5 h-5 mr-1" /> THÊM CÂU HỎI
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => { setBankSelected([]); setBankOpen(true); }}>Lấy từ kho câu hỏi</Button>
+              <Button variant="primary" size="lg" onClick={handleOpenAdd}><Plus className="w-5 h-5 mr-1" /> THÊM CÂU HỎI</Button>
+            </div>
           ) : (
             <Badge variant="info">CHỈ XEM • Bộ câu hỏi được chia sẻ</Badge>
           )
@@ -297,8 +308,8 @@ export const QuizEditorPage: React.FC = () => {
 
             return (
               <Card key={q.id} className="p-6">
-                <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-wrap gap-3 items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className="w-8 h-8 rounded-xl bg-sky-100 text-sky-800 font-bold text-sm flex items-center justify-center">
                       {idx + 1}
                     </span>
@@ -326,9 +337,10 @@ export const QuizEditorPage: React.FC = () => {
                     </span>
                   </div>
 
+                  <Button variant="outline" size="sm" disabled={bankBusy} onClick={() => { setSavingToBank(q); setBankTopic(''); setBankDifficulty(q.difficulty || ''); }}>Lưu vào kho</Button>
                   {/* Move Up/Down & Action Buttons */}
                   {canEdit && (
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <Button
                         variant="secondary"
                         size="sm"
@@ -429,6 +441,46 @@ export const QuizEditorPage: React.FC = () => {
         )}
       </div>
 
+      <Modal isOpen={bankOpen} onClose={() => { if (!bankBusy) setBankOpen(false); }} title="Lấy câu hỏi từ kho" footer={<>
+        <Button variant="secondary" disabled={bankBusy} onClick={() => setBankOpen(false)}>Đóng</Button>
+        <Button variant="primary" disabled={bankBusy || !bankSelected.length || bank.loading || !!bank.error} onClick={async () => {
+          setBankBusy(true);
+          try {
+            const chosen = bank.items.filter((item) => bankSelected.includes(item.id));
+            await addQuestions(currentQuiz.id, chosen.map((item) => copyQuestion(item.question)));
+            setBankOpen(false); setBankSelected([]); showToast(`Đã thêm ${chosen.length} câu từ kho!`, 'success');
+          } catch (err) { showToast(err instanceof Error ? err.message : 'Không thể thêm câu hỏi.', 'error'); }
+          finally { setBankBusy(false); }
+        }}>{bankBusy ? 'Đang thêm…' : `Thêm ${bankSelected.length} câu`}</Button>
+      </>}>
+        <p className="text-sm text-slate-600 mb-3">Chọn câu hỏi để tạo bản sao vào bộ đề này. Sau đó thầy có thể sửa riêng từng câu.</p>
+        {bank.loading ? <p>Đang tải kho…</p> : bank.error ? <p role="alert" className="text-rose-700">{bank.error}</p> : <QuestionBankBrowser items={bank.items} selected={bankSelected} onSelect={(id) => setBankSelected((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])} />}
+      </Modal>
+      <Modal isOpen={!!savingToBank} onClose={() => { if (!bankBusy) setSavingToBank(null); }} title="Lưu câu hỏi để dùng lại" footer={<>
+        <Button variant="secondary" disabled={bankBusy} onClick={() => setSavingToBank(null)}>Hủy</Button>
+        <Button variant="primary" disabled={bankBusy || bank.loading || !!bank.error} onClick={async () => {
+          if (!savingToBank) return;
+          setBankBusy(true);
+          try {
+            const question = copyQuestion(savingToBank);
+            if (question.type === 'MULTIPLE_CHOICE' && /^[A-D]$/i.test(question.correctAnswer.trim()) && question.options) {
+              question.correctAnswer = question.options[question.correctAnswer.trim().toUpperCase().charCodeAt(0) - 65];
+            }
+            if (bankDifficulty) question.difficulty = bankDifficulty;
+            const existing: BankQuestion | undefined = bank.items.find((item) => item.subject === currentQuiz.subject && item.grade === currentQuiz.grade && item.topic === bankTopic.trim() && JSON.stringify(copyQuestion(item.question)) === JSON.stringify(question));
+            if (existing) { showToast('Câu hỏi này đã có trong kho cùng chủ đề.', 'info'); }
+            else { await bank.save({ subject: currentQuiz.subject, grade: currentQuiz.grade, topic: bankTopic.trim(), question }); showToast('Đã lưu câu hỏi vào kho Firebase!', 'success'); }
+            setSavingToBank(null);
+          } catch (err) { showToast(err instanceof Error ? err.message : 'Không thể lưu vào kho.', 'error'); }
+          finally { setBankBusy(false); }
+        }}>{bankBusy ? 'Đang lưu…' : 'Lưu vào kho'}</Button>
+      </>}>
+        <p className="font-semibold text-slate-900 mb-3">{savingToBank?.content}</p>
+        <p className="text-sm text-slate-600 mb-3">{currentQuiz.grade} • {currentQuiz.subject} • Kho riêng của thầy</p>
+        <label className="block text-sm font-semibold">Chủ đề / Bài học<input value={bankTopic} onChange={(e) => setBankTopic(e.target.value)} className="w-full border border-slate-300 rounded-xl p-3 mt-1 mb-3" placeholder="Ví dụ: Phân số, Bài 5…" /></label>
+        <label className="block text-sm font-semibold">Mức độ<select value={bankDifficulty} onChange={(e) => setBankDifficulty(e.target.value as QuestionDifficulty | '')} className="w-full border border-slate-300 rounded-xl p-3 mt-1"><option value="">Chưa phân loại</option><option value="KNOWLEDGE">Nhận biết</option><option value="UNDERSTANDING">Thông hiểu</option><option value="APPLICATION">Vận dụng</option></select></label>
+        {bank.error && <p role="alert" className="text-rose-700">{bank.error}</p>}
+      </Modal>
       {/* Modal Form Question Add/Edit */}
       <Modal
         isOpen={isFormOpen}
@@ -472,7 +524,7 @@ export const QuizEditorPage: React.FC = () => {
                 type="button"
                 onClick={() => setQType('SHORT_ANSWER')}
                 className={`py-2.5 px-2 rounded-xl border text-xs font-bold transition-all ${
-                  ['SHORT_ANSWER', 'FILL_BLANK', 'ORDERING'].includes(qType)
+                  qType === 'SHORT_ANSWER'
                     ? 'bg-amber-600 text-white border-amber-600 shadow-md'
                     : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                 }`}
