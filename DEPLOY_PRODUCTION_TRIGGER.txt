@@ -1,2 +1,2 @@
-Deploy personal reusable question bank with atomic quiz import
+Deploy local PPT/PDF lesson uploads and classroom projector integration
 2026-10-10
