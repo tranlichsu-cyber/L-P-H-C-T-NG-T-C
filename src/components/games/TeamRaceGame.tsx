@@ -1,11 +1,12 @@
 import React from 'react';
 import { Button } from '../common/Button';
-import type { TeamData, LiveQuestionPublic, MockSubmission } from '../../services/realtime/types';
+import type { TeamData, LiveQuestionPublic, MockSubmission, MockParticipant } from '../../services/realtime/types';
 import { playCorrectSound } from '../../utils/audio';
 // TeamRaceGame Component
 
 interface TeamRaceGameProps {
   teams: Record<string, TeamData>;
+  participants?: Record<string, MockParticipant>;
   question: LiveQuestionPublic | null;
   submissions: MockSubmission[];
   onOpenQuestion: () => void;
@@ -16,6 +17,7 @@ interface TeamRaceGameProps {
 
 export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
   teams,
+  participants = {},
   question,
   submissions,
   onOpenQuestion,
@@ -23,7 +25,7 @@ export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
   onShowResult,
   onCloseGame,
 }) => {
-  const teamsList = Object.values(teams || {}).sort((a, b) => a.displayOrder - b.displayOrder);
+  const teamsList = Object.values(teams || {}).map((team) => ({ ...team, score: submissions.filter((sub) => team.memberIds.includes(sub.studentId) && sub.isCorrect === true).length })).sort((a, b) => a.displayOrder - b.displayOrder);
   const maxScore = Math.max(10, ...teamsList.map((t) => t.score));
 
   const qStatus = question?.status || 'READY';
@@ -33,16 +35,17 @@ export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <div>
           <h3 className="text-2xl font-black text-rose-400 flex items-center gap-2">
-            🏎️ ĐUA XE THEO ĐỘI
+            🏎️ HỌC THEO NHÓM
           </h3>
           <p className="text-xs text-slate-400">Mỗi câu trả lời đúng của các thành viên sẽ đẩy xe đội tiến lên phía trước!</p>
         </div>
 
-        <Button variant="outline" size="sm" onClick={onCloseGame} className="text-slate-300 border-slate-700">
+        <Button variant="primary" size="sm" onClick={onCloseGame}>
           Đóng Trò Chơi
         </Button>
       </div>
 
+      <div className="grid sm:grid-cols-2 gap-3">{teamsList.map((team) => <div key={team.id} className="p-3 bg-slate-800 rounded-xl"><h4 className="font-bold" style={{color: team.color}}>{team.name}</h4><p className="text-sm text-slate-200 mt-2">{team.memberIds.map((id) => participants[id]?.name || id).join(', ') || 'Chưa có thành viên'}</p></div>)}</div>
       {/* Race Tracks Container */}
       <div className="space-y-4 my-6 bg-slate-950 p-6 rounded-3xl border border-slate-800">
         {teamsList.map((team) => {
@@ -83,7 +86,7 @@ export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
         <div className="bg-slate-950 p-6 rounded-3xl border-2 border-slate-800 space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-xs font-bold text-rose-400 uppercase">CÂU HỎI THI ĐẤU ĐỘI</span>
-            <span className="text-xs font-bold text-slate-400">Lượt nộp: <strong className="text-amber-400 text-base">{submissions.length}</strong></span>
+            <span className="text-xs font-bold text-slate-400">Lượt nộp: <strong className="text-amber-400 text-base">{submissions.filter((s) => s.questionId === question.id).length}</strong></span>
           </div>
           <h2 className="text-2xl font-black text-white">{question.content}</h2>
         </div>
