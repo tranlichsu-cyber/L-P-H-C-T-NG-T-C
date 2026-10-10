@@ -51,10 +51,6 @@ export const RoomControllerPage: React.FC = () => {
 
   // Modals state
   const lessons = useLessonLibrary();
-  const [lessonId, setLessonId] = useState('');
-  const [lessonPage, setLessonPage] = useState(1);
-  const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
-  const selectedLesson = lessons.items.find((lesson) => lesson.id === lessonId) || null;
   const [powerPointMode, setPowerPointMode] = useState(() => new URLSearchParams(window.location.search).get('powerpoint') === '1');
   const [isPresenting, setIsPresenting] = useState(false);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
@@ -404,10 +400,6 @@ export const RoomControllerPage: React.FC = () => {
     return (
       <PresentationView
         room={room}
-        lesson={selectedLesson}
-        lessonPage={lessonPage}
-        onLessonPage={setLessonPage}
-        onChooseLesson={() => { setIsPresenting(false); setLessonPickerOpen(true); }}
         onClose={() => setIsPresenting(false)}
         onOpenQuestion={handleOpenQuestion}
         onCloseQuestion={handleCloseQuestion}
@@ -462,7 +454,6 @@ export const RoomControllerPage: React.FC = () => {
               if (panel) panel.focus();
               else { setPowerPointMode(true); showToast('Trình duyệt chặn cửa sổ mới; đã mở bảng điều khiển tại đây.', 'info'); }
             }}>Dạy cùng PowerPoint</Button>
-            <Button variant="primary" size="sm" onClick={() => setLessonPickerOpen(true)}>Chiếu bài giảng PDF</Button>
             <Button variant="outline" size="sm" onClick={() => setIsPresenting(true)}>
               <Maximize2 className="w-4 h-4 mr-1" /> Trình Chiếu Máy Chiếu
             </Button>
@@ -1139,12 +1130,6 @@ export const RoomControllerPage: React.FC = () => {
         </div>
       </Modal>
 
-      <Modal isOpen={lessonPickerOpen} onClose={() => setLessonPickerOpen(false)} title="Chọn bài giảng trên máy này">
-        <p className="text-sm text-slate-600 mb-3">PPT gốc được lưu trong kho; trình chiếu dùng bản PDF. Bài giảng xuất hiện trên màn hình máy chiếu, câu hỏi vẫn phát riêng tới học sinh.</p>
-        {lessons.loading ? <p>Đang đọc kho…</p> : lessons.error ? <p className="text-rose-700">{lessons.error}</p> : <div className="space-y-2">{lessons.items.filter((lesson) => lesson.pdfName).map((lesson) => <Button key={lesson.id} variant="outline" className="w-full justify-start" onClick={() => { if (lessonId !== lesson.id) setLessonPage(1); setLessonId(lesson.id); setLessonPickerOpen(false); setIsPresenting(true); }}>{lesson.title} • {lesson.grade} • {lesson.pageCount} trang</Button>)}</div>}
-        {!lessons.items.some((lesson) => lesson.pdfName) && <p className="text-slate-600 my-3">Chưa có bài PDF để chiếu trên máy này.</p>}
-        <Button variant="primary" className="mt-4" onClick={() => navigate('/teacher/lessons')}>Mở kho để tải PPT / PDF lên</Button>
-      </Modal>
       {/* MODAL 5: GAME HUB SELECTION */}
       <GameHubModal
         isOpen={isGameHubOpen}
