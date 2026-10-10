@@ -134,8 +134,8 @@ export const QuizEditorPage: React.FC = () => {
       }
     } else if (q.type === 'TRUE_FALSE') {
       setCorrectChoice(q.correctAnswer || 'Đúng');
-    } else if (q.type === 'SHORT_ANSWER') {
-      setCorrectChoice(q.correctAnswer || '');
+    } else if (['SHORT_ANSWER', 'FILL_BLANK', 'ORDERING'].includes(q.type)) {
+      setCorrectChoice(q.type === 'ORDERING' ? (q.correctAnswer || '').split(' → ').join('\n') : q.correctAnswer || '');
     }
 
     setFormError('');
@@ -170,12 +170,21 @@ export const QuizEditorPage: React.FC = () => {
     } else if (qType === 'TRUE_FALSE') {
       finalOptions = ['Đúng', 'Sai'];
       finalCorrectAnswer = correctChoice === 'Sai' ? 'Sai' : 'Đúng';
-    } else if (qType === 'SHORT_ANSWER') {
+    } else if (['SHORT_ANSWER', 'FILL_BLANK', 'ORDERING'].includes(qType)) {
       if (!correctChoice.trim()) {
         setFormError('Vui lòng nhập đáp án đúng cho câu trả lời ngắn!');
         return;
       }
       finalCorrectAnswer = correctChoice.trim();
+      if (qType === 'ORDERING') {
+        const steps = correctChoice.split('\n').map((s) => s.trim()).filter(Boolean);
+        if (steps.length < 2 || steps.length > 8 || new Set(steps).size !== steps.length) {
+          setFormError('Sắp xếp cần 2–8 mục khác nhau, mỗi mục một dòng theo thứ tự đúng.');
+          return;
+        }
+        finalOptions = [...steps].sort((a, b) => a.localeCompare(b, 'vi'));
+        finalCorrectAnswer = steps.join(' → ');
+      }
     }
 
     if (correctPoints < 0 || wrongPenalty < 0) {
@@ -191,7 +200,7 @@ export const QuizEditorPage: React.FC = () => {
       explanation: qExplanation.trim() || undefined,
       correctPoints,
       wrongPenalty,
-      ...(qType === 'SHORT_ANSWER'
+      ...(['SHORT_ANSWER', 'FILL_BLANK', 'ORDERING'].includes(qType)
         ? {
             caseInsensitive,
             trimWhitespace,
@@ -307,7 +316,7 @@ export const QuizEditorPage: React.FC = () => {
                         ? 'Trắc nghiệm A/B/C/D'
                         : q.type === 'TRUE_FALSE'
                         ? 'Đúng / Sai'
-                        : 'Trả lời ngắn'}
+                        : q.type === 'ORDERING' ? 'Sắp xếp thứ tự' : q.type === 'FILL_BLANK' ? 'Điền chỗ trống' : 'Trả lời ngắn'}
                     </Badge>
                     <span className="text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
                       Đúng +{q.correctPoints ?? 10}
@@ -399,7 +408,7 @@ export const QuizEditorPage: React.FC = () => {
                   </div>
                 )}
 
-                {q.type === 'SHORT_ANSWER' && (
+                {['SHORT_ANSWER', 'FILL_BLANK', 'ORDERING'].includes(q.type) && (
                   <div className="mb-4">
                     <span className="text-xs text-slate-500 block mb-1">Đáp án ngắn đúng:</span>
                     <span className="inline-block px-4 py-2 rounded-xl bg-amber-100 text-amber-900 font-bold text-sm border border-amber-300">
@@ -463,7 +472,7 @@ export const QuizEditorPage: React.FC = () => {
                 type="button"
                 onClick={() => setQType('SHORT_ANSWER')}
                 className={`py-2.5 px-2 rounded-xl border text-xs font-bold transition-all ${
-                  qType === 'SHORT_ANSWER'
+                  ['SHORT_ANSWER', 'FILL_BLANK', 'ORDERING'].includes(qType)
                     ? 'bg-amber-600 text-white border-amber-600 shadow-md'
                     : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                 }`}
@@ -473,6 +482,13 @@ export const QuizEditorPage: React.FC = () => {
             </div>
           </div>
 
+          <div className="flex flex-wrap gap-2">
+            {(['FILL_BLANK', 'ORDERING'] as QuestionType[]).map((type) => (
+              <button key={type} type="button" onClick={() => { setQType(type); setCorrectChoice(''); }} className={`px-4 py-3 rounded-xl border font-bold ${qType === type ? 'bg-indigo-600 text-white' : 'bg-white text-slate-700'}`}>
+                {type === 'FILL_BLANK' ? 'Điền chỗ trống' : 'Sắp xếp thứ tự'}
+              </button>
+            ))}
+          </div>
           {/* Question Content */}
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">Nội Dung Câu Hỏi *</label>
@@ -579,13 +595,13 @@ export const QuizEditorPage: React.FC = () => {
             </div>
           )}
 
-          {qType === 'SHORT_ANSWER' && (
+          {['SHORT_ANSWER', 'FILL_BLANK', 'ORDERING'].includes(qType) && (
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Đáp Án Đúng Chuẩn *</label>
-                <input
-                  type="text"
-                  placeholder="Ví dụ: Hà Nội hoặc 150"
+                <label className="block text-xs font-bold text-slate-700 mb-1">{qType === 'ORDERING' ? 'Thứ tự đúng: mỗi mục một dòng (2–8 mục)' : 'Đáp án đúng chuẩn *'}</label>
+                <textarea
+                  rows={qType === 'ORDERING' ? 5 : 2}
+                  placeholder={qType === 'ORDERING' ? 'Mục thứ nhất\nMục thứ hai\nMục thứ ba' : 'Ví dụ: Hà Nội hoặc 150'}
                   value={correctChoice}
                   onChange={(e) => setCorrectChoice(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm font-bold"
