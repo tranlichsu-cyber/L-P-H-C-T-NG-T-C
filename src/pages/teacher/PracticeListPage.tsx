@@ -19,7 +19,7 @@ import {
   Archive,
 } from 'lucide-react';
 
-export const PracticeListPage: React.FC = () => {
+export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly = false }) => {
   const navigate = useNavigate();
   const { classes } = useTeacherData();
   const { showToast } = useToast();
@@ -35,7 +35,7 @@ export const PracticeListPage: React.FC = () => {
     setIsLoading(true);
     try {
       const sets = await PracticeService.getTeacherPracticeSets(selectedClassId || undefined, selectedSubject, showArchived);
-      setPracticeSets(sets);
+      setPracticeSets(testsOnly ? sets.filter((s) => s.type === 'TEST') : sets);
     } catch {
       showToast('Lỗi khi tải danh sách bài ôn tập.', 'error');
     } finally {
@@ -45,7 +45,7 @@ export const PracticeListPage: React.FC = () => {
 
   useEffect(() => {
     fetchPracticeSets();
-  }, [selectedClassId, selectedSubject, showArchived]);
+  }, [selectedClassId, selectedSubject, showArchived, testsOnly]);
 
   const handleToggleArchive = async (e: React.MouseEvent, id: string, archived?: boolean) => {
     e.stopPropagation();
@@ -57,11 +57,11 @@ export const PracticeListPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="QUẢN LÝ CÁC BÀI ÔN TẬP ĐÃ GIAO"
-        description="Theo dõi tiến độ làm bài, kết quả hoàn thành và quản lý nhiệm vụ ôn tập phân hóa"
+        title={testsOnly ? "BÀI KIỂM TRA ĐÃ GIAO" : "QUẢN LÝ CÁC BÀI ÔN TẬP ĐÃ GIAO"}
+        description={testsOnly ? "Giao cả đề, đặt điểm từng câu và xem kết quả trên thang 10." : "Theo dõi tiến độ làm bài, kết quả hoàn thành và quản lý nhiệm vụ ôn tập phân hóa"}
         action={
-          <Button variant="primary" onClick={() => navigate('/teacher/practice/new')}>
-            <PlusCircle className="w-5 h-5 mr-1" /> TẠO BÀI ÔN MỚI
+          <Button variant="primary" onClick={() => navigate('/teacher/practice/new', { state: testsOnly ? { type: 'TEST' } : undefined })}>
+            <PlusCircle className="w-5 h-5 mr-1" /> {testsOnly ? 'TẠO BÀI KIỂM TRA' : 'TẠO BÀI ÔN MỚI'}
           </Button>
         }
       />
@@ -128,9 +128,9 @@ export const PracticeListPage: React.FC = () => {
       ) : practiceSets.length === 0 ? (
         <Card className="p-12 text-center space-y-4">
           <BookOpen className="w-12 h-12 text-slate-400 mx-auto" />
-          <h3 className="font-bold text-lg text-slate-800">Chưa có bài ôn tập nào</h3>
-          <Button variant="primary" onClick={() => navigate('/teacher/practice/new')}>
-            TẠO BÀI ÔN TẬP ĐẦU TIÊN
+          <h3 className="font-bold text-lg text-slate-800">{testsOnly ? 'Chưa có bài kiểm tra nào' : 'Chưa có bài ôn tập nào'}</h3>
+          <Button variant="primary" onClick={() => navigate('/teacher/practice/new', { state: testsOnly ? { type: 'TEST' } : undefined })}>
+            {testsOnly ? 'TẠO BÀI KIỂM TRA ĐẦU TIÊN' : 'TẠO BÀI ÔN TẬP ĐẦU TIÊN'}
           </Button>
         </Card>
       ) : (
@@ -157,7 +157,7 @@ export const PracticeListPage: React.FC = () => {
                           p.type === 'REMEDIATION' ? 'warning' : p.type === 'PRACTICE' ? 'info' : 'success'
                         }
                       >
-                        {p.type === 'REMEDIATION' ? 'Củng cố' : p.type === 'PRACTICE' ? 'Luyện tập' : 'Nâng cao'}
+                        {p.type === 'TEST' ? 'Bài kiểm tra' : p.type === 'REMEDIATION' ? 'Củng cố' : p.type === 'PRACTICE' ? 'Luyện tập' : 'Nâng cao'}
                       </Badge>
                       <span className="text-xs text-slate-500 font-semibold flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" /> Giao ngày {dateStr}
