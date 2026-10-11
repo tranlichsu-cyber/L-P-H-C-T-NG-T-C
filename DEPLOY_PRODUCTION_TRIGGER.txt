@@ -1,2 +1,2 @@
-Deploy classroom without PDF presentation entry
-2026-10-10
+Deploy whole-test assignments, per-question ten-point rubric and immediate student results.
+2026-10-11
