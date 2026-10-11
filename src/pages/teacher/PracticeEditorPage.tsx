@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Badge } from '../../components/common/Badge';
 import { Modal } from '../../components/common/Modal';
+import { distributeTenPoints, totalPoints, questionPoints, validateTestQuestions } from '../../services/practice/grading';
 import { PracticeService } from '../../services/practice/PracticeService';
 import type { PracticeQuestion, PracticeType, PracticeFeedbackMode } from '../../services/practice/types';
 import { useTeacherData } from '../../context/TeacherDataContext';
@@ -43,19 +44,23 @@ export const PracticeEditorPage: React.FC = () => {
   const [isQuizBankModalOpen, setIsQuizBankModalOpen] = useState<boolean>(false);
 
   // Student Assignment Target State
-  const [assignTarget, setAssignTarget] = useState<'WHOLE_CLASS' | 'SELECTED_STUDENTS'>('SELECTED_STUDENTS');
+  const [assignTarget, setAssignTarget] = useState<'WHOLE_CLASS' | 'SELECTED_STUDENTS'>(stateData.type === 'TEST' ? 'WHOLE_CLASS' : 'SELECTED_STUDENTS');
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(stateData.suggestedStudentIds || []);
 
   // Modal Confirm Assign State
   const [isAssignConfirmOpen, setIsAssignConfirmOpen] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
+  const [publishedTest, setPublishedTest] = useState(false);
+  const isTest = type === 'TEST';
+  const maxPoints = totalPoints(questions);
   const targetClass = classes.find((c) => c.id === selectedClassId) || classes[0];
 
   useEffect(() => {
     if (practiceSetId) {
       PracticeService.getPracticeSetDetail(practiceSetId).then((set) => {
         if (set) {
+          setPublishedTest(set.type === 'TEST' && set.status === 'ASSIGNED');
           setTitle(set.title);
           setSelectedClassId(set.classId);
           setSubject(set.subject);
@@ -90,9 +95,11 @@ export const PracticeEditorPage: React.FC = () => {
       correctAnswer: q.correctAnswer,
       explanation: q.explanation,
       difficulty: q.difficulty,
+      caseInsensitive: q.caseInsensitive, trimWhitespace: q.trimWhitespace,
+      points: 1,
     }));
 
-    setQuestions((prev) => [...prev, ...imported]);
+    setQuestions((prev) => isTest ? distributeTenPoints([...prev, ...imported]) : [...prev, ...imported]);
     setIsQuizBankModalOpen(false);
     showToast(`Đã thêm ${imported.length} câu hỏi từ bộ đề "${quiz.title}"!`, 'success');
   };
@@ -105,6 +112,9 @@ export const PracticeEditorPage: React.FC = () => {
 
   // Save / Assign Action
   const handleConfirmAssign = async () => {
+    if (!targetClass) { showToast('Hãy tạo lớp học trước khi giao bài.', 'info'); return; }
+    if (publishedTest) { showToast('Bài kiểm tra đã giao giữ nguyên đề và biểu điểm. Hãy tạo bài mới.', 'info'); return; }
+    if (isTest) { try { validateTestQuestions(questions); } catch (err) { showToast((err as Error).message, 'info'); return; } }
     if (!title.trim()) {
       showToast('Vui lòng nhập tên bài ôn tập!', 'info');
       return;
@@ -136,10 +146,10 @@ export const PracticeEditorPage: React.FC = () => {
         title: title.trim(),
         type,
         status: 'ASSIGNED' as const,
-        dueAt: dueAt ? `${dueAt}T23:59:59.000Z` : undefined,
-        allowRetry,
-        maxAttempts: allowRetry ? 2 : 1,
-        feedbackMode,
+        dueAt: dueAt ? new Date(`${dueAt}T23:59:59+07:00`).toISOString() : undefined,
+        allowRetry: isTest ? false : allowRetry,
+        maxAttempts: isTest ? 1 : allowRetry ? 2 : 1,
+        feedbackMode: isTest ? 'AFTER_FINISH' as const : feedbackMode,
         createdBy: currentUser?.displayName || currentUser?.email || 'Giáo viên',
         source: stateData.topic ? 'HISTORY_REMEDIATION' as const : 'QUESTION_BANK' as const,
         questions,
@@ -162,7 +172,7 @@ export const PracticeEditorPage: React.FC = () => {
         'success'
       );
       setIsAssignConfirmOpen(false);
-      navigate('/teacher/practice');
+      navigate(isTest ? '/teacher/tests' : '/teacher/practice');
     } catch (err: any) {
       showToast(err?.message || 'Lỗi khi giao bài ôn tập. Hãy thử lại.', 'error');
     } finally {
@@ -174,7 +184,7 @@ export const PracticeEditorPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center gap-3 border-b pb-4">
         <button
-          onClick={() => navigate('/teacher/remediation')}
+          onClick={() => navigate(isTest ? '/teacher/tests' : '/teacher/remediation')}
           className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
           title="Quay lại Hub Ôn tập"
         >
@@ -182,7 +192,7 @@ export const PracticeEditorPage: React.FC = () => {
         </button>
         <div>
           <h1 className="text-xl font-black text-slate-900">
-            {practiceSetId ? 'CHỈNH SỬA BÀI ÔN TẬP' : 'TẠO BÀI ÔN TẬP PHÂN HÓA MỚI'}
+            {isTest ? 'GIAO BÀI KIỂM TRA • BIỂU ĐIỂM 10' : practiceSetId ? 'CHỈNH SỬA BÀI ÔN TẬP' : 'TẠO BÀI ÔN TẬP PHÂN HÓA MỚI'}
           </h1>
           <p className="text-xs text-slate-500 font-medium">
             Biên soạn câu hỏi và giao nhiệm vụ cho cả lớp hoặc từng nhóm học sinh
@@ -190,6 +200,8 @@ export const PracticeEditorPage: React.FC = () => {
         </div>
       </div>
 
+      {isTest && <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-sm text-indigo-950">Học sinh nhận cả đề, làm theo thứ tự tuỳ chọn và nộp một lần. Chấm tự động theo đáp án chuẩn, sai hoặc bỏ trống được 0 điểm, không trừ điểm. Trả lời ngắn cần khớp đáp án; không dùng cho tự luận dài. Tổng điểm từng câu phải bằng 10.</div>}
+      {publishedTest && <p className="p-4 rounded-xl bg-amber-50 text-amber-900">Bài kiểm tra đã giao: đề và biểu điểm được giữ nguyên. Hãy tạo bài mới nếu cần thay đổi.</p>}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Form & Question Editor */}
         <div className="lg:col-span-2 space-y-6">
@@ -241,12 +253,13 @@ export const PracticeEditorPage: React.FC = () => {
                 <label className="text-slate-700 block mb-1">Loại nhiệm vụ:</label>
                 <select
                   value={type}
-                  onChange={(e: any) => setType(e.target.value)}
+                  onChange={(e: any) => { setType(e.target.value); if (e.target.value === 'TEST') { setQuestions(distributeTenPoints(questions)); setAssignTarget('WHOLE_CLASS'); setFeedbackMode('AFTER_FINISH'); setAllowRetry(false); } }}
                   className="w-full p-2.5 rounded-xl border border-slate-300 bg-white"
                 >
                   <option value="REMEDIATION">Củng cố</option>
                   <option value="PRACTICE">Luyện tập</option>
                   <option value="ADVANCED">Nâng cao</option>
+                  <option value="TEST">Bài kiểm tra • Chấm ngay khi nộp</option>
                 </select>
               </div>
             </div>
@@ -267,6 +280,7 @@ export const PracticeEditorPage: React.FC = () => {
               </div>
             </div>
 
+            {isTest && <div className="flex flex-wrap gap-3 items-center text-sm"><strong className={maxPoints === 10 ? 'text-emerald-800' : 'text-rose-700'}>Tổng biểu điểm: {maxPoints} / 10</strong><Button variant="outline" size="sm" disabled={!questions.length || publishedTest} onClick={() => setQuestions(distributeTenPoints(questions))}>Chia đều tổng 10 điểm</Button></div>}
             {questions.length === 0 ? (
               <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl text-center space-y-3">
                 <p className="text-xs text-slate-500 font-medium">
@@ -298,6 +312,8 @@ export const PracticeEditorPage: React.FC = () => {
                     </div>
 
                     <h4 className="font-bold text-slate-900 text-sm">{q.content}</h4>
+                    {isTest && <label className="flex items-center gap-2 text-sm font-bold text-indigo-900">Điểm câu {idx + 1}:<input aria-label={`Điểm câu ${idx + 1}`} type="number" min="0.01" max="10" step="0.01" disabled={publishedTest} value={questionPoints(q)} onChange={(e) => setQuestions((prev) => prev.map((item) => item.id === q.id ? { ...item, points: Number(e.target.value) } : item))} className="w-24 p-2 rounded-lg border border-indigo-300 bg-white" /> điểm</label>}
+                    {!q.options && <p className="text-sm text-emerald-800">Đáp án: {q.correctAnswer}</p>}
 
                     {q.options && (
                       <div className="grid grid-cols-2 gap-2 text-xs">
@@ -405,7 +421,8 @@ export const PracticeEditorPage: React.FC = () => {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={allowRetry}
+                  disabled={isTest}
+                  checked={isTest ? false : allowRetry}
                   onChange={(e) => setAllowRetry(e.target.checked)}
                   className="rounded text-sky-600"
                 />
@@ -415,7 +432,8 @@ export const PracticeEditorPage: React.FC = () => {
               <div>
                 <label className="text-slate-700 block mb-1">Chế độ hiển thị đáp án:</label>
                 <select
-                  value={feedbackMode}
+                  disabled={isTest}
+                  value={isTest ? 'AFTER_FINISH' : feedbackMode}
                   onChange={(e: any) => setFeedbackMode(e.target.value)}
                   className="w-full p-2 rounded-xl border border-slate-300 bg-white"
                 >
@@ -429,10 +447,11 @@ export const PracticeEditorPage: React.FC = () => {
               variant="primary"
               size="lg"
               fullWidth
+              disabled={publishedTest || (isTest && maxPoints !== 10)}
               onClick={() => setIsAssignConfirmOpen(true)}
               className="font-bold pt-3"
             >
-              <Send className="w-5 h-5 mr-2 inline" /> XÁC NHẬN & GIAO BÀI ÔN TẬP
+              <Send className="w-5 h-5 mr-2 inline" /> {isTest ? 'GIAO CẢ BÀI KIỂM TRA' : 'XÁC NHẬN & GIAO BÀI ÔN TẬP'}
             </Button>
           </Card>
         </div>
@@ -469,7 +488,7 @@ export const PracticeEditorPage: React.FC = () => {
       <Modal
         isOpen={isAssignConfirmOpen}
         onClose={() => setIsAssignConfirmOpen(false)}
-        title="Xác Nhận Giao Nhiệm Vụ Ôn Tập"
+        title={isTest ? "Xác nhận giao bài kiểm tra" : "Xác Nhận Giao Nhiệm Vụ Ôn Tập"}
         footer={
           <>
             <Button variant="secondary" onClick={() => setIsAssignConfirmOpen(false)}>Hủy</Button>
@@ -487,6 +506,7 @@ export const PracticeEditorPage: React.FC = () => {
             </strong>{' '}
             lớp {targetClass?.name}.
           </p>
+          {isTest && <p className="font-bold text-indigo-800">{questions.length} câu • Tổng 10 điểm • 1 lượt nộp • Hiện điểm ngay sau khi nộp</p>}
           <p className="text-slate-600">
             Học sinh sẽ nhìn thấy nhiệm vụ này khi mở ứng dụng phía Học sinh.
           </p>
