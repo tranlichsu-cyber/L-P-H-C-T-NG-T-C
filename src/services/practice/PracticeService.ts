@@ -8,10 +8,12 @@ import {
   query,
   where,
   writeBatch,
+  runTransaction,
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
-import type { PracticeSet, PracticeAssignment, PracticeSubmission } from './types';
+import { gradePractice, validateTestQuestions } from './grading';
+import type { PracticeSet, PracticeAssignment, PracticeSubmission, PracticeResult } from './types';
 import type { UserProfile } from '../school/types';
 import { INITIAL_MOCK_PRACTICE_SETS } from './mockPracticeData';
 
@@ -91,6 +93,7 @@ export class PracticeService {
   public static async createPracticeSet(
     params: Omit<PracticeSet, 'id' | 'createdAt' | 'assignments' | 'responses'>
   ): Promise<PracticeSet> {
+    if (params.type === 'TEST') { validateTestQuestions(params.questions); params = { ...params, feedbackMode: 'AFTER_FINISH', allowRetry: false, maxAttempts: 1 }; }
     const id = `practice-${Date.now()}`;
     const now = new Date().toISOString();
     const newSet: PracticeSet = {
@@ -118,12 +121,14 @@ export class PracticeService {
     practiceSetId: string,
     params: Omit<PracticeSet, 'id' | 'createdAt' | 'assignments' | 'responses'>
   ): Promise<PracticeSet> {
+    if (params.type === 'TEST') { validateTestQuestions(params.questions); params = { ...params, feedbackMode: 'AFTER_FINISH', allowRetry: false, maxAttempts: 1 }; }
     if (isFirebaseConfigured && db) {
       const ref = doc(db, 'practiceSets', practiceSetId);
       const snap = await getDoc(ref);
       if (!snap.exists()) throw new Error('Không tìm thấy bài ôn tập.');
 
       const current = { ...(snap.data() as PracticeSet), id: snap.id };
+      if (current.type === 'TEST' && current.status === 'ASSIGNED') throw new Error('Bài kiểm tra đã giao không thể sửa đề hoặc biểu điểm. Hãy tạo bài mới.');
       const updated: PracticeSet = {
         ...current,
         ...params,
@@ -148,6 +153,7 @@ export class PracticeService {
     const sets = this.loadLocalPracticeSets();
     const index = sets.findIndex((s) => s.id === practiceSetId);
     if (index === -1) throw new Error('Không tìm thấy bài ôn tập.');
+    if (sets[index].type === 'TEST' && sets[index].status === 'ASSIGNED') throw new Error('Bài kiểm tra đã giao không thể sửa đề hoặc biểu điểm. Hãy tạo bài mới.');
     sets[index] = {
       ...sets[index],
       ...params,
@@ -357,6 +363,7 @@ export class PracticeService {
         setItem.feedbackMode === 'TEACHER_ONLY'
       ) {
         const {
+          result: _result, earnedPoints: _earnedPoints, maxPoints: _maxPoints,
           score: _score,
           correctCount: _correctCount,
           totalQuestions: _totalQuestions,
@@ -442,130 +449,105 @@ export class PracticeService {
     return true;
   }
 
-  // 7. Complete assignment
-  public static async completeStudentAssignment(
-    practiceSetId: string,
-    studentId: string
-  ): Promise<{ score: number; correctCount: number; totalCount: number }> {
+  // Submit a complete test atomically using the latest answers from the form.
+  public static async submitWholeTest(practiceSetId: string, studentId: string, answers: Record<string, string>): Promise<PracticeResult> {
+    if (isFirebaseConfigured && db) {
+      const authUid = await this.ensureStudentAuth();
+      const firestore = db;
+      return runTransaction(firestore, async (tx) => {
+        const setRef = doc(firestore, 'practiceSets', practiceSetId);
+        const progressRef = doc(firestore, 'practiceSets', practiceSetId, 'studentProgress', studentId);
+        const setSnap = await tx.get(setRef);
+        const progressSnap = await tx.get(progressRef);
+        if (!setSnap.exists() || !progressSnap.exists()) throw new Error('Không tìm thấy bài kiểm tra được giao.');
+        const setItem = setSnap.data() as PracticeSet;
+        const progress = progressSnap.data() as StudentProgress;
+        if (progress.authUid && progress.authUid !== authUid) throw new Error('Bài này thuộc phiên học sinh khác.');
+        if (progress.status === 'COMPLETED' && progress.result) return progress.result;
+        if (setItem.type !== 'TEST' || setItem.status !== 'ASSIGNED' || setItem.archived) throw new Error('Bài kiểm tra hiện không nhận bài.');
+        if (progress.status === 'EXPIRED' || (setItem.dueAt && Date.now() > Date.parse(setItem.dueAt))) throw new Error('Bài kiểm tra đã hết hạn nộp.');
+        validateTestQuestions(setItem.questions);
+        const result = gradePractice(setItem.questions, answers);
+        const now = new Date().toISOString();
+        result.breakdown.forEach((entry) => {
+          const id = `${entry.questionId}_${studentId}`;
+          tx.set(doc(firestore, 'practiceSets', practiceSetId, 'responses', id), {
+            id, studentId, questionId: entry.questionId, authUid, answer: entry.answer,
+            isCorrect: entry.isCorrect, earnedPoints: entry.earnedPoints, maxPoints: entry.maxPoints,
+            submittedAt: now, attemptNumber: 1,
+          });
+        });
+        tx.set(progressRef, { ...progress, authUid, status: 'COMPLETED', startedAt: progress.startedAt || now,
+          completedAt: now, attemptCount: 1, score: result.score, correctCount: result.correctCount,
+          totalQuestions: result.totalCount, earnedPoints: result.earnedPoints, maxPoints: result.maxPoints, result }, { merge: true });
+        return result;
+      });
+    }
+    const sets = this.loadLocalPracticeSets();
+    const setItem = sets.find((s) => s.id === practiceSetId);
+    const progress = setItem?.assignments?.[studentId];
+    if (!setItem || !progress) throw new Error('Không tìm thấy bài kiểm tra được giao.');
+    if (progress.status === 'COMPLETED' && progress.result) return progress.result;
+    if (setItem.type !== 'TEST' || setItem.status !== 'ASSIGNED' || setItem.archived) throw new Error('Bài kiểm tra hiện không nhận bài.');
+    if (progress.status === 'EXPIRED' || (setItem.dueAt && Date.now() > Date.parse(setItem.dueAt))) throw new Error('Bài kiểm tra đã hết hạn nộp.');
+    validateTestQuestions(setItem.questions);
+    const result = gradePractice(setItem.questions, answers);
+    const now = new Date().toISOString();
+    setItem.responses ||= {};
+    result.breakdown.forEach((entry) => {
+      const id = `${entry.questionId}_${studentId}`;
+      setItem.responses![id] = { id, studentId, questionId: entry.questionId, answer: entry.answer,
+        submittedAt: now, attemptNumber: 1, isCorrect: entry.isCorrect, earnedPoints: entry.earnedPoints, maxPoints: entry.maxPoints };
+    });
+    Object.assign(progress, { status: 'COMPLETED', completedAt: now, attemptCount: 1, score: result.score,
+      correctCount: result.correctCount, totalQuestions: result.totalCount, earnedPoints: result.earnedPoints, maxPoints: result.maxPoints, result });
+    this.saveLocalPracticeSets(sets);
+    return result;
+  }
+
+  // Preserve the existing practice submission flow, sharing the same grading logic.
+  public static async completeStudentAssignment(practiceSetId: string, studentId: string): Promise<PracticeResult> {
     if (isFirebaseConfigured && db) {
       const authUid = await this.ensureStudentAuth();
       const [setSnap, progressSnap, responsesSnap] = await Promise.all([
         getDoc(doc(db, 'practiceSets', practiceSetId)),
         getDoc(doc(db, 'practiceSets', practiceSetId, 'studentProgress', studentId)),
-        getDocs(
-          query(
-            collection(db, 'practiceSets', practiceSetId, 'responses'),
-            where('authUid', '==', authUid)
-          )
-        ),
+        getDocs(query(collection(db, 'practiceSets', practiceSetId, 'responses'), where('authUid', '==', authUid))),
       ]);
-
-      if (!setSnap.exists()) throw new Error('Bài ôn không tồn tại.');
-      if (!progressSnap.exists()) throw new Error('Không tìm thấy nhiệm vụ của học sinh.');
-
-      const setItem = { ...(setSnap.data() as PracticeSet), id: setSnap.id };
+      if (!setSnap.exists() || !progressSnap.exists()) throw new Error('Không tìm thấy nhiệm vụ.');
+      const setItem = setSnap.data() as PracticeSet;
       const progress = progressSnap.data() as StudentProgress;
-      if (progress.status === 'COMPLETED') {
-        throw new Error('Bài ôn tập này đã được nộp.');
-      }
-      if (progress.authUid && progress.authUid !== authUid) {
-        throw new Error('Bài ôn này đang được gắn với một phiên học sinh khác.');
-      }
-
-      const ownResponses = responsesSnap.docs
-        .map((d) => d.data() as PracticeSubmission & { authUid?: string })
-        .filter((r) => r.studentId === studentId);
-
-      let correctCount = 0;
+      if (progress.status === 'COMPLETED') throw new Error('Bài này đã được nộp.');
+      if (progress.authUid && progress.authUid !== authUid) throw new Error('Bài này thuộc phiên học sinh khác.');
+      const responses = responsesSnap.docs.map((d) => ({ ...d.data(), id: d.id } as PracticeSubmission)).filter((r) => r.studentId === studentId);
+      if (setItem.type === 'TEST') return this.submitWholeTest(practiceSetId, studentId, Object.fromEntries(responses.map((r) => [r.questionId, r.answer])));
+      const result = gradePractice(setItem.questions, Object.fromEntries(responses.map((r) => [r.questionId, r.answer])));
       const batch = writeBatch(db);
-      setItem.questions.forEach((q) => {
-        const response = ownResponses.find((r) => r.questionId === q.id);
-        if (!response) return;
-        const rawAnswer = response.answer.trim();
-        const rawCorrect = q.correctAnswer.trim();
-
-        let isCorrect = false;
-        if (q.type === 'MULTIPLE_CHOICE' && q.options?.length) {
-          const answerIndex = /^[A-D]$/i.test(rawAnswer)
-            ? rawAnswer.toUpperCase().charCodeAt(0) - 65
-            : -1;
-          const selectedOption =
-            answerIndex >= 0 && answerIndex < q.options.length
-              ? q.options[answerIndex]
-              : rawAnswer;
-
-          const correctIndex = /^[A-D]$/i.test(rawCorrect)
-            ? rawCorrect.toUpperCase().charCodeAt(0) - 65
-            : -1;
-          const correctOption =
-            correctIndex >= 0 && correctIndex < q.options.length
-              ? q.options[correctIndex]
-              : rawCorrect;
-
-          isCorrect =
-            selectedOption.trim().toLocaleLowerCase('vi-VN') ===
-            correctOption.trim().toLocaleLowerCase('vi-VN');
-        } else {
-          isCorrect =
-            rawAnswer.toLocaleLowerCase('vi-VN') ===
-            rawCorrect.toLocaleLowerCase('vi-VN');
-        }
-
-        if (isCorrect) correctCount++;
-        batch.set(
-          doc(db!, 'practiceSets', practiceSetId, 'responses', response.id),
-          { isCorrect },
-          { merge: true }
-        );
+      result.breakdown.forEach((entry) => {
+        const response = responses.find((r) => r.questionId === entry.questionId);
+        if (response) batch.set(doc(db!, 'practiceSets', practiceSetId, 'responses', response.id),
+          { isCorrect: entry.isCorrect, earnedPoints: entry.earnedPoints, maxPoints: entry.maxPoints }, { merge: true });
       });
-
-      const totalCount = setItem.questions.length;
-      const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-      const now = new Date().toISOString();
-      batch.set(
-        doc(db, 'practiceSets', practiceSetId, 'studentProgress', studentId),
-        {
-          authUid,
-          status: 'COMPLETED',
-          completedAt: now,
-          score,
-          correctCount,
-          totalQuestions: totalCount,
-          attemptCount: (progress.attemptCount || 0) + 1,
-        },
-        { merge: true }
-      );
-      await batch.commit();
-      return { score, correctCount, totalCount };
+      batch.set(doc(db, 'practiceSets', practiceSetId, 'studentProgress', studentId), {
+        authUid, status: 'COMPLETED', completedAt: new Date().toISOString(), score: result.score,
+        correctCount: result.correctCount, totalQuestions: result.totalCount, attemptCount: (progress.attemptCount || 0) + 1,
+        earnedPoints: result.earnedPoints, maxPoints: result.maxPoints, result,
+      }, { merge: true });
+      await batch.commit(); return result;
     }
-
     const sets = this.loadLocalPracticeSets();
     const setItem = sets.find((s) => s.id === practiceSetId);
-    if (!setItem) throw new Error('Bài ôn không tồn tại');
-    const assignment = setItem.assignments?.[studentId];
-    if (!assignment) throw new Error('Không tìm thấy nhiệm vụ của học sinh');
-
-    let correctCount = 0;
-    const totalCount = setItem.questions.length;
-    setItem.questions.forEach((q) => {
-      const subId = `${q.id}_${studentId}`;
-      const sub = setItem.responses?.[subId];
-      if (sub) {
-        const isCorr = sub.answer.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase();
-        sub.isCorrect = isCorr;
-        if (isCorr) correctCount++;
-      }
-    });
-
-    const score = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0;
-    assignment.status = 'COMPLETED';
-    assignment.completedAt = new Date().toISOString();
-    assignment.score = score;
-    assignment.correctCount = correctCount;
-    assignment.totalQuestions = totalCount;
-    assignment.attemptCount = (assignment.attemptCount || 0) + 1;
-    this.saveLocalPracticeSets(sets);
-    return { score, correctCount, totalCount };
+    const progress = setItem?.assignments?.[studentId];
+    if (!setItem || !progress) throw new Error('Không tìm thấy nhiệm vụ.');
+    if (progress.status === 'COMPLETED') throw new Error('Bài này đã được nộp.');
+    if (setItem.type === 'TEST') return this.submitWholeTest(practiceSetId, studentId, Object.fromEntries(Object.values(setItem.responses || {}).filter((r) => r.studentId === studentId).map((r) => [r.questionId, r.answer])));
+    const responses = Object.values(setItem.responses || {}).filter((r) => r.studentId === studentId);
+    const result = gradePractice(setItem.questions, Object.fromEntries(responses.map((r) => [r.questionId, r.answer])));
+    result.breakdown.forEach((entry) => { const r = responses.find((r) => r.questionId === entry.questionId); if (r) Object.assign(r, { isCorrect: entry.isCorrect, earnedPoints: entry.earnedPoints, maxPoints: entry.maxPoints }); });
+    Object.assign(progress, { status: 'COMPLETED', completedAt: new Date().toISOString(), score: result.score,
+      correctCount: result.correctCount, totalQuestions: result.totalCount, attemptCount: (progress.attemptCount || 0) + 1,
+      earnedPoints: result.earnedPoints, maxPoints: result.maxPoints, result });
+    this.saveLocalPracticeSets(sets); return result;
   }
 
   // 8. Restart a completed assignment when retry is allowed
@@ -613,7 +595,7 @@ export class PracticeService {
           status: 'NOT_STARTED',
           startedAt: null,
           completedAt: null,
-          score: null,
+          score: null, earnedPoints: null, maxPoints: null, result: null,
           correctCount: null,
           totalQuestions: null,
         },
@@ -638,6 +620,7 @@ export class PracticeService {
     assignment.startedAt = undefined;
     assignment.completedAt = undefined;
     assignment.score = undefined;
+    assignment.result = undefined; assignment.earnedPoints = undefined; assignment.maxPoints = undefined;
     assignment.correctCount = undefined;
     assignment.totalQuestions = undefined;
 
