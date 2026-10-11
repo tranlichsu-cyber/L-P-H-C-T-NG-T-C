@@ -32,7 +32,7 @@ const StudentLayoutInner: React.FC = () => {
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-100 to-orange-100 text-amber-950 font-black text-xs sm:text-sm border border-amber-300/90 hover:from-amber-200 hover:to-orange-200 transition-all shadow-xs"
             >
               <Sparkles className="w-4 h-4 text-amber-600" />
-              Bài ôn tập
+              Bài tập & Kiểm tra
             </Link>
 
             {session.studentName ? (
