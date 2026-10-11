@@ -1,6 +1,6 @@
 import type { QuestionType, QuestionDifficulty } from '../../types';
 
-export type PracticeType = 'REMEDIATION' | 'PRACTICE' | 'ADVANCED'; // "CỦNG CỐ", "LUYỆN THÊM", "NÂNG CAO"
+export type PracticeType = 'REMEDIATION' | 'PRACTICE' | 'ADVANCED' | 'TEST'; // "CỦNG CỐ", "LUYỆN THÊM", "NÂNG CAO"
 export type PracticeStatus = 'DRAFT' | 'READY' | 'ASSIGNED' | 'CLOSED' | 'ARCHIVED';
 export type AssignmentStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED';
 export type PracticeFeedbackMode = 'AFTER_FINISH' | 'PER_QUESTION' | 'TEACHER_ONLY';
@@ -13,6 +13,18 @@ export interface PracticeQuestion {
   correctAnswer: string;
   explanation?: string;
   difficulty?: QuestionDifficulty;
+  points?: number;
+  caseInsensitive?: boolean;
+  trimWhitespace?: boolean;
+}
+
+export interface PracticeResult {
+  score: number;
+  correctCount: number;
+  totalCount: number;
+  earnedPoints: number;
+  maxPoints: number;
+  breakdown: { questionId: string; content: string; answer: string; correctAnswer: string; explanation: string; isCorrect: boolean; earnedPoints: number; maxPoints: number }[];
 }
 
 export interface PracticeAssignment {
@@ -26,6 +38,9 @@ export interface PracticeAssignment {
   score?: number;
   correctCount?: number;
   totalQuestions?: number;
+  earnedPoints?: number;
+  maxPoints?: number;
+  result?: PracticeResult;
 }
 
 export interface PracticeSubmission {
@@ -37,6 +52,8 @@ export interface PracticeSubmission {
   submittedAt: string;
   attemptNumber: number;
   isCorrect?: boolean;
+  earnedPoints?: number;
+  maxPoints?: number;
 }
 
 export interface PracticeSet {
