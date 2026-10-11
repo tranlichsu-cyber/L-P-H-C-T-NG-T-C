@@ -28,6 +28,7 @@ export const PracticeMonitorPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedStudentAssignment, setSelectedStudentAssignment] = useState<PracticeAssignment | null>(null);
 
+  const [refreshVersion, setRefreshVersion] = useState(0);
   useEffect(() => {
     if (!practiceSetId) return;
     setIsLoading(true);
@@ -41,7 +42,7 @@ export const PracticeMonitorPage: React.FC = () => {
       })
       .catch(() => showToast('Lỗi khi tải chi tiết bài ôn tập.', 'error'))
       .finally(() => setIsLoading(false));
-  }, [practiceSetId]);
+  }, [practiceSetId, refreshVersion]);
 
   if (isLoading) {
     return (
@@ -78,6 +79,8 @@ export const PracticeMonitorPage: React.FC = () => {
       'Họ và tên': a.studentName,
       'Trạng thái': a.status === 'COMPLETED' ? 'Đã hoàn thành' : a.status === 'IN_PROGRESS' ? 'Đang làm' : 'Chưa làm',
       'Số câu đúng': a.correctCount !== undefined ? `${a.correctCount}/${practiceSet.questions.length}` : '—',
+      'Điểm đạt': a.earnedPoints ?? '—',
+      'Tổng điểm': a.maxPoints ?? '—',
       'Tỷ lệ đúng (%)': a.score !== undefined ? `${a.score}%` : '—',
       'Thời gian hoàn thành': a.completedAt ? new Date(a.completedAt).toLocaleDateString('vi-VN') : '—',
     }));
@@ -105,7 +108,7 @@ export const PracticeMonitorPage: React.FC = () => {
               <Badge variant="primary">{practiceSet.className}</Badge>
               <Badge variant="neutral">Môn {practiceSet.subject}</Badge>
               <Badge variant={practiceSet.type === 'REMEDIATION' ? 'warning' : 'info'}>
-                {practiceSet.type === 'REMEDIATION' ? 'Củng cố' : 'Luyện tập'}
+                {practiceSet.type === 'TEST' ? 'Bài kiểm tra' : practiceSet.type === 'REMEDIATION' ? 'Củng cố' : 'Luyện tập'}
               </Badge>
             </div>
             <h1 className="text-xl font-black text-slate-900 mt-1">{practiceSet.title}</h1>
@@ -113,6 +116,7 @@ export const PracticeMonitorPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={()=>setRefreshVersion(v=>v+1)}>Cập nhật kết quả</Button>
           <Button variant="outline" size="sm" onClick={handleExportExcel} className="font-bold text-emerald-800">
             <FileSpreadsheet className="w-4 h-4 mr-1 text-emerald-600" /> Xuất Excel
           </Button>
@@ -194,7 +198,7 @@ export const PracticeMonitorPage: React.FC = () => {
                     {a.score !== undefined ? `${a.score}%` : '—'}
                   </td>
                   <td className="p-3 text-center font-black text-sky-700">
-                    {a.score !== undefined ? `${a.score} đ` : '—'}
+                    {a.earnedPoints !== undefined ? `${a.earnedPoints}/${a.maxPoints} đ` : '—'}
                   </td>
                   <td className="p-3 text-right">
                     <button
@@ -220,7 +224,7 @@ export const PracticeMonitorPage: React.FC = () => {
                 <h3 className="font-black text-lg text-slate-900">{selectedStudentAssignment.studentName}</h3>
                 <p className="text-xs text-slate-500 font-medium">Chi tiết câu trả lời bài ôn tập</p>
               </div>
-              <Badge variant="primary">{selectedStudentAssignment.score || 0} điểm</Badge>
+              <Badge variant="primary">{selectedStudentAssignment.earnedPoints ?? '—'}/{selectedStudentAssignment.maxPoints ?? '—'} điểm</Badge>
             </div>
 
             <div className="max-h-[350px] overflow-y-auto space-y-3 pr-1 text-xs">
@@ -241,7 +245,7 @@ export const PracticeMonitorPage: React.FC = () => {
                     <div className="flex justify-between items-center text-xs">
                       <span>Đáp án của em: <strong>{sub?.answer || 'Chưa làm'}</strong></span>
                       <span className={`font-bold ${isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
-                        {isCorrect ? '✓ Đúng' : '✗ Chưa đúng'} (Đáp án đúng: {q.correctAnswer})
+                        {isCorrect ? '✓ Đúng' : '✗ Chưa đúng'} • {sub?.earnedPoints ?? 0}/{sub?.maxPoints ?? q.points ?? 1} điểm (Đáp án đúng: {q.correctAnswer})
                       </span>
                     </div>
                   </div>
