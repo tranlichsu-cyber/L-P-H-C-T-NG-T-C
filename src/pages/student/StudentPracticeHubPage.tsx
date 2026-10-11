@@ -1,3 +1,4 @@
+import { WholeTestRunner } from '../../components/student/WholeTestRunner';
 import { OrderingAnswer } from '../../components/student/OrderingAnswer';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -5,7 +6,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
 import { PracticeService } from '../../services/practice/PracticeService';
-import type { PracticeSet, PracticeAssignment, PracticeQuestion } from '../../services/practice/types';
+import type { PracticeSet, PracticeAssignment, PracticeQuestion, PracticeResult } from '../../services/practice/types';
 import { useToast } from '../../context/ToastContext';
 import { useStudentSession } from '../../context/StudentSessionContext';
 import {
@@ -34,7 +35,7 @@ export const StudentPracticeHubPage: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [studentAnswers, setStudentAnswers] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [testResult, setTestResult] = useState<{ score: number; correctCount: number; totalCount: number } | null>(null);
+  const [testResult, setTestResult] = useState<PracticeResult | null>(null);
 
   const fetchStudentTasks = async () => {
     if (!studentId) {
@@ -64,7 +65,9 @@ export const StudentPracticeHubPage: React.FC = () => {
   const handleStartTask = (task: { practiceSet: PracticeSet; assignment: PracticeAssignment }) => {
     setTakingSet(task.practiceSet);
     setCurrentQuestionIndex(0);
-    setStudentAnswers({});
+    let draft: Record<string,string> = {};
+    if(task.practiceSet.type === 'TEST') { try { const saved=JSON.parse(localStorage.getItem(`test-draft:${studentId}:${task.practiceSet.id}`) || '{}'); if(saved && typeof saved==='object' && !Array.isArray(saved)) draft=Object.fromEntries(Object.entries(saved).filter((entry)=>typeof entry[1]==='string')) as Record<string,string>; } catch { /* Start fresh if draft is damaged. */ } }
+    setStudentAnswers(draft);
     setTestResult(null);
   };
 
@@ -84,8 +87,16 @@ export const StudentPracticeHubPage: React.FC = () => {
   const handleFinishTest = async () => {
     if (!takingSet) return;
 
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
+      if(takingSet.type === 'TEST') {
+        const result=await PracticeService.submitWholeTest(takingSet.id,studentId,studentAnswers);
+        try {localStorage.removeItem(`test-draft:${studentId}:${takingSet.id}`);} catch { /* Submitted result is already stored remotely. */ }
+        setTestResult(result);
+        await fetchStudentTasks();
+        return;
+      }
       for (const [questionId, answer] of Object.entries(studentAnswers)) {
         if (answer.trim()) {
           await PracticeService.submitStudentAnswer(
@@ -156,6 +167,8 @@ export const StudentPracticeHubPage: React.FC = () => {
       </Card>
     );
   }
+
+  if(takingSet?.type === 'TEST') return <WholeTestRunner test={takingSet} answers={studentAnswers} result={testResult} busy={isSubmitting} onExit={()=>setTakingSet(null)} onSubmit={()=>{void handleFinishTest();}} onAnswer={(id,value)=>{setStudentAnswers(prev=>{const next={...prev,[id]:value};try {localStorage.setItem(`test-draft:${studentId}:${takingSet.id}`,JSON.stringify(next));} catch {showToast('Máy không lưu được bản nháp. Hãy giữ trang này mở đến khi nộp bài.','error');}return next;});}}/>;
 
   // TEST TAKING SCREEN (1 Question at a time)
   if (takingSet) {
@@ -329,7 +342,7 @@ export const StudentPracticeHubPage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-gradient-to-r from-sky-600 to-indigo-700 text-white p-6 rounded-3xl shadow-lg space-y-2">
         <Badge variant="warning">Học sinh: {studentName}</Badge>
-        <h1 className="text-2xl font-black">BÀI ÔN TẬP & NHIỆM VỤ CỦA EM</h1>
+        <h1 className="text-2xl font-black">BÀI TẬP & KIỂM TRA CỦA EM</h1>
         <p className="text-xs text-sky-100 font-medium">
           Tự do làm bài ôn tập theo tiến độ của em để củng cố kiến thức các môn học
         </p>
@@ -394,7 +407,7 @@ export const StudentPracticeHubPage: React.FC = () => {
                   <Badge variant="neutral">Môn {t.practiceSet.subject}</Badge>
                   {typeof t.assignment.score === 'number' ? (
                     <span className="text-sm font-black text-emerald-600">
-                      {t.assignment.score}% đúng
+                      {t.practiceSet.type==='TEST' ? `${t.assignment.earnedPoints ?? 0}/${t.assignment.maxPoints ?? 10} điểm` : `${t.assignment.score}% đúng`}
                     </span>
                   ) : (
                     <span className="text-xs font-bold text-slate-500">
@@ -411,6 +424,7 @@ export const StudentPracticeHubPage: React.FC = () => {
                   </p>
                 )}
 
+                {t.practiceSet.type==='TEST' && t.assignment.result && <Button variant="outline" size="sm" fullWidth onClick={()=>{setTakingSet(t.practiceSet);setTestResult(t.assignment.result!);}}>XEM KẾT QUẢ TỪNG CÂU</Button>}
                 {t.practiceSet.allowRetry &&
                   (t.assignment.attemptCount || 0) < (t.practiceSet.maxAttempts || 1) && (
                     <Button
