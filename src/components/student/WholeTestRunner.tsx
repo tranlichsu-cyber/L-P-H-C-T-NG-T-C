@@ -1,0 +1,22 @@
+import React, { useState } from 'react';
+import type { PracticeSet, PracticeResult } from '../../services/practice/types';
+import { totalPoints, questionPoints } from '../../services/practice/grading';
+import { OrderingAnswer } from './OrderingAnswer';
+interface Props { test: PracticeSet; answers: Record<string,string>; result: PracticeResult | null; busy: boolean; onAnswer:(id:string,value:string)=>void; onSubmit:()=>void; onExit:()=>void; }
+export const WholeTestRunner: React.FC<Props> = ({test,answers,result,busy,onAnswer,onSubmit,onExit}) => {
+ const [confirm,setConfirm]=useState(false);
+ const unanswered=test.questions.filter(q=>!answers[q.id]?.trim()).length;
+ return <div className="max-w-3xl mx-auto space-y-4 text-slate-900">
+ <header className="bg-white rounded-2xl border p-5 space-y-2"><h1 className="text-xl font-black">{test.title}</h1><p>{test.subject} • {test.questions.length} câu • Tổng {totalPoints(test.questions)} điểm</p><button disabled={busy} onClick={onExit} className="text-sky-800 underline">Quay lại danh sách</button></header>
+ {result ? <><section className="bg-emerald-50 border rounded-2xl p-6 text-center"><h2 className="font-bold">Đã nộp bài — Điểm của em</h2><p className="text-4xl font-black text-emerald-800 my-3">{result.earnedPoints}/{result.maxPoints}</p><p>Đúng {result.correctCount}/{result.totalCount} câu</p></section>{result.breakdown.map((q,i)=><section key={q.questionId} className="bg-white rounded-xl border p-4 space-y-2"><h3 className="font-bold">Câu {i+1}: {q.content}</h3><p className={q.isCorrect?'text-emerald-800 font-bold':'text-red-800 font-bold'}>{q.earnedPoints}/{q.maxPoints} điểm • {q.isCorrect?'Đúng':'Chưa đúng'}</p><p>Em trả lời: {q.answer || 'Chưa trả lời'}</p><p>Đáp án: {q.correctAnswer}</p>{q.explanation && <p>{q.explanation}</p>}</section>)}</> : <>
+ <p className="bg-sky-50 p-4 rounded-xl">Làm toàn bộ bài rồi bấm Nộp bài. Mỗi câu đúng được đủ số điểm ghi bên cạnh; câu sai hoặc bỏ trống được 0 điểm. Chỉ được nộp một lần. Câu trả lời được lưu tạm trên máy này.</p>
+ {test.questions.map((q,i)=><section key={q.id} className="bg-white rounded-2xl border p-5 space-y-4"><div className="flex justify-between gap-3"><h2 className="font-bold whitespace-pre-wrap">Câu {i+1}. {q.content}</h2><span className="shrink-0 text-sky-900 font-bold">{questionPoints(q)} điểm</span></div><fieldset disabled={busy} className="space-y-3">
+ {(q.type==='MULTIPLE_CHOICE' || q.type==='TRUE_FALSE') && (q.type==='TRUE_FALSE'?['Đúng','Sai']:q.options || []).map((opt,index)=>{const value=q.type==='MULTIPLE_CHOICE'?String.fromCharCode(65+index):opt;return <label key={index} className={`flex gap-3 items-center border rounded-xl p-3 cursor-pointer ${answers[q.id]===value?'bg-sky-100 border-sky-600':'bg-white'}`}><input type="radio" name={q.id} checked={answers[q.id]===value} onChange={()=>onAnswer(q.id,value)}/><span>{q.type==='MULTIPLE_CHOICE'?`${value}. `:''}{opt}</span></label>;})}
+ {q.type==='ORDERING' && <OrderingAnswer options={q.options || []} value={answers[q.id] || ''} disabled={busy} onChange={value=>onAnswer(q.id,value)}/>}
+ {(q.type==='SHORT_ANSWER' || q.type==='FILL_BLANK') && <label className="block">Câu trả lời:<input className="block w-full border rounded-xl p-3 mt-2" value={answers[q.id] || ''} onChange={e=>onAnswer(q.id,e.target.value)}/></label>}
+ </fieldset></section>)}
+ <footer className="sticky bottom-0 bg-white border rounded-xl p-4 shadow-lg flex items-center justify-between gap-3"><span>Đã trả lời {test.questions.length-unanswered}/{test.questions.length} câu</span><button disabled={busy} onClick={()=>setConfirm(true)} className="bg-sky-800 text-white rounded-xl px-5 py-3 font-bold disabled:opacity-50">{busy?'Đang nộp…':'Nộp bài'}</button></footer>
+ {confirm && <div role="dialog" aria-modal="true" aria-label="Xác nhận nộp bài" className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"><section className="bg-white p-6 rounded-2xl max-w-md space-y-4"><h2 className="font-bold text-xl">Nộp bài kiểm tra?</h2><p>{unanswered?`Còn ${unanswered} câu chưa trả lời, các câu này được 0 điểm.`:'Em đã trả lời tất cả các câu.'} Sau khi nộp, em không thể sửa bài.</p><div className="flex gap-3"><button disabled={busy} onClick={()=>setConfirm(false)} className="border p-3 rounded-xl">Xem lại</button><button disabled={busy} onClick={()=>{setConfirm(false);onSubmit();}} className="bg-sky-800 text-white p-3 rounded-xl">Xác nhận nộp</button></div></section></div>}
+ </>}
+ </div>;
+};
