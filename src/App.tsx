@@ -141,6 +141,7 @@ export const App: React.FC = () => {
                     <Route path="quizzes" element={<QuizzesPage />} />
                     <Route path="quizzes/:quizId" element={<QuizEditorPage />} />
                     <Route path="remediation" element={<RemediationHubPage />} />
+                    <Route path="tests" element={<PracticeListPage testsOnly />} />
                     <Route path="practice" element={<PracticeListPage />} />
                     <Route path="practice/new" element={<PracticeEditorPage />} />
                     <Route path="practice/:practiceSetId" element={<PracticeMonitorPage />} />
