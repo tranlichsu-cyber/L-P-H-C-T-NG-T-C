@@ -57,6 +57,7 @@ export interface PracticeSubmission {
 }
 
 export interface PracticeSet {
+  testCode?: string;
   id: string;
   teacherId: string;
   classId: string;
