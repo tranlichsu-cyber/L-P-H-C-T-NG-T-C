@@ -91,6 +91,7 @@ const AuditLogsPage = lazy(() =>
 const TeamDashboardPage = lazy(() =>
   import('./pages/team/TeamDashboardPage').then((m) => ({ default: m.TeamDashboardPage }))
 );
+const TestJoinPage = lazy(() => import('./pages/student/TestJoinPage').then(m=>({default:m.TestJoinPage})));
 const StudentPracticeHubPage = lazy(() =>
   import('./pages/student/StudentPracticeHubPage').then((m) => ({ default: m.StudentPracticeHubPage }))
 );
@@ -186,6 +187,7 @@ export const App: React.FC = () => {
                   <Route path="/student" element={<StudentLayout />}>
                     <Route index element={<Navigate to="/student/join" replace />} />
                     <Route path="join" element={<JoinPage />} />
+                    <Route path="test" element={<TestJoinPage />} />
                     <Route path="select-name" element={<SelectNamePage />} />
                     <Route path="waiting" element={<WaitingPage />} />
                     <Route path="quiz" element={<QuizPage />} />
