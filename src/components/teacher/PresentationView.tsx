@@ -64,13 +64,13 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col h-[100dvh] overflow-hidden p-3 sm:p-4 gap-3 select-none animate-fade-in">
       {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3 shrink-0">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold shadow-lg">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-bold shadow-lg">
             <Sparkles className="w-7 h-7" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-amber-400">
+            <h1 className="text-base lg:text-lg font-black tracking-tight text-amber-400">
               LỚP HỌC TƯƠNG TÁC
             </h1>
             <p className="text-slate-400 text-sm font-medium">
@@ -79,18 +79,63 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           </div>
         </div>
 
+      {/* Teacher controls beside the classroom title */}
+      <div className="flex-1 flex flex-wrap items-center justify-center gap-2 min-w-0">
+        <div className="flex items-center gap-1 text-slate-300 font-semibold text-xs">
+          <Users className="w-4 h-4 text-sky-400" />
+          <span>Học sinh tham gia: <strong className="text-white text-sm">{participantsList.length}</strong></span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {room.status !== 'WAITING' && liveQ && (
+            <Button variant="primary" size="sm" onClick={() => { setShowLesson(false); setShowSubmissionPicker((v) => !v); }}>
+              CHIẾU BÀI HỌC SINH ({answeredCount})
+            </Button>
+          )}
+          {onCallRandomStudent && (
+            <Button variant="warning" size="sm" onClick={() => { setShowLesson(false); onCallRandomStudent(); }} className="font-bold text-slate-950">
+              <Award className="w-5 h-5 mr-2 inline" /> GỌI HỌC SINH
+            </Button>
+          )}
+
+          {qStatus === 'READY' && onOpenQuestion && (
+            <Button variant="success" size="sm" onClick={() => { setShowLesson(false); onOpenQuestion(currentQuestionId); }} className="font-bold">
+              PHÁT CÂU HỎI
+            </Button>
+          )}
+
+          {qStatus === 'OPEN' && onCloseQuestion && (
+            <Button variant="danger" size="sm" onClick={() => { setShowLesson(false); onCloseQuestion(currentQuestionId); }} className="font-bold">
+              ĐÓNG TRẢ LỜI
+            </Button>
+          )}
+
+          {qStatus === 'CLOSED' && onShowResult && (
+            <Button variant="primary" size="sm" onClick={() => { setShowLesson(false); onShowResult(currentQuestionId); }} className="font-bold">
+              HIỂN THỊ ĐÁP ÁN
+            </Button>
+          )}
+
+          {qStatus === 'RESULT' && onNextQuestion && (
+            <Button variant="primary" size="sm" onClick={() => { setShowLesson(false); onNextQuestion(); }} className="font-bold">
+              CÂU TIẾP THEO <ArrowRight className="w-5 h-5 ml-2 inline" />
+            </Button>
+          )}
+        </div>
+      </div>
+
         {/* Room Code Badge */}
-        <div className="flex items-center space-x-6">
-          <div className="bg-slate-900 border-2 border-sky-500/40 rounded-2xl px-4 py-2 text-center shadow-xl">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="bg-slate-900 border-2 border-sky-500/40 rounded-xl px-3 py-1 text-center shadow-xl">
             <div className="text-xs uppercase font-bold tracking-widest text-sky-400">MÃ THAM GIA</div>
-            <div className="text-2xl sm:text-3xl font-mono font-black text-white tracking-widest">
+            <div className="text-xl font-mono font-black text-white tracking-widest">
               {room.roomCode}
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
             title="Thoát Trình Chiếu"
           >
             <X className="w-7 h-7" />
@@ -323,50 +368,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       <SessionLeaderboard room={room}/>
       </div>
 
-      {/* Bottom Floating Control Bar for Teacher */}
-      <div className="bg-slate-900/90 backdrop-blur-md border-t border-slate-800 shrink-0 py-3 px-3 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-3 text-slate-400 font-semibold text-base">
-          <Users className="w-6 h-6 text-sky-400" />
-          <span>Học sinh tham gia: <strong className="text-white text-lg">{participantsList.length}</strong></span>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          {room.status !== 'WAITING' && liveQ && (
-            <Button variant="primary" size="md" onClick={() => { setShowLesson(false); setShowSubmissionPicker((v) => !v); }}>
-              CHIẾU BÀI HỌC SINH ({answeredCount})
-            </Button>
-          )}
-          {onCallRandomStudent && (
-            <Button variant="warning" size="md" onClick={() => { setShowLesson(false); onCallRandomStudent(); }} className="font-bold text-slate-950">
-              <Award className="w-5 h-5 mr-2 inline" /> GỌI HỌC SINH
-            </Button>
-          )}
-
-          {qStatus === 'READY' && onOpenQuestion && (
-            <Button variant="success" size="md" onClick={() => { setShowLesson(false); onOpenQuestion(currentQuestionId); }} className="font-bold">
-              PHÁT CÂU HỎI
-            </Button>
-          )}
-
-          {qStatus === 'OPEN' && onCloseQuestion && (
-            <Button variant="danger" size="md" onClick={() => { setShowLesson(false); onCloseQuestion(currentQuestionId); }} className="font-bold">
-              ĐÓNG TRẢ LỜI
-            </Button>
-          )}
-
-          {qStatus === 'CLOSED' && onShowResult && (
-            <Button variant="primary" size="md" onClick={() => { setShowLesson(false); onShowResult(currentQuestionId); }} className="font-bold">
-              HIỂN THỊ ĐÁP ÁN
-            </Button>
-          )}
-
-          {qStatus === 'RESULT' && onNextQuestion && (
-            <Button variant="primary" size="md" onClick={() => { setShowLesson(false); onNextQuestion(); }} className="font-bold">
-              CÂU TIẾP THEO <ArrowRight className="w-5 h-5 ml-2 inline" />
-            </Button>
-          )}
-        </div>
-      </div>
     </div>
   );
 };
