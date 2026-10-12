@@ -1,2 +1,2 @@
-Deploy selected tradition navigation highlighting.
-2026-10-13 05:19 Asia/Saigon
+Deploy curated tradition material reading order.
+2026-10-13
