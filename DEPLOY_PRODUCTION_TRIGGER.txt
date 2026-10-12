@@ -1,2 +1,2 @@
-Deploy projector without call-student button.
+Deploy finished-session deletion with confirmation and ownership checks.
 2026-10-12
