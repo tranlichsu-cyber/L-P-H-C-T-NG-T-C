@@ -1,2 +1,2 @@
-Deploy TV split view with question choices and session leaderboard.
+Deploy compact 240–280px leaderboard for TV projection.
 2026-10-12
