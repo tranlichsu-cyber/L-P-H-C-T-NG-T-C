@@ -1,2 +1,2 @@
-Deploy compact top-header projector controls.
+Deploy projector without call-student button.
 2026-10-12
