@@ -1,2 +1,2 @@
-Deploy finished-session deletion with confirmation and ownership checks.
+Deploy quiz-title editing from question bank list.
 2026-10-12
