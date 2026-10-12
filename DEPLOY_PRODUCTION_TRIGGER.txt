@@ -1,2 +1,2 @@
-Deploy subject-grouped question bank and subject filter.
+Deploy standalone six-digit test codes and direct student test entry with Firebase access rules.
 2026-10-12
