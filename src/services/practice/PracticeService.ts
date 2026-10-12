@@ -13,7 +13,7 @@ import {
 import { signInAnonymously } from 'firebase/auth';
 import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 import { gradePractice, validateTestQuestions } from './grading';
-import type { PracticeSet, PracticeAssignment, PracticeSubmission, PracticeResult } from './types';
+import type { PracticeSet, PracticeAssignment, PracticeSubmission, PracticeResult, PracticeQuestion } from './types';
 import type { UserProfile } from '../school/types';
 import { INITIAL_MOCK_PRACTICE_SETS } from './mockPracticeData';
 
@@ -87,6 +87,51 @@ export class PracticeService {
     });
 
     return { ...setItem, assignments, responses };
+  }
+
+  public static async ensureTestCode(testId:string): Promise<string> {
+    if(isFirebaseConfigured && db){
+      const firestore=db, uid=auth?.currentUser?.uid;
+      if(!uid || auth?.currentUser?.isAnonymous)throw new Error('Hãy đăng nhập giáo viên để tạo mã.');
+      for(let attempt=0;attempt<20;attempt++){
+        const random=crypto.getRandomValues(new Uint32Array(1))[0];const code=String(100000+random%900000);
+        const saved=await runTransaction(firestore,async tx=>{
+          const ref=doc(firestore,'practiceSets',testId),snap=await tx.get(ref);
+          if(!snap.exists() || snap.data().type!=='TEST')throw new Error('Không tìm thấy bài kiểm tra.');
+          const profile=await tx.get(doc(firestore,'users',uid));
+          if(profile.data()?.status!=='ACTIVE' || (snap.data().teacherId!==uid && profile.data()?.role!=='SCHOOL_ADMIN'))throw new Error('Không có quyền tạo mã bài này.');
+          if(snap.data().testCode)return String(snap.data().testCode);
+          const codeRef=doc(firestore,'testCodes',code),codeSnap=await tx.get(codeRef);
+          if(codeSnap.exists())return '';
+          tx.set(codeRef,{testId,teacherId:snap.data().teacherId});tx.update(ref,{testCode:code});return code;
+        });if(saved)return saved;
+      }throw new Error('Không tạo được mã. Hãy thử lại.');
+    }
+    const sets=this.loadLocalPracticeSets(),set=sets.find(s=>s.id===testId);if(!set || set.type!=='TEST')throw new Error('Không tìm thấy bài kiểm tra.');
+    if(!set.testCode){do{set.testCode=String(100000+crypto.getRandomValues(new Uint32Array(1))[0]%900000);}while(sets.some(s=>s.id!==testId && s.testCode===set.testCode));this.saveLocalPracticeSets(sets);}return set.testCode;
+  }
+
+  public static async findTestByCode(code:string):Promise<PracticeSet> {
+    if(!/^\d{6}$/.test(code))throw new Error('Mã bài kiểm tra gồm 6 chữ số.');
+    let test:PracticeSet|undefined;
+    if(isFirebaseConfigured && db){await this.ensureStudentAuth();const codeSnap=await getDoc(doc(db,'testCodes',code));if(codeSnap.exists()){const snap=await getDoc(doc(db,'practiceSets',codeSnap.data().testId));if(snap.exists())test={...snap.data(),id:snap.id} as PracticeSet;}}
+    else test=this.loadLocalPracticeSets().find(s=>s.testCode===code);
+    if(!test || test.type!=='TEST' || test.status!=='ASSIGNED' || test.archived)throw new Error('Mã không đúng hoặc bài kiểm tra không còn mở.');
+    if(test.dueAt && Date.now()>Date.parse(test.dueAt))throw new Error('Bài kiểm tra đã hết hạn.');
+    return {...test,questions:test.questions.map(({correctAnswer:_answer,explanation:_explanation,...q})=>q as PracticeQuestion),responses:{}};
+  }
+
+  public static async enterTest(testId:string,studentId:string):Promise<PracticeResult|null> {
+    if(isFirebaseConfigured && db){const firestore=db,uid=await this.ensureStudentAuth();return runTransaction(firestore,async tx=>{
+      const setSnap=await tx.get(doc(firestore,'practiceSets',testId));const ref=doc(firestore,'practiceSets',testId,'studentProgress',studentId),snap=await tx.get(ref);
+      if(!setSnap.exists() || setSnap.data().type!=='TEST' || setSnap.data().status!=='ASSIGNED' || setSnap.data().archived || !snap.exists())throw new Error('Em chưa được giao bài kiểm tra này.');
+      const progress=snap.data();if(progress.authUid && progress.authUid!==uid)throw new Error('Tên này đã được chọn trên thiết bị khác. Hãy báo giáo viên.');
+      if(progress.status==='COMPLETED')return (progress.result || null) as PracticeResult|null;
+      if(progress.status==='EXPIRED' || (setSnap.data().dueAt && Date.now()>Date.parse(setSnap.data().dueAt)))throw new Error('Bài kiểm tra đã hết hạn.');
+      tx.update(ref,{authUid:uid,status:'IN_PROGRESS',startedAt:progress.startedAt || new Date().toISOString()});return null;
+    });}
+    const sets=this.loadLocalPracticeSets(),set=sets.find(s=>s.id===testId),progress=set?.assignments?.[studentId];if(!set || !progress)throw new Error('Em chưa được giao bài.');
+    if(progress.status==='COMPLETED')return progress.result || null;if(set.status!=='ASSIGNED' || set.archived || progress.status==='EXPIRED' || (set.dueAt && Date.now()>Date.parse(set.dueAt)))throw new Error('Bài kiểm tra không còn mở.');progress.status='IN_PROGRESS';progress.startedAt ||= new Date().toISOString();this.saveLocalPracticeSets(sets);return null;
   }
 
   // 1. Create Practice Set
@@ -219,6 +264,7 @@ export class PracticeService {
         assignments,
       });
       await batch.commit();
+      if(setItem.type==='TEST')await this.ensureTestCode(practiceSetId);
       return true;
     }
 
@@ -238,6 +284,7 @@ export class PracticeService {
       };
     });
     this.saveLocalPracticeSets(sets);
+    if(setItem.type==='TEST')await this.ensureTestCode(practiceSetId);
     return true;
   }
 
