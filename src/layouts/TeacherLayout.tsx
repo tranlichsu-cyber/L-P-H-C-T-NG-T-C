@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, BookOpen, Radio, LogOut, HeartHandshake, Building2, Crown, GraduationCap, UserCircle, KeyRound, Link2, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, Radio, LogOut, Building2, Crown, GraduationCap, UserCircle, KeyRound, Link2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSchool } from '../context/SchoolContext';
 import { SCHOOL_LOGO_SRC } from '../assets/schoolLogo';
@@ -97,7 +97,6 @@ export const TeacherLayout: React.FC = () => {
     { path: '/teacher/quizzes', label: 'Ngân hàng câu hỏi', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
     { path: '/teacher/tradition', label: 'Góc truyền thống số', icon: BookOpen, idle: 'bg-emerald-50 text-emerald-700 border-emerald-200', active: 'bg-emerald-700 text-white border-emerald-700' },
     { path: '/teacher/tests', label: 'Bài kiểm tra', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
-    { path: '/teacher/remediation', label: 'Ôn tập & Củng cố', icon: HeartHandshake, idle: 'bg-amber-50 text-amber-800 border-amber-200', active: 'bg-amber-500 text-slate-950 border-amber-500 shadow-amber-200' },
     { path: '/teacher/room', label: 'Phòng học Live', icon: Radio, idle: 'bg-rose-50 text-rose-700 border-rose-200', active: 'bg-rose-600 text-white border-rose-600 shadow-rose-200' },
     { path: '/team', label: 'Tổ chuyên môn', icon: Crown, idle: 'bg-orange-50 text-orange-700 border-orange-200', active: 'bg-orange-500 text-white border-orange-500 shadow-orange-200' },
     { path: '/admin', label: 'Quản trị trường', icon: Building2, idle: 'bg-indigo-50 text-indigo-700 border-indigo-200', active: 'bg-indigo-700 text-white border-indigo-700 shadow-indigo-200' },
