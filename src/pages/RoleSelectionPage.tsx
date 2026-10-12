@@ -133,6 +133,7 @@ export const RoleSelectionPage: React.FC = () => {
               Lớp học tương tác • Hệ thống giáo dục nội bộ
             </p>
           </header>
+          <button type="button" onClick={()=>navigate('/goc-truyen-thong')} className="mt-4 w-full rounded-xl bg-emerald-800 px-4 py-3 text-white font-bold">GÓC TRUYỀN THỐNG SỐ – THÁI NGUYÊN</button>
 
           <div className="mt-5 rounded-2xl bg-slate-100 p-1.5 shadow-inner">
             <div className="grid grid-cols-2 gap-1.5">
