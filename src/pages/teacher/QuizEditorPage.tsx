@@ -10,6 +10,7 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { SchoolService } from '../../services/school/SchoolService';
 import { useQuestionBank, copyQuestion, type BankQuestion } from '../../services/questionBank/useQuestionBank';
+import { QuestionFileImport } from '../../components/teacher/QuestionFileImport';
 import { QuestionBankBrowser } from '../../components/teacher/QuestionBankBrowser';
 import type { Question, QuestionDifficulty, QuestionType } from '../../types';
 import {
@@ -284,6 +285,7 @@ export const QuizEditorPage: React.FC = () => {
         action={
           canEdit ? (
             <div className="flex flex-wrap gap-2">
+              <QuestionFileImport onImport={async items=>{await addQuestions(currentQuiz.id,items.map(({points: _points,...q})=>q));showToast(`Đã thêm ${items.length} câu hỏi từ file.`, 'success');}}/>
               <Button variant="outline" onClick={() => { setBankSelected([]); setBankOpen(true); }}>Lấy từ kho câu hỏi</Button>
               <Button variant="primary" size="lg" onClick={handleOpenAdd}><Plus className="w-5 h-5 mr-1" /> THÊM CÂU HỎI</Button>
             </div>
