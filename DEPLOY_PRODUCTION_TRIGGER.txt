@@ -1,2 +1,2 @@
-Deploy compact tradition introduction and left column navigation.
-2026-10-13
+Deploy selected tradition navigation highlighting.
+2026-10-13 05:19 Asia/Saigon
