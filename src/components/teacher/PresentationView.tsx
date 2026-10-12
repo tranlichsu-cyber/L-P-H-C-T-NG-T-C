@@ -240,7 +240,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
                   return (
                     <div
                       key={idx}
-                      className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
+                      className={`p-4 rounded-2xl border-2 transition-all flex flex-wrap gap-3 items-center justify-between ${
                         isCorrect
                           ? 'bg-emerald-950/80 border-emerald-400 text-white shadow-emerald-900/50 shadow-2xl scale-102 ring-4 ring-emerald-500/20'
                           : 'bg-slate-900 border-slate-800 text-slate-200'
@@ -264,6 +264,10 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
                           {isCorrect && <CheckCircle2 className="w-8 h-8 text-emerald-400" />}
                         </div>
                       )}
+                      {qStatus === 'RESULT' && <div className="w-full border-t border-slate-700 pt-3 flex flex-wrap gap-2" aria-label={`Học sinh chọn đáp án ${letter}`}>
+                        {submissionsList.filter(s=>choiceIndex(liveQ.options || [],s.answer,liveQ.type)===idx).map(s=><span key={s.id || s.studentId} className="px-3 py-1 rounded-lg bg-slate-800 text-sky-100 text-base font-semibold break-words">{s.studentName || room.participants?.[s.studentId]?.name || 'Học sinh'}</span>)}
+                        {!count && <span className="text-sm text-slate-400">Chưa có học sinh chọn</span>}
+                      </div>}
                     </div>
                   );
                 })}
