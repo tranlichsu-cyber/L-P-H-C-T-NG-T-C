@@ -1,3 +1,4 @@
+import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
 import React, { useEffect, useState } from 'react';
 import { PdfLessonView } from './PdfLessonView';
 import { LessonSlideControls } from './LessonSlideControls';
@@ -56,20 +57,8 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
   const qStatus = liveQ?.status || 'READY';
 
-  // Calculate choices breakdown for Bar Chart when RESULT
-  const choiceCounts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
-  if (liveQ?.options) {
-    liveQ.options.forEach((_, idx) => {
-      const label = String.fromCharCode(65 + idx);
-      choiceCounts[label] = 0;
-    });
-    submissionsList.forEach((sub) => {
-      const ansUpper = sub.answer.trim().toUpperCase();
-      if (choiceCounts[ansUpper] !== undefined) {
-        choiceCounts[ansUpper] += 1;
-      }
-    });
-  }
+  const choiceCounts = countChoices(liveQ?.options || [], submissionsList, liveQ?.type || 'MULTIPLE_CHOICE');
+  const correctChoiceIndex = choiceIndex(liveQ?.options || [], liveQ?.correctAnswer, liveQ?.type || 'MULTIPLE_CHOICE');
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col h-[100dvh] overflow-hidden p-3 sm:p-4 gap-3 select-none animate-fade-in">
@@ -243,8 +232,8 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {liveQ.options.map((opt, idx) => {
                   const letter = String.fromCharCode(65 + idx);
-                  const isCorrect = qStatus === 'RESULT' && liveQ.correctAnswer === letter;
-                  const count = choiceCounts[letter] || 0;
+                  const isCorrect = qStatus === 'RESULT' && correctChoiceIndex === idx;
+                  const count = choiceCounts[idx] || 0;
 
                   return (
                     <div
@@ -296,9 +285,9 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
                 <div className="space-y-3">
                   {liveQ.options.map((_, idx) => {
                     const letter = String.fromCharCode(65 + idx);
-                    const count = choiceCounts[letter] || 0;
+                    const count = choiceCounts[idx] || 0;
                     const pct = answeredCount > 0 ? Math.round((count / answeredCount) * 100) : 0;
-                    const isCorrect = liveQ.correctAnswer === letter;
+                    const isCorrect = correctChoiceIndex === idx;
 
                     return (
                       <div key={letter} className="flex items-center space-x-4 text-lg">
@@ -308,7 +297,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
                             className={`h-full rounded-full transition-all duration-700 flex items-center justify-end px-3 text-xs font-bold text-slate-950 ${
                               isCorrect ? 'bg-emerald-400' : 'bg-sky-500'
                             }`}
-                            style={{ width: `${Math.max(8, pct)}%` }}
+                            style={{ width: `${pct}%` }}
                           >
                             {pct > 15 ? `${pct}% (${count})` : ''}
                           </div>
