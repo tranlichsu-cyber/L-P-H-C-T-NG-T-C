@@ -1,3 +1,4 @@
+import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
@@ -698,8 +699,8 @@ export const RoomControllerPage: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {liveQ.options.map((opt, i) => {
                       const letter = String.fromCharCode(65 + i);
-                      const count = submissionsList.filter((s) => s.answer.trim().toUpperCase() === letter || s.answer === opt).length;
-                      const isCorrect = liveQ.status === 'RESULT' && liveQ.correctAnswer === letter;
+                      const count = countChoices(liveQ.options || [], submissionsList, liveQ.type)[i];
+                      const isCorrect = liveQ.status === 'RESULT' && choiceIndex(liveQ.options || [], liveQ.correctAnswer, liveQ.type) === i;
 
                       return (
                         <div
