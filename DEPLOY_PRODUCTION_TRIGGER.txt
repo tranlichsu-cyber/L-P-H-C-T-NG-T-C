@@ -1,2 +1,2 @@
-Deploy teacher menu without remediation item.
-2026-10-12
+Deploy compact tradition introduction and left column navigation.
+2026-10-13
