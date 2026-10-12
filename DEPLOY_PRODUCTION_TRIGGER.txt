@@ -1,2 +1,2 @@
-Deploy whole-test assignments, per-question ten-point rubric and immediate student results.
-2026-10-11
+Deploy Excel/CSV question import, downloadable template and preview.
+2026-10-12
