@@ -1,2 +1,2 @@
-Deploy compact 240–280px leaderboard for TV projection.
+Deploy student names grouped under selected answers after reveal.
 2026-10-12
