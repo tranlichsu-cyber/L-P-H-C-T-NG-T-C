@@ -35,7 +35,6 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   onCloseQuestion,
   onShowResult,
   onNextQuestion,
-  onCallRandomStudent,
 }) => {
   const [showLesson, setShowLesson] = useState(Boolean(lesson));
   const [pageCount, setPageCount] = useState(lesson?.pageCount || 1);
@@ -92,11 +91,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
               CHIẾU BÀI HỌC SINH ({answeredCount})
             </Button>
           )}
-          {onCallRandomStudent && (
-            <Button variant="warning" size="sm" onClick={() => { setShowLesson(false); onCallRandomStudent(); }} className="font-bold text-slate-950">
-              <Award className="w-5 h-5 mr-2 inline" /> GỌI HỌC SINH
-            </Button>
-          )}
+
 
           {qStatus === 'READY' && onOpenQuestion && (
             <Button variant="success" size="sm" onClick={() => { setShowLesson(false); onOpenQuestion(currentQuestionId); }} className="font-bold">
