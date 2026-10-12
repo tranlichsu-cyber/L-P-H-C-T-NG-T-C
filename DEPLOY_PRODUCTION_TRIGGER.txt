@@ -1,2 +1,2 @@
-Deploy corrected live answer statistics and correct-option highlighting.
+Deploy TV split view with question choices and session leaderboard.
 2026-10-12
