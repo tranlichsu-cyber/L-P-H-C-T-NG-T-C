@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
+import { Modal } from '../../components/common/Modal';
 import { Input } from '../../components/common/Input';
 import { HistoryService } from '../../services/history/HistoryService';
 import type { RoomSummary, HistoryFilters } from '../../services/history/types';
@@ -16,6 +17,7 @@ import {
   Users,
   ArrowRight,
   Archive,
+  Trash2,
   RefreshCw,
   PlusCircle,
 } from 'lucide-react';
@@ -30,6 +32,9 @@ export const HistoryPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
   const pageSize = 20;
+
+  const [deleteTarget, setDeleteTarget] = useState<RoomSummary | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Filters State
   const [selectedClassId, setSelectedClassId] = useState<string>('');
@@ -300,6 +305,7 @@ export const HistoryPage: React.FC = () => {
                           <Archive className="w-4 h-4" />
                         </button>
 
+                        <Button variant="danger" size="sm" onClick={e=>{e.stopPropagation();setDeleteTarget(s);}}><Trash2 className="w-4 h-4 mr-1"/>Xóa</Button>
                         <Button variant="outline" size="sm" className="font-bold">
                           CHI TIẾT <ArrowRight className="w-4 h-4 ml-1" />
                         </Button>
@@ -337,6 +343,9 @@ export const HistoryPage: React.FC = () => {
           )}
         </div>
       )}
+      <Modal isOpen={Boolean(deleteTarget)} onClose={()=>{if(!isDeleting)setDeleteTarget(null);}} title="Xóa buổi học" footer={<><Button variant="outline" disabled={isDeleting} onClick={()=>setDeleteTarget(null)}>Hủy</Button><Button variant="danger" disabled={isDeleting} onClick={async()=>{if(!deleteTarget || isDeleting)return;setIsDeleting(true);try{await HistoryService.deleteSession(deleteTarget.roomId);setDeleteTarget(null);showToast('Đã xóa buổi học và kết quả của buổi đó.','success');if(summaries.length===1 && page>1)setPage(p=>p-1);else await fetchHistory();}catch(err){showToast((err as Error).message || 'Không xóa được buổi học. Hãy thử lại.','error');}finally{setIsDeleting(false);}}}>{isDeleting?'Đang xóa…':'Xác nhận xóa'}</Button></>}>
+        <p className="font-bold">{deleteTarget?.quizTitle || 'Buổi học'} • {deleteTarget?.className} • {deleteTarget?.subject}</p><p className="mt-2">Xóa toàn bộ câu trả lời, điểm và báo cáo của buổi học này. Không thể khôi phục. Bộ câu hỏi gốc và danh sách lớp vẫn được giữ.</p>
+      </Modal>
     </div>
   );
 };
