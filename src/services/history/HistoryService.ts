@@ -7,6 +7,7 @@ import {
   updateDoc,
   query,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import type { UserProfile } from '../school/types';
@@ -281,6 +282,32 @@ export class HistoryService {
     if (!roomData) return null;
 
     return SessionAnalysisService.analyzeSession(roomData, privateQuestions);
+  }
+
+  public static async deleteSession(roomId: string): Promise<void> {
+    if (db) {
+      const firestore = db, uid = auth?.currentUser?.uid;
+      if (!uid || auth?.currentUser?.isAnonymous) throw new Error('Hãy đăng nhập tài khoản giáo viên.');
+      const roomRef = doc(firestore, 'rooms', roomId);
+      const [roomSnap, profileSnap] = await Promise.all([getDoc(roomRef), getDoc(doc(firestore, 'users', uid))]);
+      if (!roomSnap.exists()) return;
+      const room = roomSnap.data(), profile = profileSnap.data();
+      if (profile?.status !== 'ACTIVE' || (room.teacherId !== uid && profile?.role !== 'SCHOOL_ADMIN')) throw new Error('Thầy/cô không có quyền xóa buổi học này.');
+      if (room.status !== 'FINISHED') throw new Error('Chỉ xóa được buổi học đã kết thúc.');
+      // Keep the parent until children are removed so ownership rules remain valid.
+      const snapshots = await Promise.all(['roster','participants','liveQuestions','submissions','scores','scoreEvents','summary','games'].map(name=>getDocs(collection(firestore,'rooms',roomId,name))));
+      const refs = snapshots.flatMap(snapshot=>snapshot.docs.map(item=>item.ref));
+      for(let offset=0;offset<refs.length;offset+=450){
+        const batch=writeBatch(firestore);refs.slice(offset,offset+450).forEach(ref=>batch.delete(ref));await batch.commit();
+      }
+      const batch=writeBatch(firestore);
+      if(room.roomCode){const codeRef=doc(firestore,'roomCodes',room.roomCode);const codeSnap=await getDoc(codeRef);if(codeSnap.exists() && codeSnap.data().roomId===roomId)batch.delete(codeRef);}
+      batch.delete(roomRef);await batch.commit();return;
+    }
+    const mockDb=loadMockDatabase();
+    if(mockDb.rooms[roomId] && mockDb.rooms[roomId].status!=='FINISHED') throw new Error('Chỉ xóa được buổi học đã kết thúc.');
+    delete mockDb.rooms[roomId];delete mockDb.privateQuestions[roomId];saveMockDatabase(mockDb);
+    this.saveLocalSummaries(this.loadLocalSummaries().filter(item=>item.roomId!==roomId));
   }
 
   // 4. Archive / Unarchive Session (Soft delete)
