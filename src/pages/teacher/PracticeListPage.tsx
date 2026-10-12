@@ -165,6 +165,7 @@ export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly 
                     </div>
 
                     <h3 className="text-base font-black text-slate-900">{p.title}</h3>
+                    {p.type==='TEST' && <p className="text-sky-900 font-bold">{p.testCode ? `Mã kiểm tra: ${p.testCode}` : 'Mở bài kiểm tra để tạo mã riêng'}</p>}
 
                     <div className="flex items-center gap-4 text-xs text-slate-600 font-medium">
                       <span className="flex items-center gap-1">
