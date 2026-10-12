@@ -705,7 +705,7 @@ export const RoomControllerPage: React.FC = () => {
                       return (
                         <div
                           key={i}
-                          className={`p-3 rounded-xl border flex items-center justify-between ${
+                          className={`p-3 rounded-xl border flex flex-wrap gap-2 items-center justify-between ${
                             isCorrect ? 'bg-emerald-50 border-emerald-400 font-bold' : 'bg-slate-50 border-slate-200'
                           }`}
                         >
@@ -715,6 +715,10 @@ export const RoomControllerPage: React.FC = () => {
                           <span className="text-xs font-black bg-white px-2 py-1 rounded-lg border border-slate-200">
                             {count} lượt
                           </span>
+                          {liveQ.status === 'RESULT' && <div className="w-full border-t border-slate-200 pt-2 flex flex-wrap gap-1" aria-label={`Học sinh chọn đáp án ${letter}`}>
+                            {submissionsList.filter(s=>choiceIndex(liveQ.options || [],s.answer,liveQ.type)===i).map(s=><span key={s.id || s.studentId} className="px-2 py-1 bg-white rounded-lg text-xs text-slate-800">{s.studentName || room.participants?.[s.studentId]?.name || 'Học sinh'}</span>)}
+                            {!count && <span className="text-xs text-slate-500">Chưa có học sinh chọn</span>}
+                          </div>}
                         </div>
                       );
                     })}
