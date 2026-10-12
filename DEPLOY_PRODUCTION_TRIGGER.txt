@@ -1,2 +1,2 @@
-Deploy student names grouped under selected answers after reveal.
+Deploy compact top-header projector controls.
 2026-10-12
