@@ -1,2 +1,2 @@
-Deploy standalone six-digit test codes and direct student test entry with Firebase access rules.
+Deploy public Thai Nguyen digital heritage corner and teacher publishing manager.
 2026-10-12
