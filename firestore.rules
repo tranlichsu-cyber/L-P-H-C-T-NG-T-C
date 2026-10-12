@@ -245,6 +245,17 @@ service cloud.firestore {
       }
     }
 
+    match /testCodes/{code} {
+      allow get: if isAuthenticated();
+      allow list: if false;
+      allow create: if code.matches('[0-9]{6}') && isTeacher()
+        && (isSchoolAdmin() || request.resource.data.teacherId == request.auth.uid)
+        && get(/databases/$(database)/documents/practiceSets/$(request.resource.data.testId)).data.type == 'TEST'
+        && get(/databases/$(database)/documents/practiceSets/$(request.resource.data.testId)).data.teacherId == request.resource.data.teacherId;
+      allow update: if false;
+      allow delete: if isSchoolAdmin() || isOwner(resource.data.teacherId);
+    }
+
     // 9. Self-Paced Practice Sets (practiceSets/{setId})
     match /practiceSets/{setId} {
       allow read: if isAuthenticated();
