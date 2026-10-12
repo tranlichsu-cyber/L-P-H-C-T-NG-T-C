@@ -49,6 +49,8 @@ export const QuizzesPage: React.FC = () => {
   // Scope Tab filter
   const [scopeFilter, setScopeFilter] = useState<'ALL' | 'PRIVATE' | 'TEAM' | 'SCHOOL'>('ALL');
 
+  const [subjectFilter, setSubjectFilter] = useState('ALL');
+
   // Modal States
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -174,11 +176,10 @@ export const QuizzesPage: React.FC = () => {
     }
   };
 
-  const filteredQuizzes = quizzes.filter((q) => {
-    const vis = q.visibility || 'PRIVATE';
-    if (scopeFilter === 'ALL') return true;
-    return vis === scopeFilter;
-  });
+  const subjectNames = [...new Set([...SUBJECT_OPTIONS, ...quizzes.map(q=>q.subject || 'Khác')])];
+  const subjectOf = (quiz: Quiz) => quiz.subject || 'Khác';
+  const filteredQuizzes = quizzes.filter(q=>(scopeFilter === 'ALL' || (q.visibility || 'PRIVATE')===scopeFilter) && (subjectFilter==='ALL' || subjectOf(q)===subjectFilter))
+    .sort((a,b)=>subjectNames.indexOf(subjectOf(a))-subjectNames.indexOf(subjectOf(b)) || a.grade.localeCompare(b.grade,'vi',{numeric:true}) || a.title.localeCompare(b.title,'vi',{numeric:true}));
 
   const getVisibilityBadge = (vis?: 'PRIVATE' | 'TEAM' | 'SCHOOL') => {
     switch (vis) {
@@ -264,9 +265,17 @@ export const QuizzesPage: React.FC = () => {
         </button>
       </div>
 
+      <div className="flex flex-wrap gap-3 items-center">
+        <label htmlFor="quiz-subject-filter" className="font-bold text-slate-800">Môn học:</label>
+        <select id="quiz-subject-filter" value={subjectFilter} onChange={e=>setSubjectFilter(e.target.value)} className="p-2.5 border border-slate-300 rounded-xl bg-white text-slate-900"><option value="ALL">Tất cả môn học</option>{subjectNames.map(subject=><option key={subject} value={subject}>{subject}</option>)}</select>
+        <span className="text-sm text-slate-600">{filteredQuizzes.length} bộ câu hỏi • Sắp xếp theo môn, khối và tên</span>
+      </div>
+      {!filteredQuizzes.length && <Card className="p-6 text-slate-600">Chưa có bộ câu hỏi phù hợp với bộ lọc.</Card>}
       {/* Quiz List Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredQuizzes.map((quiz) => (
+        {filteredQuizzes.map((quiz,index) => (
+          <React.Fragment key={quiz.id}>
+          {(index===0 || subjectOf(filteredQuizzes[index-1])!==subjectOf(quiz)) && <h2 className="col-span-full font-black text-xl text-sky-900 border-b border-sky-200 pb-2 mt-2">{subjectOf(quiz)}</h2>}
           <Card key={quiz.id} className="flex flex-col justify-between hover:shadow-md transition-shadow bg-white border-2 border-slate-200">
             <div>
               <div className="flex items-start justify-between mb-3 gap-2">
@@ -334,6 +343,7 @@ export const QuizzesPage: React.FC = () => {
               )}
             </div>
           </Card>
+          </React.Fragment>
         ))}
       </div>
 
