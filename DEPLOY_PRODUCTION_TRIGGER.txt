@@ -1,2 +1,2 @@
-Deploy quiz-title editing from question bank list.
+Deploy subject-grouped question bank and subject filter.
 2026-10-12
