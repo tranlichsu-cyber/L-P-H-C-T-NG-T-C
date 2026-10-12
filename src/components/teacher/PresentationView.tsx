@@ -1,3 +1,4 @@
+import { SessionLeaderboard } from './SessionLeaderboard';
 import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
 import React, { useEffect, useState } from 'react';
 import { PdfLessonView } from './PdfLessonView';
@@ -103,18 +104,19 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         <Button variant={!showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(false)}>Câu hỏi / Bài học sinh</Button>
       </div>}
       {/* Main Content Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto py-2">
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(260px,30%)] gap-4 py-2">
+      <main className="min-w-0 min-h-0 overflow-y-auto pr-1" aria-label="Câu hỏi và đáp án đang trình chiếu">
         {showLesson && lesson && onLessonPage ? <div className="h-full flex flex-col gap-2 min-h-0">
           <div className="flex-1 min-h-0"><PdfLessonView lesson={lesson} page={lessonPage} onCount={setPageCount} /></div>
           <LessonSlideControls page={lessonPage} count={pageCount} onPage={onLessonPage} />
         </div> : <>
         {/* Called Student Banner Overlay if Active */}
         {!selectedSubmission && room.calledStudent && (
-          <div className="mb-8 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 p-8 rounded-3xl text-slate-950 shadow-2xl text-center border-4 border-amber-300 animate-bounce">
+          <div className="mb-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 p-3 rounded-2xl text-slate-950 shadow-2xl text-center border-2 border-amber-300">
             <div className="inline-flex items-center space-x-2 bg-slate-950/20 text-slate-950 px-4 py-1.5 rounded-full text-lg font-black uppercase tracking-wider mb-2">
               <Award className="w-6 h-6" /> MỜI HỌC SINH PHÁT BIỂU
             </div>
-            <h2 className="text-5xl sm:text-7xl font-black tracking-tight uppercase drop-shadow-md">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight uppercase drop-shadow-md">
               {room.calledStudent.studentName}
             </h2>
             <p className="text-xl font-bold mt-2 opacity-90">
@@ -206,12 +208,12 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         {room.status !== 'WAITING' && liveQ && !selectedSubmission && (
           <div className="max-w-5xl mx-auto space-y-4">
             {/* Question Header & Status */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex flex-wrap gap-2 items-center justify-between border-b border-slate-800 pb-3">
               <span className="text-xl sm:text-2xl font-black text-sky-400 uppercase tracking-widest">
                 CÂU HỎI HIỆN TẠI
               </span>
-              <div className="flex items-center space-x-4">
-                <span className="text-xl font-bold text-slate-300">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-base font-bold text-slate-300">
                   Đã trả lời: <strong className="text-amber-400 text-2xl">{answeredCount}</strong> / {participantsList.length || totalRoster}
                 </span>
                 {qStatus === 'OPEN' && <Badge variant="success" className="text-lg py-1.5 px-4 font-bold">ĐANG NHẬN ĐÁP ÁN</Badge>}
@@ -229,7 +231,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
             {/* Options List */}
             {liveQ.options && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {liveQ.options.map((opt, idx) => {
                   const letter = String.fromCharCode(65 + idx);
                   const isCorrect = qStatus === 'RESULT' && correctChoiceIndex === idx;
@@ -238,7 +240,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
                   return (
                     <div
                       key={idx}
-                      className={`p-6 rounded-2xl border-3 transition-all flex items-center justify-between ${
+                      className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
                         isCorrect
                           ? 'bg-emerald-950/80 border-emerald-400 text-white shadow-emerald-900/50 shadow-2xl scale-102 ring-4 ring-emerald-500/20'
                           : 'bg-slate-900 border-slate-800 text-slate-200'
@@ -246,13 +248,13 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
                     >
                       <div className="flex items-center space-x-4">
                         <span
-                          className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl font-black shadow-md ${
+                          className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-xl font-black shadow-md ${
                             isCorrect ? 'bg-emerald-400 text-slate-950' : 'bg-slate-800 text-sky-400'
                           }`}
                         >
                           {letter}
                         </span>
-                        <span className="text-2xl font-bold">{opt}</span>
+                        <span className="text-xl lg:text-2xl font-bold break-words">{opt}</span>
                       </div>
 
                       {/* Bar Chart count display when RESULT */}
@@ -268,6 +270,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
               </div>
             )}
 
+            {qStatus === 'RESULT' && !liveQ.options?.length && liveQ.correctAnswer && <section className="bg-emerald-950 border border-emerald-500 p-4 rounded-xl"><h3 className="font-bold text-emerald-300">Đáp án đúng</h3><p className="text-2xl whitespace-pre-wrap">{liveQ.correctAnswer}</p></section>}
             {/* Result Explanation Card */}
             {qStatus === 'RESULT' && liveQ.explanation && (
               <div className="bg-emerald-950/40 border-2 border-emerald-500/30 rounded-2xl p-6 text-emerald-200">
@@ -312,6 +315,8 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
           </div>
         )}
         </>}
+      </main>
+      <SessionLeaderboard room={room}/>
       </div>
 
       {/* Bottom Floating Control Bar for Teacher */}
