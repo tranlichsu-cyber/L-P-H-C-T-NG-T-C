@@ -33,8 +33,9 @@ export const PracticeMonitorPage: React.FC = () => {
     if (!practiceSetId) return;
     setIsLoading(true);
     PracticeService.getPracticeSetDetail(practiceSetId)
-      .then((set) => {
+      .then(async (set) => {
         if (set) {
+          if(set.type==='TEST')set.testCode=await PracticeService.ensureTestCode(set.id);
           setPracticeSet(set);
         } else {
           showToast('Không tìm thấy bài ôn tập này.', 'error');
@@ -126,6 +127,7 @@ export const PracticeMonitorPage: React.FC = () => {
         </div>
       </div>
 
+      {practiceSet.type==='TEST' && practiceSet.testCode && <Card className="p-4 bg-sky-50 space-y-2"><h2 className="font-bold text-sky-900">MÃ BÀI KIỂM TRA</h2><p className="text-3xl font-black tracking-widest text-sky-900">{practiceSet.testCode}</p><p className="text-sm">Học sinh mở liên kết dưới đây, nhập mã và chọn đúng tên của mình.</p><a className="text-sky-800 underline break-all" href={`${window.location.origin}/student/test?code=${practiceSet.testCode}`} target="_blank" rel="noreferrer">{window.location.origin}/student/test?code={practiceSet.testCode}</a><Button variant="outline" size="sm" onClick={async()=>{try{await navigator.clipboard.writeText(`${window.location.origin}/student/test?code=${practiceSet.testCode}`);showToast('Đã sao chép liên kết bài kiểm tra.','success');}catch{showToast('Hãy chọn và sao chép liên kết phía trên.','info');}}}>Sao chép liên kết</Button></Card>}
       {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card className="p-4 border-2 border-slate-200 bg-white">
