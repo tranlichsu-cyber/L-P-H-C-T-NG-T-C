@@ -59,6 +59,7 @@ export const JoinPage: React.FC = () => {
       <h1 className="text-2xl sm:text-3xl font-black text-sky-950 mb-1 tracking-tight">THAM GIA LỚP HỌC</h1>
       <p className="text-slate-600 text-sm mb-6 font-semibold">Nhập mã phòng do thầy/cô cung cấp 🎈</p>
 
+      <button type="button" onClick={()=>navigate('/student/test')} className="w-full mb-4 p-3 rounded-xl bg-sky-700 text-white font-bold">VÀO BÀI KIỂM TRA BẰNG MÃ RIÊNG</button>
       <form onSubmit={handleJoin} className="space-y-6">
         <div>
           <input
