@@ -104,7 +104,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         <Button variant={!showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(false)}>Câu hỏi / Bài học sinh</Button>
       </div>}
       {/* Main Content Area */}
-      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(260px,30%)] gap-4 py-2">
+      <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_280px] gap-4 py-2">
       <main className="min-w-0 min-h-0 overflow-y-auto pr-1" aria-label="Câu hỏi và đáp án đang trình chiếu">
         {showLesson && lesson && onLessonPage ? <div className="h-full flex flex-col gap-2 min-h-0">
           <div className="flex-1 min-h-0"><PdfLessonView lesson={lesson} page={lessonPage} onCount={setPageCount} /></div>
