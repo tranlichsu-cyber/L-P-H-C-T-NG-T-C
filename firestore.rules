@@ -245,6 +245,18 @@ service cloud.firestore {
       }
     }
 
+    match /traditionQuizzes/{quizId} {
+      allow read: if resource.data.published == true || (isTeacher() && resource.data.teacherId == request.auth.uid);
+      allow create: if isTeacher() && request.resource.data.teacherId == request.auth.uid
+        && request.resource.data.published == true && request.resource.data.questions is list
+        && request.resource.data.questions.size() > 0 && request.resource.data.questions.size() <= 200;
+      allow update: if isTeacher() && resource.data.teacherId == request.auth.uid
+        && request.resource.data.teacherId == resource.data.teacherId
+        && request.resource.data.published == true && request.resource.data.questions is list
+        && request.resource.data.questions.size() > 0 && request.resource.data.questions.size() <= 200;
+      allow delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
+    }
+
     match /testCodes/{code} {
       allow get: if isAuthenticated();
       allow list: if false;
