@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { QuestionFileImport } from '../../components/teacher/QuestionFileImport';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -273,10 +274,11 @@ export const PracticeEditorPage: React.FC = () => {
                 <p className="text-xs text-slate-500 font-medium">Thêm câu hỏi từ Ngân hàng câu hỏi</p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setIsQuizBankModalOpen(true)}>
                   <BookOpen className="w-4 h-4 mr-1 text-sky-600" /> Ngân hàng câu hỏi
                 </Button>
+                <QuestionFileImport disabled={publishedTest} onImport={async items=>{if(questions.length+items.length>200)throw new Error('Bài chỉ được có tối đa 200 câu.');setQuestions(prev=>[...prev,...items.map(q=>({...q,id:crypto.randomUUID()}))]);showToast(`Đã thêm ${items.length} câu từ file. Kiểm tra lại tổng biểu điểm trước khi giao.`, 'success');}}/>
               </div>
             </div>
 
