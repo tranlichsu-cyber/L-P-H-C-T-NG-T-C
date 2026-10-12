@@ -40,7 +40,7 @@ export const SUBJECT_OPTIONS = [
 
 export const QuizzesPage: React.FC = () => {
   const navigate = useNavigate();
-  const { quizzes, addQuiz, duplicateQuiz, deleteQuiz, updateQuizVisibility } = useTeacherData();
+  const { quizzes, addQuiz, duplicateQuiz, deleteQuiz, updateQuiz, updateQuizVisibility } = useTeacherData();
   const { showToast } = useToast();
   const { currentUser } = useAuth();
   const [availableTeams, setAvailableTeams] = useState<SchoolTeam[]>([]);
@@ -53,6 +53,11 @@ export const QuizzesPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+
+  const [renameTarget, setRenameTarget] = useState<Quiz | null>(null);
+  const [renameTitle, setRenameTitle] = useState('');
+  const [renameError, setRenameError] = useState('');
+  const [renaming, setRenaming] = useState(false);
 
   // Form States
   const [titleInput, setTitleInput] = useState('');
@@ -302,6 +307,7 @@ export const QuizzesPage: React.FC = () => {
                   <Copy className="w-4 h-4 text-slate-600" />
                 </Button>
 
+                {(quiz.teacherId === currentUser?.uid || isSchoolAdmin) && <Button variant="outline" size="sm" title="Sửa tên bộ câu hỏi" onClick={()=>{setRenameTarget(quiz);setRenameTitle(quiz.title);setRenameError('');}}><Edit3 className="w-4 h-4 mr-1"/>Sửa tên</Button>}
                 {(quiz.teacherId === currentUser?.uid || isSchoolAdmin) && (
                   <Button
                     variant="secondary"
@@ -330,6 +336,13 @@ export const QuizzesPage: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      <Modal isOpen={Boolean(renameTarget)} onClose={()=>{if(!renaming)setRenameTarget(null);}} title="Sửa tên bộ câu hỏi" footer={<><Button variant="outline" disabled={renaming} onClick={()=>setRenameTarget(null)}>Hủy</Button><Button variant="primary" disabled={renaming || !renameTitle.trim()} type="submit" form="rename-quiz-form">{renaming?'Đang lưu…':'Lưu tên mới'}</Button></>}>
+        <form id="rename-quiz-form" className="space-y-3" onSubmit={async e=>{e.preventDefault();if(!renameTarget || renaming)return;const name=renameTitle.trim();if(!name){setRenameError('Hãy nhập tên bộ câu hỏi.');return;}setRenaming(true);setRenameError('');try{await updateQuiz(renameTarget.id,name,renameTarget.subject,renameTarget.grade);setRenameTarget(null);showToast('Đã đổi tên bộ câu hỏi.','success');}catch(err){setRenameError((err as Error).message || 'Không lưu được tên. Hãy thử lại.');}finally{setRenaming(false);}}}>
+          <label htmlFor="rename-quiz-title" className="block font-bold text-sm">Tên bộ câu hỏi</label><Input id="rename-quiz-title" autoFocus maxLength={200} value={renameTitle} disabled={renaming} onChange={e=>setRenameTitle(e.target.value)}/>
+          {renameError && <p role="alert" className="text-sm text-red-700">{renameError}</p>}
+        </form>
+      </Modal>
 
       {/* Modal Create Quiz */}
       <Modal
