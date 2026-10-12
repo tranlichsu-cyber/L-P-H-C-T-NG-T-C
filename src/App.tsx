@@ -91,6 +91,8 @@ const AuditLogsPage = lazy(() =>
 const TeamDashboardPage = lazy(() =>
   import('./pages/team/TeamDashboardPage').then((m) => ({ default: m.TeamDashboardPage }))
 );
+const TraditionPage = lazy(()=>import('./pages/TraditionPage').then(m=>({default:m.TraditionPage})));
+const TraditionManagerPage = lazy(()=>import('./pages/teacher/TraditionManagerPage').then(m=>({default:m.TraditionManagerPage})));
 const TestJoinPage = lazy(() => import('./pages/student/TestJoinPage').then(m=>({default:m.TestJoinPage})));
 const StudentPracticeHubPage = lazy(() =>
   import('./pages/student/StudentPracticeHubPage').then((m) => ({ default: m.StudentPracticeHubPage }))
@@ -120,6 +122,7 @@ export const App: React.FC = () => {
                 <Routes>
                   {/* Role Selection Landing */}
                   <Route path="/" element={<RoleSelectionPage />} />
+                  <Route path="/goc-truyen-thong" element={<TraditionPage />} />
 
                   {/* Teacher Auth */}
                   <Route path="/login" element={<LoginPage />} />
@@ -143,6 +146,7 @@ export const App: React.FC = () => {
                     <Route path="quizzes/:quizId" element={<QuizEditorPage />} />
                     <Route path="remediation" element={<RemediationHubPage />} />
                     <Route path="tests" element={<PracticeListPage testsOnly />} />
+                    <Route path="tradition" element={<TraditionManagerPage />} />
                     <Route path="practice" element={<PracticeListPage />} />
                     <Route path="practice/new" element={<PracticeEditorPage />} />
                     <Route path="practice/:practiceSetId" element={<PracticeMonitorPage />} />
