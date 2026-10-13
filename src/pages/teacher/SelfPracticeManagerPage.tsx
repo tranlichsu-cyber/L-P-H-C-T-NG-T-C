@@ -19,10 +19,45 @@ export function SelfPracticeManagerPage(){
  const [scienceConfirm,setScienceConfirm]=useState(false),[scienceResult,setScienceResult]=useState('');
  const scienceQuizzes=quizzes.filter(q=>q.subject.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()==='khoa hoc' && q.questions.length>0);
  const [writingFiles,setWritingFiles]=useState<File[]>([]),[writingProgress,setWritingProgress]=useState('');
+ const emptyQuizzes=quizzes.filter(q=>q.questions.length===0);
+ const publishedEmpty=items.filter(q=>q.questions.length===0);
+ const outdatedPublished=items.filter(item=>{
+  const original=quizzes.find(q=>item.id===item.teacherId+'_'+q.id);
+  return original&&original.questions.length!==item.questions.length;
+ });
+ const normalized=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().trim();
+ const duplicateWriting=new Map<string,SelfPracticeQuiz[]>();
+ items.filter(item=>normalized(item.subject)==='tap lam van').forEach(item=>{
+  const week=normalized(item.title).match(/(?:^|\s)tuan\s*0*(\d{1,2})/);
+  if(!week)return;
+  const key=(item.grade.match(/[1-5]/)?.[0]||item.grade)+'-tuan-'+Number(week[1])+'-'+(item.category||'PRACTICE');
+  duplicateWriting.set(key,[...(duplicateWriting.get(key)||[]),item]);
+ });
+ const duplicates=[...duplicateWriting.values()].filter(group=>group.length>1);
  const quiz=quizzes.find(q=>q.id===selected);
  const load=useCallback(async()=>{try{setItems(await SelfPracticeService.list(false));setError('');}catch{setError('Không tải được các bộ đề đã công khai.');}finally{setLoading(false);}},[]);
  useEffect(()=>{let active=true;SelfPracticeService.list(false).then(data=>{if(active)setItems(data);}).catch(()=>{if(active)setError('Không tải được các bộ đề đã công khai.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
  return <div className="space-y-5"><h1 className="font-black text-2xl text-sky-900">QUẢN LÝ TỰ LUYỆN</h1><section className="bg-sky-50 border border-sky-200 rounded-2xl p-5 space-y-3"><p>Học sinh chọn lớp, môn và làm bài không cần mã. Điểm tự luyện chỉ hiển thị trên thiết bị của học sinh.</p><Link to="/tu-luyen" target="_blank" className="underline font-bold text-sky-800">Mở trang Tự luyện dành cho học sinh ↗</Link><p>Bốn bộ câu hỏi Giáo dục địa phương đã công khai được hiển thị sẵn. Các bộ đề riêng chỉ xuất hiện sau khi thầy/cô chọn công khai.</p></section>
+ <section className="rounded-2xl border-2 border-sky-200 bg-sky-50 p-5 space-y-3" aria-labelledby="data-health-heading">
+  <h2 id="data-health-heading" className="text-xl font-black text-sky-950">Kiểm tra chất lượng Ngân hàng và Tự luyện</h2>
+  <p className="text-sm text-sky-900">Báo cáo chỉ đọc, không tự xóa hoặc sửa bất kỳ dữ liệu Firebase nào. Bộ trùng trên giao diện học sinh được ẩn, nhưng bản gốc vẫn được giữ.</p>
+  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+   <div className="rounded-xl bg-white p-3 border border-sky-100"><p className="text-sm">Bộ trong Ngân hàng</p><p className="text-2xl font-black">{quizzes.length}</p></div>
+   <div className="rounded-xl bg-white p-3 border border-amber-100"><p className="text-sm">Bộ gốc chưa có câu</p><p className="text-2xl font-black text-amber-800">{emptyQuizzes.length}</p></div>
+   <div className="rounded-xl bg-white p-3 border border-rose-100"><p className="text-sm">Bản công khai 0 câu</p><p className="text-2xl font-black text-rose-800">{publishedEmpty.length}</p></div>
+   <div className="rounded-xl bg-white p-3 border border-violet-100"><p className="text-sm">Nhóm Tập làm văn trùng</p><p className="text-2xl font-black text-violet-800">{duplicates.length}</p></div>
+  </div>
+  {(emptyQuizzes.length>0||publishedEmpty.length>0||duplicates.length>0||outdatedPublished.length>0)&&<details className="rounded-xl bg-white border border-sky-100 p-4">
+   <summary className="cursor-pointer font-bold text-sky-900">Xem chi tiết các vấn đề cần xử lý</summary>
+   <div className="mt-3 max-h-64 overflow-auto text-sm space-y-2">
+    {emptyQuizzes.slice(0,30).map(q=><p key={q.id} className="text-amber-900">Ngân hàng rỗng: {q.title} ({q.grade})</p>)}
+    {publishedEmpty.slice(0,30).map(q=><p key={q.id} className="text-rose-800">Đã công khai nhưng rỗng: {q.title}</p>)}
+    {duplicates.map((group,i)=><p key={i} className="text-violet-800">Trùng tuần: {group[0].title} ({group.length} bản, giữ nguyên dữ liệu)</p>)}
+    {outdatedPublished.slice(0,30).map(q=><p key={q.id} className="text-sky-800">Cần công khai lại sau khi sửa: {q.title}</p>)}
+   </div>
+  </details>}
+  <p className="text-xs text-slate-600">Các số liệu trên phản ánh dữ liệu đã tải về trong phiên hiện tại. Làm mới trang để đối chiếu sau khi nhập hoặc sửa đề.</p>
+ </section>
  <section className="bg-white border-2 border-amber-200 rounded-2xl p-5 space-y-3"><h2 className="font-black text-xl text-amber-900">Nhập đề thi từ Excel (mẫu riêng)</h2><p>Độc lập với mẫu bài tập. Đề có tên, môn, lớp, thời gian, điểm từng câu và đáp án. Kiểm tra tổng điểm trước khi công khai.</p><Button variant="outline" disabled={busy} onClick={()=>downloadExamTemplate()}>Tải mẫu nhập đề thi (.xlsx)</Button><label className="block font-bold">Nhập đề thi<input type="file" accept=".xlsx" disabled={busy} className="block mt-2 w-full" onChange={async e=>{const f=e.target.files?.[0];e.target.value='';if(!f)return;setImportError('');setImportedExam(null);setBusy(true);try{const uid=auth?.currentUser?.uid;if(!uid)throw new Error('Cần đăng nhập giáo viên để nhập đề thi.');setImportedExam(await readExamFile(f,uid));}catch(err){setImportError((err as Error).message);}finally{setBusy(false);}}}/></label>{importError&&<p role="alert" className="text-red-800">{importError}</p>}{importedExam&&<div className="rounded-xl border border-amber-200 p-4 space-y-2"><p className="font-bold">{importedExam.quiz.title}</p><p>{importedExam.quiz.subject} • {importedExam.quiz.grade} • {importedExam.quiz.questions.length} câu • {importedExam.durationMinutes} phút • {importedExam.totalPoints} điểm</p>{importedExam.warnings.map((w,i)=><p key={i} className="text-amber-800">{w}</p>)}<p className="text-sm">Kiểm tra lại nội dung và đáp án trước khi công khai. Đề sẽ xuất hiện trực tiếp ở mục Đề thi của học sinh.</p><Button disabled={busy} onClick={async()=>{if(!importedExam)return;setBusy(true);try{await SelfPracticeService.publish(importedExam.quiz,'EXAM',importedExam.durationMinutes);setImportedExam(null);await load();showToast('Đã nhập và công khai đề thi cho học sinh.','success');}catch(err){setImportError((err as Error).message);}finally{setBusy(false);}}}>Xác nhận nhập và công khai đề thi</Button></div>}</section>
  <section className="bg-white border-2 border-violet-200 rounded-2xl p-5 space-y-3">
  <h2 className="font-black text-xl text-violet-900">Nhập Tập làm văn lớp 4 theo tuần (tập 1 và tập 2)</h2><Button variant="outline" disabled={busy} onClick={()=>downloadWritingTemplate()}>Tải mẫu riêng Tập làm văn (.xlsx)</Button>
