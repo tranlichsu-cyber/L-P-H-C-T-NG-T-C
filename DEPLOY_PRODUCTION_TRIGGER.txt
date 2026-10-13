@@ -30,3 +30,5 @@ Fix newly created quiz question insertion and resume failed 35-week imports.
 Fix atomic Tập làm văn weekly quiz and question import plus Firestore permissions.
 
 Add a dedicated writing-template download for weekly Tập làm văn imports.
+
+Hide duplicate Tập làm văn self-practice cards by grade and week, preferring fuller questions.
