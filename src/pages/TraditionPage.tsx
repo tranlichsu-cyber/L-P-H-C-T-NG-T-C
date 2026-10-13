@@ -35,7 +35,16 @@ export const TraditionPage:React.FC=()=>{
   return ()=>window.removeEventListener('hashchange',syncSection);
  },[]);
  const backToQuizzes=()=>{setSelected(null);requestAnimationFrame(()=>{const heading=document.getElementById('tradition-questions');heading?.scrollIntoView({block:'start'});heading?.focus({preventScroll:true});});};
- const navClass=(section:string)=>`min-h-16 flex items-center gap-3 border-2 rounded-2xl px-4 py-3 text-base font-extrabold shadow-sm transition-all focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${activeSection===section?'bg-sky-700 border-sky-700 text-white shadow-md':'bg-white border-sky-100 text-slate-800 hover:bg-sky-50 hover:border-sky-300'}`;
+ const navColors:Record<string,string>={
+  'tradition-map':'bg-sky-50 border-sky-200 hover:bg-sky-100 hover:border-sky-400',
+  'heritage-catalog':'bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-400',
+  'material-HISTORY':'bg-amber-50 border-amber-200 hover:bg-amber-100 hover:border-amber-400',
+  'material-CULTURE':'bg-rose-50 border-rose-200 hover:bg-rose-100 hover:border-rose-400',
+  'material-IMAGE':'bg-violet-50 border-violet-200 hover:bg-violet-100 hover:border-violet-400',
+  'material-VIDEO':'bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-400',
+  'tradition-questions':'bg-lime-50 border-lime-200 hover:bg-lime-100 hover:border-lime-400',
+ };
+ const navClass=(section:string)=>`min-h-16 flex items-center gap-3 border-2 rounded-2xl px-4 py-3 text-base font-extrabold shadow-sm transition-all focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${activeSection===section?'bg-sky-700 border-sky-700 text-white shadow-md':`text-slate-800 ${navColors[section]||navColors['tradition-map']}`}`;
  const sectionIcons:Record<string,React.ReactNode>={HISTORY:<BookOpen size={23}/>,CULTURE:<Flower2 size={23}/>,IMAGE:<Images size={23}/>,VIDEO:<Clapperboard size={23}/>};
  const load=async()=>{
   setLoading(true);setError('');
