@@ -1,2 +1,2 @@
-Deploy tradition page layout matching teacher image reference.
+Deploy compact tradition page layout.
 2026-10-13
