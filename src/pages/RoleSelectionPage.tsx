@@ -119,8 +119,8 @@ export const RoleSelectionPage: React.FC = () => {
         <div className="flex flex-1 flex-col justify-center">
           <header className="text-center">
             <div className="flex items-center justify-center gap-3 sm:gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5 sm:h-20 sm:w-20">
-                <img src={currentLogo} alt="Logo trường" className="h-full w-full object-contain p-2" />
+              <div className="relative top-1 flex h-12 w-12 shrink-0 items-center justify-center sm:top-1.5 sm:h-14 sm:w-14">
+                <img src={currentLogo} alt="Logo trường" className="h-full w-full object-contain" />
               </div>
               <h1 className="min-w-0 text-left text-xl font-black leading-tight tracking-tight text-slate-950 sm:text-2xl">
                 {schoolName.toUpperCase()}
