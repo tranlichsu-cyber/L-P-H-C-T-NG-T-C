@@ -1,2 +1,2 @@
-Deploy removal of area shortcut buttons.
+Deploy interactive 92 commune SVG map.
 2026-10-13
