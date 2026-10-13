@@ -92,7 +92,7 @@ export const TeacherLayout: React.FC = () => {
   };
 
   const allNavItems = [
-    { path: '/teacher', label: 'Tổng quan', icon: LayoutDashboard, idle: 'bg-sky-50 text-sky-700 border-sky-200', active: 'bg-sky-600 text-white border-sky-600 shadow-sky-200' },
+    { path: '/teacher', label: 'Dạy học', icon: LayoutDashboard, idle: 'bg-sky-50 text-sky-700 border-sky-200', active: 'bg-sky-600 text-white border-sky-600 shadow-sky-200' },
     { path: '/teacher/classes', label: 'Quản lý lớp', icon: Users, idle: 'bg-emerald-50 text-emerald-700 border-emerald-200', active: 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-200' },
     { path: '/teacher/quizzes', label: 'Ngân hàng câu hỏi', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
     { path: '/teacher/self-practice', label: 'Tự luyện công khai', icon: BookOpen, idle: 'bg-sky-50 text-sky-800 border-sky-200', active: 'bg-sky-700 text-white border-sky-700' },
@@ -100,12 +100,13 @@ export const TeacherLayout: React.FC = () => {
     { path: '/teacher/tests', label: 'Bài kiểm tra', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
     { path: '/teacher/room', label: 'Phòng học Live', icon: Radio, idle: 'bg-rose-50 text-rose-700 border-rose-200', active: 'bg-rose-600 text-white border-rose-600 shadow-rose-200' },
     { path: '/team', label: 'Tổ chuyên môn', icon: Crown, idle: 'bg-orange-50 text-orange-700 border-orange-200', active: 'bg-orange-500 text-white border-orange-500 shadow-orange-200' },
-    { path: '/admin', label: 'Quản trị trường', icon: Building2, idle: 'bg-indigo-50 text-indigo-700 border-indigo-200', active: 'bg-indigo-700 text-white border-indigo-700 shadow-indigo-200' },
+    { path: '/admin', label: 'Tổng quan quản trị', icon: Building2, idle: 'bg-indigo-50 text-indigo-700 border-indigo-200', active: 'bg-indigo-700 text-white border-indigo-700 shadow-indigo-200' },
   ];
 
   const navItems = allNavItems.filter((item) => {
     if (item.path === '/admin') return profile?.role === 'SCHOOL_ADMIN';
-    if (item.path === '/team') return profile?.role === 'TEAM_LEADER' || profile?.role === 'SCHOOL_ADMIN';
+    // Quản trị viên quản lý tổ qua /admin/teams; trang /team vẫn giữ nguyên khi truy cập trực tiếp.
+    if (item.path === '/team') return profile?.role === 'TEAM_LEADER';
     return true;
   });
 
@@ -136,7 +137,7 @@ export const TeacherLayout: React.FC = () => {
             <nav className="hidden lg:flex items-center gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                const isActive = location.pathname === item.path || (item.path !== '/teacher' && item.path !== '/admin' && location.pathname.startsWith(item.path + '/'));
                 return (
                   <Link
                     key={item.path}
