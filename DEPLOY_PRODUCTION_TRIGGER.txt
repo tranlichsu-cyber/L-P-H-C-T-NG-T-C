@@ -1,2 +1,2 @@
-Deploy interactive 92 commune SVG map.
+Deploy names inside all 92 commune map regions.
 2026-10-13
