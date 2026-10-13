@@ -18,3 +18,5 @@ Deploy math self-practice numeric lesson ordering correction.
 Release smaller homepage subtitle beneath school name.
 
 Center subtitle under school name, independent of logo.
+
+Release bulk publication control for Science question banks.
