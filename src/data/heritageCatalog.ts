@@ -92,7 +92,7 @@ export const heritageCatalog:HeritageRecord[]=[
   "formerArea": "Đại Từ – Hùng Sơn",
   "summary": "Địa điểm ghi dấu sự ra đời Ngày Thương binh – Liệt sĩ.",
   "detail": "# Vị trí và tên gọi\nKhu di tích lịch sử quốc gia 27/7 tọa lạc tại khu vực Bàn Cờ, xã Đại Phúc, tỉnh Thái Nguyên. Đây là một địa chỉ giáo dục truyền thống gắn với sự hình thành ngày dành để tri ân thương binh, liệt sĩ trên cả nước.\n\n# Sự kiện ngày 27 tháng 7 năm 1947\nNgày 27/7/1947, khoảng 300 cán bộ, bộ đội và đại diện các tầng lớp nhân dân địa phương đã dự cuộc họp mặt tại đây và nghe công bố thư của Chủ tịch Hồ Chí Minh. Sự kiện ghi dấu sự ra đời Ngày Thương binh toàn quốc, về sau được gọi là Ngày Thương binh – Liệt sĩ.\n\n# Di tích hôm nay\nNăm 1997, nhân kỷ niệm 50 năm sự kiện, khu di tích và bia kỷ niệm được khánh thành; địa điểm được công nhận là di tích lịch sử cấp quốc gia. Không gian khu di tích có bia tưởng niệm, cây xanh, hồ nước và sân hành lễ, phục vụ hoạt động tưởng niệm và giáo dục lịch sử.\n\n# Điều em có thể làm\nKhi tham quan, em hãy đọc nội dung bia kỷ niệm, giữ trật tự và vệ sinh, tìm hiểu câu chuyện về những người đã cống hiến vì đất nước. Em có thể viết vài câu giải thích vì sao ngày 27/7 là dịp bày tỏ lòng biết ơn.",
-  "sourceUrl": "https://congan.thainguyen.gov.vn/index.php/tin-tuc/tin-hoat-dong/cong-an-xa-dai-phuc-to-chuc-cac-hoat-dong-tri-an-nhan-ky-niem-79-nam-ngay-thuong-binh-liet-si-4981.html",
+  "sourceUrl": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/di-tich-lich-su-quoc-gia-27-7-291217",
   "sourceName": "Cổng thông tin tỉnh/UBND địa phương hoặc cơ quan chuyên môn",
   "checkedAt": "2026-10-13"
  },
