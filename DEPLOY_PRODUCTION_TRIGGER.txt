@@ -1,2 +1,2 @@
-Deploy versioned map labels and safe handling of cached geometry.
+Deploy actionable commune map search results and Enter selection.
 2026-10-13
