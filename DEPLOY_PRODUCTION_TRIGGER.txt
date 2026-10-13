@@ -1,2 +1,2 @@
-Deploy names inside all 92 commune map regions.
+Deploy versioned map labels and safe handling of cached geometry.
 2026-10-13
