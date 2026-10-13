@@ -42,3 +42,5 @@ Phase 2 and 3: read-only question-bank health dashboard and student curriculum w
 Admin navigation cleanup: differentiate teaching and administration overview; hide redundant team shortcut without removing routes.
 
 Digital heritage: balanced full-width articles, structured historical biographies and verified landmark narratives. No Firebase data change.
+
+Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo and Than Sa. No Firestore data migration.
