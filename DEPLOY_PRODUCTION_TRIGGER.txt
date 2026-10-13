@@ -14,3 +14,5 @@ Release smaller borderless logo slightly lower on homepage.
 Release removal of sort explanatory line from self-practice public page.
 
 Deploy math self-practice numeric lesson ordering correction.
+
+Release smaller homepage subtitle beneath school name.
