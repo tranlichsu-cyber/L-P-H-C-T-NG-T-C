@@ -3,7 +3,7 @@ import {MapPinned,Search,ZoomIn,ZoomOut,BookOpen} from 'lucide-react';
 import {traditionMapPlaces,traditionMapSource,type TraditionMapPlace,type MapTheme} from '../../data/traditionMap';
 import {type TraditionMaterial} from '../../services/tradition/TraditionMaterials';
 import {MaterialCard} from './MaterialCard';
-const normalize=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/đ/g,'d').toLowerCase();
+const normalize=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[đĐ]/g,'d').toLowerCase();
 function PlaceStory({place,materials}:{place:TraditionMapPlace;materials:TraditionMaterial[]}){
  const [answer,setAnswer]=useState<number|null>(null);
  const related=materials.filter(m=>place.keywords.some(word=>normalize(m.title).includes(normalize(word))));

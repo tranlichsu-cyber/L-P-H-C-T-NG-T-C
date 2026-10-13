@@ -1,2 +1,2 @@
-Deploy sourced post-merger Thai Nguyen heritage story map.
+Deploy verified story map search with Vietnamese uppercase and lowercase handling.
 2026-10-13
