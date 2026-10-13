@@ -29,3 +29,22 @@ export function parseQuestionRows(rows: unknown[][]): { questions:ImportedQuesti
  });if(!questions.length && !errors.length)errors.push('File chưa có câu hỏi.');return {questions,errors};
 }
 export async function readQuestionFile(file:File){if(!/\.(xlsx|csv)$/i.test(file.name))throw new Error('Chỉ nhận file Excel .xlsx hoặc CSV .csv theo mẫu.');if(file.size>5*1024*1024)throw new Error('File vượt quá 5 MB.');const buffer=await file.arrayBuffer();const wb=/\.csv$/i.test(file.name)?XLSX.read(new TextDecoder('utf-8').decode(buffer),{type:'string',raw:true}):XLSX.read(buffer,{type:'array'});const sheet=wb.Sheets[wb.SheetNames.includes('Cau_hoi')?'Cau_hoi':wb.SheetNames[0]];return parseQuestionRows(XLSX.utils.sheet_to_json<unknown[]>(sheet,{header:1,defval:'',raw:true}));}
+
+export function downloadWritingTemplate(){
+ const wb=XLSX.utils.book_new();
+ const info=XLSX.utils.aoa_to_sheet([['MẪU TẬP LÀM VĂN – LỚP 4','Thông tin'],['Tên bộ đề','Tuần 1 – Tập làm văn lớp 4'],['Môn học','Tập làm văn'],['Lớp',4],['Tuần',1],['Học kì',1],['Chủ đề','Đoạn văn và câu chủ đề']]);
+ info['!cols']=[{wch:36},{wch:54}];
+ XLSX.utils.book_append_sheet(wb,info,'Thong_tin_TLV');
+ const questions=XLSX.utils.aoa_to_sheet([headers,
+ ['Trắc nghiệm','Câu chủ đề có tác dụng gì?','Nêu ý chính của đoạn','Chỉ nêu tên tác giả','Thay dấu chấm câu','Chỉ nêu thời gian','A','Câu chủ đề nêu nội dung chính của đoạn.',2],
+ ['Trắc nghiệm','Khi viết đoạn nêu ý kiến, em cần làm gì?','Chỉ viết một từ','Nêu ý kiến kèm lí do','Chép lại đoạn văn khác','Viết không cần dấu câu','B','Ý kiến cần có lí do giải thích phù hợp.',2]]);
+ questions['!cols']=[{wch:20},{wch:60},...Array.from({length:4},()=>({wch:32})),{wch:20},{wch:65},{wch:12}];
+ XLSX.utils.book_append_sheet(wb,questions,'Cau_hoi');
+ const writing=XLSX.utils.aoa_to_sheet([['Tuần','Nhiệm vụ thực hành viết','Tiêu chí tự kiểm tra','Ghi chú'],[1,'Viết đoạn văn nêu lí do em yêu thích một câu chuyện.','Có ý kiến, lí do rõ ràng, đúng chính tả.','Nội dung này để giáo viên nhận xét; hiện không nhập vào trình chấm tự động.']]);
+ writing['!cols']=[{wch:12},{wch:75},{wch:75},{wch:80}];
+ XLSX.utils.book_append_sheet(wb,writing,'Bai_viet');
+ const guides=XLSX.utils.aoa_to_sheet([['HƯỚNG DẪN'],['Chỉ trang Cau_hoi được nhập vào Ngân hàng câu hỏi và chấm tự động.'],['Giữ nguyên 9 tiêu đề cột và tên sheet Cau_hoi.'],['Xóa các câu ví dụ, nhập câu hỏi của từng tuần, đáp án và điểm.'],['Tổng điểm nên bằng 10.'],['Trang Bai_viet lưu nhiệm vụ viết và tiêu chí cho giáo viên; chưa hiển thị/chấm tự động.'],['Khi nhập nhiều tuần, đặt tên file Tuan_01_Tap_lam_van_4.xlsx, ..., Tuan_35_Tap_lam_van_4.xlsx.']]);
+ guides['!cols']=[{wch:110}];
+ XLSX.utils.book_append_sheet(wb,guides,'Huong_dan');
+ XLSX.writeFile(wb,'Mau_rieng_Tap_lam_van_Lop_4.xlsx');
+}
