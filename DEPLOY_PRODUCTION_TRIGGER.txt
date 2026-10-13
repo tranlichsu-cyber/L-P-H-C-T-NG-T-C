@@ -32,3 +32,5 @@ Fix atomic Tập làm văn weekly quiz and question import plus Firestore permis
 Add a dedicated writing-template download for weekly Tập làm văn imports.
 
 Hide duplicate Tập làm văn self-practice cards by grade and week, preferring fuller questions.
+
+Safety audit stage: hide empty student quizzes and normalize numeric short answers.
