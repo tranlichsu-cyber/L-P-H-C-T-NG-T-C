@@ -122,13 +122,15 @@ export const RoleSelectionPage: React.FC = () => {
               <div className="relative top-1 flex h-12 w-12 shrink-0 items-center justify-center sm:top-1.5 sm:h-14 sm:w-14">
                 <img src={currentLogo} alt="Logo trường" className="h-full w-full object-contain" />
               </div>
-              <h1 className="min-w-0 text-left text-xl font-black leading-tight tracking-tight text-slate-950 sm:text-2xl">
-                {schoolName.toUpperCase()}
-              </h1>
+              <div className="min-w-0 text-left">
+                <h1 className="text-xl font-black leading-tight tracking-tight text-slate-950 sm:text-2xl">
+                  {schoolName.toUpperCase()}
+                </h1>
+                <p className="mt-1 text-[10px] font-medium leading-snug text-slate-500 sm:text-xs">
+                  Lớp học tương tác • Hệ thống giáo dục nội bộ
+                </p>
+              </div>
             </div>
-            <p className="mt-3 text-sm font-semibold text-slate-400">
-              Lớp học tương tác • Hệ thống giáo dục nội bộ
-            </p>
           </header>
           <button type="button" onClick={()=>navigate('/tu-luyen')} className="mt-4 w-full rounded-xl bg-sky-700 hover:bg-sky-800 px-4 py-3 text-white font-bold">TỰ LUYỆN • KHÔNG CẦN MÃ</button>
           <button type="button" onClick={()=>navigate('/goc-truyen-thong')} className="mt-4 w-full rounded-xl bg-emerald-800 px-4 py-3 text-white font-bold">GÓC TRUYỀN THỐNG SỐ – THÁI NGUYÊN</button>
