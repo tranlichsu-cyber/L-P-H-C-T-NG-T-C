@@ -435,7 +435,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     const now = new Date().toISOString();
     const newQuiz: Quiz = {
-      id: `quiz-${Date.now()}`,
+      id: `quiz-${crypto.randomUUID()}`,
       teacherId,
       title: title.trim(),
       subject,
@@ -581,8 +581,6 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // --- QUESTION ACTIONS ---
   // Import copies in one atomic transaction; existing questions stay unchanged.
   const addQuestions = async (quizId: string, items: Omit<Question, 'id'>[]): Promise<void> => {
-    const target = quizzes.find((quiz) => quiz.id === quizId);
-    if (!target) throw new Error('Không tìm thấy bộ câu hỏi.');
     if (!items.length) return;
     if (items.length > 400) throw new Error('Mỗi lần thêm tối đa 400 câu hỏi.');
     const now = new Date().toISOString();
@@ -593,7 +591,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const quizRef = doc(firestore, 'quizzes', quizId);
         const snapshot = await transaction.get(quizRef);
         if (!snapshot.exists()) throw new Error('Bộ câu hỏi đã bị xoá.');
-        const count = snapshot.data().questionCount ?? target.questions.length;
+        const count = snapshot.data().questionCount ?? 0;
         added.forEach((item, index) => transaction.set(
           doc(firestore, 'quizzes', quizId, 'questions', item.id),
           sanitizeFirestoreData({ ...item, order: count + index, createdAt: now, updatedAt: now })
