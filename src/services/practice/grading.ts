@@ -19,9 +19,10 @@ export function gradePractice(questions: PracticeQuestion[], answers: Record<str
       const trimmed=value.trim(); const index=/^[A-D]$/i.test(trimmed)?trimmed.toUpperCase().charCodeAt(0)-65:-1;
       return index>=0 && q.options?.[index]!==undefined?q.options[index]:value;
     };
+    const comparable=(value:string)=>{const normalized=normalize(value);if(!['SHORT_ANSWER','FILL_BLANK'].includes(q.type))return normalized;const compact=normalized.replace(/[\u00a0\u202f\s]/g,'');return /^[+-]?\d+(?:[.,]\d+)?$/.test(compact)?compact.replace(',','.'):normalized;};
     const isCorrect=Boolean(answer.trim()) && (q.type==='MULTIPLE_CHOICE'
       ? normalize(optionValue(answer))===normalize(optionValue(q.correctAnswer))
-      : normalize(answer)===normalize(q.correctAnswer));
+      : comparable(answer)===comparable(q.correctAnswer));
     const maxPoints=questionPoints(q);
     return {questionId:q.id,content:q.content,answer,correctAnswer:q.correctAnswer,explanation:q.explanation || '',isCorrect,maxPoints,earnedPoints:isCorrect?maxPoints:0};
   });
