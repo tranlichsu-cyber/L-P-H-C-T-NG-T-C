@@ -6,3 +6,5 @@ Deploy timed exam section in self practice: countdown, auto submit, 10-point gra
 Release separate exam Excel import workflow and template; preserve practice import.
 
 Release week and lesson ordering for self practice cards.
+
+Release homepage logo aligned before school name.
