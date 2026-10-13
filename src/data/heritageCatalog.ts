@@ -1,6 +1,6 @@
 export interface HeritageRecord {
  id:string;name:string;commune:string;address:string;kind:'Lịch sử'|'Văn hóa'|'Khảo cổ';
- formerArea:string;summary:string;sourceUrl:string;sourceName:string;checkedAt:string;
+ formerArea:string;summary:string;detail?:string;sourceUrl:string;sourceName:string;checkedAt:string;
  mapAreaId?:string;addressSourceUrl?:string;
 }
 export const heritageCatalog:HeritageRecord[]=[
@@ -39,6 +39,7 @@ export const heritageCatalog:HeritageRecord[]=[
   "kind": "Lịch sử",
   "formerArea": "Phổ Yên",
   "summary": "Nơi tưởng nhớ Lý Nam Đế, gắn với quê hương của người lập Nhà nước Vạn Xuân.",
+  "detail": "# Dấu ấn lịch sử\nĐền Mục là di tích thờ Lý Nam Đế, tên thật là Lý Bí (503–548), người lãnh đạo cuộc khởi nghĩa chống nhà Lương năm 542. Sau thắng lợi của cuộc khởi nghĩa, năm 544 ông lên ngôi Hoàng đế và đặt tên nước là Vạn Xuân. Sự kiện này thể hiện ý chí độc lập, tự chủ của dân tộc trong thời kỳ Bắc thuộc.\n\n# Nhân vật gắn với di tích\nTheo giới thiệu của Cổng thông tin tỉnh Thái Nguyên, tư liệu lịch sử và truyền thống địa phương gắn quê hương Lý Bí với làng Cổ Pháp xưa, nay thuộc phường Vạn Xuân. Người dân lập đền để tưởng nhớ công lao của ông. Khi tìm hiểu về Lý Nam Đế, học sinh cần ghi nhớ hai mốc: năm 542 khởi nghĩa và năm 544 thành lập nước Vạn Xuân.\n\n# Giá trị di sản\nĐền Mục được xếp hạng di tích lịch sử quốc gia năm 2014. Công trình được tu bổ, tôn tạo và khánh thành vào ngày 02/11/2024. Ngày nay, đây là địa chỉ tìm hiểu lịch sử và giáo dục lòng tự hào về truyền thống đấu tranh giành độc lập.\n\n# Em tìm hiểu thêm\nVì sao tên nước “Vạn Xuân” thể hiện khát vọng của người xưa? Em hãy kể hai việc làm góp phần giữ gìn di tích lịch sử khi tham quan.",
   "sourceUrl": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/den-muc-292477",
   "sourceName": "Cổng thông tin tỉnh/UBND địa phương hoặc cơ quan chuyên môn",
   "checkedAt": "2026-10-13",
@@ -77,6 +78,7 @@ export const heritageCatalog:HeritageRecord[]=[
   "kind": "Lịch sử",
   "formerArea": "Thành phố Thái Nguyên",
   "summary": "Nơi tưởng niệm 60 liệt sĩ thanh niên xung phong Đại đội 915, Đội 91 Bắc Thái.",
+  "detail": "# Địa điểm tưởng niệm\nKhu di tích Đại đội thanh niên xung phong 915, Đội 91 Bắc Thái, nằm tại phường Gia Sàng, tỉnh Thái Nguyên. Đây là không gian tưởng nhớ 60 thanh niên xung phong đã hy sinh khi thực hiện nhiệm vụ trong cuộc kháng chiến chống Mỹ.\n\n# Sự kiện lịch sử\nĐêm 24/12/1972, khi làm nhiệm vụ phục vụ vận chuyển hàng hóa tại khu vực ga Lưu Xá, 60 cán bộ, đội viên Đại đội 915 đã hy sinh trong trận đánh phá bằng máy bay. Sự kiện để lại mất mát rất lớn và trở thành một dấu mốc trong ký ức của người dân Thái Nguyên.\n\n# Công trình và hoạt động giáo dục\nTheo Cổng thông tin tỉnh Thái Nguyên, khu di tích có không gian tưởng niệm và trưng bày gần 350 hiện vật, tài liệu, tư liệu, giới thiệu cuộc sống, nhiệm vụ và sự hy sinh của các thanh niên xung phong. Đây là địa chỉ để thế hệ trẻ tìm hiểu lịch sử, bày tỏ lòng biết ơn với những người đã cống hiến cho đất nước.\n\n# Em suy ngẫm\nKhi đến thăm khu tưởng niệm, em nên có thái độ như thế nào? Hãy kể một hành động cụ thể để thể hiện lòng biết ơn các thế hệ đi trước.",
   "sourceUrl": "https://thainguyen.gov.vn/tin-du-lich-noi-bat/tren-50-000-luot-khach-den-tham-quan-khu-di-tich-915-258413",
   "sourceName": "Cổng thông tin tỉnh/UBND địa phương hoặc cơ quan chuyên môn",
   "checkedAt": "2026-10-13"
@@ -113,6 +115,7 @@ export const heritageCatalog:HeritageRecord[]=[
   "kind": "Lịch sử",
   "formerArea": "Thành phố Thái Nguyên",
   "summary": "Tưởng nhớ Đội Cấn và nghĩa quân trong cuộc khởi nghĩa Thái Nguyên năm 1917.",
+  "detail": "# Địa danh và sự kiện\nĐền Đội Cấn ở khu vực phố Phủ Liễn, phường Phan Đình Phùng, là nơi tưởng nhớ người lãnh đạo cuộc khởi nghĩa Thái Nguyên năm 1917 cùng các nghĩa quân. Đền được người dân dựng trước Cách mạng tháng Tám. Công trình từng bị phá hủy trong kháng chiến chống Pháp và được tỉnh trùng tu, xây dựng lại vào năm 2002.\n\n# Nhân vật lịch sử Đội Cấn\nĐội Cấn tên thật là Trịnh Văn Đạt (1881–1918). Ông từng là lính khố xanh đóng tại Thái Nguyên. Cùng với Lương Ngọc Quyến, ông lãnh đạo binh lính người Việt, tù chính trị và nhân dân đứng lên khởi nghĩa vào đêm 30/8/1917. Nghĩa quân giành quyền kiểm soát tỉnh lỵ trong những ngày đầu tháng 9/1917 và tiếp tục chiến đấu trước cuộc đàn áp của thực dân Pháp.\n\n# Ý nghĩa lịch sử\nCuộc khởi nghĩa Thái Nguyên cho thấy tinh thần phản kháng chế độ thuộc địa và lòng yêu nước của nhiều tầng lớp nhân dân. Đền Đội Cấn cùng một số di tích liên quan đến cuộc khởi nghĩa được xếp hạng di tích lịch sử quốc gia năm 1997.\n\n# Em ghi nhớ\nEm hãy nêu tên thật của Đội Cấn, năm diễn ra cuộc khởi nghĩa Thái Nguyên và ý nghĩa của việc gìn giữ ngôi đền hôm nay.",
   "sourceUrl": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/den-doi-can-297035",
   "sourceName": "Cổng thông tin tỉnh/UBND địa phương hoặc cơ quan chuyên môn",
   "checkedAt": "2026-10-13",
