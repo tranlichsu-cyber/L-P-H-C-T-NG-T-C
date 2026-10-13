@@ -8,3 +8,5 @@ Release separate exam Excel import workflow and template; preserve practice impo
 Release week and lesson ordering for self practice cards.
 
 Release homepage logo aligned before school name.
+
+Release smaller borderless logo slightly lower on homepage.
