@@ -46,11 +46,13 @@ export function SelfPracticeManagerPage(){
      let target=existing.get(item.title);
      if(!target){
       target=await addQuiz(item.title,'Tập làm văn','Khối 4','PRIVATE');
+      created++;
+     }
+     if(!target.questions.length){
       await addQuestions(target.id,item.questions.map(({points:_points,...q})=>q));
       target={...target,questions:item.questions.map((q,i)=>({...q,id:'tlv-'+item.week+'-'+(i+1)})),questionCount:item.questions.length};
-      existing.set(item.title,target);created++;
      }
-     if(!target.questions.length)throw new Error('Bộ hiện có chưa có câu hỏi.');
+     existing.set(item.title,target);
      await SelfPracticeService.publish(target,'PRACTICE');published++;
     }catch(err){problems.push(item.title+': '+((err as Error).message||'Lỗi không xác định'));}
     setWritingProgress('Đã xử lý '+(created)+' bộ mới; công khai '+published+'/'+prepared.length+'.');
