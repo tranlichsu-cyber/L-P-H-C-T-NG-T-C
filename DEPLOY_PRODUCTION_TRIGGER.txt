@@ -2,3 +2,5 @@ Deploy public self practice hub and teacher controlled quiz publication.
 2026-10-13
 
 Deploy timed exam section in self practice: countdown, auto submit, 10-point grading.
+
+Release separate exam Excel import workflow and template; preserve practice import.
