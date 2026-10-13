@@ -22,3 +22,5 @@ Center subtitle under school name, independent of logo.
 Release bulk publication control for Science question banks.
 
 Release batch import of 18 weekly Vietnamese writing quizzes into bank and self practice.
+
+Extend writing weekly Excel import to semester two weeks 19-35.
