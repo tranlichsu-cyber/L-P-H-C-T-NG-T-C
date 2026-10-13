@@ -121,7 +121,12 @@ service cloud.firestore {
 
       match /questions/{questionId} {
         allow read: if isTeacher();
-        allow create, update, delete: if canManageQuiz(quizId);
+        allow create: if canManageQuiz(quizId) || (
+          isTeacher()
+          && existsAfter(/databases/$(database)/documents/quizzes/$(quizId))
+          && getAfter(/databases/$(database)/documents/quizzes/$(quizId)).data.teacherId == request.auth.uid
+        );
+        allow update, delete: if canManageQuiz(quizId);
       }
     }
 
