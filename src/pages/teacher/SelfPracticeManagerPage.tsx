@@ -10,7 +10,7 @@ import {auth} from '../../services/firebase/firebase';
 import {downloadExamTemplate,readExamFile,type ExamImport} from '../../services/selfPractice/examImport';
 import {readQuestionFile} from '../../services/questionImport/template';
 import {db,isFirebaseConfigured} from '../../services/firebase/firebase';
-import {doc,writeBatch} from 'firebase/firestore';
+import {doc,writeBatch,getDocs,collection} from 'firebase/firestore';
 import type {Quiz,Question} from '../../types';
 export function SelfPracticeManagerPage(){
  const {quizzes}=useTeacherData(),{showToast}=useToast();
@@ -60,10 +60,13 @@ export function SelfPracticeManagerPage(){
       batch.set(doc(db,'quizzes',quizId),{teacherId:uid,title:fresh.title,subject:fresh.subject,grade:fresh.grade,questionCount:questions.length,visibility:'PRIVATE',teamId:null,createdAt:fresh.createdAt,updatedAt:now});
       questions.forEach((q,i)=>batch.set(doc(db!,'quizzes',quizId,'questions',q.id),{...q,order:i,createdAt:now,updatedAt:now}));
       await batch.commit();
+      const saved=await getDocs(collection(db,'quizzes',quizId,'questions'));
+      if(saved.size!==questions.length)throw new Error('Firebase mới lưu '+saved.size+'/'+questions.length+' câu. Không công khai bộ chưa đủ câu.');
       if(!target)created++;
       target=fresh;
      }
      existing.set(item.title,target);
+     if(!target.questions.length)throw new Error('Bộ câu hỏi còn rỗng; cần nhập lại dữ liệu.');
      await SelfPracticeService.publish(target,'PRACTICE');published++;
     }catch(err){problems.push(item.title+': '+((err as Error).message||'Lỗi không xác định'));}
     setWritingProgress('Đã xử lý '+(created)+' bộ mới; công khai '+published+'/'+prepared.length+'.');
@@ -71,7 +74,7 @@ export function SelfPracticeManagerPage(){
    await load();
    setWritingProgress('Đã tạo '+created+' bộ mới và công khai '+published+'/'+prepared.length+' tuần.'+(problems.length?' Lỗi: '+problems.join(' | '):''));
    if(!problems.length)setWritingFiles([]);
-   showToast('Đã xử lý '+published+' bộ Tập làm văn.','success');
+   showToast('Đã công khai '+published+'/'+prepared.length+' bộ Tập làm văn.',problems.length?'error':'success');
   }catch(err){setWritingProgress('Không nhập được: '+((err as Error).message||'Lỗi đọc file'));}
   finally{setBusy(false);}
  }}>Nhập vào Ngân hàng và công khai Tự luyện</Button>
