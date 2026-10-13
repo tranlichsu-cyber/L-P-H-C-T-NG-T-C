@@ -5,8 +5,22 @@ import {SelfPracticeService} from '../services/selfPractice/SelfPracticeService'
 import {matchesGrade,type SelfPracticeQuiz} from '../services/selfPractice/content';
 import {curatedTraditionQuizzes} from '../data/traditionQuizzes';
 import {TraditionQuizRunner} from '../components/tradition/TraditionQuizRunner';
-const numberAfter=(title:string,kind:'week'|'lesson')=>{const normalized=title.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase();const expression=kind==='week'?/\b(?:tuan|week)\s*(\d{1,2})\b/:/\b(?:bai|lesson)\s*(\d{1,3})\b/;const match=normalized.match(expression);return match?Number(match[1]):Number.POSITIVE_INFINITY;};
-const compareQuiz=(a:SelfPracticeQuiz,b:SelfPracticeQuiz)=>{const gradeA=Number(a.grade.match(/[1-5]/)?.[0]||99),gradeB=Number(b.grade.match(/[1-5]/)?.[0]||99);return gradeA-gradeB||a.subject.localeCompare(b.subject,'vi')||numberAfter(a.title,'week')-numberAfter(b.title,'week')||numberAfter(a.title,'lesson')-numberAfter(b.title,'lesson')||a.title.localeCompare(b.title,'vi',{numeric:true});};
+const lessonOrder=(title:string,kind:'week'|'lesson')=>{
+ const clean=title.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
+ const expression=kind==='week'?/(?:^|[^a-z])(?:tuan|week)\s*[:.\-–]?\s*0*(\d{1,2})(?!\d)/:/(?:^|[^a-z])(?:bai|lesson)\s*[:.\-–]?\s*0*(\d{1,3})(?!\d)/;
+ const match=clean.match(expression);
+ return match?Number(match[1]):Number.POSITIVE_INFINITY;
+};
+const compareQuiz=(a:SelfPracticeQuiz,b:SelfPracticeQuiz)=>{
+ const gradeA=Number(a.grade.match(/[1-5]/)?.[0]||99),gradeB=Number(b.grade.match(/[1-5]/)?.[0]||99);
+ const common=gradeA-gradeB||a.subject.localeCompare(b.subject,'vi');
+ if(common)return common;
+ // Môn Toán thường đánh số bài xuyên suốt năm học. Ưu tiên Bài 1, 2, 3... hơn Tuần.
+ const math=/^toan$/i.test(a.subject.normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+ const lesson=lessonOrder(a.title,'lesson')-lessonOrder(b.title,'lesson');
+ const week=lessonOrder(a.title,'week')-lessonOrder(b.title,'week');
+ return (math?(lesson||week):(week||lesson))||a.title.localeCompare(b.title,'vi',{numeric:true});
+};
 const builtIn:SelfPracticeQuiz[]=curatedTraditionQuizzes.map(q=>({...q,teacherId:'editorial',subject:'Giáo dục địa phương',published:true,updatedAt:'2026-10-13'}));
 export function SelfPracticePage(){
  const [items,setItems]=useState<SelfPracticeQuiz[]>(builtIn),[loading,setLoading]=useState(true),[error,setError]=useState(''),[grade,setGrade]=useState(''),[subject,setSubject]=useState(''),[search,setSearch]=useState(''),[selected,setSelected]=useState<SelfPracticeQuiz|null>(null),[retry,setRetry]=useState(0),[section,setSection]=useState<'PRACTICE'|'EXAM'>('PRACTICE');
