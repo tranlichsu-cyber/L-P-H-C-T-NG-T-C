@@ -26,3 +26,5 @@ Release batch import of 18 weekly Vietnamese writing quizzes into bank and self 
 Extend writing weekly Excel import to semester two weeks 19-35.
 
 Fix newly created quiz question insertion and resume failed 35-week imports.
+
+Fix atomic Tập làm văn weekly quiz and question import plus Firestore permissions.
