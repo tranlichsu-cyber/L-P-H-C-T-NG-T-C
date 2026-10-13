@@ -8,6 +8,8 @@ import {
   Mail,
   School,
   UserRound,
+  BookOpenCheck,
+  MapPinned,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStudentSession } from '../context/StudentSessionContext';
@@ -132,8 +134,16 @@ export const RoleSelectionPage: React.FC = () => {
               </div>
             </div>
           </header>
-          <button type="button" onClick={()=>navigate('/tu-luyen')} className="mt-4 w-full rounded-xl bg-sky-700 hover:bg-sky-800 px-4 py-3 text-white font-bold">TỰ LUYỆN • KHÔNG CẦN MÃ</button>
-          <button type="button" onClick={()=>navigate('/goc-truyen-thong')} className="mt-4 w-full rounded-xl bg-emerald-800 px-4 py-3 text-white font-bold">GÓC TRUYỀN THỐNG SỐ – THÁI NGUYÊN</button>
+          <nav aria-label="Khám phá nội dung học tập" className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button type="button" onClick={()=>navigate('/tu-luyen')} className="min-h-24 flex items-center gap-3 rounded-2xl border-2 border-sky-200 bg-sky-50 px-4 py-4 text-left text-sky-950 shadow-sm transition hover:bg-sky-100 focus-visible:outline-4 focus-visible:outline-sky-600">
+              <span className="shrink-0 rounded-xl bg-sky-700 p-3 text-white"><BookOpenCheck size={27} aria-hidden="true"/></span>
+              <span><strong className="block text-base font-black">Tự luyện</strong><span className="block text-xs font-semibold text-sky-800">Làm bài không cần mã</span></span>
+            </button>
+            <button type="button" onClick={()=>navigate('/goc-truyen-thong')} className="min-h-24 flex items-center gap-3 rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-4 py-4 text-left text-emerald-950 shadow-sm transition hover:bg-emerald-100 focus-visible:outline-4 focus-visible:outline-emerald-700">
+              <span className="shrink-0 rounded-xl bg-emerald-700 p-3 text-white"><MapPinned size={27} aria-hidden="true"/></span>
+              <span><strong className="block text-base font-black">Góc truyền thống số</strong><span className="block text-xs font-semibold text-emerald-800">Khám phá quê hương Thái Nguyên</span></span>
+            </button>
+          </nav>
 
           <div className="mt-5 rounded-2xl bg-slate-100 p-1.5 shadow-inner">
             <div className="grid grid-cols-2 gap-1.5">
