@@ -1,3 +1,4 @@
+import {HeritageCatalog} from './HeritageCatalog';
 import {useState} from 'react';
 import {MapPinned,Search,ZoomIn,ZoomOut,BookOpen} from 'lucide-react';
 import {traditionMapPlaces,traditionMapSource,normalizeMapText,matchingMapSites,matchesMapPlace,type TraditionMapPlace,type MapTheme} from '../../data/traditionMap';
@@ -39,5 +40,6 @@ export function TraditionStoryMap({materials}:{materials:TraditionMaterial[]}){
  {!imageError && visible.map(place=><button key={place.id} onClick={()=>pick(place)} aria-label={'Khám phá '+place.name} aria-pressed={selectedId===place.id} title={place.name} style={{left:place.x+'%',top:place.y+'%',transform:'translate(-50%,-50%)'}} className={`absolute w-8 h-8 text-sm rounded-full border-[3px] border-white font-black shadow-md focus-visible:outline-4 focus-visible:outline-amber-500 ${selectedId===place.id?'bg-amber-400 text-slate-950 ring-2 ring-sky-800 z-10':'bg-sky-800 text-white hover:bg-sky-600'}`}>{traditionMapPlaces.indexOf(place)+1}</button>)}</div></div>
  <p className="text-xs leading-5 mt-3">Nguồn: <a href={traditionMapSource.url} target="_blank" rel="noopener noreferrer" className="underline text-sky-800">{traditionMapSource.title} ↗</a><br/>Đối chiếu ngày {traditionMapSource.checked}. Bản đồ thể hiện cả khu vực Bắc Kạn trước sáp nhập.</p><a href={traditionMapSource.image} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 underline text-sm text-sky-800 mt-2"><BookOpen size={16}/>Mở ảnh bản đồ đầy đủ ↗</a></div>
  <AreaStory key={selected.id+':'+selectedSiteId} place={selected} materials={materials} initialSiteId={selectedSiteId}/></div>
+ <HeritageCatalog onOpenArea={id=>{const area=traditionMapPlaces.find(place=>place.id===id);if(area){setSearch('');setTheme('Tất cả');pick(area,'');window.location.hash='tradition-map';requestAnimationFrame(()=>document.getElementById('tradition-map')?.scrollIntoView({block:'start'}));}}}/>
  </section>;
 }
