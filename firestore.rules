@@ -272,10 +272,11 @@ service cloud.firestore {
     // Public learning copies, isolated from pupil identities and private assessment records.
     match /selfPracticeQuizzes/{quizId} {
       function validLearningCopy() {
-        return request.resource.data.keys().hasOnly(['id','teacherId','title','grade','subject','questions','published','updatedAt'])
+        return request.resource.data.keys().hasOnly(['id','teacherId','title','grade','subject','questions','published','updatedAt','category'])
           && request.resource.data.id == quizId
           && request.resource.data.teacherId == request.auth.uid
           && request.resource.data.published == true
+          && request.resource.data.get('category','PRACTICE') in ['PRACTICE','EXAM']
           && request.resource.data.title is string && request.resource.data.title.size() > 0
           && request.resource.data.grade is string && request.resource.data.subject is string
           && request.resource.data.questions is list
