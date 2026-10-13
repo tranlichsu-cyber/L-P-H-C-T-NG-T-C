@@ -8,10 +8,10 @@ export class SelfPracticeService{
   if(isFirebaseConfigured&&db){const snap=await getDocs(query(collection(db,'selfPracticeQuizzes'),publicOnly?where('published','==',true):where('teacherId','==',auth?.currentUser?.uid||'')));return snap.docs.map(d=>({...d.data(),id:d.id} as SelfPracticeQuiz)).sort((a,b)=>a.title.localeCompare(b.title,'vi'));}
   const items=JSON.parse(localStorage.getItem(key)||'[]') as SelfPracticeQuiz[];return items.filter(i=>publicOnly?i.published:i.teacherId===(auth?.currentUser?.uid||'mock-teacher'));
  }
- static async publish(quiz:Quiz){
+ static async publish(quiz:Quiz,category:'PRACTICE'|'EXAM'='PRACTICE'){
   const uid=auth?.currentUser?.uid||(isFirebaseConfigured?'':'mock-teacher');
   if(isFirebaseConfigured&&db){const profile=await getDoc(doc(db,'users',uid));if(quiz.teacherId!==uid&&profile.data()?.role!=='SCHOOL_ADMIN')throw new Error('Chỉ công khai bộ đề do thầy/cô quản lý.');}
-  const item=publicQuizCopy(quiz,uid);
+  const item=publicQuizCopy(quiz,uid,category);
   if(isFirebaseConfigured&&db)await setDoc(doc(db,'selfPracticeQuizzes',item.id),item);else localStorage.setItem(key,JSON.stringify([item,...(await this.list(false)).filter(i=>i.id!==item.id)]));
  }
  static async remove(id:string){if(isFirebaseConfigured&&db)await deleteDoc(doc(db,'selfPracticeQuizzes',id));else localStorage.setItem(key,JSON.stringify((await this.list(false)).filter(i=>i.id!==id)));}
