@@ -9,8 +9,11 @@ import {Button} from '../../components/common/Button';
 import {auth} from '../../services/firebase/firebase';
 import {downloadExamTemplate,readExamFile,type ExamImport} from '../../services/selfPractice/examImport';
 import {readQuestionFile} from '../../services/questionImport/template';
+import {db,isFirebaseConfigured} from '../../services/firebase/firebase';
+import {doc,writeBatch} from 'firebase/firestore';
+import type {Quiz,Question} from '../../types';
 export function SelfPracticeManagerPage(){
- const {quizzes,addQuiz,addQuestions}=useTeacherData(),{showToast}=useToast();
+ const {quizzes}=useTeacherData(),{showToast}=useToast();
  const [items,setItems]=useState<SelfPracticeQuiz[]>([]),[category,setCategory]=useState<'PRACTICE'|'EXAM'>('PRACTICE'),[durationMinutes,setDurationMinutes]=useState(30),[selected,setSelected]=useState(''),[confirm,setConfirm]=useState(false),[busy,setBusy]=useState(false),[removeId,setRemoveId]=useState<string|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  const [importedExam,setImportedExam]=useState<ExamImport|null>(null),[importError,setImportError]=useState('');
  const [scienceConfirm,setScienceConfirm]=useState(false),[scienceResult,setScienceResult]=useState('');
@@ -44,13 +47,21 @@ export function SelfPracticeManagerPage(){
    for(const item of prepared){
     try{
      let target=existing.get(item.title);
-     if(!target){
-      target=await addQuiz(item.title,'Tập làm văn','Khối 4','PRIVATE');
-      created++;
-     }
-     if(!target.questions.length){
-      await addQuestions(target.id,item.questions.map(({points:_points,...q})=>q));
-      target={...target,questions:item.questions.map((q,i)=>({...q,id:'tlv-'+item.week+'-'+(i+1)})),questionCount:item.questions.length};
+     const uid=auth?.currentUser?.uid;
+     if(!uid)throw new Error('Phiên đăng nhập giáo viên không còn hiệu lực.');
+     if(!target || !target.questions.length){
+      if(!isFirebaseConfigured||!db)throw new Error('Không có kết nối Firebase để lưu bộ câu hỏi.');
+      if(target?.teacherId && target.teacherId!==uid)throw new Error('Bộ đã có thuộc tài khoản khác; không thể ghi đè.');
+      const quizId=target?.id||'tlv4-'+uid+'-week-'+item.week;
+      const now=new Date().toISOString();
+      const questions:Question[]=item.questions.map(({points:_points,...q},i)=>({...q,id:'tlv4-week-'+item.week+'-question-'+(i+1)}));
+      const fresh:Quiz={id:quizId,teacherId:uid,title:item.title,subject:'Tập làm văn',grade:'Khối 4',questionCount:questions.length,questions,createdAt:target?.createdAt||now,visibility:'PRIVATE'};
+      const batch=writeBatch(db);
+      batch.set(doc(db,'quizzes',quizId),{teacherId:uid,title:fresh.title,subject:fresh.subject,grade:fresh.grade,questionCount:questions.length,visibility:'PRIVATE',teamId:null,createdAt:fresh.createdAt,updatedAt:now});
+      questions.forEach((q,i)=>batch.set(doc(db!,'quizzes',quizId,'questions',q.id),{...q,order:i,createdAt:now,updatedAt:now}));
+      await batch.commit();
+      if(!target)created++;
+      target=fresh;
      }
      existing.set(item.title,target);
      await SelfPracticeService.publish(target,'PRACTICE');published++;
