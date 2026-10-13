@@ -40,3 +40,5 @@ Phase 1 school UI upgrade: home learning cards, practice loading/refresh, stable
 Phase 2 and 3: read-only question-bank health dashboard and student curriculum week 1-35 filter. No data deletions.
 
 Admin navigation cleanup: differentiate teaching and administration overview; hide redundant team shortcut without removing routes.
+
+Digital heritage: balanced full-width articles, structured historical biographies and verified landmark narratives. No Firebase data change.
