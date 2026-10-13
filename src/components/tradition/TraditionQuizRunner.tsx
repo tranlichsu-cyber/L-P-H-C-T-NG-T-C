@@ -5,11 +5,17 @@ import { gradePractice } from '../../services/practice/grading';
 import type { PracticeResult } from '../../services/practice/types';
 import type { TraditionQuizContent } from '../../services/tradition/TraditionService';
 
-export function TraditionQuizRunner({ quiz, onBack, mode='tradition' }: { quiz: TraditionQuizContent; onBack: () => void; mode?:'tradition'|'practice' }) {
+export function TraditionQuizRunner({ quiz, onBack, mode='tradition', durationMinutes }: { quiz: TraditionQuizContent; onBack: () => void; mode?:'tradition'|'practice'; durationMinutes?:number }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [result, setResult] = useState<PracticeResult | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const exam = mode==='practice' && typeof durationMinutes==='number' && durationMinutes>0;
+  const [deadline,setDeadline] = useState(() => Date.now() + (durationMinutes || 0)*60000);
+  const [secondsLeft,setSecondsLeft] = useState(() => Math.max(0,Math.ceil((deadline-Date.now())/1000)));
+  const [expired,setExpired] = useState(false);
+  useEffect(() => {if(!exam||result)return;const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));setSecondsLeft(left);if(left===0){setExpired(true);setResult(previous=>previous??gradePractice(quiz.questions,answers));}};tick();const timer=window.setInterval(tick,500);return()=>window.clearInterval(timer);},[exam,deadline,result,answers,quiz.questions]);
+  const submit = () => {if(!result)setResult(gradePractice(quiz.questions,answers));};
   useEffect(() => { heading.current?.focus(); }, [currentIndex, result]);
   const question = quiz.questions[currentIndex];
   const answered = quiz.questions.filter(q => answers[q.id]?.trim()).length;
@@ -19,14 +25,15 @@ export function TraditionQuizRunner({ quiz, onBack, mode='tradition' }: { quiz: 
   return <section aria-label={mode==='practice'?'Làm bài tự luyện':'Làm câu hỏi tương tác'} className="mx-auto max-w-3xl space-y-5">
     <button type="button" className={`${buttonClass} flex items-center gap-2 bg-white border-2 border-sky-200 text-sky-900`} onClick={onBack}><ArrowLeft size={20} aria-hidden="true"/>Chọn bộ câu hỏi khác</button>
     <h2 className="text-2xl sm:text-3xl font-black text-sky-950">{quiz.title}</h2>
+    {exam&&!result&&<div role="timer" aria-label="Thời gian còn lại" className={`rounded-2xl p-4 text-xl font-black ${secondsLeft<=60?'bg-red-100 text-red-900':'bg-amber-100 text-amber-950'}`}>⏳ Còn lại: {String(Math.floor(secondsLeft/60)).padStart(2,'0')}:{String(secondsLeft%60).padStart(2,'0')}</div>}
     {result ? <>
       <div role="status" className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-6 sm:p-8 text-center space-y-3">
         <Trophy className="mx-auto text-amber-600" size={44} aria-hidden="true"/>
-        <h3 ref={heading} tabIndex={-1} className="text-2xl font-black outline-none">Em đã hoàn thành!</h3>
+        <h3 ref={heading} tabIndex={-1} className="text-2xl font-black outline-none">{expired?'Đã hết giờ! Bài được tự động nộp.':'Em đã hoàn thành!'}</h3>
         {mode==='practice'&&<p className="text-2xl font-black">Điểm tự luyện: {result.maxPoints?Math.round(result.earnedPoints/result.maxPoints*100)/10:0}/10</p>}
         <p className="text-xl font-bold text-emerald-900">Em trả lời đúng {result.correctCount}/{result.totalCount} câu</p>
         <p className="text-lg">{result.correctCount === result.totalCount ? (mode==='practice'?'Rất tốt! Em hãy tiếp tục luyện tập nhé.':'Rất tốt! Em hãy tiếp tục khám phá quê hương nhé.') : (mode==='practice'?'Em hãy xem lời giải và thử lại nhé.':'Em hãy xem lời giải để hiểu thêm về quê hương nhé.')}</p>
-        <button type="button" className={`${buttonClass} inline-flex gap-2 items-center bg-sky-700 text-white hover:bg-sky-800`} onClick={() => { setAnswers({}); setCurrentIndex(0); setResult(null); }}><RotateCcw size={20} aria-hidden="true"/>Làm lại</button>
+        <button type="button" className={`${buttonClass} inline-flex gap-2 items-center bg-sky-700 text-white hover:bg-sky-800`} onClick={() => { setAnswers({}); setCurrentIndex(0); setResult(null); setExpired(false); const end=Date.now()+(durationMinutes||0)*60000;setDeadline(end);setSecondsLeft(Math.ceil((end-Date.now())/1000)); }}><RotateCcw size={20} aria-hidden="true"/>Làm lại</button>
       </div>
       <h3 className="text-xl font-bold">Cùng xem lại đáp án</h3>
       {quiz.questions.map((q, index) => <details key={q.id} className="rounded-2xl border-2 border-slate-200 bg-white p-4">
@@ -52,7 +59,8 @@ export function TraditionQuizRunner({ quiz, onBack, mode='tradition' }: { quiz: 
       </div>
       <div className="flex flex-wrap justify-between gap-3">
         <button type="button" disabled={currentIndex === 0} className={`${buttonClass} flex gap-2 items-center bg-white border-2 border-slate-200 disabled:opacity-40`} onClick={() => setCurrentIndex(index => index - 1)}><ArrowLeft size={20} aria-hidden="true"/>Câu trước</button>
-        {currentIndex < quiz.questions.length - 1 ? <button type="button" disabled={!answers[question.id]?.trim()} className={`${buttonClass} flex gap-2 items-center bg-sky-700 text-white hover:bg-sky-800 disabled:bg-slate-200 disabled:text-slate-500`} onClick={() => setCurrentIndex(index => index + 1)}>Câu tiếp theo<ArrowRight size={20} aria-hidden="true"/></button> : <button type="button" disabled={answered !== quiz.questions.length} className={`${buttonClass} bg-emerald-700 text-white hover:bg-emerald-800 disabled:bg-slate-200 disabled:text-slate-500`} onClick={() => setResult(gradePractice(quiz.questions, answers))}>Xem kết quả</button>}
+        {currentIndex < quiz.questions.length - 1 ? <button type="button" disabled={!exam&&!answers[question.id]?.trim()} className={`${buttonClass} flex gap-2 items-center bg-sky-700 text-white hover:bg-sky-800 disabled:bg-slate-200 disabled:text-slate-500`} onClick={() => setCurrentIndex(index => index + 1)}>Câu tiếp theo<ArrowRight size={20} aria-hidden="true"/></button> : <button type="button" disabled={!exam&&answered !== quiz.questions.length} className={`${buttonClass} bg-emerald-700 text-white hover:bg-emerald-800 disabled:bg-slate-200 disabled:text-slate-500`} onClick={submit}>{exam?'Nộp bài':'Xem kết quả'}</button>}
+        {exam&&<button type="button" onClick={submit} className={`${buttonClass} bg-amber-500 text-slate-950 hover:bg-amber-400`}>Nộp bài ngay ({answered}/{quiz.questions.length} câu)</button>}
       </div>
     </> : <p>Bộ câu hỏi đang được chuẩn bị.</p>}
   </section>;
