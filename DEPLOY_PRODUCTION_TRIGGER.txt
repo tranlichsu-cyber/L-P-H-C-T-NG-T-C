@@ -1,2 +1,2 @@
-Deploy compact tradition page layout.
+Restore compact tradition page with left category sidebar.
 2026-10-13
