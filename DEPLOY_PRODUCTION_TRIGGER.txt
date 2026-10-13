@@ -36,3 +36,5 @@ Hide duplicate Tập làm văn self-practice cards by grade and week, preferring
 Safety audit stage: hide empty student quizzes and normalize numeric short answers.
 
 Phase 1 school UI upgrade: home learning cards, practice loading/refresh, stable offline banner. No data migration.
+
+Phase 2 and 3: read-only question-bank health dashboard and student curriculum week 1-35 filter. No data deletions.
