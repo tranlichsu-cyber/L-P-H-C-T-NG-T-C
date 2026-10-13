@@ -9,6 +9,8 @@ export interface TraditionMapPlace {
  id:string; name:string; region:string; x:number; y:number; theme:MapTheme;
  title:string; story:string; culture:string; task:string; keywords:string[];
  sources:{title:string;url:string}[];
+ sites?:TraditionMapSite[];
+ image?:{url:string;caption:string};
  question:{text:string;options:string[];correct:number;explanation:string};
 }
 export const traditionMapPlaces:TraditionMapPlace[]=[
@@ -26,3 +28,262 @@ export const traditionMapPlaces:TraditionMapPlace[]=[
  {id:'nghia-ta',name:'Xã Nghĩa Tá',region:'Khu vực huyện Chợ Đồn, tỉnh Bắc Kạn trước sắp xếp',x:16.8,y:49.7,theme:'Lịch sử',title:'Nà Pậu – một địa chỉ về nguồn',story:'Di tích Nà Pậu ở thôn Thành Công, xã Nghĩa Tá thuộc quần thể ATK Chợ Đồn. Nơi đây gắn với Chủ tịch Hồ Chí Minh trong thời kỳ kháng chiến chống thực dân Pháp.',culture:'Các hoạt động dâng hương, báo công và về nguồn góp phần giáo dục lòng biết ơn. Khi đọc tư liệu cũ ghi Bắc Kạn, em cần nhớ rằng địa điểm này hiện thuộc tỉnh Thái Nguyên sau sáp nhập.',task:'Em hãy viết một câu thể hiện lòng biết ơn khi tìm hiểu địa chỉ đỏ.',keywords:['Nà Pậu','ATK Chợ Đồn','Chợ Đồn'],sources:[{title:'UBND xã Nghĩa Tá: Dâng hương tại Nà Pậu (28/08/2026)',url:'https://nghiata.thainguyen.gov.vn/hoat-dong-dang-uy/xa-nghia-ta-to-chuc-le-dang-huong-bao-cong-tai-khu-di-tich-lich-su-quoc-gia-na-pau-290530'},{title:'UBND xã Nghĩa Tá: Di tích Nà Pậu (01/01/2026)',url:'https://nghiata.thainguyen.gov.vn/hoat-dong-ubnd/dong-chi-hoang-duy-chinh-tham-va-dang-huong-tai-di-tich-lich-su-na-pau-233944'}],question:{text:'Di tích Nà Pậu hiện thuộc xã nào?',options:['Thần Sa','Vạn Phú','Tân Cương','Nghĩa Tá'],correct:3,explanation:'Di tích Nà Pậu ở thôn Thành Công, xã Nghĩa Tá, tỉnh Thái Nguyên.'}},
  {id:'ba-be',name:'Xã Ba Bể',region:'Khu vực huyện Ba Bể, tỉnh Bắc Kạn trước sắp xếp',x:27.6,y:22.9,theme:'Thiên nhiên',title:'Miền hồ xanh và văn hóa cộng đồng',story:'Hồ Ba Bể nằm giữa núi rừng, là một hồ nước ngọt tự nhiên nổi tiếng. Sau sáp nhập, em có thể khám phá miền hồ này trong hành trình tìm hiểu tỉnh Thái Nguyên.',culture:'Lễ hội Lồng Tồng tại thôn Bó Lù, xã Ba Bể là dịp cộng đồng gặp gỡ đầu xuân. Cảnh quan hồ và các hoạt động văn hóa cùng tạo nên nét đặc sắc của miền đất này.',task:'Nêu hai việc em cần làm để giữ hồ và đường làng sạch đẹp.',keywords:['Ba Bể'],sources:[{title:'Cổng thông tin tỉnh: Xã Ba Bể sẵn sàng cho mùa du lịch 2026',url:'https://thainguyen.gov.vn/di-va-den-thai-nguyen/xa-ba-be-san-sang-cho-mua-du-lich-2026-tinh-thai-nguyen-262959'},{title:'Hội Nhà báo tỉnh: Lễ hội Lồng Tồng tại Bó Lù (2026)',url:'https://hoinhabao.thainguyen.gov.vn/vi/news/chinh-tri-thoi-su/thong-nhat-ke-hoach-to-chuc-hoi-bao-xuan-binh-ngo-2026-cung-le-hoi-long-tong-ba-be-4318.html'}],question:{text:'Hồ Ba Bể là loại hồ nào?',options:['Hồ nước ngọt tự nhiên','Hồ nước mặn ven biển','Bể bơi nhân tạo','Hồ chứa trong nhà máy'],correct:0,explanation:'Ba Bể là hồ nước ngọt tự nhiên giữa núi rừng.'}},
 ];
+
+export interface TraditionMapSite {
+ id:string; title:string; address:string; theme:MapTheme;
+ story:string; culture:string; task:string; keywords:string[];
+ sources:TraditionMapPlace['sources']; question:TraditionMapPlace['question'];
+ image?:{url:string;caption:string};
+}
+
+// Local destinations are grouped by their verified current administrative area.
+const localDestinations:Record<string,TraditionMapSite[]>={
+ "song-cong": [
+  {
+   "id": "quang-truong-1-7",
+   "title": "Quảng trường 1/7 và Phố đi bộ Sông Công",
+   "address": "Phường Sông Công, tỉnh Thái Nguyên",
+   "theme": "Văn hóa",
+   "story": "Quảng trường 1/7 là một không gian sinh hoạt cộng đồng của Sông Công. Ngày 18/9/2026, địa phương khai trương phố đi bộ tại khu vực quảng trường, phố Nguyễn Khuyến và một số vị trí trên các tuyến đường lân cận.",
+   "culture": "Các hoạt động văn nghệ, giới thiệu sản phẩm địa phương và giao lưu cộng đồng góp phần làm phong phú đời sống văn hóa. Đây là nơi em có thể quan sát sự thay đổi của quê hương hôm nay.",
+   "task": "Em hãy giới thiệu quảng trường trong hai câu và nêu một việc giúp giữ nơi công cộng sạch đẹp.",
+   "keywords": [
+    "Quảng trường 1/7",
+    "Phố đi bộ Sông Công"
+   ],
+   "sources": [
+    {
+     "title": "Cổng thông tin tỉnh: Khai trương Phố đi bộ Sông Công (18/09/2026)",
+     "url": "https://thainguyen.gov.vn/tin-hoat-dong-cua-don-vi/khai-truong-pho-di-bo-song-cong-295033"
+    }
+   ],
+   "question": {
+    "text": "Không gian nào gắn với Phố đi bộ Sông Công được khai trương năm 2026?",
+    "options": [
+     "Quảng trường 1/7",
+     "Mái đá Ngườm",
+     "Di tích Nà Pậu",
+     "Hồ Ba Bể"
+    ],
+    "correct": 0,
+    "explanation": "Phố đi bộ Sông Công được bố trí tại khu vực Quảng trường 1/7 và một số tuyến phố lân cận."
+   }
+  }
+ ],
+ "tan-cuong": [
+  {
+   "id": "cang-ba-van",
+   "title": "Căng Bá Vân – câu chuyện về lòng kiên trung",
+   "address": "Xã Tân Cương, tỉnh Thái Nguyên; trước đây thuộc xã Bình Sơn, thành phố Sông Công",
+   "theme": "Lịch sử",
+   "story": "Căng Bá Vân từng là nơi thực dân Pháp giam giữ những chiến sĩ cách mạng. Dù bị giam cầm, họ vẫn tổ chức đấu tranh và giữ vững ý chí. Di tích ngày nay giúp thế hệ sau tìm hiểu tinh thần yêu nước của cha ông.",
+   "culture": "Hoạt động về nguồn tại Căng Bá Vân thể hiện lòng biết ơn người đi trước. Khi đọc tư liệu cũ ghi Bình Sơn, Sông Công, em cần đối chiếu: địa chỉ hiện nay là xã Tân Cương.",
+   "task": "Em hãy nói một lời giới thiệu về ý nghĩa của di tích, rồi nêu một cách thể hiện sự tôn trọng khi tham quan.",
+   "keywords": [
+    "Căng Bá Vân",
+    "Bá Vân"
+   ],
+   "sources": [
+    {
+     "title": "UBND xã Tân Cương: Hành trình thăm Căng Bá Vân (11/05/2026)",
+     "url": "https://tancuong.thainguyen.gov.vn/chuyen-oi-so/sinh-hoat-chuyen-de-chuong-trinh-hanh-trinh-tham-dia-chi-do-tai-di-tich-lich-su-quoc-gia-cang-ba-van-263638"
+    }
+   ],
+   "question": {
+    "text": "Căng Bá Vân giúp em tìm hiểu điều gì?",
+    "options": [
+     "Cách chế biến chè",
+     "Cuộc đấu tranh của các chiến sĩ cách mạng",
+     "Quá trình hình thành hồ Ba Bể",
+     "Nghề dệt mành cọ"
+    ],
+    "correct": 1,
+    "explanation": "Di tích gắn với cuộc đấu tranh kiên cường của các chiến sĩ cách mạng bị giam cầm."
+   }
+  },
+  {
+   "id": "ho-ghenh-che",
+   "title": "Hồ Ghềnh Chè – giữ màu xanh quê hương",
+   "address": "Xã Tân Cương, tỉnh Thái Nguyên; khu vực Bình Sơn, Sông Công trước sắp xếp",
+   "theme": "Thiên nhiên",
+   "story": "Hồ Ghềnh Chè có mặt nước xanh, cảnh quan đồi và cây cối xung quanh. Điểm du lịch cộng đồng tại đây kết nối việc khám phá thiên nhiên với đời sống của người dân địa phương.",
+   "culture": "Du khách có thể tìm hiểu vùng chè và các sản phẩm địa phương. Giá trị của cảnh quan gắn với việc giữ sạch nước hồ, bảo vệ cây xanh và tôn trọng cuộc sống của cộng đồng.",
+   "task": "Em hãy kể hai việc giúp bảo vệ hồ. Khi tham quan, em đi cùng người lớn và làm theo hướng dẫn an toàn.",
+   "keywords": [
+    "Ghềnh Chè"
+   ],
+   "sources": [
+    {
+     "title": "Cổng thông tin tỉnh: Điểm du lịch cộng đồng hồ Ghềnh Chè (28/09/2026)",
+     "url": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/diem-du-lich-cong-dong-ho-ghenh-che-296618"
+    }
+   ],
+   "question": {
+    "text": "Việc nào giúp gìn giữ cảnh quan hồ Ghềnh Chè?",
+    "options": [
+     "Bẻ cành cây làm đồ chơi",
+     "Vứt túi nhựa xuống hồ",
+     "Bỏ rác đúng nơi quy định",
+     "Viết tên lên thân cây"
+    ],
+    "correct": 2,
+    "explanation": "Bỏ rác đúng nơi quy định giúp giữ nước hồ và cảnh quan sạch đẹp."
+   },
+   "image": {
+    "url": "https://storage-vnportal.vnpt.vn/gov-tnn/1/FileQuanTriTinTuc/image.639261826364017138.jpg",
+    "caption": "Hồ Ghềnh Chè • Ảnh trong bài của Cổng thông tin tỉnh ngày 28/09/2026."
+   }
+  },
+  {
+   "id": "khong-gian-tra",
+   "title": "Không gian văn hóa trà Tân Cương",
+   "address": "Xã Tân Cương, tỉnh Thái Nguyên",
+   "theme": "Văn hóa",
+   "story": "Không gian văn hóa trà Tân Cương giới thiệu cây chè và nghề làm chè của quê hương. Qua những câu chuyện về trồng, hái và chế biến chè, em hiểu rằng một sản phẩm quen thuộc chứa đựng nhiều tri thức và công sức.",
+   "culture": "Lễ hội Hương sắc trà xuân có hoạt động diễn diễu cây chè cổ, thi hái chè, sao chè và trao đổi về văn hóa thưởng trà. Nghề truyền thống được gìn giữ nhờ sự tiếp nối giữa các thế hệ.",
+   "task": "Em hãy đặt ba câu hỏi muốn hỏi người làm chè, trong đó có một câu về cách chăm sóc cây chè.",
+   "keywords": [
+    "Không gian văn hóa trà",
+    "Tân Cương"
+   ],
+   "sources": [
+    {
+     "title": "Cổng thông tin tỉnh: Lễ hội Hương sắc trà xuân Tân Cương (2026)",
+     "url": "https://thainguyen.gov.vn/tin-anh/khai-mac-le-hoi-truyen-thong-huong-sac-tra-xuan-vung-che-dac-san-tan-cuong-xuan-binh-ngo-nam-2026-249372"
+    }
+   ],
+   "question": {
+    "text": "Hoạt động nào gắn với nghề truyền thống ở Tân Cương?",
+    "options": [
+     "Khai quật mái đá Ngườm",
+     "Làm muối biển",
+     "Đánh bắt cá ngoài khơi",
+     "Hái chè và sao chè"
+    ],
+    "correct": 3,
+    "explanation": "Hái chè, sao chè và văn hóa thưởng trà là những hoạt động gắn với vùng chè Tân Cương."
+   }
+  },
+  {
+   "id": "thai-hai",
+   "title": "Làng nhà sàn Thái Hải – tìm hiểu văn hóa Tày, Nùng",
+   "address": "Xã Tân Cương, tỉnh Thái Nguyên",
+   "theme": "Văn hóa",
+   "story": "Khu bảo tồn Làng nhà sàn dân tộc sinh thái Thái Hải lưu giữ những ngôi nhà sàn Tày, Nùng được chuyển đến từ Định Hóa. Không gian làng và đời sống cộng đồng giúp em tìm hiểu văn hóa qua những điều cụ thể.",
+   "culture": "Bảo tồn văn hóa không chỉ là giữ một ngôi nhà. Đó còn là trân trọng cách sinh hoạt, tri thức và sự tiếp nối truyền thống trong cộng đồng. Em có thể lắng nghe người giới thiệu để hiểu ý nghĩa của đồ dùng, nếp nhà.",
+   "task": "Chọn một chi tiết em thích ở nhà sàn và hỏi người hướng dẫn về công dụng của chi tiết đó.",
+   "keywords": [
+    "Thái Hải",
+    "Nhà sàn"
+   ],
+   "sources": [
+    {
+     "title": "Cổng thông tin tỉnh: Làng nhà sàn Thái Hải (28/09/2026)",
+     "url": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/khu-bao-ton-lang-nha-san-dan-toc-sinh-thai-thai-hai-295795"
+    },
+    {
+     "title": "Cổng thông tin tỉnh: Các điểm du lịch tại xã Tân Cương (21/07/2026)",
+     "url": "https://thainguyen.gov.vn/di-va-den-thai-nguyen/tan-cuong-can-khai-thac-hieu-qua-tiem-nang-loi-the-dua-du-lich-tro-thanh-nganh-kinh-te-quan-trong-281238"
+    }
+   ],
+   "question": {
+    "text": "Những ngôi nhà sàn được bảo tồn tại Thái Hải gắn với văn hóa nào?",
+    "options": [
+     "Tày, Nùng",
+     "Chăm, Khmer",
+     "Ê Đê, Gia Rai",
+     "Mạ, Cơ Ho"
+    ],
+    "correct": 0,
+    "explanation": "Nguồn của Cổng thông tin tỉnh giới thiệu các ngôi nhà sàn Tày, Nùng tại Thái Hải."
+   },
+   "image": {
+    "url": "https://storage-vnportal.vnpt.vn/gov-tnn/1/FileQuanTriTinTuc/image.639257551871919922.jpg",
+    "caption": "Một góc bản làng Thái Hải • Ảnh trong bài của Cổng thông tin tỉnh ngày 28/09/2026."
+   }
+  }
+ ]
+};
+for(const place of traditionMapPlaces){if(localDestinations[place.id])place.sites=localDestinations[place.id];}
+traditionMapPlaces.push({
+ "id": "ba-xuyen",
+ "name": "Phường Bá Xuyên",
+ "region": "Khu vực thành phố Sông Công trước sắp xếp",
+ "x": 46.8,
+ "y": 87.5,
+ "theme": "Lịch sử",
+ "title": "Bá Xuyên – tìm hiểu một di tích gần gũi",
+ "story": "Phường Bá Xuyên thuộc khu vực Sông Công trước sắp xếp. Chùa Bá Xuyên là một địa chỉ để học sinh tìm hiểu lịch sử và việc gìn giữ truyền thống tại địa phương.",
+ "culture": "Những hoạt động chuẩn bị Hội chùa năm 2026, như dọn vệ sinh và chỉnh trang cảnh quan, thể hiện sự chung tay của cộng đồng trong bảo vệ di tích.",
+ "task": "Em hãy chọn thẻ Chùa Bá Xuyên bên trên để tìm hiểu câu chuyện và thử trả lời câu hỏi.",
+ "keywords": [
+  "Bá Xuyên"
+ ],
+ "sources": [
+  {
+   "title": "Sở VHTTDL: Bàn giao công trình tôn tạo Chùa Bá Xuyên (18/10/2023)",
+   "url": "https://sovhttdl.thainguyen.gov.vn/quy-hoach-ke-hoach-dau-tu-va-du-an/ban-giao-dua-vao-su-dung-cong-trinh-tu-sua-ton-tao-di-tich-lich-su-chua-ba-xuyen-tp-song-cong-193052"
+  },
+  {
+   "title": "UBND phường Bá Xuyên: Chuẩn bị Hội chùa năm 2026 (13/02/2026)",
+   "url": "https://baxuyen.thainguyen.gov.vn/tin-noi-bat/tich-cuc-trien-khai-cong-tac-chuan-bi-cho-hoi-chua-ba-xuyen-nam-2026-248006"
+  }
+ ],
+ "question": {
+  "text": "Chùa Bá Xuyên hiện thuộc phường nào?",
+  "options": [
+   "Phan Đình Phùng",
+   "Sông Công",
+   "Bá Xuyên",
+   "Bắc Kạn"
+  ],
+  "correct": 2,
+  "explanation": "Nguồn của UBND phường Bá Xuyên về Hội chùa năm 2026 xác nhận khu vực quản lý hiện nay là phường Bá Xuyên."
+ },
+ "sites": [
+  {
+   "id": "chua-ba-xuyen",
+   "title": "Chùa Bá Xuyên – di tích và nếp sống văn minh",
+   "address": "Phường Bá Xuyên, tỉnh Thái Nguyên",
+   "theme": "Lịch sử",
+   "story": "Chùa Bá Xuyên là di tích lịch sử cấp tỉnh, gắn với những sự kiện và nhân vật hoạt động ở Căng Bá Vân trong thời kỳ 1943–1945. Công trình được tu sửa, tôn tạo và bàn giao đưa vào sử dụng năm 2023.",
+   "culture": "Hội chùa là dịp cộng đồng gìn giữ truyền thống. Việc cùng dọn vệ sinh, bảo vệ cảnh quan và tổ chức sinh hoạt trang nghiêm thể hiện trách nhiệm của người dân với di tích.",
+   "task": "Em hãy chọn một việc nên làm khi đến di tích và giải thích vì sao.",
+   "keywords": [
+    "Chùa Bá Xuyên"
+   ],
+   "sources": [
+    {
+     "title": "Sở VHTTDL: Bàn giao công trình tôn tạo Chùa Bá Xuyên (18/10/2023)",
+     "url": "https://sovhttdl.thainguyen.gov.vn/quy-hoach-ke-hoach-dau-tu-va-du-an/ban-giao-dua-vao-su-dung-cong-trinh-tu-sua-ton-tao-di-tich-lich-su-chua-ba-xuyen-tp-song-cong-193052"
+    },
+    {
+     "title": "UBND phường Bá Xuyên: Chuẩn bị Hội chùa năm 2026 (13/02/2026)",
+     "url": "https://baxuyen.thainguyen.gov.vn/tin-noi-bat/tich-cuc-trien-khai-cong-tac-chuan-bi-cho-hoi-chua-ba-xuyen-nam-2026-248006"
+    }
+   ],
+   "question": {
+    "text": "Chùa Bá Xuyên gắn với các sự kiện và nhân vật lịch sử hoạt động ở địa điểm nào?",
+    "options": [
+     "Hồ Ba Bể",
+     "Căng Bá Vân",
+     "Mái đá Ngườm",
+     "Núi Văn – Núi Võ"
+    ],
+    "correct": 1,
+    "explanation": "Nguồn của Sở VHTTDL ghi nhận mối liên hệ giữa Chùa Bá Xuyên và các hoạt động ở Căng Bá Vân thời kỳ 1943–1945."
+   },
+   "image": {
+    "url": "https://storage-vnportal.vnpt.vn/gov-tnn/11216/ConvertFiles/documents/2474098/13374704/85.%20Di%20t%C3%ADch%20l%E1%BB%8Bch%20s%E1%BB%AD%20c%E1%BA%A5p%20t%E1%BB%89nh%20Ch%C3%B9a%20B%C3%A1%20Xuy%C3%AAn%20sau%20khi%20%C4%91%C6%B0%E1%BB%A3c%20tu%20s%E1%BB%ADa%2C%20t%C3%B4n%20t%E1%BA%A1o%20n%C4%83m%202023_8ZTJRO84.jpg",
+    "caption": "Chùa Bá Xuyên sau tu sửa, tôn tạo năm 2023 • Nguồn ảnh: Sở VHTTDL Thái Nguyên."
+   }
+  }
+ ]
+});
+export const normalizeMapText=(value:string)=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/[đĐ]/g,'d').toLowerCase();
+export function matchingMapSites(place:TraditionMapPlace,search:string,theme:MapTheme|'Tất cả'){
+ return (place.sites||[]).filter(site=>(theme==='Tất cả'||site.theme===theme)&&normalizeMapText(site.title+' '+site.address+' '+place.region+' '+site.keywords.join(' ')).includes(normalizeMapText(search)));
+}
+export function matchesMapPlace(place:TraditionMapPlace,search:string,theme:MapTheme|'Tất cả'){
+ return ((theme==='Tất cả'||place.theme===theme)&&normalizeMapText(place.name+' '+place.region+' '+place.title+' '+place.keywords.join(' ')).includes(normalizeMapText(search)))||matchingMapSites(place,search,theme).length>0;
+}

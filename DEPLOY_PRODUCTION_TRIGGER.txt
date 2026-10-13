@@ -1,2 +1,2 @@
-Deploy verified story map search with Vietnamese uppercase and lowercase handling.
+Deploy six sourced local destinations around Song Cong with current addresses.
 2026-10-13
