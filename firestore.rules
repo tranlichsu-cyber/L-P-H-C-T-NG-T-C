@@ -269,6 +269,25 @@ service cloud.firestore {
       allow delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
     }
 
+    // Public learning copies, isolated from pupil identities and private assessment records.
+    match /selfPracticeQuizzes/{quizId} {
+      function validLearningCopy() {
+        return request.resource.data.keys().hasOnly(['id','teacherId','title','grade','subject','questions','published','updatedAt'])
+          && request.resource.data.id == quizId
+          && request.resource.data.teacherId == request.auth.uid
+          && request.resource.data.published == true
+          && request.resource.data.title is string && request.resource.data.title.size() > 0
+          && request.resource.data.grade is string && request.resource.data.subject is string
+          && request.resource.data.questions is list
+          && request.resource.data.questions.size() > 0 && request.resource.data.questions.size() <= 200;
+      }
+      allow read: if resource.data.published == true || isOwner(resource.data.teacherId);
+      allow create: if isTeacher() && validLearningCopy();
+      allow update: if isOwner(resource.data.teacherId) && validLearningCopy()
+        && request.resource.data.teacherId == resource.data.teacherId;
+      allow delete: if isOwner(resource.data.teacherId);
+    }
+
     match /testCodes/{code} {
       allow get: if isAuthenticated();
       allow list: if false;

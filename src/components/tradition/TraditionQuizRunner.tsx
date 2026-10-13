@@ -5,7 +5,7 @@ import { gradePractice } from '../../services/practice/grading';
 import type { PracticeResult } from '../../services/practice/types';
 import type { TraditionQuizContent } from '../../services/tradition/TraditionService';
 
-export function TraditionQuizRunner({ quiz, onBack }: { quiz: TraditionQuizContent; onBack: () => void }) {
+export function TraditionQuizRunner({ quiz, onBack, mode='tradition' }: { quiz: TraditionQuizContent; onBack: () => void; mode?:'tradition'|'practice' }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [result, setResult] = useState<PracticeResult | null>(null);
@@ -16,15 +16,16 @@ export function TraditionQuizRunner({ quiz, onBack }: { quiz: TraditionQuizConte
   const buttonClass = 'min-h-12 rounded-2xl px-5 py-3 font-bold focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700';
   const answer = (value: string) => setAnswers(previous => ({ ...previous, [question.id]: value }));
 
-  return <section aria-label="Làm câu hỏi tương tác" className="mx-auto max-w-3xl space-y-5">
+  return <section aria-label={mode==='practice'?'Làm bài tự luyện':'Làm câu hỏi tương tác'} className="mx-auto max-w-3xl space-y-5">
     <button type="button" className={`${buttonClass} flex items-center gap-2 bg-white border-2 border-sky-200 text-sky-900`} onClick={onBack}><ArrowLeft size={20} aria-hidden="true"/>Chọn bộ câu hỏi khác</button>
     <h2 className="text-2xl sm:text-3xl font-black text-sky-950">{quiz.title}</h2>
     {result ? <>
       <div role="status" className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-6 sm:p-8 text-center space-y-3">
         <Trophy className="mx-auto text-amber-600" size={44} aria-hidden="true"/>
         <h3 ref={heading} tabIndex={-1} className="text-2xl font-black outline-none">Em đã hoàn thành!</h3>
+        {mode==='practice'&&<p className="text-2xl font-black">Điểm tự luyện: {result.maxPoints?Math.round(result.earnedPoints/result.maxPoints*100)/10:0}/10</p>}
         <p className="text-xl font-bold text-emerald-900">Em trả lời đúng {result.correctCount}/{result.totalCount} câu</p>
-        <p className="text-lg">{result.correctCount === result.totalCount ? 'Rất tốt! Em hãy tiếp tục khám phá quê hương nhé.' : 'Em hãy xem lời giải để hiểu thêm về quê hương nhé.'}</p>
+        <p className="text-lg">{result.correctCount === result.totalCount ? (mode==='practice'?'Rất tốt! Em hãy tiếp tục luyện tập nhé.':'Rất tốt! Em hãy tiếp tục khám phá quê hương nhé.') : (mode==='practice'?'Em hãy xem lời giải và thử lại nhé.':'Em hãy xem lời giải để hiểu thêm về quê hương nhé.')}</p>
         <button type="button" className={`${buttonClass} inline-flex gap-2 items-center bg-sky-700 text-white hover:bg-sky-800`} onClick={() => { setAnswers({}); setCurrentIndex(0); setResult(null); }}><RotateCcw size={20} aria-hidden="true"/>Làm lại</button>
       </div>
       <h3 className="text-xl font-bold">Cùng xem lại đáp án</h3>

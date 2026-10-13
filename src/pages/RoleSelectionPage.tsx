@@ -133,6 +133,7 @@ export const RoleSelectionPage: React.FC = () => {
               Lớp học tương tác • Hệ thống giáo dục nội bộ
             </p>
           </header>
+          <button type="button" onClick={()=>navigate('/tu-luyen')} className="mt-4 w-full rounded-xl bg-sky-700 hover:bg-sky-800 px-4 py-3 text-white font-bold">TỰ LUYỆN • KHÔNG CẦN MÃ</button>
           <button type="button" onClick={()=>navigate('/goc-truyen-thong')} className="mt-4 w-full rounded-xl bg-emerald-800 px-4 py-3 text-white font-bold">GÓC TRUYỀN THỐNG SỐ – THÁI NGUYÊN</button>
 
           <div className="mt-5 rounded-2xl bg-slate-100 p-1.5 shadow-inner">

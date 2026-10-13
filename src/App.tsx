@@ -92,6 +92,8 @@ const TeamDashboardPage = lazy(() =>
   import('./pages/team/TeamDashboardPage').then((m) => ({ default: m.TeamDashboardPage }))
 );
 const TraditionPage = lazy(()=>import('./pages/TraditionPage').then(m=>({default:m.TraditionPage})));
+const SelfPracticePage = lazy(()=>import('./pages/SelfPracticePage').then(m=>({default:m.SelfPracticePage})));
+const SelfPracticeManagerPage = lazy(()=>import('./pages/teacher/SelfPracticeManagerPage').then(m=>({default:m.SelfPracticeManagerPage})));
 const TraditionManagerPage = lazy(()=>import('./pages/teacher/TraditionManagerPage').then(m=>({default:m.TraditionManagerPage})));
 const TestJoinPage = lazy(() => import('./pages/student/TestJoinPage').then(m=>({default:m.TestJoinPage})));
 const StudentPracticeHubPage = lazy(() =>
@@ -122,6 +124,7 @@ export const App: React.FC = () => {
                 <Routes>
                   {/* Role Selection Landing */}
                   <Route path="/" element={<RoleSelectionPage />} />
+                  <Route path="/tu-luyen" element={<SelfPracticePage />} />
                   <Route path="/goc-truyen-thong" element={<TraditionPage />} />
 
                   {/* Teacher Auth */}
@@ -146,6 +149,7 @@ export const App: React.FC = () => {
                     <Route path="quizzes/:quizId" element={<QuizEditorPage />} />
                     <Route path="remediation" element={<RemediationHubPage />} />
                     <Route path="tests" element={<PracticeListPage testsOnly />} />
+                    <Route path="self-practice" element={<SelfPracticeManagerPage />} />
                     <Route path="tradition" element={<TraditionManagerPage />} />
                     <Route path="practice" element={<PracticeListPage />} />
                     <Route path="practice/new" element={<PracticeEditorPage />} />

@@ -1,0 +1,23 @@
+import fs from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import ts from 'typescript';
+async function loadTs(path){const source=await fs.readFile(new URL(path,import.meta.url),'utf8');const {outputText}=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}});return import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));}
+const {publicQuizCopy,matchesGrade}=await loadTs('../src/services/selfPractice/content.ts');
+const {gradePractice}=await loadTs('../src/services/practice/grading.ts');
+const question={id:'q1',type:'MULTIPLE_CHOICE',content:'2 + 3 bằng bao nhiêu?',options:['3','4','5','6'],correctAnswer:'C',correctPoints:5,explanation:'2 + 3 = 5.',studentName:'Private pupil'};
+const source={id:'source1',teacherId:'teacher1',title:'Ôn Toán',subject:'Toán',grade:'Lớp 2',questions:[question],assignments:{pupil:'PRIVATE'},responses:{score:'PRIVATE'},className:'PRIVATE',testCode:'123456'};
+const copy=publicQuizCopy(source,'teacher1');
+assert.equal(copy.id,'teacher1_source1');assert.equal(copy.published,true);
+for(const key of ['assignments','responses','className','testCode'])assert.equal(copy[key],undefined);
+assert.equal(copy.questions[0].studentName,undefined);assert.equal(copy.questions[0].points,1);
+assert.equal(gradePractice(copy.questions,{q1:'5'}).correctCount,1);
+assert.equal(gradePractice(copy.questions,{q1:'4'}).correctCount,0);
+assert.equal(gradePractice(copy.questions,{}).correctCount,0);
+assert.equal(matchesGrade('Lớp 4–5','4'),true);assert.equal(matchesGrade('Lớp 4–5','5'),true);assert.equal(matchesGrade('Lớp 4–5','3'),false);
+assert.throws(()=>publicQuizCopy({...source,questions:[]},'teacher1'));
+assert.throws(()=>publicQuizCopy({...source,questions:[question,question]},'teacher1'));
+assert.throws(()=>publicQuizCopy({...source,questions:[{...question,options:['1','2','3']}]},'teacher1'));
+assert.throws(()=>publicQuizCopy({...source,questions:[{...question,correctAnswer:'wrong'}]},'teacher1'));
+assert.throws(()=>publicQuizCopy(source,''));
+assert.equal(source.questions[0].correctPoints,5);
+console.log('PASS: public copy strips private fields, validates questions, filters mixed grades, and grades answers correctly.');
