@@ -1,2 +1,2 @@
-Deploy removal of local priority discovery panel.
+Deploy removal of area shortcut buttons.
 2026-10-13
