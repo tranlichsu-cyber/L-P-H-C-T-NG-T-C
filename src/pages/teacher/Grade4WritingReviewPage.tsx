@@ -5,7 +5,7 @@ import {Grade4WritingReviewService,type TeacherWritingSubmission} from '../../se
 
 export function Grade4WritingReviewPage(){
  const {classes}=useTeacherData();
- const grade4=useMemo(()=>classes.filter(c=>/^(?:khối\\s*)?4$/i.test(c.grade.trim())),[classes]);
+ const grade4=useMemo(()=>classes.filter(c=>/^(?:khối\s*)?4$/i.test(c.grade.trim())),[classes]);
  const [classId,setClassId]=useState('');
  const [week,setWeek]=useState('');
  const [studentId,setStudentId]=useState('');
