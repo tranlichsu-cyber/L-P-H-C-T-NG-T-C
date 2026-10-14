@@ -295,6 +295,18 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.teacherId);
     }
 
+    // Writing submissions contain children's work: no public or anonymous access.
+    // Only teachers assigned to the class (or school admins) can review them.
+    // Student writes must be performed by a trusted server after PIN verification.
+    match /grade4WritingSubmissions/{submissionId} {
+      allow read: if isTeacher() && (
+        isSchoolAdmin() || (
+          resource.data.classId is string && canManageClass(resource.data.classId)
+        )
+      );
+      allow create, update, delete: if false;
+    }
+
     match /testCodes/{code} {
       allow get: if isAuthenticated();
       allow list: if false;
