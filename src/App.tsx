@@ -92,6 +92,7 @@ const TeamDashboardPage = lazy(() =>
   import('./pages/team/TeamDashboardPage').then((m) => ({ default: m.TeamDashboardPage }))
 );
 const TraditionPage = lazy(()=>import('./pages/TraditionPage').then(m=>({default:m.TraditionPage})));
+const Grade4WritingReviewPage = lazy(()=>import('./pages/teacher/Grade4WritingReviewPage').then(m=>({default:m.Grade4WritingReviewPage})));
 const SelfPracticePage = lazy(()=>import('./pages/SelfPracticePage').then(m=>({default:m.SelfPracticePage})));
 const SelfPracticeManagerPage = lazy(()=>import('./pages/teacher/SelfPracticeManagerPage').then(m=>({default:m.SelfPracticeManagerPage})));
 const TraditionManagerPage = lazy(()=>import('./pages/teacher/TraditionManagerPage').then(m=>({default:m.TraditionManagerPage})));
@@ -150,6 +151,7 @@ export const App: React.FC = () => {
                     <Route path="remediation" element={<RemediationHubPage />} />
                     <Route path="tests" element={<PracticeListPage testsOnly />} />
                     <Route path="self-practice" element={<SelfPracticeManagerPage />} />
+                    <Route path="writing-review" element={<Grade4WritingReviewPage />} />
                     <Route path="tradition" element={<TraditionManagerPage />} />
                     <Route path="practice" element={<PracticeListPage />} />
                     <Route path="practice/new" element={<PracticeEditorPage />} />
