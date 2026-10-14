@@ -49,19 +49,18 @@ export const verifyGrade4Pin=onCall(options,async req=>{
  if(!req.auth?.uid||req.auth.token.firebase.sign_in_provider!=='anonymous')fail('unauthenticated','Cần phiên học sinh ẩn danh.');
  if(typeof pin!=='string'||!/^[0-9]{6}$/.test(pin))fail('invalid-argument','Mã xác nhận không hợp lệ.');
  const ref=db.doc(`grade4WritingCredentials/${classId}_${studentId}`);
- const ok=await db.runTransaction(async tx=>{
- const snap=await tx.get(ref);if(!snap.exists)return false;
+ const verification=await db.runTransaction(async tx=>{
+ const snap=await tx.get(ref);if(!snap.exists)return {valid:false};
  const c=snap.data();if((c.lockedUntil||0)>Date.now())fail('resource-exhausted','Vui lòng thử lại sau.');
  const actual=Buffer.from(pinHash(pin,c.salt),'hex'),expected=Buffer.from(c.pinHash,'hex');
  const valid=actual.length===expected.length&&timingSafeEqual(actual,expected);
  tx.update(ref,valid?{failed:0,lockedUntil:0}:{failed:FieldValue.increment(1),lockedUntil:(c.failed||0)>=4?Date.now()+15*60*1000:0});
- return valid;
+ return {valid,version:c.version};
  });
- if(!ok)fail('permission-denied','Không thể xác minh thông tin.');
+ if(!verification.valid)fail('permission-denied','Không thể xác minh thông tin.');
  await requireStudent(classId,studentId);
  const token=randomBytes(32).toString('hex'),salt=randomBytes(16).toString('hex');
- const credential=await ref.get();
- await db.doc('grade4WritingSessions/'+req.auth.uid).set({classId,studentId,salt,tokenHash:pinHash(token,salt),credentialVersion:credential.data().version,expiresAt:Date.now()+2*60*60*1000});
+ await db.doc('grade4WritingSessions/'+req.auth.uid).set({classId,studentId,salt,tokenHash:pinHash(token,salt),credentialVersion:verification.version,expiresAt:Date.now()+2*60*60*1000});
  return {sessionToken:token,expiresInSeconds:7200};
 });
 export const saveGrade4Writing=onCall(options,async req=>{
