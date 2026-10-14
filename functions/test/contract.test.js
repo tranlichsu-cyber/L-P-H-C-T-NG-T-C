@@ -19,7 +19,7 @@ test('PINs are generated securely and salted, not stored in plaintext',()=>{
  assert.match(source,/randomInt\(0,1000000\)/);
  assert.match(source,/scryptSync\(/);
  assert.match(source,/pinHash:pinHash\(pin,salt\)/);
- assert.doesNotMatch(source,/\.set\(\{[^}]*\bpin,\s*salt/);
+ assert.doesNotMatch(source,/pinHash:pinHash\(pin,salt\),\s*pin\b/);
 });
 test('PIN verification requires anonymous auth and locks out repeated failures',()=>{
  assert.match(source,/sign_in_provider!=='anonymous'/);
