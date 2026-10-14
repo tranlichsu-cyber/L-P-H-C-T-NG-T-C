@@ -14,6 +14,10 @@ export function Grade4WritingReviewPage(){
  const [error,setError]=useState('');
  const [comments,setComments]=useState<Record<string,string>>({});
  const [saving,setSaving]=useState<string|null>(null);
+ const [pinStudentId,setPinStudentId]=useState('');
+ const [issuedPin,setIssuedPin]=useState('');
+ const [issuing,setIssuing]=useState(false);
+ const issuePin=async()=>{setIssuedPin('');setError('');setIssuing(true);try{setIssuedPin(await WritingIdentityService.issuePin(classId,pinStudentId));}catch{setError('Không cấp được mã. Vui lòng kiểm tra quyền quản lý lớp và Firebase Functions.');}finally{setIssuing(false);}};
  const saveComment=async(r:TeacherWritingSubmission)=>{setSaving(r.id);setError('');try{const comment=comments[r.id]??r.teacherComment??'';await WritingIdentityService.comment(r.classId,r.studentId,r.week,comment);setRows(prev=>prev.map(x=>x.id===r.id?{...x,teacherComment:comment}:x));}catch{setError('Không lưu được nhận xét. Kiểm tra quyền giáo viên và kết nối.');}finally{setSaving(null);}};
  useEffect(()=>{setClassId(prev=>grade4.some(c=>c.id===prev)?prev:(grade4[0]?.id||''));},[grade4]);
  useEffect(()=>{let active=true;setRows([]);setError('');setStudentId('');if(!classId)return;setLoading(true);
@@ -22,7 +26,7 @@ export function Grade4WritingReviewPage(){
  const students=grade4.find(c=>c.id===classId)?.students||[];
  const shown=rows.filter(r=>(!week||r.week===Number(week))&&(!studentId||r.studentId===studentId)).sort((a,b)=>a.week-b.week||a.studentName.localeCompare(b.studentName,'vi'));
  return <main className="space-y-6"><header><h1 className="text-2xl font-black text-sky-900">Bài Tập làm văn lớp 4</h1><p className="text-slate-600">Xem dàn ý và bài viết đã lưu của từng học sinh. Chỉ hiển thị dữ liệu được Firebase cấp quyền.</p></header>
- <section className="grid gap-4 rounded-2xl border bg-white p-5 sm:grid-cols-3">
+ <section className="rounded-2xl border bg-white p-5"><h2 className="mb-3 text-lg font-bold">Cấp hoặc cấp lại mã học sinh</h2><p className="mb-3 text-sm">Mã mới chỉ hiển thị một lần. Hãy phát riêng cho đúng học sinh hoặc phụ huynh.</p><div className="flex flex-wrap gap-3"><select className="min-w-48 rounded-xl border p-3" value={pinStudentId} onChange={e=>{setPinStudentId(e.target.value);setIssuedPin('');}}><option value="">Chọn học sinh</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select><button className="rounded-xl bg-sky-700 px-4 py-2 font-bold text-white disabled:opacity-50" disabled={!classId||!pinStudentId||issuing} onClick={()=>void issuePin()}>{issuing?'Đang tạo…':'Tạo / cấp lại mã'}</button></div>{issuedPin&&<div className="mt-3 rounded-xl border border-amber-400 bg-amber-50 p-4"><p>Mã mới: <strong className="text-2xl tracking-widest">{issuedPin}</strong></p><button className="mt-2 underline" onClick={()=>setIssuedPin('')}>Ẩn mã</button></div>}</section><section className="grid gap-4 rounded-2xl border bg-white p-5 sm:grid-cols-3">
  <label className="font-semibold">Lớp<select className="mt-2 block w-full rounded-xl border p-3" value={classId} onChange={e=>setClassId(e.target.value)}><option value="">Chọn lớp</option>{grade4.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
  <label className="font-semibold">Tuần<select className="mt-2 block w-full rounded-xl border p-3" value={week} onChange={e=>setWeek(e.target.value)}><option value="">Tất cả các tuần</option>{Array.from({length:35},(_,i)=>i+1).map(n=><option key={n} value={n}>Tuần {n}</option>)}</select></label>
  <label className="font-semibold">Học sinh<select className="mt-2 block w-full rounded-xl border p-3" value={studentId} onChange={e=>setStudentId(e.target.value)}><option value="">Tất cả học sinh</option>{students.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
