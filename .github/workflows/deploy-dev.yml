@@ -2,6 +2,8 @@ name: Deploy DEV to Firebase
 
 on:
   workflow_dispatch:
+  push:
+    branches: [feature/grade4-writing-35-weeks]
 
 permissions:
   contents: read
