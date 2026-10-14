@@ -9,7 +9,7 @@ const labels:Record<CurriculumCheck['status'],string>={REFERENCE:'Có bài tham 
 export function CurriculumAuditPage(){
  const {quizzes}=useTeacherData(),{currentUser}=useAuth();
  const [publicItems,setPublicItems]=useState<SelfPracticeQuiz[]>([]),[error,setError]=useState(''),[loading,setLoading]=useState(true),[retry,setRetry]=useState(0),[subject,setSubject]=useState('Tiếng Việt'),[week,setWeek]=useState('1');
- useEffect(()=>{let active=true;SelfPracticeService.list(false).then(items=>{if(active){setPublicItems(items);setError('');}},()=>{if(active)setError('Chưa đọc được bài đang công khai từ máy chủ. Kết quả bên dưới chỉ áp dụng cho dữ liệu đã tải được; chưa xác nhận toàn bộ ngân hàng.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[retry,currentUser?.uid]);
+ useEffect(()=>{let active=true;SelfPracticeService.list(false,retry>0).then(items=>{if(active){setPublicItems(items);setError('');}},()=>{if(active)setError('Chưa đọc được bài đang công khai từ máy chủ. Kết quả bên dưới chỉ áp dụng cho dữ liệu đã tải được; chưa xác nhận toàn bộ ngân hàng.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[retry,currentUser?.uid]);
  const own=quizzes.filter(q=>q.teacherId===currentUser?.uid);
  const items=[...own.map(q=>({...q,origin:'Bộ đề giáo viên'})),...publicItems.map(q=>({...q,origin:'Bài tự luyện công khai'}))].map(q=>({...q,check:checkGrade4Quiz(q)})).filter(q=>q.check.status!=='OUTSIDE');
  const references=grade4Curriculum.lessons.filter(l=>l.subject===subject),selectedWeek=grade4Curriculum.weeks.find(w=>w.week===Number(week))!;

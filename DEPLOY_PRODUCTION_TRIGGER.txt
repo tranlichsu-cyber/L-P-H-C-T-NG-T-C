@@ -66,3 +66,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-15: Refresh primary-school learning interface with a wider welcoming portal, book illustration, clear student-first entry, coordinated practice/heritage colours, school crest in student pages, responsive layouts and reduced-motion support.
 
 2026-10-15: Reduce homepage welcome heading, introduction and book illustration; balance discovery column with the login panel on desktop and mobile.
+
+2026-10-15: Reduce Firestore reads through route-scoped teacher loading, scoped class/quiz queries, short-lived self-practice caches, one settings listener and shared room/worksheet subscriptions; verify account isolation and worksheet flows.

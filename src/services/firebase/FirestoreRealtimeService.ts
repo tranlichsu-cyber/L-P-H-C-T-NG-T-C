@@ -1,3 +1,4 @@
+import {createSharedSubscriptions} from '../data/readEfficiency';
 import {
   doc,
   collection,
@@ -44,6 +45,7 @@ const sanitizeFirestoreData = (value: unknown): any => {
   return value;
 };
 
+const shareRoom=createSharedSubscriptions<MockRoomData>();
 export class FirestoreRealtimeService {
   private async ensureAuthenticated(): Promise<string> {
     if (!auth) throw new Error('Firebase Auth is not initialized');
@@ -964,6 +966,9 @@ export class FirestoreRealtimeService {
   // --- LISTENERS ---
   // Keep room metadata and the live subcollections in sync.
   public subscribeRoom(roomId: string, callback: (room: MockRoomData) => void): () => void {
+    return shareRoom(JSON.stringify([auth?.currentUser?.uid||'signed-out',auth?.currentUser?.isAnonymous||false,roomId]),next=>this.subscribeRoomSource(roomId,next),callback);
+  }
+  private subscribeRoomSource(roomId: string, callback: (room: MockRoomData) => void): () => void {
     if (!db) return () => {};
 
     const firestore = db;

@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import {loadVisibleClasses,loadVisibleQuizzes} from '../services/data/teacherQueries';
+import {useLocation} from 'react-router-dom';
 import type { ClassGroup, Student, Quiz, Question } from '../types';
 import { INITIAL_CLASSES } from '../data/mockClasses';
 import { INITIAL_QUIZZES } from '../data/mockQuizzes';
@@ -67,6 +69,10 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [classes, setClasses] = useState<ClassGroup[]>(
     isFirebaseConfigured ? [] : INITIAL_CLASSES
   );
+  const {pathname}=useLocation();
+  const needsTeacherData=pathname==='/teacher'||pathname.startsWith('/teacher/');
+  const loadedUid=useRef('');
+  const loadedAt=useRef(0);
   const [quizzes, setQuizzes] = useState<Quiz[]>(
     isFirebaseConfigured ? [] : INITIAL_QUIZZES
   );
@@ -76,11 +82,14 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!authReady) return;
 
     if (!isTeacherAuthenticated || !currentUser?.uid) {
+      loadedUid.current='';
       setClasses([]);
       setQuizzes([]);
       return;
     }
 
+    if(!needsTeacherData||(loadedUid.current===currentUser.uid&&Date.now()-loadedAt.current<120000))return;
+    setClasses([]);setQuizzes([]);
     const firestore = db;
     const uid = currentUser.uid;
     let cancelled = false;
@@ -98,7 +107,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         const isAdmin = profile.role === 'SCHOOL_ADMIN';
 
-        const classSnap = await getDocs(collection(firestore, 'classes'));
+        const classSnap=await loadVisibleClasses(firestore,uid,isAdmin);
         const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
         const visibleClassDocs = classSnap.docs.filter((classDoc) => {
           if (legacyClassIds.has(classDoc.id)) return false;
@@ -131,7 +140,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
           })
         );
 
-        const quizSnap = await getDocs(collection(firestore, 'quizzes'));
+        const quizSnap=await loadVisibleQuizzes(firestore,uid,isAdmin,profile.teamIds||[]);
         const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
         const visibleQuizDocs = quizSnap.docs.filter((quizDoc) => {
           if (legacyQuizIds.has(quizDoc.id)) return false;
@@ -180,6 +189,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         );
 
         if (!cancelled) {
+          loadedUid.current=uid;loadedAt.current=Date.now();
           setClasses(realClasses);
           setQuizzes(realQuizzes);
         }
@@ -197,7 +207,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => {
       cancelled = true;
     };
-  }, [authReady, isTeacherAuthenticated, currentUser?.uid]);
+  }, [authReady, isTeacherAuthenticated, currentUser?.uid,needsTeacherData]);
 
   // --- CLASS ACTIONS ---
   const addClass = async (name: string, grade: string): Promise<ClassGroup> => {
@@ -744,8 +754,8 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   return (
     <TeacherDataContext.Provider
       value={{
-        classes,
-        quizzes,
+        classes:isFirebaseConfigured&&loadedUid.current!==currentUser?.uid?[]:classes,
+        quizzes:isFirebaseConfigured&&loadedUid.current!==currentUser?.uid?[]:quizzes,
         addClass,
         updateClass,
         deleteClass,

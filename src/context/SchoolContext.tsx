@@ -19,12 +19,6 @@ export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Initial fetch
-    SchoolService.getSchoolSettings().then((s) => {
-      setSettings(s);
-      setIsLoading(false);
-    });
-
     // Real-time listener via Firestore onSnapshot / local events
     const unsubscribe = SchoolService.subscribeSchoolSettings((updatedSettings) => {
       setSettings(updatedSettings);

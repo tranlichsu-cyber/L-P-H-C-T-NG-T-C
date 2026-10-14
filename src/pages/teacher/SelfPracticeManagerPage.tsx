@@ -36,7 +36,7 @@ export function SelfPracticeManagerPage(){
  });
  const duplicates=[...duplicateWriting.values()].filter(group=>group.length>1);
  const quiz=quizzes.find(q=>q.id===selected);
- const load=useCallback(async()=>{try{setItems(await SelfPracticeService.list(false));setError('');}catch{setError('Không tải được các bộ đề đã công khai.');}finally{setLoading(false);}},[]);
+ const load=useCallback(async()=>{try{setItems(await SelfPracticeService.list(false,true));setError('');}catch{setError('Không tải được các bộ đề đã công khai.');}finally{setLoading(false);}},[]);
  useEffect(()=>{let active=true;SelfPracticeService.list(false).then(data=>{if(active)setItems(data);}).catch(()=>{if(active)setError('Không tải được các bộ đề đã công khai.');}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
  return <div className="space-y-5"><h1 className="font-black text-2xl text-sky-900">QUẢN LÝ TỰ LUYỆN</h1><section className="bg-sky-50 border border-sky-200 rounded-2xl p-5 space-y-3"><p>Học sinh vào bằng mã riêng, xác nhận tên rồi làm bài. Thầy/cô có thể xem kết quả và nội dung bài đã nộp bên dưới.</p><Link to="/tu-luyen" target="_blank" className="underline font-bold text-sky-800">Mở trang Tự luyện dành cho học sinh ↗</Link><p>Bốn bộ câu hỏi Giáo dục địa phương đã công khai được hiển thị sẵn. Các bộ đề riêng chỉ xuất hiện sau khi thầy/cô chọn công khai.</p></section>
  <TeacherStudentWork/>

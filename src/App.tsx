@@ -117,10 +117,10 @@ export const App: React.FC = () => {
     <ToastProvider>
       <AuthProvider>
         <SchoolProvider>
+          <BrowserRouter>
           <TeacherDataProvider>
             <OfflineBanner />
             <PWAInstallPrompt />
-            <BrowserRouter>
               <StudentSessionProvider>
               <Suspense fallback={<LoadingFallback />}>
                 <Routes>
@@ -212,8 +212,8 @@ export const App: React.FC = () => {
                 </Routes>
               </Suspense>
                           </StudentSessionProvider>
-            </BrowserRouter>
           </TeacherDataProvider>
+            </BrowserRouter>
         </SchoolProvider>
       </AuthProvider>
     </ToastProvider>

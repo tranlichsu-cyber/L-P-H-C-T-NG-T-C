@@ -194,6 +194,7 @@ export class SchoolService {
     callback: (settings: SchoolSettings) => void
   ): () => void {
     let firestoreUnsub: (() => void) | null = null;
+    callback(normalizeSchoolSettings(this.loadLocalStorage().settings));
 
     if (isFirebaseConfigured && db) {
       try {

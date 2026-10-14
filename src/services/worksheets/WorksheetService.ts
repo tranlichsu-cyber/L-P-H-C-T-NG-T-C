@@ -1,3 +1,4 @@
+import {createSharedSubscriptions} from '../data/readEfficiency';
 import {arrayUnion,collection,doc,onSnapshot,runTransaction,writeBatch,setDoc,updateDoc,getDoc} from 'firebase/firestore';
 import {auth,db} from '../firebase/firebase';
 import {isFirebaseActive} from '../realtime/realtimeServiceSwitch';
@@ -8,16 +9,29 @@ interface LocalData {reviews?:Record<string,Record<string,WorksheetReview>>;feed
 const key=(roomId:string)=>'lhtt-worksheets-v1-'+roomId;
 const read=(roomId:string):LocalData=>JSON.parse(localStorage.getItem(key(roomId))||'null')||{state:emptyWorksheetState(),sheets:{},responses:{}};
 const write=(roomId:string,data:LocalData)=>{localStorage.setItem(key(roomId),JSON.stringify(data));eventBus.publish({type:'ROOM_UPDATED',roomId,timestamp:new Date().toISOString()});};
+const shareState=createSharedSubscriptions<WorksheetState>();
+const shareSheet=createSharedSubscriptions<RoomWorksheet|null>();
+const shareResponses=createSharedSubscriptions<WorksheetResponse[]>();
+const ownerScope=()=>JSON.stringify([auth?.currentUser?.uid||'local',auth?.currentUser?.isAnonymous||false]);
 export class WorksheetService {
  static subscribeState(roomId:string,callback:(state:WorksheetState)=>void,onError:(error:Error)=>void){
+  return shareState(JSON.stringify([ownerScope(),roomId]),(next,error)=>this.subscribeStateSource(roomId,next,error),callback,onError);
+ }
+ static subscribeStateSource(roomId:string,callback:(state:WorksheetState)=>void,onError:(error:Error)=>void){
   if(isFirebaseActive&&db)return onSnapshot(doc(db,'rooms',roomId,'worksheetState','current'),s=>callback(s.exists()?s.data() as WorksheetState:emptyWorksheetState()),onError);
   callback(read(roomId).state);return eventBus.subscribe(e=>{if(e.roomId===roomId)callback(read(roomId).state);});
  }
  static subscribeSheet(roomId:string,id:string,callback:(sheet:RoomWorksheet|null)=>void,onError:(error:Error)=>void){
+  return shareSheet(JSON.stringify([ownerScope(),roomId,id]),(next,error)=>this.subscribeSheetSource(roomId,id,next,error),callback,onError);
+ }
+ static subscribeSheetSource(roomId:string,id:string,callback:(sheet:RoomWorksheet|null)=>void,onError:(error:Error)=>void){
   if(isFirebaseActive&&db)return onSnapshot(doc(db,'rooms',roomId,'worksheets',id),s=>callback(s.exists()?s.data() as RoomWorksheet:null),onError);
   callback(read(roomId).sheets[id]||null);return eventBus.subscribe(e=>{if(e.roomId===roomId)callback(read(roomId).sheets[id]||null);});
  }
  static subscribeResponses(roomId:string,id:string,studentId:string|null,callback:(work:WorksheetResponse[])=>void,onError:(error:Error)=>void){
+  return shareResponses(JSON.stringify([ownerScope(),roomId,id,studentId]),(next,error)=>this.subscribeResponsesSource(roomId,id,studentId,next,error),callback,onError);
+ }
+ static subscribeResponsesSource(roomId:string,id:string,studentId:string|null,callback:(work:WorksheetResponse[])=>void,onError:(error:Error)=>void){
   if(isFirebaseActive&&db){
    if(studentId)return onSnapshot(doc(db,'rooms',roomId,'worksheets',id,'responses',studentId),s=>callback(s.exists()?[s.data() as WorksheetResponse]:[]),onError);
    return onSnapshot(collection(db,'rooms',roomId,'worksheets',id,'responses'),s=>callback(s.docs.map(d=>d.data() as WorksheetResponse)),onError);
