@@ -1,5 +1,7 @@
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
-const {doc,setDoc,getDoc,getDocs,collection,query,where,deleteDoc}=require('firebase/firestore');
+// Resolve the same SDK as rules-unit-testing, rather than the app's Firebase version.
+const ruleToolsRequire=require('node:module').createRequire(require.resolve('@firebase/rules-unit-testing'));
+const {doc,setDoc,getDoc,getDocs,collection,query,where,deleteDoc}=ruleToolsRequire('firebase/firestore');
 const fs=require('fs');
 const path=require('path');
 const [host,port]=(process.env.FIRESTORE_EMULATOR_HOST||'127.0.0.1:8080').split(':');
