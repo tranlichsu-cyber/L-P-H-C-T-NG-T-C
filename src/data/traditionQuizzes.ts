@@ -83,7 +83,7 @@ export const curatedTraditionQuizzes:TraditionQuizContent[] = [
           "Trưng Trắc và Trưng Nhị"
         ],
         "correctAnswer": "Đội Cấn và Lương Ngọc Quyến",
-        "explanation": "Đội Cấn (Trịnh Văn Cấn) và Lương Ngọc Quyến lãnh đạo cuộc khởi nghĩa.",
+        "explanation": "Đội Cấn (Trịnh Văn Đạt) và Lương Ngọc Quyến lãnh đạo cuộc khởi nghĩa.",
         "points": 1,
         "caseInsensitive": true,
         "trimWhitespace": true
@@ -197,7 +197,7 @@ export const curatedTraditionQuizzes:TraditionQuizContent[] = [
         "content": "Lễ hội đền Đuổm tưởng nhớ nhân vật nào?",
         "options": [
           "Lương Ngọc Quyến",
-          "Trịnh Văn Cấn",
+          "Trịnh Văn Đạt",
           "Dương Tự Minh",
           "Lưu Nhân Chú"
         ],
@@ -213,7 +213,7 @@ export const curatedTraditionQuizzes:TraditionQuizContent[] = [
         "content": "Di tích Núi Văn–Núi Võ gắn với danh tướng nào?",
         "options": [
           "Dương Tự Minh",
-          "Trịnh Văn Cấn",
+          "Trịnh Văn Đạt",
           "Lương Ngọc Quyến",
           "Lưu Nhân Chú"
         ],

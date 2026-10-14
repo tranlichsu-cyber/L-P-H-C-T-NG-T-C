@@ -1,15 +1,17 @@
 import {collection,doc,getDocs,query,where,setDoc,deleteDoc} from 'firebase/firestore';
 import {auth,db,isFirebaseConfigured} from '../firebase/firebase';
+import {historyTopics,type HistoryTopic} from './articleText';
 export const materialKinds={HISTORY:'Tư liệu lịch sử',CULTURE:'Văn hóa',IMAGE:'Hình ảnh',VIDEO:'Video'};
 export type MaterialKind=keyof typeof materialKinds;
-export interface TraditionMaterial {id:string;teacherId:string;kind:MaterialKind;title:string;text:string;mediaUrl:string;source:string;sourceUrl:string;published:boolean;updatedAt:string;}
+export interface TraditionMaterial {id:string;teacherId:string;kind:MaterialKind;title:string;text:string;mediaUrl:string;source:string;sourceUrl:string;published:boolean;updatedAt:string;historyTopic?:HistoryTopic;}
 export function safeHttps(value:string){try{const url=new URL(value);return url.protocol==='https:' && !url.username && !url.password;}catch{return false;}}
 export function youtubeEmbed(value:string):string|null {try{const u=new URL(value);let id='';if(u.hostname==='youtu.be')id=u.pathname.slice(1);else if(['youtube.com','www.youtube.com','m.youtube.com'].includes(u.hostname))id=u.searchParams.get('v') || u.pathname.match(/^\/(?:shorts|embed)\/([^/]+)/)?.[1] || '';return /^[\w-]{11}$/.test(id)?`https://www.youtube-nocookie.com/embed/${id}`:null;}catch{return null;}}
-export function validateMaterial(item:Pick<TraditionMaterial,'kind'|'title'|'text'|'mediaUrl'|'sourceUrl'>){
+export function validateMaterial(item:Pick<TraditionMaterial,'kind'|'title'|'text'|'mediaUrl'|'sourceUrl'|'historyTopic'>){
  if(!(item.kind in materialKinds))throw new Error('Loại tư liệu không hợp lệ.');
  if(!item.title.trim() || item.title.length>200)throw new Error('Tiêu đề cần 1–200 ký tự.');
  if(item.text.length>30000)throw new Error('Nội dung tối đa 30.000 ký tự.');
  if(['HISTORY','CULTURE'].includes(item.kind) && !item.text.trim())throw new Error('Hãy nhập nội dung tư liệu.');
+ if(item.historyTopic && !Object.hasOwn(historyTopics,item.historyTopic))throw new Error('Nhóm bài lịch sử không hợp lệ.');
  if(item.sourceUrl && !safeHttps(item.sourceUrl))throw new Error('Liên kết nguồn cần bắt đầu bằng https://.');
  const image=/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(item.mediaUrl) && item.mediaUrl.length<=700000;
  if(item.kind==='IMAGE' && !image && !safeHttps(item.mediaUrl))throw new Error('Hãy chọn ảnh hoặc nhập liên kết ảnh https://.');

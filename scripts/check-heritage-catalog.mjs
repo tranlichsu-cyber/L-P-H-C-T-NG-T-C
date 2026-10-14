@@ -8,7 +8,7 @@ assert.equal(records.length,38);assert.equal(new Set(records.map(r=>r.id)).size,
 for(const r of records){
  assert(/^(Xã|Phường) /.test(r.commune));assert(normalizeMapText(r.address).includes(normalizeMapText(r.commune)));
  assert(r.name && r.summary && r.formerArea && r.checkedAt);
- for(const url of [r.sourceUrl,r.addressSourceUrl].filter(Boolean)){const u=new URL(url);assert(u.protocol==='https:' && (u.hostname==='thainguyen.gov.vn'||u.hostname.endsWith('.thainguyen.gov.vn')));}
+ for(const url of [r.sourceUrl,r.addressSourceUrl].filter(Boolean)){const u=new URL(url);assert(u.protocol==='https:' && (u.hostname==='thainguyen.gov.vn'||u.hostname.endsWith('.thainguyen.gov.vn')||u.hostname==='baotanglichsu.vn'));}
  if(r.mapAreaId)assert(areas.some(a=>a.id===r.mapAreaId));
 }
 assert.equal(records.find(r=>r.id==='den-luc-giap').commune,'Phường Phổ Yên');

@@ -56,3 +56,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-14: Live Word worksheets with DOCX preview, direct student answers, teacher review, selected-work projection, retained worksheet history and tested Firestore permissions.
 
 2026-10-14: Browser tab title Tiểu học Sông Công and school crest favicon.
+
+2026-10-14: Source-backed digital heritage library with 12 historical readings, four cultural readings from teacher-provided grade 4/5 books, presentation mode, reading questions, citations and updated archaeological findings.
