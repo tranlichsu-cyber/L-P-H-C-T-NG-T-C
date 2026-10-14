@@ -9,7 +9,8 @@ const fail=(code,message)=>{throw new HttpsError(code,message);};
 const clean=(v,max=10000)=>typeof v==='string'?v.trim().slice(0,max):'';
 const bounded=(v,max)=>typeof v==='string'&&v.length<=max?v.trim():fail('invalid-argument','Nội dung quá dài hoặc không hợp lệ.');
 const pinHash=(pin,salt)=>scryptSync(pin,salt,64).toString('hex');
-const teacher=async(uid,classId)=>{
+const teacher=async(uid,classId,provider)=>{
+ if(provider==='anonymous')fail('permission-denied','Phiên học sinh không được quản lý lớp.');
  if(!uid)fail('unauthenticated','Cần đăng nhập giáo viên.');
  const [user,cls]=await Promise.all([db.doc('users/'+uid).get(),db.doc('classes/'+classId).get()]);
  if(!cls.exists||!user.exists||user.data().status!=='ACTIVE')fail('permission-denied','Không có quyền truy cập lớp.');
@@ -24,7 +25,8 @@ const requireStudent=async(classId,studentId)=>{
  const snap=await db.doc(`classes/${classId}/students/${studentId}`).get();
  if(!snap.exists)fail('not-found','Không tìm thấy học sinh.');return snap.data();
 };
-const secureSession=async(data,uid)=>{
+const secureSession=async(data,uid,provider)=>{
+ if(provider!=='anonymous')fail('permission-denied','Chỉ phiên học sinh được phép lưu bài.');
  const classId=clean(data.classId,100),studentId=clean(data.studentId,100),sessionToken=clean(data.sessionToken,150);
  assertIds(classId,studentId);
  if(!uid||!sessionToken)fail('unauthenticated','Cần xác minh mã học sinh.');
@@ -38,7 +40,7 @@ const secureSession=async(data,uid)=>{
 };
 export const issueGrade4Pin=onCall(options,async req=>{
  const classId=clean(req.data?.classId,100),studentId=clean(req.data?.studentId,100);assertIds(classId,studentId);
- await teacher(req.auth?.uid,classId);await requireStudent(classId,studentId);
+ await teacher(req.auth?.uid,classId,req.auth?.token?.firebase?.sign_in_provider);await requireStudent(classId,studentId);
  const pin=String(randomInt(0,1000000)).padStart(6,'0'),salt=randomBytes(16).toString('hex');
  await db.doc(`grade4WritingCredentials/${classId}_${studentId}`).set({classId,studentId,salt,pinHash:pinHash(pin,salt),version:randomBytes(16).toString('hex'),failed:0,lockedUntil:0,updatedAt:FieldValue.serverTimestamp()});
  return {pin}; // Show once to the authorized teacher; never log or persist plaintext.
@@ -64,7 +66,7 @@ export const verifyGrade4Pin=onCall(options,async req=>{
  return {sessionToken:token,expiresInSeconds:7200};
 });
 export const saveGrade4Writing=onCall(options,async req=>{
- const {classId,studentId}=await secureSession(req.data||{},req.auth?.uid);
+ const {classId,studentId}=await secureSession(req.data||{},req.auth?.uid,req.auth?.token?.firebase?.sign_in_provider);
  const week=req.data?.week,status=req.data?.status;
  if(!Number.isInteger(week)||week<1||week>35||!['DRAFT','SUBMITTED'].includes(status))fail('invalid-argument','Tuần hoặc trạng thái không hợp lệ.');
  const outline=bounded(req.data?.outline,12000),writing=bounded(req.data?.writing,30000);
