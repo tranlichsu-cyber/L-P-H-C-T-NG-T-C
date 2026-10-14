@@ -84,13 +84,13 @@ body {
 .learning-shell textarea { line-height: 1.8; }
 .learning-shell input[inputmode="numeric"] { font-size: 1.75rem; }
 .portal-school-header { padding-bottom: 28px; border-bottom: 1px solid #d8e5ed; }
-.portal-grid { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(0,1fr); gap: 56px; align-items: center; padding: 40px 0; }
+.portal-grid { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); gap: 48px; align-items: center; padding: 40px 0; }
 .portal-discover { min-width: 0; }
 .portal-eyebrow { color: #356580; font-size: 12px; letter-spacing: .12em; font-weight: 800; }
-.portal-headline { margin-top: 14px; font-size: clamp(32px,4vw,48px); line-height: 1.2; letter-spacing: -.035em; font-weight: 900; color: #18344c; }
+.portal-headline { margin-top: 14px; font-size: clamp(28px,3vw,36px); line-height: 1.2; letter-spacing: -.035em; font-weight: 900; color: #18344c; }
 .portal-headline span { color: #0876a7; }
-.portal-intro { max-width: 450px; margin-top: 16px; line-height: 1.85; color: #4c6477; font-size: 17px; }
-.learning-illustration { width: 100%; max-height: 250px; margin: 16px 0; }
+.portal-intro { max-width: 420px; margin-top: 12px; line-height: 1.75; color: #4c6477; font-size: 15px; }
+.learning-illustration { width: 100%; max-width: 420px; max-height: 190px; margin: 12px 0; }
 .portal-entry { min-width: 0; padding: 30px; border: 1px solid #dce8ef; border-radius: 28px; background: #fff; box-shadow: 0 18px 55px -30px #3a638650; }
 .portal-learning-links button { border-width: 1px; background: #fff; box-shadow: 0 5px 15px -10px #36597844; }
 .portal-learning-links button:hover { transform: translateY(-3px); box-shadow: 0 12px 22px -14px #36597866; }
@@ -103,9 +103,9 @@ body {
 @media (max-width: 767px) {
   .portal-grid { grid-template-columns: minmax(0,1fr); gap: 28px; padding: 28px 0 16px; }
   .portal-school-header { padding-bottom: 20px; }
-  .portal-headline { font-size: 32px; }
-  .portal-intro { font-size: 16px; margin-top: 12px; }
-  .learning-illustration { max-height: 130px; margin: 8px 0; }
+  .portal-headline { font-size: 27px; }
+  .portal-intro { font-size: 15px; margin-top: 10px; }
+  .learning-illustration { max-width: 300px; max-height: 110px; margin: 8px 0; }
   .portal-learning-links { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .portal-learning-links button { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
   .portal-learning-links button > span:first-child { padding: 9px; }
