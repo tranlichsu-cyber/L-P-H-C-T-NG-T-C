@@ -62,3 +62,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-14: Private Word worksheet review drafts, optional scores and per-question feedback, explicit return to each student, returned-work history and reload recovery; verify Firestore privacy before release.
 
 2026-10-14: Align 35 grade-four writing weeks with six uploaded textbook references, correct paragraph and functional-writing formats, preserve legacy drafts, add sourced lesson catalogues and teacher curriculum audit. Published bank read remains blocked by Firestore quota; no database migration.
+
+2026-10-15: Refresh primary-school learning interface with a wider welcoming portal, book illustration, clear student-first entry, coordinated practice/heritage colours, school crest in student pages, responsive layouts and reduced-motion support.

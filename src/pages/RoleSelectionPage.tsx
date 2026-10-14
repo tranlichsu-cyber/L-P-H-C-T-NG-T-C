@@ -1,3 +1,4 @@
+import {LearningIllustration} from '../components/learning/LearningIllustration';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -30,7 +31,7 @@ export const RoleSelectionPage: React.FC = () => {
   const { joinRoom } = useStudentSession();
   const { settings, logoUrl } = useSchool();
 
-  const [tab, setTab] = useState<PortalTab>('TEACHER');
+  const [tab, setTab] = useState<PortalTab>('STUDENT');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -116,10 +117,10 @@ export const RoleSelectionPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 py-4 sm:px-6 sm:py-5">
-        <div className="flex flex-1 flex-col justify-center">
-          <header className="text-center">
+    <div className="learning-shell school-portal min-h-screen text-slate-900">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-6 sm:px-8 sm:py-8">
+        <div className="flex flex-1 flex-col">
+          <header className="portal-school-header text-center">
             <div className="flex items-center justify-center gap-3 sm:gap-4">
               <div className="relative top-1 flex h-12 w-12 shrink-0 items-center justify-center sm:top-1.5 sm:h-14 sm:w-14">
                 <img src={currentLogo} alt="Logo trường" className="h-full w-full object-contain" />
@@ -129,12 +130,13 @@ export const RoleSelectionPage: React.FC = () => {
                   {schoolName.toUpperCase()}
                 </h1>
                 <p className="mt-1 text-[10px] font-medium leading-snug text-slate-500 sm:text-xs">
-                  Lớp học tương tác • Hệ thống giáo dục nội bộ
+                  Cùng học tập • Cùng khám phá • Cùng trưởng thành
                 </p>
               </div>
             </div>
           </header>
-          <nav aria-label="Khám phá nội dung học tập" className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <main className="portal-grid"><section className="portal-discover" aria-labelledby="portal-welcome"><p className="portal-eyebrow">CHÀO MỪNG EM ĐẾN LỚP</p><h2 id="portal-welcome" className="portal-headline">Mỗi ngày đến lớp,<br/><span>thêm một điều hay.</span></h2><p className="portal-intro">Học cùng thầy cô, tự luyện thật vui và khám phá những câu chuyện của quê hương.</p><LearningIllustration/>
+          <nav aria-label="Khám phá nội dung học tập" className="portal-learning-links grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button type="button" onClick={()=>navigate('/tu-luyen')} className="min-h-24 flex items-center gap-3 rounded-2xl border-2 border-sky-200 bg-sky-50 px-4 py-4 text-left text-sky-950 shadow-sm transition hover:bg-sky-100 focus-visible:outline-4 focus-visible:outline-sky-600">
               <span className="shrink-0 rounded-xl bg-sky-700 p-3 text-white"><BookOpenCheck size={27} aria-hidden="true"/></span>
               <span><strong className="block text-base font-black">Tự luyện</strong><span className="block text-xs font-semibold text-sky-800">Vào bằng mã học sinh</span></span>
@@ -145,15 +147,16 @@ export const RoleSelectionPage: React.FC = () => {
             </button>
           </nav>
 
-          <div className="mt-5 rounded-2xl bg-slate-100 p-1.5 shadow-inner">
+          </section><section className="portal-entry" aria-label="Cổng lớp học"><p className="portal-eyebrow">LỚP HỌC CỦA CHÚNG MÌNH</p><h2 className="text-2xl font-black text-slate-950 mt-2">Sẵn sàng học nhé!</h2><p className="mt-2 text-sm leading-6 text-slate-600">Chọn cổng của em hoặc thầy cô để bắt đầu.</p>
+          <div className="mt-5 rounded-2xl bg-slate-100 p-1.5">
             <div className="grid grid-cols-2 gap-1.5">
               <button
                 type="button"
-                onClick={() => setTab('TEACHER')}
+                aria-pressed={tab === 'TEACHER'} onClick={() => setTab('TEACHER')}
                 className={`rounded-xl px-3 py-3 text-sm font-black tracking-wide transition-all sm:text-sm ${
                   tab === 'TEACHER'
-                    ? 'bg-white text-sky-700 shadow-md ring-2 ring-slate-900'
-                    : 'text-slate-400 hover:text-slate-700'
+                    ? 'bg-white text-sky-800 shadow-sm ring-1 ring-sky-200'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 CỔNG GIÁO VIÊN
@@ -161,14 +164,14 @@ export const RoleSelectionPage: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => {
+                aria-pressed={tab === 'STUDENT'} onClick={() => {
                   setTab('STUDENT');
                   setStudentError('');
                 }}
                 className={`rounded-xl px-3 py-3 text-sm font-black tracking-wide transition-all sm:text-sm ${
                   tab === 'STUDENT'
-                    ? 'bg-white text-amber-700 shadow-md ring-2 ring-slate-900'
-                    : 'text-slate-400 hover:text-slate-700'
+                    ? 'bg-white text-sky-800 shadow-sm ring-1 ring-sky-200'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 CỔNG HỌC SINH
@@ -183,6 +186,7 @@ export const RoleSelectionPage: React.FC = () => {
                   <Mail className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input
                     type="email"
+                    aria-label="Địa chỉ Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Địa chỉ Email"
@@ -195,7 +199,7 @@ export const RoleSelectionPage: React.FC = () => {
                 <label className="relative block">
                   <KeyRound className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    aria-label="Mật khẩu" type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Mật khẩu"
@@ -277,7 +281,7 @@ export const RoleSelectionPage: React.FC = () => {
                     setRoomCode(e.target.value.replace(/\D/g, ''));
                     setStudentError('');
                   }}
-                  placeholder="000000"
+                  aria-label="Mã phòng lớp học" placeholder="000000"
                   className="h-14 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 text-center font-mono text-3xl font-black tracking-[0.3em] text-slate-950 outline-none transition placeholder:text-slate-300 focus:border-amber-400 focus:bg-white focus:ring-4 focus:ring-amber-100"
                   required
                 />
@@ -299,9 +303,10 @@ export const RoleSelectionPage: React.FC = () => {
               </form>
             </div>
           )}
+          </section></main>
         </div>
 
-        <footer className="mt-5 flex items-center justify-center gap-2 pb-2 text-center text-[11px] font-bold text-slate-300">
+        <footer className="mt-5 flex items-center justify-center gap-2 pb-2 text-center text-xs font-medium text-slate-600">
           <School className="h-4 w-4" />
           {settings.campusName || 'Phân hiệu Lý Tự Trọng'} • Năm học {settings.schoolYear}
         </footer>

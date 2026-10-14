@@ -1,3 +1,4 @@
+import {SCHOOL_LOGO_SRC} from '../assets/schoolLogo';
 import React,{useEffect,useRef} from 'react';
 import {useWorksheetState} from '../hooks/useWorksheet';
 import { Outlet, Link,useNavigate } from 'react-router-dom';
@@ -13,20 +14,18 @@ const StudentLayoutInner: React.FC = () => {
   useEffect(()=>{const key=[session.roomId,session.studentId,state.worksheetId].join(':');if(state.worksheetId&&session.studentId&&room?.status!=='FINISHED'&&lastWorksheet.current!==key){lastWorksheet.current=key;navigate('/student/worksheet');}},[session.roomId,session.studentId,state.worksheetId,room?.status,navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 flex flex-col justify-between select-none">
+    <div className="learning-shell min-h-screen flex flex-col justify-between select-none">
       {/* Dev Test Panel for simulation */}
       {!isFirebaseActive && <DevTestPanel />}
 
       {/* Student Top Bar */}
       <header className="bg-white/95 backdrop-blur-md border-b-2 border-sky-200/90 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-400 to-orange-400 text-slate-950 flex items-center justify-center font-extrabold text-2xl shadow-md border-2 border-amber-300">
-              <Sparkles className="w-6 h-6 animate-bounce text-slate-950" />
-            </div>
+            <img src={SCHOOL_LOGO_SRC} alt="Logo Trường Tiểu học Sông Công" className="w-11 h-11 object-contain shrink-0"/>
             <div>
-              <span className="font-black text-xl text-sky-950 tracking-tight block">LỚP HỌC TƯƠNG TÁC</span>
-              <span className="text-xs font-black text-amber-700 block">Trang Dành Cho Học Sinh 🎈</span>
+              <span className="font-black text-base sm:text-lg text-sky-950 tracking-tight block">TIỂU HỌC SÔNG CÔNG</span>
+              <span className="text-xs font-black text-amber-700 block">Góc học tập của em</span>
             </div>
           </div>
 
@@ -58,7 +57,7 @@ const StudentLayoutInner: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+      <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-4">
         {session.studentId&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Phiếu Word và bài giáo viên đã trả</Link>}
         <Outlet />
       </main>
