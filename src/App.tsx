@@ -92,6 +92,7 @@ const TeamDashboardPage = lazy(() =>
   import('./pages/team/TeamDashboardPage').then((m) => ({ default: m.TeamDashboardPage }))
 );
 const TraditionPage = lazy(()=>import('./pages/TraditionPage').then(m=>({default:m.TraditionPage})));
+const Grade4WritingStudentPage = lazy(()=>import('./pages/Grade4WritingStudentPage').then(m=>({default:m.Grade4WritingStudentPage})));
 const Grade4WritingReviewPage = lazy(()=>import('./pages/teacher/Grade4WritingReviewPage').then(m=>({default:m.Grade4WritingReviewPage})));
 const SelfPracticePage = lazy(()=>import('./pages/SelfPracticePage').then(m=>({default:m.SelfPracticePage})));
 const SelfPracticeManagerPage = lazy(()=>import('./pages/teacher/SelfPracticeManagerPage').then(m=>({default:m.SelfPracticeManagerPage})));
@@ -126,6 +127,7 @@ export const App: React.FC = () => {
                   {/* Role Selection Landing */}
                   <Route path="/" element={<RoleSelectionPage />} />
                   <Route path="/tu-luyen" element={<SelfPracticePage />} />
+                  <Route path="/tu-luyen/tap-lam-van-4" element={<Grade4WritingStudentPage />} />
                   <Route path="/goc-truyen-thong" element={<TraditionPage />} />
 
                   {/* Teacher Auth */}
