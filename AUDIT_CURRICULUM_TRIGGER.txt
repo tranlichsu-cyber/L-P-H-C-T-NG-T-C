@@ -1,3 +1,4 @@
 2026-10-14: Read public grade-four content to compare with six teacher-provided textbooks.
 Use existing project read identity; query only published practice content.
 Use credential-file token exchange, matching existing deployment authentication.
+2026-10-15: Resume the requested full lesson/week audit and check whether published content can now be read.
