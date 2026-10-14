@@ -47,9 +47,9 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Check personal self-practice workflow
+      - name: Check student practice and Word worksheets
         run: |
-          for check in check-student-self-practice check-writing-practice check-tradition-quizzes; do
+          for check in check-student-self-practice check-writing-practice check-tradition-quizzes check-worksheets; do
             if ! node "scripts/$check.mjs" > "$RUNNER_TEMP/$check.log" 2>&1; then
               cat "$RUNNER_TEMP/$check.log"
               node -e 'const fs=require("fs");const log=fs.readFileSync(process.argv[1],"utf8").slice(-6000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A");console.log("::error::"+log)' "$RUNNER_TEMP/$check.log"

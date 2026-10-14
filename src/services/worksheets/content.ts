@@ -5,7 +5,7 @@ export interface WorksheetResponse {studentId:string;studentName:string;authUid:
 export interface WorksheetState {worksheetId:string|null;projectedStudentId:string|null;projectedWorksheetId:string|null;showStudentName:boolean}
 export const emptyWorksheetState=():WorksheetState=>({worksheetId:null,projectedStudentId:null,projectedWorksheetId:null,showStudentName:true});
 export function detectWorksheetQuestions(text:string):WorksheetQuestion[]{
- const labels=text.split(/\n/).map(s=>s.trim()).filter(s=>/^(?:câu|bài)\s*\d+\s*[:.)–-]|^\d{1,2}[.)]\s+\S/i.test(s)).slice(0,40);
+ const labels=text.split(/\n/).map(s=>s.trim()).filter(s=>/^(?:câu|bài)\s*\d+\s*[:.)–-]|^\d{1,2}[.)]\s+\S/i.test(s));
  return (labels.length?labels:['Bài làm của em']).map((label,i)=>({id:'answer-'+(i+1),label:label.slice(0,1000)}));
 }
 export function validateWorksheet(draft:WorksheetDraft){

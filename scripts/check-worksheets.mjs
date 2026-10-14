@@ -5,6 +5,7 @@ const {outputText}=ts.transpileModule(await fs.readFile('src/services/worksheets
 const {detectWorksheetQuestions,validateWorksheet,validateWorksheetAnswers}=await import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));
 const questions=detectWorksheetQuestions('PHIẾU\nCâu 1: Tính 125 + 275.\nCâu 2. Giải thích.\n3) Viết lời giải.');assert.equal(questions.length,3);assert.equal(new Set(questions.map(q=>q.id)).size,3);
 assert.equal(detectWorksheetQuestions('Viết đoạn văn về quê hương.')[0].label,'Bài làm của em');
+assert.equal(detectWorksheetQuestions(Array.from({length:41},(_,i)=>'Câu '+(i+1)+': Trả lời.').join('\n')).length,41,'Never silently drop prompts from a long worksheet');
 const draft={title:'Phiếu Toán',fileName:'toan.docx',html:'<p>Câu 1: Tính</p>',questions};assert.doesNotThrow(()=>validateWorksheet(draft));
 const mammoth=await import('mammoth');
 const actual=await mammoth.convertToHtml({path:'public/templates/phieu-bai-tap-mau.docx'},{externalFileAccess:false,includeEmbeddedStyleMap:false});
