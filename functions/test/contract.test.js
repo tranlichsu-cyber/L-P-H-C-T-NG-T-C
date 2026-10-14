@@ -42,6 +42,11 @@ test('teacher comments require classroom authorization',()=>{
  assert.match(source,/await teacher\(req\.auth\?\.uid,classId\)/);
  assert.match(source,/reviewerUid:req\.auth\.uid/);
 });
+test('teacher and student callable actions enforce distinct Firebase providers',()=>{
+ assert.match(source,/if\(provider==='anonymous'\)fail\('permission-denied'/);
+ assert.match(source,/if\(provider!=='anonymous'\)fail\('permission-denied'/);
+ assert.match(source,/secureSession\(req\.data\|\|\{\},req\.auth\?\.uid,req\.auth\?\.token\?\.firebase\?\.sign_in_provider\)/);
+});
 test('oversized writing is rejected rather than silently truncated',()=>{
  assert.match(source,/bounded\(req\.data\?\.outline,12000\)/);
  assert.match(source,/bounded\(req\.data\?\.writing,30000\)/);
