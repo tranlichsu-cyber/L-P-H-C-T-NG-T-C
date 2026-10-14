@@ -81,6 +81,15 @@ export const saveGrade4Writing=onCall(options,async req=>{
  });
  return {saved:true};
 });
+export const getGrade4Writing=onCall(options,async req=>{
+ const {classId,studentId}=await secureSession(req.data||{},req.auth?.uid,req.auth?.token?.firebase?.sign_in_provider);
+ const week=req.data?.week;
+ if(!Number.isInteger(week)||week<1||week>35)fail('invalid-argument','Tuần không hợp lệ.');
+ const snap=await db.doc(`grade4WritingSubmissions/${classId}_${studentId}_${week}`).get();
+ if(!snap.exists)return {found:false};
+ const item=snap.data();
+ return {found:true,outline:item.outline||'',writing:item.writing||'',status:item.status==='SUBMITTED'?'SUBMITTED':'DRAFT',teacherComment:item.teacherComment||''};
+});
 export const commentGrade4Writing=onCall(options,async req=>{
  const classId=clean(req.data?.classId,100),studentId=clean(req.data?.studentId,100),week=req.data?.week;
  assertIds(classId,studentId);await teacher(req.auth?.uid,classId);
