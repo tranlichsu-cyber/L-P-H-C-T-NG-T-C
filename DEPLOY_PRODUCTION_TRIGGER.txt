@@ -48,3 +48,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-14: 35 weekly writing practice lessons with outlines, full writing and completion-gated hints.
 
 2026-10-14: Personal student self-practice codes, teacher-visible quiz and writing submissions, revocation, and Firestore access checks before deployment.
+
+2026-10-14: Expose self-practice verification failure diagnostics and use supported Java setup action.

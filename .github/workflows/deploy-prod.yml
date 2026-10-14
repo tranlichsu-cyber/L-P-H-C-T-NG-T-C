@@ -49,12 +49,17 @@ jobs:
 
       - name: Check personal self-practice workflow
         run: |
-          node scripts/check-student-self-practice.mjs
-          node scripts/check-writing-practice.mjs
-          node scripts/check-tradition-quizzes.mjs
+          for check in check-student-self-practice check-writing-practice check-tradition-quizzes; do
+            if ! node "scripts/$check.mjs" > "$RUNNER_TEMP/$check.log" 2>&1; then
+              cat "$RUNNER_TEMP/$check.log"
+              node -e 'const fs=require("fs");const log=fs.readFileSync(process.argv[1],"utf8").slice(-6000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A");console.log("::error::"+log)' "$RUNNER_TEMP/$check.log"
+              exit 1
+            fi
+            cat "$RUNNER_TEMP/$check.log"
+          done
 
       - name: Setup Java for Firestore Emulator
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -64,7 +69,12 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/self-practice-rule-tools" --no-audit --no-fund firebase-tools@15.32.1 @firebase/rules-unit-testing@6.0.0 firebase@13.0.0
           export NODE_PATH="$RUNNER_TEMP/self-practice-rule-tools/node_modules"
-          "$RUNNER_TEMP/self-practice-rule-tools/node_modules/.bin/firebase" emulators:exec --only firestore --project demo-self-practice 'node scripts/check-self-practice-rules.cjs'
+          if ! "$RUNNER_TEMP/self-practice-rule-tools/node_modules/.bin/firebase" emulators:exec --only firestore --project demo-self-practice 'node scripts/check-self-practice-rules.cjs' > "$RUNNER_TEMP/self-practice-rules.log" 2>&1; then
+            cat "$RUNNER_TEMP/self-practice-rules.log"
+            node -e 'const fs=require("fs");const log=fs.readFileSync(process.argv[1],"utf8").slice(-10000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A");console.log("::error::"+log)' "$RUNNER_TEMP/self-practice-rules.log"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/self-practice-rules.log"
 
       - name: Authenticate to Google Cloud
         id: auth
