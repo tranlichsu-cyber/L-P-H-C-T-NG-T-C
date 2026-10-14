@@ -7,6 +7,7 @@ const db=getFirestore();
 const options={region:'asia-southeast1',enforceAppCheck:true,maxInstances:20};
 const fail=(code,message)=>{throw new HttpsError(code,message);};
 const clean=(v,max=10000)=>typeof v==='string'?v.trim().slice(0,max):'';
+const bounded=(v,max)=>typeof v==='string'&&v.length<=max?v.trim():fail('invalid-argument','Nội dung quá dài hoặc không hợp lệ.');
 const pinHash=(pin,salt)=>scryptSync(pin,salt,64).toString('hex');
 const teacher=async(uid,classId)=>{
  if(!uid)fail('unauthenticated','Cần đăng nhập giáo viên.');
@@ -67,7 +68,7 @@ export const saveGrade4Writing=onCall(options,async req=>{
  const {classId,studentId}=await secureSession(req.data||{},req.auth?.uid);
  const week=req.data?.week,status=req.data?.status;
  if(!Number.isInteger(week)||week<1||week>35||!['DRAFT','SUBMITTED'].includes(status))fail('invalid-argument','Tuần hoặc trạng thái không hợp lệ.');
- const outline=clean(req.data?.outline,12000),writing=clean(req.data?.writing,30000);
+ const outline=bounded(req.data?.outline,12000),writing=bounded(req.data?.writing,30000);
  if(status==='SUBMITTED'&&(!outline||!writing))fail('invalid-argument','Cần hoàn thành dàn ý và bài viết.');
  const student=await requireStudent(classId,studentId);
  const ref=db.doc(`grade4WritingSubmissions/${classId}_${studentId}_${week}`);
@@ -83,7 +84,7 @@ export const commentGrade4Writing=onCall(options,async req=>{
  const classId=clean(req.data?.classId,100),studentId=clean(req.data?.studentId,100),week=req.data?.week;
  assertIds(classId,studentId);await teacher(req.auth?.uid,classId);
  if(!Number.isInteger(week)||week<1||week>35)fail('invalid-argument','Tuần không hợp lệ.');
- const comment=clean(req.data?.comment,3000);
+ const comment=bounded(req.data?.comment,3000);
  const ref=db.doc(`grade4WritingSubmissions/${classId}_${studentId}_${week}`);
  if(!(await ref.get()).exists)fail('not-found','Chưa có bài làm.');
  await ref.update({teacherComment:comment,reviewedAt:new Date().toISOString(),reviewerUid:req.auth.uid});
