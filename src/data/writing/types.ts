@@ -1,1 +1,1 @@
-export interface WritingLesson {week:number; topic:string; title:string; prompt:string; focus:string; outline:string[]; model:string; checklist:string[]}
+export interface WritingLesson {curriculumRevision?:string;sourceBook?:string;sourcePages?:number[];sourceNote?:string;week:number; topic:string; title:string; prompt:string; focus:string; outline:string[]; model:string; checklist:string[]}

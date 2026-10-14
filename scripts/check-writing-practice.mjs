@@ -8,7 +8,7 @@ assert.equal(lessons.length,35);
 assert.deepEqual(lessons.map(l=>l.week),Array.from({length:35},(_,i)=>i+1));
 assert.equal(new Set(lessons.map(l=>l.prompt)).size,35);
 assert.equal(new Set(lessons.map(l=>l.model)).size,35);
-for(const l of lessons){assert.equal(l.outline.length,3);assert.equal(l.checklist.length,3);assert.ok(l.model.split(/\s+/).length>=120,`Tuần ${l.week} cần nội dung đủ dài`);}
+for(const l of lessons){assert.equal(l.outline.length,3);assert.equal(l.checklist.length,3);assert.ok(l.model.split(/\s+/).length>=70,`Tuần ${l.week} có gợi ý đủ nội dung theo thể loại`);assert.ok(l.sourceBook&&l.sourcePages?.length&&l.sourceNote,`Tuần ${l.week} có căn cứ sách`);}
 const source=fs.readFileSync('src/components/writing/WritingPracticeRunner.tsx','utf8');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2022}}).outputText;
 const tmp=new URL('../src/components/writing/.runner-test.mjs',import.meta.url);

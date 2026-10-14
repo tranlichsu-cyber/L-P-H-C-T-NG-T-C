@@ -35,6 +35,7 @@ const ClassDetailsPage = lazy(() =>
   import('./pages/teacher/ClassDetailsPage').then((m) => ({ default: m.ClassDetailsPage }))
 );
 const LessonsPage = lazy(() => import('./pages/teacher/LessonsPage').then((m) => ({ default: m.LessonsPage })));
+const CurriculumAuditPage = lazy(() => import('./pages/teacher/CurriculumAuditPage').then(m=>({default:m.CurriculumAuditPage})));
 const QuestionBankPage = lazy(() => import('./pages/teacher/QuestionBankPage').then((m) => ({ default: m.QuestionBankPage })));
 const QuizzesPage = lazy(() =>
   import('./pages/teacher/QuizzesPage').then((m) => ({ default: m.QuizzesPage }))
@@ -145,6 +146,7 @@ export const App: React.FC = () => {
                     <Route path="classes/:classId" element={<ClassDetailsPage />} />
                     <Route path="classes/:classId/students/:studentId/history" element={<StudentHistoryPage />} />
                     <Route path="lessons" element={<LessonsPage />} />
+                    <Route path="curriculum-audit" element={<CurriculumAuditPage />} />
                     <Route path="question-bank" element={<QuestionBankPage />} />
                     <Route path="quizzes" element={<QuizzesPage />} />
                     <Route path="quizzes/:quizId" element={<QuizEditorPage />} />

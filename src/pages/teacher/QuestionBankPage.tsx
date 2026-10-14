@@ -63,6 +63,7 @@ export function QuestionBankPage() {
   };
   const field = 'w-full border border-slate-300 rounded-xl p-3 text-sm text-slate-900';
   return <div>
+    <Link to="/teacher/curriculum-audit" className="inline-block mb-4 underline font-bold text-sky-800">Đối chiếu bài và tuần với SGK lớp 4</Link>
     <PageHeader title="KHO CÂU HỎI DÙNG LẠI" description="Kho riêng của giáo viên, lưu trên Firebase. Câu hỏi thêm vào bộ đề là một bản sao độc lập." />
     <p className="text-sm text-slate-600 mb-4">Để đưa câu hỏi vào kho: mở <Link className="font-bold text-indigo-700 underline" to="/teacher/quizzes">Ngân hàng câu hỏi</Link>, chọn bộ đề và bấm “Lưu vào kho” ở câu muốn giữ.</p>
     <div className="flex flex-wrap gap-3 items-center p-4 mb-4 rounded-xl bg-indigo-50">

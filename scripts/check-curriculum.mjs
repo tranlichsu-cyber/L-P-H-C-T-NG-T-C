@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import ts from 'typescript';
+const data=JSON.parse(await fs.readFile('src/data/curriculum/grade4.json','utf8'));
+const writing=JSON.parse(await fs.readFile('src/data/writing/lessons.json','utf8'));
+assert.equal(Object.keys(data.books).length,6);
+assert.equal(new Set(data.lessons.map(l=>l.id)).size,data.lessons.length);
+for(const [subject,total] of [['Toán',73],['Khoa học',31],['Lịch sử và Địa lí',27],['Tiếng Việt',62]])assert.equal(data.lessons.filter(l=>l.subject===subject).length,total,subject);
+for(const subject of ['Toán','Khoa học','Lịch sử và Địa lí']){const rows=data.lessons.filter(l=>l.subject===subject);assert.deepEqual(rows.map(l=>l.number),Array.from({length:rows.length},(_,i)=>i+1));}
+for(const lesson of data.lessons){assert.ok(lesson.title&&lesson.printedPage>0);assert.equal(lesson.pdfPage,lesson.printedPage+data.books[lesson.book].pdfOffset);}
+assert.deepEqual(data.weeks.map(w=>w.week),Array.from({length:35},(_,i)=>i+1));
+assert.equal(new Set(data.weeks.flatMap(w=>w.readingIds)).size,62);
+assert.deepEqual(data.weeks.filter(w=>!w.readingIds.length).map(w=>w.week),[9,18,27,35]);
+for(const week of data.weeks){assert.deepEqual(writing[week.week-1].sourcePages,week.writingPages);assert.equal(writing[week.week-1].sourceBook,week.book);assert.equal(writing[week.week-1].topic,week.writing.join('; '));assert.ok(week.readingIds.every(id=>data.lessons.some(l=>l.id===id)));}
+assert.match(writing[12].prompt,/đơn/);assert.doesNotMatch(writing[12].model,/GIEO HẠT/);
+assert.match(writing[18].prompt,/người gần gũi/);assert.doesNotMatch(writing[18].prompt,/mái trường/);
+assert.match(writing[33].prompt,/giấy mời/);assert.match(writing[33].model,/GIẤY MỜI/);
+for(const week of [1,2,10,11,19,20,21,24,29,32,33])assert.ok(!writing[week-1].model.includes('\n\n'),'Paragraph format week '+week);
+let source=await fs.readFile('src/services/curriculum/grade4.ts','utf8');source=source.replace("import data from '../../data/curriculum/grade4.json';",'const data='+JSON.stringify(data)+';');
+const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const {checkGrade4Quiz}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+const check=(subject,title,grade='Khối 4')=>checkGrade4Quiz({subject,title,grade});
+assert.equal(check('Toán','Bài 42 – Nhân với số có hai chữ số').status,'MISMATCH');
+assert.equal(check('Toán','Bài 43 – Nhân với số có hai chữ số').status,'REFERENCE');
+assert.equal(check('Khoa học','Bài 32').status,'MISMATCH');
+assert.equal(check('Lịch sử và Địa lý','Bài 30').status,'MISMATCH');
+assert.equal(check('Tập làm văn','Tuần 13').week,13);assert.match(check('Tập làm văn','Tuần 13').message,/Viết đơn/);
+assert.equal(check('Tiếng Việt','Bài 1').status,'UNCONFIRMED');
+assert.equal(check('Tiếng Việt','Bài 1 – Điều kì diệu').references[0].book,'tv1');
+assert.equal(check('Tiếng Việt','Bài 1 – Hải Thượng Lãn Ông').references[0].book,'tv2');
+assert.equal(check('Toán','Tuần 36').status,'MISMATCH');
+assert.equal(check('Toán','Bài 1','Khối 5').status,'OUTSIDE');
+assert.equal(check('Toán','Bài 1','Khối 14').status,'OUTSIDE');
+console.log('PASS: six book identities, full numbered lesson catalogues, explicit 35-week Vietnamese sequence, source page offsets, corrected writing genres and conservative metadata audit.');

@@ -3,7 +3,7 @@ import type { Quiz } from '../types';
 export const INITIAL_QUIZZES: Quiz[] = [
   {
     id: 'quiz-1',
-    title: 'Phép nhân với số có hai chữ số',
+    title: 'Bài 43 – Nhân với số có hai chữ số',
     subject: 'Toán',
     grade: 'Khối 4',
     questionCount: 3,
@@ -36,7 +36,7 @@ export const INITIAL_QUIZZES: Quiz[] = [
   },
   {
     id: 'quiz-2',
-    title: 'Nước cần cho sự sống',
+    title: 'Ôn tập bài 1–2 – Nước và cuộc sống',
     subject: 'Khoa học',
     grade: 'Khối 4',
     questionCount: 2,
@@ -45,9 +45,9 @@ export const INITIAL_QUIZZES: Quiz[] = [
       {
         id: 'q-201',
         type: 'MULTIPLE_CHOICE',
-        content: 'Vòng tuần hoàn của nước trong tự nhiên gồm mấy thể?',
-        options: ['1 thể', '2 thể', '3 thể (Rắn, Lỏng, Khí)', '4 thể'],
-        correctAnswer: '3 thể (Rắn, Lỏng, Khí)',
+        content: 'Nước có thể tồn tại ở những thể nào?',
+        options: ['Chỉ thể rắn', 'Chỉ thể lỏng', 'Thể rắn, thể lỏng và thể khí', 'Chỉ thể khí'],
+        correctAnswer: 'Thể rắn, thể lỏng và thể khí',
         explanation: 'Nước tồn tại ở 3 thể: rắn (băng), lỏng (nước), khí (hơi nước).',
       },
       {
@@ -56,13 +56,13 @@ export const INITIAL_QUIZZES: Quiz[] = [
         content: 'Con người có thể sống thiếu nước trong 1 tháng mà vẫn khỏe mạnh.',
         options: ['Đúng', 'Sai'],
         correctAnswer: 'Sai',
-        explanation: 'Con người chỉ có thể nhịn uống nước từ 3 đến 5 ngày.',
+        explanation: 'Nước cần thiết cho các hoạt động sống của cơ thể. Cần uống đủ nước sạch, không thử nhịn uống nước.',
       },
     ],
   },
   {
     id: 'quiz-3',
-    title: 'Danh từ và cụm danh từ',
+    title: 'Tuần 2 – Danh từ chung, danh từ riêng',
     subject: 'Tiếng Việt',
     grade: 'Khối 4',
     questionCount: 2,
@@ -79,9 +79,9 @@ export const INITIAL_QUIZZES: Quiz[] = [
       {
         id: 'q-302',
         type: 'SHORT_ANSWER',
-        content: 'Danh từ chỉ người sinh ra và nuôi dưỡng em là gì?',
-        correctAnswer: 'Cha mẹ',
-        explanation: 'Hoặc: Bố mẹ, Ba mẹ.',
+        content: 'Trong câu “Mẹ đang đọc sách.”, danh từ chỉ người là từ nào?',
+        correctAnswer: 'Mẹ',
+        explanation: 'Mẹ là danh từ chỉ người trong câu.',
       },
     ],
   },

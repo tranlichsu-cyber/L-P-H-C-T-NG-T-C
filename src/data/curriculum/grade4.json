@@ -1,0 +1,2415 @@
+{
+  "books": {
+    "tv1": {
+      "id": "tv1",
+      "title": "Tiếng Việt 4, tập một",
+      "fileName": "SGK-Tieng-Viet-4--2026-Tap-1.pdf",
+      "series": "Kết nối tri thức với cuộc sống",
+      "pdfOffset": 1,
+      "sha256": "a0d5844fefc986f586fd586bf7de9cb7bbb0c0179282ce56bfff5244640d7b1d",
+      "checkedAt": "2026-10-14",
+      "source": "PDF giáo viên cung cấp trong cuộc trao đổi"
+    },
+    "tv2": {
+      "id": "tv2",
+      "title": "Tiếng Việt 4, tập hai",
+      "fileName": "SGK-Tieng-Viet-4-Tap-2.pdf",
+      "series": "Kết nối tri thức với cuộc sống",
+      "pdfOffset": 1,
+      "sha256": "3126301ac78be5843600dd52f0e4e3bd7cbd73692cc0fcacec4a8f6f9565d720",
+      "checkedAt": "2026-10-14",
+      "source": "PDF giáo viên cung cấp trong cuộc trao đổi"
+    },
+    "math1": {
+      "id": "math1",
+      "title": "Toán 4, tập một",
+      "fileName": "SGK-Toan-4-tu-nam-2026-Tap-1.pdf",
+      "series": "Kết nối tri thức với cuộc sống",
+      "pdfOffset": 1,
+      "sha256": "04c58f482bf79b6e8b414a3347b7fef5a46ff89f8c5e1e657dae63ed27956caf",
+      "checkedAt": "2026-10-14",
+      "source": "PDF giáo viên cung cấp trong cuộc trao đổi"
+    },
+    "math2": {
+      "id": "math2",
+      "title": "Toán 4, tập hai",
+      "fileName": "SGK-Toan-4-tu-nam-2026-Tap-2.pdf",
+      "series": "Kết nối tri thức với cuộc sống",
+      "pdfOffset": 1,
+      "sha256": "8ee113f4cb6ccc584aa97ab457a0b4fb6850defd8c237a7a461dcf3b2bc26c15",
+      "checkedAt": "2026-10-14",
+      "source": "PDF giáo viên cung cấp trong cuộc trao đổi"
+    },
+    "science": {
+      "id": "science",
+      "title": "Khoa học 4",
+      "fileName": "SGK-Khoa-Hoc-lop-4-thong-nhat-tu-nam-2026.pdf",
+      "series": "Kết nối tri thức với cuộc sống",
+      "pdfOffset": 1,
+      "sha256": "ab34f31ce033f961d03ec33ba3971a05ece82d18d473f34a13ec0940b3257806",
+      "checkedAt": "2026-10-14",
+      "source": "PDF giáo viên cung cấp trong cuộc trao đổi"
+    },
+    "historygeo": {
+      "id": "historygeo",
+      "title": "Lịch sử và Địa lí 4",
+      "fileName": "SGK-Lich-Su-Va-Dia-Li-lop-4-thong-nhat-tu-nam-2026.pdf",
+      "series": "Kết nối tri thức với cuộc sống",
+      "pdfOffset": 2,
+      "sha256": "34cf3718eaf5b7bc6def51fab3ac0595e4588a5f30211e4c30b506177dd86c6c",
+      "checkedAt": "2026-10-14",
+      "source": "PDF giáo viên cung cấp trong cuộc trao đổi"
+    }
+  },
+  "lessons": [
+    {
+      "id": "math1-1",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 1,
+      "title": "Ôn tập các số đến 100 000",
+      "printedPage": 6,
+      "pdfPage": 7
+    },
+    {
+      "id": "math1-2",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 2,
+      "title": "Ôn tập các phép tính trong phạm vi 100 000",
+      "printedPage": 9,
+      "pdfPage": 10
+    },
+    {
+      "id": "math1-3",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 3,
+      "title": "Số chẵn, số lẻ",
+      "printedPage": 12,
+      "pdfPage": 13
+    },
+    {
+      "id": "math1-4",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 4,
+      "title": "Biểu thức chứa chữ",
+      "printedPage": 14,
+      "pdfPage": 15
+    },
+    {
+      "id": "math1-5",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 5,
+      "title": "Giải bài toán có ba bước tính",
+      "printedPage": 19,
+      "pdfPage": 20
+    },
+    {
+      "id": "math1-6",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 6,
+      "title": "Luyện tập chung",
+      "printedPage": 21,
+      "pdfPage": 22
+    },
+    {
+      "id": "math1-7",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 7,
+      "title": "Đo góc, đơn vị đo góc",
+      "printedPage": 23,
+      "pdfPage": 24
+    },
+    {
+      "id": "math1-8",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 8,
+      "title": "Góc nhọn, góc tù, góc bẹt",
+      "printedPage": 26,
+      "pdfPage": 27
+    },
+    {
+      "id": "math1-9",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 9,
+      "title": "Luyện tập chung",
+      "printedPage": 31,
+      "pdfPage": 32
+    },
+    {
+      "id": "math1-10",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 10,
+      "title": "Số có sáu chữ số. Số 1 000 000",
+      "printedPage": 33,
+      "pdfPage": 34
+    },
+    {
+      "id": "math1-11",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 11,
+      "title": "Hàng và lớp",
+      "printedPage": 37,
+      "pdfPage": 38
+    },
+    {
+      "id": "math1-12",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 12,
+      "title": "Các số trong phạm vi lớp triệu",
+      "printedPage": 41,
+      "pdfPage": 42
+    },
+    {
+      "id": "math1-13",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 13,
+      "title": "Làm tròn số đến hàng trăm nghìn",
+      "printedPage": 45,
+      "pdfPage": 46
+    },
+    {
+      "id": "math1-14",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 14,
+      "title": "So sánh các số có nhiều chữ số",
+      "printedPage": 47,
+      "pdfPage": 48
+    },
+    {
+      "id": "math1-15",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 15,
+      "title": "Làm quen với dãy số tự nhiên",
+      "printedPage": 50,
+      "pdfPage": 51
+    },
+    {
+      "id": "math1-16",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 16,
+      "title": "Luyện tập chung",
+      "printedPage": 52,
+      "pdfPage": 53
+    },
+    {
+      "id": "math1-17",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 17,
+      "title": "Yến, tạ, tấn",
+      "printedPage": 56,
+      "pdfPage": 57
+    },
+    {
+      "id": "math1-18",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 18,
+      "title": "Đề-xi-mét vuông, mét vuông, mi-li-mét vuông",
+      "printedPage": 60,
+      "pdfPage": 61
+    },
+    {
+      "id": "math1-19",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 19,
+      "title": "Giây, thế kỉ",
+      "printedPage": 66,
+      "pdfPage": 67
+    },
+    {
+      "id": "math1-20",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 20,
+      "title": "Thực hành và trải nghiệm sử dụng một số đơn vị đo đại lượng",
+      "printedPage": 69,
+      "pdfPage": 70
+    },
+    {
+      "id": "math1-21",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 21,
+      "title": "Luyện tập chung",
+      "printedPage": 73,
+      "pdfPage": 74
+    },
+    {
+      "id": "math1-22",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 22,
+      "title": "Phép cộng các số có nhiều chữ số",
+      "printedPage": 76,
+      "pdfPage": 77
+    },
+    {
+      "id": "math1-23",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 23,
+      "title": "Phép trừ các số có nhiều chữ số",
+      "printedPage": 79,
+      "pdfPage": 80
+    },
+    {
+      "id": "math1-24",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 24,
+      "title": "Tính chất giao hoán và kết hợp của phép cộng",
+      "printedPage": 82,
+      "pdfPage": 83
+    },
+    {
+      "id": "math1-25",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 25,
+      "title": "Tìm hai số biết tổng và hiệu của hai số đó",
+      "printedPage": 86,
+      "pdfPage": 87
+    },
+    {
+      "id": "math1-26",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 26,
+      "title": "Luyện tập chung",
+      "printedPage": 88,
+      "pdfPage": 89
+    },
+    {
+      "id": "math1-27",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 27,
+      "title": "Hai đường thẳng vuông góc",
+      "printedPage": 91,
+      "pdfPage": 92
+    },
+    {
+      "id": "math1-28",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 28,
+      "title": "Thực hành và trải nghiệm về hai đường thẳng vuông góc",
+      "printedPage": 94,
+      "pdfPage": 95
+    },
+    {
+      "id": "math1-29",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 29,
+      "title": "Hai đường thẳng song song",
+      "printedPage": 98,
+      "pdfPage": 99
+    },
+    {
+      "id": "math1-30",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 30,
+      "title": "Thực hành và trải nghiệm về hai đường thẳng song song",
+      "printedPage": 101,
+      "pdfPage": 102
+    },
+    {
+      "id": "math1-31",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 31,
+      "title": "Hình bình hành, hình thoi",
+      "printedPage": 105,
+      "pdfPage": 106
+    },
+    {
+      "id": "math1-32",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 32,
+      "title": "Luyện tập chung",
+      "printedPage": 110,
+      "pdfPage": 111
+    },
+    {
+      "id": "math1-33",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 33,
+      "title": "Ôn tập các số đến lớp triệu",
+      "printedPage": 114,
+      "pdfPage": 115
+    },
+    {
+      "id": "math1-34",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 34,
+      "title": "Ôn tập phép cộng, phép trừ",
+      "printedPage": 118,
+      "pdfPage": 119
+    },
+    {
+      "id": "math1-35",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 35,
+      "title": "Ôn tập hình học",
+      "printedPage": 121,
+      "pdfPage": 122
+    },
+    {
+      "id": "math1-36",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 36,
+      "title": "Ôn tập đo lường",
+      "printedPage": 125,
+      "pdfPage": 126
+    },
+    {
+      "id": "math1-37",
+      "subject": "Toán",
+      "book": "math1",
+      "number": 37,
+      "title": "Ôn tập chung",
+      "printedPage": 127,
+      "pdfPage": 128
+    },
+    {
+      "id": "math2-38",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 38,
+      "title": "Nhân với số có một chữ số",
+      "printedPage": 4,
+      "pdfPage": 5
+    },
+    {
+      "id": "math2-39",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 39,
+      "title": "Chia cho số có một chữ số",
+      "printedPage": 6,
+      "pdfPage": 7
+    },
+    {
+      "id": "math2-40",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 40,
+      "title": "Tính chất giao hoán và kết hợp của phép nhân",
+      "printedPage": 9,
+      "pdfPage": 10
+    },
+    {
+      "id": "math2-41",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 41,
+      "title": "Nhân, chia với 10, 100, 1 000,...",
+      "printedPage": 14,
+      "pdfPage": 15
+    },
+    {
+      "id": "math2-42",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 42,
+      "title": "Tính chất phân phối của phép nhân đối với phép cộng",
+      "printedPage": 17,
+      "pdfPage": 18
+    },
+    {
+      "id": "math2-43",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 43,
+      "title": "Nhân với số có hai chữ số",
+      "printedPage": 20,
+      "pdfPage": 21
+    },
+    {
+      "id": "math2-44",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 44,
+      "title": "Chia cho số có hai chữ số",
+      "printedPage": 23,
+      "pdfPage": 24
+    },
+    {
+      "id": "math2-45",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 45,
+      "title": "Thực hành và trải nghiệm ước lượng trong tính toán",
+      "printedPage": 27,
+      "pdfPage": 28
+    },
+    {
+      "id": "math2-46",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 46,
+      "title": "Tìm số trung bình cộng",
+      "printedPage": 29,
+      "pdfPage": 30
+    },
+    {
+      "id": "math2-47",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 47,
+      "title": "Bài toán liên quan đến rút về đơn vị",
+      "printedPage": 31,
+      "pdfPage": 32
+    },
+    {
+      "id": "math2-48",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 48,
+      "title": "Luyện tập chung",
+      "printedPage": 33,
+      "pdfPage": 34
+    },
+    {
+      "id": "math2-49",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 49,
+      "title": "Dãy số liệu thống kê",
+      "printedPage": 36,
+      "pdfPage": 37
+    },
+    {
+      "id": "math2-50",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 50,
+      "title": "Biểu đồ cột",
+      "printedPage": 39,
+      "pdfPage": 40
+    },
+    {
+      "id": "math2-51",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 51,
+      "title": "Số lần xuất hiện của một sự kiện",
+      "printedPage": 43,
+      "pdfPage": 44
+    },
+    {
+      "id": "math2-52",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 52,
+      "title": "Luyện tập chung",
+      "printedPage": 47,
+      "pdfPage": 48
+    },
+    {
+      "id": "math2-53",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 53,
+      "title": "Khái niệm phân số",
+      "printedPage": 49,
+      "pdfPage": 50
+    },
+    {
+      "id": "math2-54",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 54,
+      "title": "Phân số và phép chia số tự nhiên",
+      "printedPage": 52,
+      "pdfPage": 53
+    },
+    {
+      "id": "math2-55",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 55,
+      "title": "Tính chất cơ bản của phân số",
+      "printedPage": 56,
+      "pdfPage": 57
+    },
+    {
+      "id": "math2-56",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 56,
+      "title": "Rút gọn phân số",
+      "printedPage": 59,
+      "pdfPage": 60
+    },
+    {
+      "id": "math2-57",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 57,
+      "title": "Quy đồng mẫu số các phân số",
+      "printedPage": 62,
+      "pdfPage": 63
+    },
+    {
+      "id": "math2-58",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 58,
+      "title": "So sánh phân số",
+      "printedPage": 64,
+      "pdfPage": 65
+    },
+    {
+      "id": "math2-59",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 59,
+      "title": "Luyện tập chung",
+      "printedPage": 69,
+      "pdfPage": 70
+    },
+    {
+      "id": "math2-60",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 60,
+      "title": "Phép cộng phân số",
+      "printedPage": 74,
+      "pdfPage": 75
+    },
+    {
+      "id": "math2-61",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 61,
+      "title": "Phép trừ phân số",
+      "printedPage": 80,
+      "pdfPage": 81
+    },
+    {
+      "id": "math2-62",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 62,
+      "title": "Luyện tập chung",
+      "printedPage": 83,
+      "pdfPage": 84
+    },
+    {
+      "id": "math2-63",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 63,
+      "title": "Phép nhân phân số",
+      "printedPage": 86,
+      "pdfPage": 87
+    },
+    {
+      "id": "math2-64",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 64,
+      "title": "Phép chia phân số",
+      "printedPage": 91,
+      "pdfPage": 92
+    },
+    {
+      "id": "math2-65",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 65,
+      "title": "Tìm phân số của một số",
+      "printedPage": 95,
+      "pdfPage": 96
+    },
+    {
+      "id": "math2-66",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 66,
+      "title": "Luyện tập chung",
+      "printedPage": 98,
+      "pdfPage": 99
+    },
+    {
+      "id": "math2-67",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 67,
+      "title": "Ôn tập số tự nhiên",
+      "printedPage": 102,
+      "pdfPage": 103
+    },
+    {
+      "id": "math2-68",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 68,
+      "title": "Ôn tập phép tính với số tự nhiên",
+      "printedPage": 105,
+      "pdfPage": 106
+    },
+    {
+      "id": "math2-69",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 69,
+      "title": "Ôn tập phân số",
+      "printedPage": 107,
+      "pdfPage": 108
+    },
+    {
+      "id": "math2-70",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 70,
+      "title": "Ôn tập phép tính với phân số",
+      "printedPage": 110,
+      "pdfPage": 111
+    },
+    {
+      "id": "math2-71",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 71,
+      "title": "Ôn tập hình học và đo lường",
+      "printedPage": 112,
+      "pdfPage": 113
+    },
+    {
+      "id": "math2-72",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 72,
+      "title": "Ôn tập một số yếu tố thống kê và xác suất",
+      "printedPage": 114,
+      "pdfPage": 115
+    },
+    {
+      "id": "math2-73",
+      "subject": "Toán",
+      "book": "math2",
+      "number": 73,
+      "title": "Ôn tập chung",
+      "printedPage": 116,
+      "pdfPage": 117
+    },
+    {
+      "id": "science-1",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 1,
+      "title": "Tính chất của nước và nước với cuộc sống",
+      "printedPage": 5,
+      "pdfPage": 6
+    },
+    {
+      "id": "science-2",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 2,
+      "title": "Sự chuyển thể của nước và vòng tuần hoàn của nước trong tự nhiên",
+      "printedPage": 9,
+      "pdfPage": 10
+    },
+    {
+      "id": "science-3",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 3,
+      "title": "Sự ô nhiễm và bảo vệ nguồn nước. Một số cách làm sạch nước",
+      "printedPage": 13,
+      "pdfPage": 14
+    },
+    {
+      "id": "science-4",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 4,
+      "title": "Không khí có ở đâu? Tính chất và thành phần của không khí",
+      "printedPage": 17,
+      "pdfPage": 18
+    },
+    {
+      "id": "science-5",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 5,
+      "title": "Vai trò của không khí và bảo vệ bầu không khí trong lành",
+      "printedPage": 21,
+      "pdfPage": 22
+    },
+    {
+      "id": "science-6",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 6,
+      "title": "Gió, bão và phòng chống bão",
+      "printedPage": 25,
+      "pdfPage": 26
+    },
+    {
+      "id": "science-7",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 7,
+      "title": "Ôn tập chủ đề Chất",
+      "printedPage": 29,
+      "pdfPage": 30
+    },
+    {
+      "id": "science-8",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 8,
+      "title": "Ánh sáng và sự truyền ánh sáng",
+      "printedPage": 31,
+      "pdfPage": 32
+    },
+    {
+      "id": "science-9",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 9,
+      "title": "Vai trò của ánh sáng",
+      "printedPage": 35,
+      "pdfPage": 36
+    },
+    {
+      "id": "science-10",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 10,
+      "title": "Âm thanh và sự truyền âm thanh",
+      "printedPage": 39,
+      "pdfPage": 40
+    },
+    {
+      "id": "science-11",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 11,
+      "title": "Âm thanh trong cuộc sống",
+      "printedPage": 42,
+      "pdfPage": 43
+    },
+    {
+      "id": "science-12",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 12,
+      "title": "Nhiệt độ và sự truyền nhiệt",
+      "printedPage": 45,
+      "pdfPage": 46
+    },
+    {
+      "id": "science-13",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 13,
+      "title": "Vật dẫn nhiệt tốt, vật dẫn nhiệt kém",
+      "printedPage": 48,
+      "pdfPage": 49
+    },
+    {
+      "id": "science-14",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 14,
+      "title": "Ôn tập chủ đề Năng lượng",
+      "printedPage": 51,
+      "pdfPage": 52
+    },
+    {
+      "id": "science-15",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 15,
+      "title": "Thực vật cần gì để sống?",
+      "printedPage": 53,
+      "pdfPage": 54
+    },
+    {
+      "id": "science-16",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 16,
+      "title": "Động vật cần gì để sống?",
+      "printedPage": 59,
+      "pdfPage": 60
+    },
+    {
+      "id": "science-17",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 17,
+      "title": "Chăm sóc cây trồng, vật nuôi",
+      "printedPage": 64,
+      "pdfPage": 65
+    },
+    {
+      "id": "science-18",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 18,
+      "title": "Ôn tập chủ đề Thực vật và động vật",
+      "printedPage": 68,
+      "pdfPage": 69
+    },
+    {
+      "id": "science-19",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 19,
+      "title": "Đặc điểm chung của nấm",
+      "printedPage": 70,
+      "pdfPage": 71
+    },
+    {
+      "id": "science-20",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 20,
+      "title": "Nấm ăn và nấm trong chế biến thực phẩm",
+      "printedPage": 74,
+      "pdfPage": 75
+    },
+    {
+      "id": "science-21",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 21,
+      "title": "Nấm gây hỏng thực phẩm và nấm độc",
+      "printedPage": 78,
+      "pdfPage": 79
+    },
+    {
+      "id": "science-22",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 22,
+      "title": "Ôn tập chủ đề Nấm",
+      "printedPage": 82,
+      "pdfPage": 83
+    },
+    {
+      "id": "science-23",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 23,
+      "title": "Vai trò của chất dinh dưỡng đối với cơ thể",
+      "printedPage": 84,
+      "pdfPage": 85
+    },
+    {
+      "id": "science-24",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 24,
+      "title": "Chế độ ăn uống cân bằng",
+      "printedPage": 88,
+      "pdfPage": 89
+    },
+    {
+      "id": "science-25",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 25,
+      "title": "Một số bệnh liên quan đến dinh dưỡng",
+      "printedPage": 93,
+      "pdfPage": 94
+    },
+    {
+      "id": "science-26",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 26,
+      "title": "Thực phẩm an toàn",
+      "printedPage": 99,
+      "pdfPage": 100
+    },
+    {
+      "id": "science-27",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 27,
+      "title": "Phòng tránh đuối nước",
+      "printedPage": 103,
+      "pdfPage": 104
+    },
+    {
+      "id": "science-28",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 28,
+      "title": "Ôn tập chủ đề Con người và sức khoẻ",
+      "printedPage": 107,
+      "pdfPage": 108
+    },
+    {
+      "id": "science-29",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 29,
+      "title": "Chuỗi thức ăn trong tự nhiên",
+      "printedPage": 109,
+      "pdfPage": 110
+    },
+    {
+      "id": "science-30",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 30,
+      "title": "Vai trò của thực vật trong chuỗi thức ăn",
+      "printedPage": 113,
+      "pdfPage": 114
+    },
+    {
+      "id": "science-31",
+      "subject": "Khoa học",
+      "book": "science",
+      "number": 31,
+      "title": "Ôn tập chủ đề Sinh vật và môi trường",
+      "printedPage": 119,
+      "pdfPage": 120
+    },
+    {
+      "id": "historygeo-1",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 1,
+      "title": "Làm quen với phương tiện học tập môn Lịch sử và Địa lí",
+      "printedPage": 6,
+      "pdfPage": 8
+    },
+    {
+      "id": "historygeo-2",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 2,
+      "title": "Thiên nhiên và con người ở địa phương em",
+      "printedPage": 12,
+      "pdfPage": 14
+    },
+    {
+      "id": "historygeo-3",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 3,
+      "title": "Lịch sử và văn hoá truyền thống địa phương em",
+      "printedPage": 16,
+      "pdfPage": 18
+    },
+    {
+      "id": "historygeo-4",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 4,
+      "title": "Thiên nhiên vùng Trung du và miền núi phía Bắc",
+      "printedPage": 18,
+      "pdfPage": 20
+    },
+    {
+      "id": "historygeo-5",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 5,
+      "title": "Dân cư và hoạt động sản xuất ở vùng Trung du và miền núi phía Bắc",
+      "printedPage": 24,
+      "pdfPage": 26
+    },
+    {
+      "id": "historygeo-6",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 6,
+      "title": "Một số nét văn hoá ở vùng Trung du và miền núi phía Bắc",
+      "printedPage": 28,
+      "pdfPage": 30
+    },
+    {
+      "id": "historygeo-7",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 7,
+      "title": "Đền Hùng và lễ giỗ Tổ Hùng Vương",
+      "printedPage": 32,
+      "pdfPage": 34
+    },
+    {
+      "id": "historygeo-8",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 8,
+      "title": "Thiên nhiên vùng Đồng bằng Bắc Bộ",
+      "printedPage": 36,
+      "pdfPage": 38
+    },
+    {
+      "id": "historygeo-9",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 9,
+      "title": "Dân cư và hoạt động sản xuất ở vùng Đồng bằng Bắc Bộ",
+      "printedPage": 41,
+      "pdfPage": 43
+    },
+    {
+      "id": "historygeo-10",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 10,
+      "title": "Một số nét văn hoá ở vùng Đồng bằng Bắc Bộ",
+      "printedPage": 46,
+      "pdfPage": 48
+    },
+    {
+      "id": "historygeo-11",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 11,
+      "title": "Sông Hồng và văn minh sông Hồng",
+      "printedPage": 50,
+      "pdfPage": 52
+    },
+    {
+      "id": "historygeo-12",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 12,
+      "title": "Thăng Long – Hà Nội",
+      "printedPage": 54,
+      "pdfPage": 56
+    },
+    {
+      "id": "historygeo-13",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 13,
+      "title": "Văn Miếu – Quốc Tử Giám",
+      "printedPage": 59,
+      "pdfPage": 61
+    },
+    {
+      "id": "historygeo-14",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 14,
+      "title": "Ôn tập",
+      "printedPage": 63,
+      "pdfPage": 65
+    },
+    {
+      "id": "historygeo-15",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 15,
+      "title": "Thiên nhiên vùng Bắc Trung Bộ và Nam Trung Bộ",
+      "printedPage": 65,
+      "pdfPage": 67
+    },
+    {
+      "id": "historygeo-16",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 16,
+      "title": "Dân cư và hoạt động sản xuất ở vùng Bắc Trung Bộ và Nam Trung Bộ",
+      "printedPage": 72,
+      "pdfPage": 74
+    },
+    {
+      "id": "historygeo-17",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 17,
+      "title": "Một số nét văn hoá ở vùng Bắc Trung Bộ và Nam Trung Bộ",
+      "printedPage": 78,
+      "pdfPage": 80
+    },
+    {
+      "id": "historygeo-18",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 18,
+      "title": "Truyền thống yêu nước, cách mạng của đồng bào Bắc Trung Bộ và Nam Trung Bộ",
+      "printedPage": 84,
+      "pdfPage": 86
+    },
+    {
+      "id": "historygeo-19",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 19,
+      "title": "Cố đô Huế",
+      "printedPage": 88,
+      "pdfPage": 90
+    },
+    {
+      "id": "historygeo-20",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 20,
+      "title": "Phố cổ Hội An",
+      "printedPage": 92,
+      "pdfPage": 94
+    },
+    {
+      "id": "historygeo-21",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 21,
+      "title": "Lễ hội Cồng chiêng Tây Nguyên",
+      "printedPage": 96,
+      "pdfPage": 98
+    },
+    {
+      "id": "historygeo-22",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 22,
+      "title": "Thiên nhiên vùng Nam Bộ",
+      "printedPage": 99,
+      "pdfPage": 101
+    },
+    {
+      "id": "historygeo-23",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 23,
+      "title": "Dân cư và hoạt động sản xuất ở vùng Nam Bộ",
+      "printedPage": 103,
+      "pdfPage": 105
+    },
+    {
+      "id": "historygeo-24",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 24,
+      "title": "Một số nét văn hoá và truyền thống yêu nước, cách mạng của đồng bào Nam Bộ",
+      "printedPage": 107,
+      "pdfPage": 109
+    },
+    {
+      "id": "historygeo-25",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 25,
+      "title": "Thành phố Hồ Chí Minh",
+      "printedPage": 111,
+      "pdfPage": 113
+    },
+    {
+      "id": "historygeo-26",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 26,
+      "title": "Địa đạo Củ Chi",
+      "printedPage": 117,
+      "pdfPage": 119
+    },
+    {
+      "id": "historygeo-27",
+      "subject": "Lịch sử và Địa lí",
+      "book": "historygeo",
+      "number": 27,
+      "title": "Ôn tập",
+      "printedPage": 120,
+      "pdfPage": 122
+    },
+    {
+      "id": "tv1-1",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 1,
+      "title": "Điều kì diệu",
+      "printedPage": 8,
+      "pdfPage": 9
+    },
+    {
+      "id": "tv1-2",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 2,
+      "title": "Thi nhạc",
+      "printedPage": 12,
+      "pdfPage": 13
+    },
+    {
+      "id": "tv1-3",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 3,
+      "title": "Anh em sinh đôi",
+      "printedPage": 16,
+      "pdfPage": 17
+    },
+    {
+      "id": "tv1-4",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 4,
+      "title": "Công chúa và người dẫn chuyện",
+      "printedPage": 20,
+      "pdfPage": 21
+    },
+    {
+      "id": "tv1-5",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 5,
+      "title": "Thằn lằn xanh và tắc kè",
+      "printedPage": 23,
+      "pdfPage": 24
+    },
+    {
+      "id": "tv1-6",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 6,
+      "title": "Nghệ sĩ trống",
+      "printedPage": 26,
+      "pdfPage": 27
+    },
+    {
+      "id": "tv1-7",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 7,
+      "title": "Những bức chân dung",
+      "printedPage": 30,
+      "pdfPage": 31
+    },
+    {
+      "id": "tv1-8",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 8,
+      "title": "Đò ngang",
+      "printedPage": 34,
+      "pdfPage": 35
+    },
+    {
+      "id": "tv1-9",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 9,
+      "title": "Bầu trời trong quả trứng",
+      "printedPage": 39,
+      "pdfPage": 40
+    },
+    {
+      "id": "tv1-10",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 10,
+      "title": "Tiếng nói của cỏ cây",
+      "printedPage": 44,
+      "pdfPage": 45
+    },
+    {
+      "id": "tv1-11",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 11,
+      "title": "Tập làm văn",
+      "printedPage": 48,
+      "pdfPage": 49
+    },
+    {
+      "id": "tv1-12",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 12,
+      "title": "Nhà phát minh 6 tuổi",
+      "printedPage": 51,
+      "pdfPage": 52
+    },
+    {
+      "id": "tv1-13",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 13,
+      "title": "Con vẹt xanh",
+      "printedPage": 55,
+      "pdfPage": 56
+    },
+    {
+      "id": "tv1-14",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 14,
+      "title": "Chân trời cuối phố",
+      "printedPage": 59,
+      "pdfPage": 60
+    },
+    {
+      "id": "tv1-15",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 15,
+      "title": "Gặt chữ trên non",
+      "printedPage": 63,
+      "pdfPage": 64
+    },
+    {
+      "id": "tv1-16",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 16,
+      "title": "Trước ngày xa quê",
+      "printedPage": 66,
+      "pdfPage": 67
+    },
+    {
+      "id": "tv1-17",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 17,
+      "title": "Vẽ màu",
+      "printedPage": 77,
+      "pdfPage": 78
+    },
+    {
+      "id": "tv1-18",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 18,
+      "title": "Đồng cỏ nở hoa",
+      "printedPage": 81,
+      "pdfPage": 82
+    },
+    {
+      "id": "tv1-19",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 19,
+      "title": "Thanh âm của núi",
+      "printedPage": 85,
+      "pdfPage": 86
+    },
+    {
+      "id": "tv1-20",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 20,
+      "title": "Bầu trời mùa thu",
+      "printedPage": 89,
+      "pdfPage": 90
+    },
+    {
+      "id": "tv1-21",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 21,
+      "title": "Làm thỏ con bằng giấy",
+      "printedPage": 93,
+      "pdfPage": 94
+    },
+    {
+      "id": "tv1-22",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 22,
+      "title": "Bức tường có nhiều phép lạ",
+      "printedPage": 97,
+      "pdfPage": 98
+    },
+    {
+      "id": "tv1-23",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 23,
+      "title": "Bét-tô-ven và bản xô-nát Ánh trăng",
+      "printedPage": 101,
+      "pdfPage": 102
+    },
+    {
+      "id": "tv1-24",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 24,
+      "title": "Người tìm đường lên các vì sao",
+      "printedPage": 105,
+      "pdfPage": 106
+    },
+    {
+      "id": "tv1-25",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 25,
+      "title": "Bay cùng ước mơ",
+      "printedPage": 109,
+      "pdfPage": 110
+    },
+    {
+      "id": "tv1-26",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 26,
+      "title": "Con trai người làm vườn",
+      "printedPage": 114,
+      "pdfPage": 115
+    },
+    {
+      "id": "tv1-27",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 27,
+      "title": "Nếu em có một khu vườn",
+      "printedPage": 118,
+      "pdfPage": 119
+    },
+    {
+      "id": "tv1-28",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 28,
+      "title": "Bốn mùa mơ ước",
+      "printedPage": 122,
+      "pdfPage": 123
+    },
+    {
+      "id": "tv1-29",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 29,
+      "title": "Ở Vương quốc Tương Lai",
+      "printedPage": 125,
+      "pdfPage": 126
+    },
+    {
+      "id": "tv1-30",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 30,
+      "title": "Cánh chim nhỏ",
+      "printedPage": 129,
+      "pdfPage": 130
+    },
+    {
+      "id": "tv1-31",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 31,
+      "title": "Nếu chúng mình có phép lạ",
+      "printedPage": 132,
+      "pdfPage": 133
+    },
+    {
+      "id": "tv1-32",
+      "subject": "Tiếng Việt",
+      "book": "tv1",
+      "number": 32,
+      "title": "Anh Ba",
+      "printedPage": 135,
+      "pdfPage": 136
+    },
+    {
+      "id": "tv2-1",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 1,
+      "title": "Hải Thượng Lãn Ông",
+      "printedPage": 8,
+      "pdfPage": 9
+    },
+    {
+      "id": "tv2-2",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 2,
+      "title": "Vệt phấn trên mặt bàn",
+      "printedPage": 12,
+      "pdfPage": 13
+    },
+    {
+      "id": "tv2-3",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 3,
+      "title": "Ông Bụt đã đến",
+      "printedPage": 16,
+      "pdfPage": 17
+    },
+    {
+      "id": "tv2-4",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 4,
+      "title": "Quả ngọt cuối mùa",
+      "printedPage": 20,
+      "pdfPage": 21
+    },
+    {
+      "id": "tv2-5",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 5,
+      "title": "Tờ báo tường của tôi",
+      "printedPage": 24,
+      "pdfPage": 25
+    },
+    {
+      "id": "tv2-6",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 6,
+      "title": "Tiếng ru",
+      "printedPage": 28,
+      "pdfPage": 29
+    },
+    {
+      "id": "tv2-7",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 7,
+      "title": "Con muốn làm một cái cây",
+      "printedPage": 31,
+      "pdfPage": 32
+    },
+    {
+      "id": "tv2-8",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 8,
+      "title": "Trên khóm tre đầu ngõ",
+      "printedPage": 35,
+      "pdfPage": 36
+    },
+    {
+      "id": "tv2-9",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 9,
+      "title": "Sự tích con Rồng cháu Tiên",
+      "printedPage": 40,
+      "pdfPage": 41
+    },
+    {
+      "id": "tv2-10",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 10,
+      "title": "Cảm xúc Trường Sa",
+      "printedPage": 44,
+      "pdfPage": 45
+    },
+    {
+      "id": "tv2-11",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 11,
+      "title": "Sáng tháng Năm",
+      "printedPage": 48,
+      "pdfPage": 49
+    },
+    {
+      "id": "tv2-12",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 12,
+      "title": "Chàng trai làng Phù Ủng",
+      "printedPage": 51,
+      "pdfPage": 52
+    },
+    {
+      "id": "tv2-13",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 13,
+      "title": "Vườn của ông tôi",
+      "printedPage": 55,
+      "pdfPage": 56
+    },
+    {
+      "id": "tv2-14",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 14,
+      "title": "Trong lời mẹ hát",
+      "printedPage": 59,
+      "pdfPage": 60
+    },
+    {
+      "id": "tv2-15",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 15,
+      "title": "Người thầy đầu tiên của bố tôi",
+      "printedPage": 63,
+      "pdfPage": 64
+    },
+    {
+      "id": "tv2-16",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 16,
+      "title": "Ngựa biên phòng",
+      "printedPage": 67,
+      "pdfPage": 68
+    },
+    {
+      "id": "tv2-17",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 17,
+      "title": "Cây đa quê hương",
+      "printedPage": 80,
+      "pdfPage": 81
+    },
+    {
+      "id": "tv2-18",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 18,
+      "title": "Bước mùa xuân",
+      "printedPage": 85,
+      "pdfPage": 86
+    },
+    {
+      "id": "tv2-19",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 19,
+      "title": "Đi hội chùa Hương",
+      "printedPage": 89,
+      "pdfPage": 90
+    },
+    {
+      "id": "tv2-20",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 20,
+      "title": "Chiều ngoại ô",
+      "printedPage": 93,
+      "pdfPage": 94
+    },
+    {
+      "id": "tv2-21",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 21,
+      "title": "Những cánh buồm",
+      "printedPage": 98,
+      "pdfPage": 99
+    },
+    {
+      "id": "tv2-22",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 22,
+      "title": "Cái cầu",
+      "printedPage": 102,
+      "pdfPage": 103
+    },
+    {
+      "id": "tv2-23",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 23,
+      "title": "Đường đi Sa Pa",
+      "printedPage": 106,
+      "pdfPage": 107
+    },
+    {
+      "id": "tv2-24",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 24,
+      "title": "Quê ngoại",
+      "printedPage": 109,
+      "pdfPage": 110
+    },
+    {
+      "id": "tv2-25",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 25,
+      "title": "Khu bảo tồn động vật hoang dã Ngô-rông-gô-rô",
+      "printedPage": 113,
+      "pdfPage": 114
+    },
+    {
+      "id": "tv2-26",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 26,
+      "title": "Ngôi nhà của yêu thương",
+      "printedPage": 117,
+      "pdfPage": 118
+    },
+    {
+      "id": "tv2-27",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 27,
+      "title": "Băng tan",
+      "printedPage": 120,
+      "pdfPage": 121
+    },
+    {
+      "id": "tv2-28",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 28,
+      "title": "Chuyến du lịch thú vị",
+      "printedPage": 123,
+      "pdfPage": 124
+    },
+    {
+      "id": "tv2-29",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 29,
+      "title": "Lễ hội ở Nhật Bản",
+      "printedPage": 127,
+      "pdfPage": 128
+    },
+    {
+      "id": "tv2-30",
+      "subject": "Tiếng Việt",
+      "book": "tv2",
+      "number": 30,
+      "title": "Ngày hội",
+      "printedPage": 131,
+      "pdfPage": 132
+    }
+  ],
+  "weeks": [
+    {
+      "week": 1,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-1",
+        "tv1-2"
+      ],
+      "writing": [
+        "Tìm hiểu đoạn văn và câu chủ đề",
+        "Tìm hiểu cách viết đoạn văn nêu ý kiến"
+      ],
+      "writingPages": [
+        10,
+        14
+      ],
+      "language": "Danh từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 2,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-3",
+        "tv1-4"
+      ],
+      "writing": [
+        "Tìm ý cho đoạn văn nêu ý kiến",
+        "Viết đoạn văn nêu ý kiến"
+      ],
+      "writingPages": [
+        19,
+        21
+      ],
+      "language": "Danh từ chung, danh từ riêng",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 3,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-5",
+        "tv1-6"
+      ],
+      "writing": [
+        "Trả bài viết đoạn văn nêu ý kiến",
+        "Tìm hiểu cách viết báo cáo thảo luận nhóm"
+      ],
+      "writingPages": [
+        25,
+        28
+      ],
+      "language": "Luyện tập về danh từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 4,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-7",
+        "tv1-8"
+      ],
+      "writing": [
+        "Lập dàn ý cho báo cáo thảo luận nhóm",
+        "Viết báo cáo thảo luận nhóm"
+      ],
+      "writingPages": [
+        33,
+        36
+      ],
+      "language": "Quy tắc viết tên cơ quan, tổ chức",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 5,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-9",
+        "tv1-10"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết bài văn thuật lại một sự việc",
+        "Lập dàn ý cho bài văn thuật lại một sự việc"
+      ],
+      "writingPages": [
+        42,
+        46
+      ],
+      "language": "Động từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 6,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-11",
+        "tv1-12"
+      ],
+      "writing": [
+        "Viết bài văn thuật lại một sự việc",
+        "Tìm hiểu cách viết bài văn kể lại một câu chuyện"
+      ],
+      "writingPages": [
+        50,
+        52
+      ],
+      "language": "Luyện tập về động từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 7,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-13",
+        "tv1-14"
+      ],
+      "writing": [
+        "Luyện viết mở bài, kết bài cho bài văn kể lại một câu chuyện",
+        "Lập dàn ý cho bài văn kể lại một câu chuyện"
+      ],
+      "writingPages": [
+        57,
+        61
+      ],
+      "language": "Luyện tập về động từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 8,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-15",
+        "tv1-16"
+      ],
+      "writing": [
+        "Viết bài văn kể lại một câu chuyện",
+        "Trả bài văn kể lại một câu chuyện"
+      ],
+      "writingPages": [
+        65,
+        68
+      ],
+      "language": "Cách dùng và công dụng của từ điển",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 9,
+      "book": "tv1",
+      "readingIds": [],
+      "writing": [
+        "Ôn tập và Đánh giá giữa học kì I"
+      ],
+      "writingPages": [
+        69
+      ],
+      "language": "Ôn tập",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 10,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-17",
+        "tv1-18"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết đoạn văn tưởng tượng",
+        "Tìm ý cho đoạn văn tưởng tượng"
+      ],
+      "writingPages": [
+        79,
+        83
+      ],
+      "language": "Biện pháp nhân hoá",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 11,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-19",
+        "tv1-20"
+      ],
+      "writing": [
+        "Viết đoạn văn tưởng tượng",
+        "Trả bài viết đoạn văn tưởng tượng"
+      ],
+      "writingPages": [
+        88,
+        91
+      ],
+      "language": "Luyện tập về biện pháp nhân hoá",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 12,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-21",
+        "tv1-22"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết hướng dẫn thực hiện một công việc",
+        "Viết hướng dẫn thực hiện một công việc"
+      ],
+      "writingPages": [
+        95,
+        99
+      ],
+      "language": "Tính từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 13,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-23",
+        "tv1-24"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết đơn",
+        "Viết đơn"
+      ],
+      "writingPages": [
+        104,
+        107
+      ],
+      "language": "Luyện tập về tính từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 14,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-25",
+        "tv1-26"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết bài văn miêu tả con vật",
+        "Quan sát con vật"
+      ],
+      "writingPages": [
+        112,
+        116
+      ],
+      "language": "Luyện tập về tính từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 15,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-27",
+        "tv1-28"
+      ],
+      "writing": [
+        "Luyện viết đoạn văn miêu tả con vật",
+        "Lập dàn ý cho bài văn miêu tả con vật"
+      ],
+      "writingPages": [
+        120,
+        123
+      ],
+      "language": "Dấu gạch ngang",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 16,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-29",
+        "tv1-30"
+      ],
+      "writing": [
+        "Viết bài văn miêu tả con vật",
+        "Trả bài văn miêu tả con vật"
+      ],
+      "writingPages": [
+        128,
+        130
+      ],
+      "language": "Luyện tập về dấu gạch ngang",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 17,
+      "book": "tv1",
+      "readingIds": [
+        "tv1-31",
+        "tv1-32"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết thư",
+        "Viết thư"
+      ],
+      "writingPages": [
+        134,
+        136
+      ],
+      "language": "Luyện tập về danh từ, động từ, tính từ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 18,
+      "book": "tv1",
+      "readingIds": [],
+      "writing": [
+        "Ôn tập và Đánh giá cuối học kì I"
+      ],
+      "writingPages": [
+        138
+      ],
+      "language": "Ôn tập",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 19,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-1",
+        "tv2-2"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết đoạn văn nêu tình cảm, cảm xúc",
+        "Tìm ý cho đoạn văn nêu tình cảm, cảm xúc về một người gần gũi, thân thiết"
+      ],
+      "writingPages": [
+        10,
+        14
+      ],
+      "language": "Câu",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 20,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-3",
+        "tv2-4"
+      ],
+      "writing": [
+        "Viết đoạn văn nêu tình cảm, cảm xúc về một người gần gũi, thân thiết",
+        "Tìm ý cho đoạn văn nêu tình cảm, cảm xúc về một nhân vật trong văn học"
+      ],
+      "writingPages": [
+        19,
+        22
+      ],
+      "language": "Hai thành phần chính của câu",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 21,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-5",
+        "tv2-6"
+      ],
+      "writing": [
+        "Viết đoạn văn nêu tình cảm, cảm xúc về một nhân vật trong văn học",
+        "Trả bài viết đoạn văn nêu tình cảm, cảm xúc về một nhân vật trong văn học"
+      ],
+      "writingPages": [
+        27,
+        29
+      ],
+      "language": "Luyện tập về chủ ngữ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 22,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-7",
+        "tv2-8"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết hướng dẫn sử dụng một sản phẩm",
+        "Viết hướng dẫn sử dụng một sản phẩm"
+      ],
+      "writingPages": [
+        33,
+        37
+      ],
+      "language": "Luyện tập về vị ngữ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 23,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-9",
+        "tv2-10"
+      ],
+      "writing": [
+        "Lập dàn ý cho bài văn kể lại một câu chuyện",
+        "Viết bài văn kể lại một câu chuyện"
+      ],
+      "writingPages": [
+        43,
+        45
+      ],
+      "language": "Luyện tập về hai thành phần chính của câu",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 24,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-11",
+        "tv2-12"
+      ],
+      "writing": [
+        "Trả bài văn kể lại một câu chuyện",
+        "Viết đoạn văn nêu ý kiến"
+      ],
+      "writingPages": [
+        50,
+        53
+      ],
+      "language": "Trạng ngữ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 25,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-13",
+        "tv2-14"
+      ],
+      "writing": [
+        "Trả bài viết đoạn văn nêu ý kiến",
+        "Lập dàn ý cho bài văn thuật lại một sự việc"
+      ],
+      "writingPages": [
+        58,
+        61
+      ],
+      "language": "Trạng ngữ chỉ thời gian, nơi chốn",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 26,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-15",
+        "tv2-16"
+      ],
+      "writing": [
+        "Viết bài văn thuật lại một sự việc",
+        "Trả bài văn thuật lại một sự việc"
+      ],
+      "writingPages": [
+        66,
+        68
+      ],
+      "language": "Trạng ngữ chỉ nguyên nhân, mục đích",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 27,
+      "book": "tv2",
+      "readingIds": [],
+      "writing": [
+        "Ôn tập và Đánh giá giữa học kì II"
+      ],
+      "writingPages": [
+        70
+      ],
+      "language": "Ôn tập",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 28,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-17",
+        "tv2-18"
+      ],
+      "writing": [
+        "Tìm hiểu cách viết bài văn miêu tả cây cối",
+        "Tìm hiểu cách viết bài văn miêu tả cây cối (tiếp theo)"
+      ],
+      "writingPages": [
+        83,
+        87
+      ],
+      "language": "Trạng ngữ chỉ phương tiện",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 29,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-19",
+        "tv2-20"
+      ],
+      "writing": [
+        "Quan sát cây cối",
+        "Luyện viết đoạn văn miêu tả cây cối"
+      ],
+      "writingPages": [
+        91,
+        95
+      ],
+      "language": "Dấu ngoặc kép",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 30,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-21",
+        "tv2-22"
+      ],
+      "writing": [
+        "Luyện viết mở bài, kết bài cho bài văn miêu tả cây cối",
+        "Lập dàn ý cho bài văn miêu tả cây cối"
+      ],
+      "writingPages": [
+        101,
+        104
+      ],
+      "language": "Dấu ngoặc đơn",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 31,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-23",
+        "tv2-24"
+      ],
+      "writing": [
+        "Viết bài văn miêu tả cây cối",
+        "Trả bài văn miêu tả cây cối"
+      ],
+      "writingPages": [
+        108,
+        110
+      ],
+      "language": "Luyện tập viết tên cơ quan, tổ chức",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 32,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-25",
+        "tv2-26"
+      ],
+      "writing": [
+        "Viết đoạn văn tưởng tượng",
+        "Trả bài viết đoạn văn tưởng tượng"
+      ],
+      "writingPages": [
+        116,
+        118
+      ],
+      "language": "Lựa chọn từ ngữ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 33,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-27",
+        "tv2-28"
+      ],
+      "writing": [
+        "Viết đoạn văn tưởng tượng",
+        "Hướng dẫn cách viết thư"
+      ],
+      "writingPages": [
+        122,
+        125
+      ],
+      "language": "Luyện tập lựa chọn từ ngữ",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 34,
+      "book": "tv2",
+      "readingIds": [
+        "tv2-29",
+        "tv2-30"
+      ],
+      "writing": [
+        "Viết thư",
+        "Viết giấy mời"
+      ],
+      "writingPages": [
+        130,
+        132
+      ],
+      "language": "Luyện tập về dấu câu",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    },
+    {
+      "week": 35,
+      "book": "tv2",
+      "readingIds": [],
+      "writing": [
+        "Ôn tập và Đánh giá cuối năm học"
+      ],
+      "writingPages": [
+        134
+      ],
+      "language": "Ôn tập",
+      "sourceBasis": "TEXTBOOK_WEEK"
+    }
+  ]
+}
