@@ -29,3 +29,9 @@ Công cụ không tự sửa đáp án hoặc coi tiêu đề khớp sách là n
 ## Kiểm tra
 
 Kiểm tra tự động: số bài liên tục, phân biệt hai tập Tiếng Việt, đủ 35 tuần và 62 bài đọc, đúng mốc ôn tập, nguồn từng bài viết, số trang PDF, lỗi tuần 13/19/34 và giới hạn đối chiếu tiêu đề. Kiểm tra trình duyệt: tra cứu, lỗi máy chủ, điện thoại và đề mới không dùng nhầm bản nháp cũ. Biên dịch, lint và các kiểm tra học tập hiện có theo quy trình dự án.
+
+## Kiểm tra lại ngày 15/10/2026
+
+Đã chạy lại truy vấn ngân hàng công khai: vẫn HTTP 429 `RESOURCE_EXHAUSTED` / `Quota exceeded`. Truy vấn giới hạn một tài liệu cũng trả cùng lỗi; không thể xử lý bằng cách chia nhỏ danh sách. Bằng chứng: các lượt kiểm tra GitHub Actions 38613134348 và 38613533724. Không sửa nội dung chưa đọc được và không xác nhận đã hoàn tất ngân hàng.
+
+Để tiếp tục khi máy chủ chưa đọc được, cần file câu hỏi thực tế đã nhập (Excel hoặc bản xuất JSON có câu hỏi, đáp án, môn và bài/tuần). Các PDF sách và báo cáo đối chiếu tiêu đề không thay thế được dữ liệu câu hỏi hiện hành.
