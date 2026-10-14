@@ -1,0 +1,21 @@
+const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
+const {doc,setDoc,getDoc,getDocs,collection,query,where,deleteDoc}=require('firebase/firestore');
+const fs=require('fs');
+const path=require('path');
+const [host,port]=(process.env.FIRESTORE_EMULATOR_HOST||'127.0.0.1:8080').split(':');
+(async()=>{const env=await initializeTestEnvironment({projectId:'demo-self-practice',firestore:{host,port:Number(port),rules:fs.readFileSync(path.join(__dirname,'../firestore.rules'),'utf8')}});
+try{
+ await env.withSecurityRulesDisabled(async c=>{const db=c.firestore();await setDoc(doc(db,'users','teacher'),{status:'ACTIVE',role:'TEACHER'});await setDoc(doc(db,'users','other'),{status:'ACTIVE',role:'TEACHER'});await setDoc(doc(db,'classes','class1'),{teacherId:'teacher',coTeacherIds:[],name:'4A',grade:'Khối 4'});await setDoc(doc(db,'classes','class1','students','s1'),{name:'Minh Anh'});});
+ const teacher=env.authenticatedContext('teacher',{firebase:{sign_in_provider:'password'}}).firestore(),other=env.authenticatedContext('other',{firebase:{sign_in_provider:'password'}}).firestore(),pupil=env.authenticatedContext('pupil',{firebase:{sign_in_provider:'anonymous'}}).firestore();
+ const code='ABCDEFGH2345',access={code,teacherId:'teacher',classId:'class1',className:'4A',grade:'Khối 4',studentId:'s1',studentName:'Minh Anh'};
+ await assertSucceeds(setDoc(doc(teacher,'selfPracticeAccess',code),access));await assertFails(setDoc(doc(other,'selfPracticeAccess','ABCDEFGH2346'),{...access,code:'ABCDEFGH2346',teacherId:'other'}));
+ await assertSucceeds(getDoc(doc(pupil,'selfPracticeAccess',code)));await assertFails(getDocs(collection(pupil,'selfPracticeAccess')));
+ await assertSucceeds(getDocs(query(collection(teacher,'selfPracticeAccess'),where('teacherId','==','teacher'))));
+ const work={id:'attempt',teacherId:'teacher',classId:'class1',className:'4A',studentId:'s1',studentName:'Minh Anh',quizId:'quiz',quizTitle:'Toán',subject:'Toán',submittedAt:new Date().toISOString(),kind:'QUIZ',result:{breakdown:[]},accessCode:code,authUid:'pupil'};
+ await assertSucceeds(setDoc(doc(pupil,'selfPracticeWork','attempt'),work));await assertSucceeds(setDoc(doc(pupil,'selfPracticeWork','attempt'),{...work,submittedAt:new Date().toISOString()}));
+ await assertFails(setDoc(doc(pupil,'selfPracticeWork','forged'),{...work,id:'forged',studentId:'s2'}));await assertFails(setDoc(doc(pupil,'selfPracticeWork','attempt'),{...work,quizTitle:'Changed'}));
+ await assertSucceeds(getDocs(query(collection(teacher,'selfPracticeWork'),where('teacherId','==','teacher'))));await assertFails(getDoc(doc(pupil,'selfPracticeWork','attempt')));await assertFails(getDoc(doc(other,'selfPracticeWork','attempt')));
+ await assertSucceeds(setDoc(doc(pupil,'selfPracticeWork','writing'),{...work,id:'writing',kind:'WRITING',outline:['Mở','Thân','Kết'],essay:'Bài viết'}));
+ await assertSucceeds(deleteDoc(doc(teacher,'selfPracticeAccess',code)));await assertFails(setDoc(doc(pupil,'selfPracticeWork','revoked'),{...work,id:'revoked'}));
+ console.log('PASS: Firestore personal code ownership, no public roster queries, identity binding, teacher-only reports, retry immutability, writing, revocation');
+}finally{await env.cleanup();}})().catch(e=>{console.error(e);process.exit(1)});

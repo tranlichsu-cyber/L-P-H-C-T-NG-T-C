@@ -295,6 +295,48 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.teacherId);
     }
 
+    // A high-entropy personal code reveals only its assigned pupil, never a class roster.
+    match /selfPracticeAccess/{code} {
+      function validAccess() {
+        let a = request.resource.data;
+        let student = get(/databases/$(database)/documents/classes/$(a.classId)/students/$(a.studentId)).data;
+        let group = get(/databases/$(database)/documents/classes/$(a.classId)).data;
+        return a.keys().hasOnly(['code','teacherId','classId','className','grade','studentId','studentName'])
+          && code.matches('[A-HJ-NP-Z2-9]{12}') && a.code == code
+          && a.teacherId == request.auth.uid && canManageClass(a.classId)
+          && a.studentName == student.name && a.className == group.name && a.grade == group.grade;
+      }
+      allow get: if isAuthenticated();
+      allow list: if isOwner(resource.data.teacherId);
+      allow create: if isTeacher() && validAccess();
+      allow update: if isOwner(resource.data.teacherId) && validAccess()
+        && request.resource.data.classId == resource.data.classId
+        && request.resource.data.studentId == resource.data.studentId;
+      allow delete: if isOwner(resource.data.teacherId);
+    }
+
+    match /selfPracticeWork/{workId} {
+      function validStudentWork() {
+        let w = request.resource.data;
+        let a = get(/databases/$(database)/documents/selfPracticeAccess/$(w.accessCode)).data;
+        let student = get(/databases/$(database)/documents/classes/$(a.classId)/students/$(a.studentId)).data;
+        return w.keys().hasOnly(['id','teacherId','classId','className','studentId','studentName','quizId','quizTitle','subject','submittedAt','kind','result','outline','essay','accessCode','authUid'])
+          && w.id == workId && w.authUid == request.auth.uid
+          && w.teacherId == a.teacherId && w.classId == a.classId
+          && w.studentId == a.studentId && w.studentName == a.studentName
+          && w.studentName == student.name && w.className == a.className
+          && w.quizId is string && w.quizTitle is string && w.subject is string && w.submittedAt is string
+          && ((w.kind == 'QUIZ' && w.result is map && w.result.breakdown is list && w.result.breakdown.size() <= 200)
+            || (w.kind == 'WRITING' && w.outline is list && w.outline.size() == 3 && w.essay is string && w.essay.size() > 0 && w.essay.size() <= 30000));
+      }
+      allow read: if isOwner(resource.data.teacherId);
+      allow create: if isAuthenticated() && validStudentWork();
+      // Permit idempotent delivery retries, but no edits to answers or identity.
+      allow update: if isAuthenticated() && resource.data.authUid == request.auth.uid
+        && validStudentWork() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['submittedAt']);
+      allow delete: if false;
+    }
+
     match /testCodes/{code} {
       allow get: if isAuthenticated();
       allow list: if false;

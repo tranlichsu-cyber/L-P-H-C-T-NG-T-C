@@ -5,7 +5,7 @@ import { gradePractice } from '../../services/practice/grading';
 import type { PracticeResult } from '../../services/practice/types';
 import type { TraditionQuizContent } from '../../services/tradition/TraditionService';
 
-export function TraditionQuizRunner({ quiz, onBack, mode='tradition', durationMinutes }: { quiz: TraditionQuizContent; onBack: () => void; mode?:'tradition'|'practice'; durationMinutes?:number }) {
+export function TraditionQuizRunner({ quiz, onBack, mode='tradition', durationMinutes, onComplete }: { quiz: TraditionQuizContent; onBack: () => void; mode?:'tradition'|'practice'; durationMinutes?:number; onComplete?:(answers:Record<string,string>)=>void }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [result, setResult] = useState<PracticeResult | null>(null);
@@ -14,6 +14,8 @@ export function TraditionQuizRunner({ quiz, onBack, mode='tradition', durationMi
   const [deadline,setDeadline] = useState(() => Date.now() + (durationMinutes || 0)*60000);
   const [secondsLeft,setSecondsLeft] = useState(() => Math.max(0,Math.ceil((deadline-Date.now())/1000)));
   const [expired,setExpired] = useState(false);
+  const deliveredResult=useRef<PracticeResult|null>(null);
+  useEffect(()=>{if(result&&deliveredResult.current!==result){deliveredResult.current=result;onComplete?.({...answers});}},[result,answers,onComplete]);
   useEffect(() => {if(!exam||result)return;const tick=()=>{const left=Math.max(0,Math.ceil((deadline-Date.now())/1000));setSecondsLeft(left);if(left===0){setExpired(true);setResult(previous=>previous??gradePractice(quiz.questions,answers));}};tick();const timer=window.setInterval(tick,500);return()=>window.clearInterval(timer);},[exam,deadline,result,answers,quiz.questions]);
   const submit = () => {if(!result)setResult(gradePractice(quiz.questions,answers));};
   useEffect(() => { heading.current?.focus(); }, [currentIndex, result]);

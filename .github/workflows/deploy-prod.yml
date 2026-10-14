@@ -47,6 +47,25 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Check personal self-practice workflow
+        run: |
+          node scripts/check-student-self-practice.mjs
+          node scripts/check-writing-practice.mjs
+          node scripts/check-tradition-quizzes.mjs
+
+      - name: Setup Java for Firestore Emulator
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Check Firestore student access rules
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/self-practice-rule-tools" --no-audit --no-fund firebase-tools@15.32.1 @firebase/rules-unit-testing@6.0.0 firebase@13.0.0
+          export NODE_PATH="$RUNNER_TEMP/self-practice-rule-tools/node_modules"
+          "$RUNNER_TEMP/self-practice-rule-tools/node_modules/.bin/firebase" emulators:exec --only firestore --project demo-self-practice 'node scripts/check-self-practice-rules.cjs'
+
       - name: Authenticate to Google Cloud
         id: auth
         uses: google-github-actions/auth@v2
