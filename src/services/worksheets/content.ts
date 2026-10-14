@@ -17,3 +17,10 @@ export function validateWorksheet(draft:WorksheetDraft){
 export function validateWorksheetAnswers(questions:WorksheetQuestion[],answers:Record<string,string>){
  if(Object.keys(answers).some(id=>!questions.some(q=>q.id===id))||questions.some(q=>typeof answers[q.id]!=='string'||!answers[q.id].trim()||answers[q.id].length>10000)||Object.values(answers).reduce((n,a)=>n+a.length,0)>40000)throw new Error('Em hãy điền đủ các ô trả lời. Mỗi ô tối đa 10.000 ký tự và cả bài tối đa 40.000 ký tự.');
 }
+export interface WorksheetReview {comment:string;score:number|null;questionComments:Record<string,string>;updatedAt:string;returnedAt:string|null}
+export function validateWorksheetReview(review:WorksheetReview,questions:WorksheetQuestion[]){
+ if(typeof review.comment!=='string'||review.comment.length>5000)throw new Error('Nhận xét chung tối đa 5.000 ký tự.');
+ if(review.score!==null&&(!Number.isFinite(review.score)||review.score<0||review.score>10))throw new Error('Điểm cần từ 0 đến 10 hoặc để trống.');
+ if(Object.entries(review.questionComments).some(([id,text])=>!questions.some(q=>q.id===id)||typeof text!=='string'||text.length>2000))throw new Error('Nhận xét từng câu tối đa 2.000 ký tự và phải thuộc phiếu.');
+ if(!review.comment.trim()&&review.score===null&&!Object.values(review.questionComments).some(s=>s.trim()))throw new Error('Hãy nhập nhận xét hoặc điểm trước khi lưu.');
+}

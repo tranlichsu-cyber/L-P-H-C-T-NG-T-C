@@ -1,10 +1,10 @@
-import {collection,doc,onSnapshot,runTransaction,writeBatch,setDoc,updateDoc,getDoc} from 'firebase/firestore';
+import {arrayUnion,collection,doc,onSnapshot,runTransaction,writeBatch,setDoc,updateDoc,getDoc} from 'firebase/firestore';
 import {auth,db} from '../firebase/firebase';
 import {isFirebaseActive} from '../realtime/realtimeServiceSwitch';
 import {eventBus} from '../realtime/broadcastChannel';
 import {getRoomById} from '../realtime/mockStorage';
-import {emptyWorksheetState,validateWorksheet,validateWorksheetAnswers,type WorksheetDraft,type RoomWorksheet,type WorksheetResponse,type WorksheetState} from './content';
-interface LocalData {state:WorksheetState;sheets:Record<string,RoomWorksheet>;responses:Record<string,Record<string,WorksheetResponse>>}
+import {emptyWorksheetState,validateWorksheetReview,type WorksheetReview,validateWorksheet,validateWorksheetAnswers,type WorksheetDraft,type RoomWorksheet,type WorksheetResponse,type WorksheetState} from './content';
+interface LocalData {reviews?:Record<string,Record<string,WorksheetReview>>;feedback?:Record<string,Record<string,WorksheetReview>>;returns?:Record<string,string[]>;state:WorksheetState;sheets:Record<string,RoomWorksheet>;responses:Record<string,Record<string,WorksheetResponse>>}
 const key=(roomId:string)=>'lhtt-worksheets-v1-'+roomId;
 const read=(roomId:string):LocalData=>JSON.parse(localStorage.getItem(key(roomId))||'null')||{state:emptyWorksheetState(),sheets:{},responses:{}};
 const write=(roomId:string,data:LocalData)=>{localStorage.setItem(key(roomId),JSON.stringify(data));eventBus.publish({type:'ROOM_UPDATED',roomId,timestamp:new Date().toISOString()});};
@@ -50,6 +50,24 @@ export class WorksheetService {
  static subscribeSheets(roomId:string,callback:(sheets:RoomWorksheet[])=>void,onError:(error:Error)=>void){
   if(isFirebaseActive&&db)return onSnapshot(collection(db,'rooms',roomId,'worksheets'),s=>callback(s.docs.map(d=>d.data() as RoomWorksheet).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))),onError);
   const emit=()=>callback(Object.values(read(roomId).sheets).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)));emit();return eventBus.subscribe(e=>{if(e.roomId===roomId)emit();});
+ }
+ static subscribeReview(roomId:string,id:string,studentId:string,draft:boolean,callback:(review:WorksheetReview|null)=>void,onError:(error:Error)=>void){
+  const section=draft?'reviews':'feedback';
+  if(isFirebaseActive&&db)return onSnapshot(doc(db,'rooms',roomId,'worksheets',id,section,studentId),s=>callback(s.exists()?s.data() as WorksheetReview:null),onError);
+  const emit=()=>callback(read(roomId)[section]?.[id]?.[studentId]||null);emit();return eventBus.subscribe(e=>{if(e.roomId===roomId)emit();});
+ }
+ static subscribeReturns(roomId:string,studentId:string,callback:(ids:string[])=>void,onError:(error:Error)=>void){
+  if(isFirebaseActive&&db)return onSnapshot(doc(db,'rooms',roomId,'worksheetReturns',studentId),s=>callback(s.data()?.worksheetIds||[]),onError);
+  const emit=()=>callback(read(roomId).returns?.[studentId]||[]);emit();return eventBus.subscribe(e=>{if(e.roomId===roomId)emit();});
+ }
+ static async review(roomId:string,id:string,studentId:string,input:WorksheetReview,returnWork:boolean){
+  const review={...input,updatedAt:new Date().toISOString(),returnedAt:returnWork?new Date().toISOString():input.returnedAt};
+  if(isFirebaseActive&&db){const sheet=await getDoc(doc(db,'rooms',roomId,'worksheets',id));if(!sheet.exists())throw new Error('Không tìm thấy phiếu.');validateWorksheetReview(review,sheet.data().questions);
+   const batch=writeBatch(db);batch.set(doc(db,'rooms',roomId,'worksheets',id,'reviews',studentId),review);
+   if(returnWork){const work=await getDoc(doc(db,'rooms',roomId,'worksheets',id,'responses',studentId));if(!work.exists())throw new Error('Học sinh chưa nộp bài.');batch.update(doc(db,'rooms',roomId,'worksheets',id),{returnedUids:arrayUnion(work.data().authUid)});batch.set(doc(db,'rooms',roomId,'worksheets',id,'feedback',studentId),review);batch.set(doc(db,'rooms',roomId,'worksheetReturns',studentId),{worksheetIds:arrayUnion(id)},{merge:true});}await batch.commit();
+  }else{const data=read(roomId);if(!data.responses[id]?.[studentId])throw new Error('Học sinh chưa nộp bài.');validateWorksheetReview(review,data.sheets[id].questions);data.reviews??={};data.reviews[id]??={};data.reviews[id][studentId]=review;
+   if(returnWork){data.feedback??={};data.feedback[id]??={};data.feedback[id][studentId]=review;data.returns??={};data.returns[studentId]=[...new Set([...(data.returns[studentId]||[]),id])];}write(roomId,data);
+  }
  }
  static async submit(roomId:string,id:string,studentId:string,answers:Record<string,string>):Promise<void>{
   if(isFirebaseActive&&db){const firestore=db;await runTransaction(firestore,async tx=>{

@@ -44,7 +44,8 @@ const INITIAL_SESSION: StudentSession = {
 };
 
 export const StudentSessionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<StudentSession>(INITIAL_SESSION);
+  const [session, setSession] = useState<StudentSession>(()=>{try{const saved=JSON.parse(sessionStorage.getItem('student-room-session')||'null');if(saved&&['roomId','roomCode','studentId','studentName'].every(key=>typeof saved[key]==='string'&&saved[key].length>0&&saved[key].length<300))return {...INITIAL_SESSION,roomId:saved.roomId,roomCode:saved.roomCode,studentId:saved.studentId,studentName:saved.studentName,className:typeof saved.className==='string'?saved.className:null,subject:typeof saved.subject==='string'?saved.subject:null};}catch{/* Storage can be unavailable. */}return INITIAL_SESSION;});
+  useEffect(()=>{try{if(session.roomId&&session.studentId)sessionStorage.setItem('student-room-session',JSON.stringify({roomId:session.roomId,roomCode:session.roomCode,studentId:session.studentId,studentName:session.studentName,className:session.className,subject:session.subject}));else sessionStorage.removeItem('student-room-session');}catch{/* Continue in memory when storage is unavailable. */}},[session.roomId,session.roomCode,session.studentId,session.studentName,session.className,session.subject]);
   const [room, setRoom] = useState<MockRoomData | null>(null);
   const dismissedResultQuestionIdRef = useRef<string | null>(null);
 

@@ -59,7 +59,7 @@ const StudentLayoutInner: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
-        {state.worksheetId&&session.studentId&&room?.status!=='FINISHED'&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Mở phiếu bài tập giáo viên đã phát</Link>}
+        {session.studentId&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Phiếu Word và bài giáo viên đã trả</Link>}
         <Outlet />
       </main>
 

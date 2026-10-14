@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import ts from 'typescript';
 const {outputText}=ts.transpileModule(await fs.readFile('src/services/worksheets/content.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}});
-const {detectWorksheetQuestions,validateWorksheet,validateWorksheetAnswers}=await import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));
+const {detectWorksheetQuestions,validateWorksheet,validateWorksheetAnswers,validateWorksheetReview}=await import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));
 const questions=detectWorksheetQuestions('PHIẾU\nCâu 1: Tính 125 + 275.\nCâu 2. Giải thích.\n3) Viết lời giải.');assert.equal(questions.length,3);assert.equal(new Set(questions.map(q=>q.id)).size,3);
 assert.equal(detectWorksheetQuestions('Viết đoạn văn về quê hương.')[0].label,'Bài làm của em');
 assert.equal(detectWorksheetQuestions(Array.from({length:41},(_,i)=>'Câu '+(i+1)+': Trả lời.').join('\n')).length,41,'Never silently drop prompts from a long worksheet');
@@ -15,3 +15,12 @@ assert.equal(detectWorksheetQuestions(plain.value).length,3,'Real DOCX has three
 assert.throws(()=>validateWorksheet({...draft,questions:[questions[0],questions[0]]}));assert.throws(()=>validateWorksheet({...draft,questions:[]}));assert.throws(()=>validateWorksheet({...draft,html:'a'.repeat(450001)}));assert.throws(()=>validateWorksheet({...draft,title:''}));
 const answers=Object.fromEntries(questions.map(q=>[q.id,'400']));assert.doesNotThrow(()=>validateWorksheetAnswers(questions,answers));assert.throws(()=>validateWorksheetAnswers(questions,{}));assert.throws(()=>validateWorksheetAnswers(questions,{...answers,'foreign-question':'bad'}));assert.throws(()=>validateWorksheetAnswers(questions,{...answers,[questions[0].id]:'x'.repeat(10001)}));assert.throws(()=>validateWorksheetAnswers(questions,{...answers,[questions[0].id]:'   '}));
 console.log('PASS: Word question recognition, fallback answer field, unique question IDs, document limits and complete bounded answer validation.');
+
+const review={comment:'Em trình bày rõ.',score:8.5,questionComments:{'answer-1':'Kiểm tra phép cộng.'},updatedAt:'now',returnedAt:null};
+assert.doesNotThrow(()=>validateWorksheetReview(review,questions));
+for(const score of [-1,11,NaN,Infinity])assert.throws(()=>validateWorksheetReview({...review,score},questions));
+assert.throws(()=>validateWorksheetReview({...review,comment:'x'.repeat(5001)},questions));
+assert.throws(()=>validateWorksheetReview({...review,questionComments:{foreign:'bad'}},questions));
+assert.throws(()=>validateWorksheetReview({...review,questionComments:{'answer-1':'x'.repeat(2001)}},questions));
+assert.throws(()=>validateWorksheetReview({...review,comment:'',score:null,questionComments:{}},questions));
+console.log('PASS: optional bounded score, review limits and question identity.');
