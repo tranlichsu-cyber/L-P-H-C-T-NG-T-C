@@ -31,13 +31,15 @@ const secureSession=async(data,uid)=>{
  if(!snap.exists)fail('permission-denied','Phiên học sinh không tồn tại.');
  const s=snap.data();
  if(s.classId!==classId||s.studentId!==studentId||s.tokenHash!==pinHash(sessionToken,s.salt)||s.expiresAt<Date.now())fail('permission-denied','Phiên đã hết hạn.');
+ const credential=await db.doc('grade4WritingCredentials/'+classId+'_'+studentId).get();
+ if(!credential.exists||credential.data().version!==s.credentialVersion)fail('permission-denied','Mã đã được cấp lại. Vui lòng xác minh lại.');
  return {classId,studentId};
 };
 export const issueGrade4Pin=onCall(options,async req=>{
  const classId=clean(req.data?.classId,100),studentId=clean(req.data?.studentId,100);assertIds(classId,studentId);
  await teacher(req.auth?.uid,classId);await requireStudent(classId,studentId);
  const pin=String(randomInt(0,1000000)).padStart(6,'0'),salt=randomBytes(16).toString('hex');
- await db.doc(`grade4WritingCredentials/${classId}_${studentId}`).set({classId,studentId,salt,pinHash:pinHash(pin,salt),failed:0,lockedUntil:0,updatedAt:FieldValue.serverTimestamp()});
+ await db.doc(`grade4WritingCredentials/${classId}_${studentId}`).set({classId,studentId,salt,pinHash:pinHash(pin,salt),version:randomBytes(16).toString('hex'),failed:0,lockedUntil:0,updatedAt:FieldValue.serverTimestamp()});
  return {pin}; // Show once to the authorized teacher; never log or persist plaintext.
 });
 export const verifyGrade4Pin=onCall(options,async req=>{
@@ -57,7 +59,8 @@ export const verifyGrade4Pin=onCall(options,async req=>{
  if(!ok)fail('permission-denied','Không thể xác minh thông tin.');
  await requireStudent(classId,studentId);
  const token=randomBytes(32).toString('hex'),salt=randomBytes(16).toString('hex');
- await db.doc('grade4WritingSessions/'+req.auth.uid).set({classId,studentId,salt,tokenHash:pinHash(token,salt),expiresAt:Date.now()+2*60*60*1000});
+ const credential=await ref.get();
+ await db.doc('grade4WritingSessions/'+req.auth.uid).set({classId,studentId,salt,tokenHash:pinHash(token,salt),credentialVersion:credential.data().version,expiresAt:Date.now()+2*60*60*1000});
  return {sessionToken:token,expiresInSeconds:7200};
 });
 export const saveGrade4Writing=onCall(options,async req=>{
