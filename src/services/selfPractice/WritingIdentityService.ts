@@ -22,6 +22,10 @@ export const WritingIdentityService={
   const call=httpsCallable<WritingIdentity&Pick<Grade4WritingSubmission,'week'|'outline'|'writing'|'status'>,{saved:boolean}>(functions(),'saveGrade4Writing');
   return (await call({...identity,week,outline,writing,status})).data.saved;
  },
+ async get(identity:WritingIdentity,week:number):Promise<{found:boolean;outline?:string;writing?:string;status?:'DRAFT'|'SUBMITTED';teacherComment?:string}>{
+  const call=httpsCallable<WritingIdentity&{week:number},{found:boolean;outline?:string;writing?:string;status?:'DRAFT'|'SUBMITTED';teacherComment?:string}>(functions(),'getGrade4Writing');
+  return (await call({...identity,week})).data;
+ },
  async comment(classId:string,studentId:string,week:number,comment:string){
   const call=httpsCallable<{classId:string;studentId:string;week:number;comment:string},{saved:boolean}>(functions(),'commentGrade4Writing');
   return (await call({classId,studentId,week,comment})).data.saved;
