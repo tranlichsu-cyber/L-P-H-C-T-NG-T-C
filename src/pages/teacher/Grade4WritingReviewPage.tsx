@@ -1,3 +1,4 @@
+import {WritingIdentityService} from '../../services/selfPractice/WritingIdentityService';
 import {useEffect,useMemo,useState} from 'react';
 import {useTeacherData} from '../../context/TeacherDataContext';
 import {Grade4WritingReviewService,type TeacherWritingSubmission} from '../../services/selfPractice/Grade4WritingReviewService';
@@ -11,6 +12,9 @@ export function Grade4WritingReviewPage(){
  const [rows,setRows]=useState<TeacherWritingSubmission[]>([]);
  const [loading,setLoading]=useState(false);
  const [error,setError]=useState('');
+ const [comments,setComments]=useState<Record<string,string>>({});
+ const [saving,setSaving]=useState<string|null>(null);
+ const saveComment=async(r:TeacherWritingSubmission)=>{setSaving(r.id);setError('');try{const comment=comments[r.id]??r.teacherComment??'';await WritingIdentityService.comment(r.classId,r.studentId,r.week,comment);setRows(prev=>prev.map(x=>x.id===r.id?{...x,teacherComment:comment}:x));}catch{setError('Không lưu được nhận xét. Kiểm tra quyền giáo viên và kết nối.');}finally{setSaving(null);}};
  useEffect(()=>{setClassId(prev=>grade4.some(c=>c.id===prev)?prev:(grade4[0]?.id||''));},[grade4]);
  useEffect(()=>{let active=true;setRows([]);setError('');setStudentId('');if(!classId)return;setLoading(true);
  Grade4WritingReviewService.listForClass(classId).then(data=>{if(active)setRows(data);}).catch(()=>{if(active)setError('Không thể tải bài làm. Vui lòng kiểm tra quyền giáo viên, quy tắc Firestore và kết nối mạng.');}).finally(()=>{if(active)setLoading(false);});
@@ -25,6 +29,6 @@ export function Grade4WritingReviewPage(){
  </section>
  {loading&&<p role="status">Đang tải bài làm…</p>}{error&&<p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-800">{error}</p>}
  {!loading&&!error&&<p className="font-semibold text-slate-600">{shown.length} bài làm</p>}
- <section className="space-y-4">{shown.map(r=><article key={r.id} className="rounded-2xl border bg-white p-5 shadow-sm"><h2 className="text-lg font-bold">{r.studentName} – Tuần {r.week}</h2><p className="text-sm text-slate-500">{r.status==='SUBMITTED'?'Đã nộp':'Bản nháp'} • {r.updatedAt}</p><h3 className="mt-4 font-bold">Dàn ý</h3><p className="whitespace-pre-wrap">{r.outline}</p><h3 className="mt-4 font-bold">Bài viết</h3><p className="whitespace-pre-wrap">{r.writing}</p>{r.teacherComment&&<p className="mt-4 rounded-xl bg-sky-50 p-3"><strong>Nhận xét: </strong>{r.teacherComment}</p>}</article>)}</section>
+ <section className="space-y-4">{shown.map(r=><article key={r.id} className="rounded-2xl border bg-white p-5 shadow-sm"><h2 className="text-lg font-bold">{r.studentName} – Tuần {r.week}</h2><p className="text-sm text-slate-500">{r.status==='SUBMITTED'?'Đã nộp':'Bản nháp'} • {r.updatedAt}</p><h3 className="mt-4 font-bold">Dàn ý</h3><p className="whitespace-pre-wrap">{r.outline}</p><h3 className="mt-4 font-bold">Bài viết</h3><p className="whitespace-pre-wrap">{r.writing}</p><label className="mt-4 block font-bold">Nhận xét của giáo viên<textarea className="mt-2 block w-full rounded-xl border p-3 font-normal" maxLength={3000} rows={3} value={comments[r.id]??r.teacherComment??''} onChange={e=>setComments(prev=>({...prev,[r.id]:e.target.value}))}/></label><button className="mt-2 rounded-xl bg-sky-700 px-4 py-2 font-bold text-white disabled:opacity-50" disabled={saving===r.id} onClick={()=>void saveComment(r)}>{saving===r.id?'Đang lưu…':'Lưu nhận xét'}</button></article>)}</section>
  </main>;
 }
