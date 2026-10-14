@@ -44,3 +44,5 @@ Admin navigation cleanup: differentiate teaching and administration overview; hi
 Digital heritage: balanced full-width articles, structured historical biographies and verified landmark narratives. No Firebase data change.
 
 Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo and Than Sa. No Firestore data migration.
+
+2026-10-14: 35 weekly writing practice lessons with outlines, full writing and completion-gated hints.
