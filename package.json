@@ -12,8 +12,10 @@
     "deploy:prod": "npm run build && firebase use prod && firebase deploy --only hosting,firestore:rules"
   },
   "dependencies": {
+    "dompurify": "^3.4.17",
     "firebase": "^12.19.0",
     "lucide-react": "^1.52.0",
+    "mammoth": "^1.13.0",
     "pdfjs-dist": "^6.4.299",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.8",

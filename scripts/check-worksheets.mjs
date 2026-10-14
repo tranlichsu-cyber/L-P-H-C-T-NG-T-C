@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import ts from 'typescript';
+const {outputText}=ts.transpileModule(await fs.readFile('src/services/worksheets/content.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}});
+const {detectWorksheetQuestions,validateWorksheet,validateWorksheetAnswers}=await import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));
+const questions=detectWorksheetQuestions('PHIẾU\nCâu 1: Tính 125 + 275.\nCâu 2. Giải thích.\n3) Viết lời giải.');assert.equal(questions.length,3);assert.equal(new Set(questions.map(q=>q.id)).size,3);
+assert.equal(detectWorksheetQuestions('Viết đoạn văn về quê hương.')[0].label,'Bài làm của em');
+const draft={title:'Phiếu Toán',fileName:'toan.docx',html:'<p>Câu 1: Tính</p>',questions};assert.doesNotThrow(()=>validateWorksheet(draft));
+const mammoth=await import('mammoth');
+const actual=await mammoth.convertToHtml({path:'public/templates/phieu-bai-tap-mau.docx'},{externalFileAccess:false,includeEmbeddedStyleMap:false});
+assert.ok(actual.value.includes('<table>'),'Real DOCX table survives conversion');
+const plain=await mammoth.extractRawText({path:'public/templates/phieu-bai-tap-mau.docx'});
+assert.equal(detectWorksheetQuestions(plain.value).length,3,'Real DOCX has three recognizable answer prompts');
+assert.throws(()=>validateWorksheet({...draft,questions:[questions[0],questions[0]]}));assert.throws(()=>validateWorksheet({...draft,questions:[]}));assert.throws(()=>validateWorksheet({...draft,html:'a'.repeat(450001)}));assert.throws(()=>validateWorksheet({...draft,title:''}));
+const answers=Object.fromEntries(questions.map(q=>[q.id,'400']));assert.doesNotThrow(()=>validateWorksheetAnswers(questions,answers));assert.throws(()=>validateWorksheetAnswers(questions,{}));assert.throws(()=>validateWorksheetAnswers(questions,{...answers,'foreign-question':'bad'}));assert.throws(()=>validateWorksheetAnswers(questions,{...answers,[questions[0].id]:'x'.repeat(10001)}));assert.throws(()=>validateWorksheetAnswers(questions,{...answers,[questions[0].id]:'   '}));
+console.log('PASS: Word question recognition, fallback answer field, unique question IDs, document limits and complete bounded answer validation.');

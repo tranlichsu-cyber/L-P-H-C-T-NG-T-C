@@ -176,6 +176,64 @@ service cloud.firestore {
       );
       allow delete: if canManageRoom(roomId);
 
+      match /worksheetState/{stateId} {
+        function validWorksheetState() {
+          let s = request.resource.data;
+          return stateId == 'current'
+            && s.keys().hasOnly(['worksheetId','projectedStudentId','projectedWorksheetId','showStudentName'])
+            && s.showStudentName is bool
+            && (s.worksheetId == null || (s.worksheetId is string
+              && existsAfter(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(s.worksheetId))))
+            && (s.projectedWorksheetId == null || (s.projectedWorksheetId is string
+              && existsAfter(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(s.projectedWorksheetId))))
+            && (s.projectedStudentId == null || (s.projectedStudentId is string && s.projectedWorksheetId is string
+              && exists(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(s.projectedWorksheetId)/responses/$(s.projectedStudentId))));
+        }
+        allow read: if isAuthenticated();
+        allow create, update: if canManageRoom(roomId) && validWorksheetState();
+        allow delete: if false;
+      }
+
+      match /worksheets/{worksheetId} {
+        allow get: if canManageRoom(roomId) || (isAuthenticated()
+          && get(/databases/$(database)/documents/rooms/$(roomId)/worksheetState/current).data.worksheetId == worksheetId);
+        allow list: if canManageRoom(roomId);
+        allow create: if canManageRoom(roomId)
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.status != 'FINISHED'
+          && request.resource.data.keys().hasOnly(['id','roomId','title','html','questions','questionIds','fileName','status','createdAt'])
+          && request.resource.data.id == worksheetId && request.resource.data.roomId == roomId
+          && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 200
+          && request.resource.data.html is string && request.resource.data.html.size() <= 450000
+          && request.resource.data.questions is list && request.resource.data.questions.size() > 0 && request.resource.data.questions.size() <= 40
+          && request.resource.data.questionIds is list && request.resource.data.questionIds.size() == request.resource.data.questions.size()
+          && request.resource.data.questionIds.toSet().size() == request.resource.data.questionIds.size()
+          && request.resource.data.status == 'OPEN' && request.resource.data.createdAt is string && request.resource.data.fileName is string;
+        allow update: if canManageRoom(roomId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status == 'CLOSED';
+        allow delete: if false;
+
+        match /responses/{studentId} {
+          function ownsWorksheetResponse() {
+            return isAuthenticated() && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.mockAuthUid == request.auth.uid;
+          }
+          allow get: if canManageRoom(roomId) || ownsWorksheetResponse();
+          allow list: if canManageRoom(roomId);
+          allow create: if ownsWorksheetResponse()
+            && get(/databases/$(database)/documents/rooms/$(roomId)).data.status != 'FINISHED'
+            && get(/databases/$(database)/documents/rooms/$(roomId)/worksheetState/current).data.worksheetId == worksheetId
+            && get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.status == 'OPEN'
+            && request.resource.data.keys().hasOnly(['studentId','studentName','authUid','answers','submittedAt'])
+            && request.resource.data.studentId == studentId && request.resource.data.authUid == request.auth.uid
+            && request.resource.data.studentName == get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.name
+            && request.resource.data.answers is map
+            && request.resource.data.answers.keys().hasOnly(get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.questionIds)
+            && request.resource.data.answers.keys().hasAll(get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.questionIds)
+            && request.resource.data.submittedAt is string;
+          allow update, delete: if false;
+        }
+      }
+
       match /roster/{studentId} {
         allow read: if isAuthenticated();
         allow write: if canManageRoom(roomId);

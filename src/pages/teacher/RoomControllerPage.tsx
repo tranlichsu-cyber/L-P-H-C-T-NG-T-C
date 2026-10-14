@@ -1,3 +1,4 @@
+import {WorksheetTeacherPanel} from '../../components/worksheets/WorksheetTeacherPanel';
 import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -48,7 +49,7 @@ export const RoomControllerPage: React.FC = () => {
   const { currentUser } = useAuth();
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'students' | 'scoreboard'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'students' | 'scoreboard' | 'worksheets'>('overview');
 
   // Modals state
   const lessons = useLessonLibrary();
@@ -614,7 +615,7 @@ export const RoomControllerPage: React.FC = () => {
 
       {/* Quick Actions Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
@@ -623,6 +624,7 @@ export const RoomControllerPage: React.FC = () => {
           >
             📊 TỔNG QUAN
           </button>
+          <button onClick={()=>setActiveTab('worksheets')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='worksheets'?'bg-sky-600 text-white':'bg-slate-100 text-slate-700'}`}>PHIẾU WORD</button>
           <button
             onClick={() => setActiveTab('questions')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
@@ -655,6 +657,7 @@ export const RoomControllerPage: React.FC = () => {
         </Button>
       </div>
 
+      {activeTab==='worksheets'&&<WorksheetTeacherPanel room={room} onProject={()=>setIsPresenting(true)}/>}
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

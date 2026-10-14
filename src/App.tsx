@@ -1,3 +1,4 @@
+import {WorksheetPage} from './pages/student/WorksheetPage';
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { StudentSessionProvider } from './context/StudentSessionContext';
@@ -199,6 +200,7 @@ export const App: React.FC = () => {
                     <Route path="select-name" element={<SelectNamePage />} />
                     <Route path="waiting" element={<WaitingPage />} />
                     <Route path="quiz" element={<QuizPage />} />
+                    <Route path="worksheet" element={<WorksheetPage />} />
                     <Route path="result" element={<ResultPage />} />
                     <Route path="practice" element={<StudentPracticeHubPage />} />
                   </Route>

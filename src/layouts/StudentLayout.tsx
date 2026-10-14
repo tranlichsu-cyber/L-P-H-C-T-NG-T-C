@@ -1,12 +1,16 @@
-import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import React,{useEffect,useRef} from 'react';
+import {useWorksheetState} from '../hooks/useWorksheet';
+import { Outlet, Link,useNavigate } from 'react-router-dom';
 import { Sparkles, Home, UserCheck } from 'lucide-react';
 import { useStudentSession } from '../context/StudentSessionContext';
 import { DevTestPanel } from '../components/student/DevTestPanel';
 import { isFirebaseActive } from '../services/realtime/realtimeServiceSwitch';
 
 const StudentLayoutInner: React.FC = () => {
-  const { session } = useStudentSession();
+  const { session,room } = useStudentSession();
+  const {state}=useWorksheetState(session.studentId?session.roomId:null);
+  const navigate=useNavigate(),lastWorksheet=useRef('');
+  useEffect(()=>{const key=[session.roomId,session.studentId,state.worksheetId].join(':');if(state.worksheetId&&session.studentId&&room?.status!=='FINISHED'&&lastWorksheet.current!==key){lastWorksheet.current=key;navigate('/student/worksheet');}},[session.roomId,session.studentId,state.worksheetId,room?.status,navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-100 via-sky-50 to-amber-50 flex flex-col justify-between select-none">
@@ -55,6 +59,7 @@ const StudentLayoutInner: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+        {state.worksheetId&&session.studentId&&room?.status!=='FINISHED'&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Mở phiếu bài tập giáo viên đã phát</Link>}
         <Outlet />
       </main>
 

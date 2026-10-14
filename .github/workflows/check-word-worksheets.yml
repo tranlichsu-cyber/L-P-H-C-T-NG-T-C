@@ -1,0 +1,37 @@
+name: Check live Word worksheets
+on:
+  push:
+    branches: ['feature/live-word-worksheets']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run lint
+      - run: node scripts/check-worksheets.mjs
+      - run: node scripts/check-student-self-practice.mjs
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify worksheet and personal practice Firestore rules
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/rule-tools" --no-audit --no-fund firebase-tools@15.32.1 @firebase/rules-unit-testing@6.0.0 firebase@13.0.0
+          export NODE_PATH="$RUNNER_TEMP/rule-tools/node_modules"
+          if ! "$RUNNER_TEMP/rule-tools/node_modules/.bin/firebase" emulators:exec --only firestore --project demo-self-practice 'node scripts/check-self-practice-rules.cjs' > "$RUNNER_TEMP/worksheet-rules.log" 2>&1; then
+            cat "$RUNNER_TEMP/worksheet-rules.log"
+            node -e 'const fs=require("fs");const log=fs.readFileSync(process.argv[1],"utf8").slice(-12000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A");console.log("::error::"+log)' "$RUNNER_TEMP/worksheet-rules.log"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/worksheet-rules.log"
