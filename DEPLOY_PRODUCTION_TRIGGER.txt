@@ -76,3 +76,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-15: Continue textbook review: correct weekly paragraph requirements, genre-specific planning and self-checks, preserve previous writing drafts, detect lesson/week/volume conflicts and clarify natural-number sample. Published-bank review remains blocked by Firestore quota.
 
 2026-10-15: Keep named-lesson matching across both Vietnamese volumes to flag explicit wrong-volume titles as well as week conflicts.
+
+2026-10-15: Publish verified live-bank review report for 213 grade-four public quizzes and 2143 questions; 76 content/scoring/explanation corrections applied and read back, paired with 48 retained source questions. Add report download and fix two real-title audit false positives.

@@ -17,10 +17,10 @@ export function checkGrade4Quiz(quiz:{title:string;subject:string;grade:string})
  const bookHint=subject==='Tiếng Việt'?( /\btap (1|mot)\b/.test(title)?'tv1':/\btap (2|hai)\b/.test(title)?'tv2':null):null;
  const allCandidates=data.lessons.filter(l=>l.subject===subject);
  const candidates=allCandidates.filter(l=>!bookHint||l.book===bookHint);
- const named=allCandidates.filter(l=>(' '+title+' ').includes(' '+curriculumText(l.title)+' ')&&curriculumText(l.title).length>=8&&!/^(luyen tap chung|on tap)/.test(curriculumText(l.title)));
+ const named=allCandidates.filter(l=>curriculumText(l.title)!==curriculumText(quiz.subject)&&(' '+title+' ').includes(' '+curriculumText(l.title)+' ')&&curriculumText(l.title).length>=8&&!/^(luyen tap chung|on tap)/.test(curriculumText(l.title)));
  const numbered=number?candidates.filter(l=>l.number===number):[];
  if(bookHint&&named.length===1&&named[0].book!==bookHint)return {status:'MISMATCH',message:'Tên bài thuộc tập khác với tập sách ghi trong tiêu đề. Cần kiểm tra nội dung trước khi sửa.',references:named,week:week||undefined};
- if(number&&named.length===1&&named[0].number!==number)return {status:'MISMATCH',message:'Tên bài khớp Bài '+named[0].number+' trong sách, nhưng tiêu đề đang ghi Bài '+number+'. Cần kiểm tra nội dung trước khi đổi số bài.',references:named,week:week||undefined};
+ if(number&&named.length===1&&named[0].number!==number&&title.includes('bai '+number+' '+curriculumText(named[0].title)))return {status:'MISMATCH',message:'Tên bài khớp Bài '+named[0].number+' trong sách, nhưng tiêu đề đang ghi Bài '+number+'. Cần kiểm tra nội dung trước khi đổi số bài.',references:named,week:week||undefined};
  if(numberMatch&&!numbered.length)return {status:'MISMATCH',message:'Không có Bài '+number+' trong môn này theo sách được cung cấp.',references:[],week:week||undefined};
  if(subject==='Tiếng Việt'&&week){
   const entry=data.weeks.find(w=>w.week===week)!;
@@ -29,6 +29,7 @@ export function checkGrade4Quiz(quiz:{title:string;subject:string;grade:string})
   if((bookHint&&bookHint!==entry.book)||(identified.length===1&&!entry.readingIds.includes(identified[0].id)))return {status:'MISMATCH',message:'Bài hoặc tập sách ghi trong tiêu đề không thuộc tuần '+week+' theo lịch Tiếng Việt 35 tuần. Cần đối chiếu nội dung trước khi sửa.',references:identified.length?identified:references,week};
   return {status:'REFERENCE',message:'Tham chiếu tuần '+week+': nội dung viết là '+entry.writing.join('; ')+'. Danh sách kèm theo là bài đọc của tuần; các phân môn khác và đáp án từng câu cần kiểm tra riêng.',references,week};
  }
+ if(number&&named.length===1&&named[0].number!==number)return {status:'UNCONFIRMED',message:'Tiêu đề có cụm từ thuộc bài khác nhưng chưa đủ căn cứ xác nhận sai số bài; có thể là bài thực hành liên quan. Cần xem nội dung.',references:numbered,week:week||undefined};
  if(named.length===1)return {status:'REFERENCE',message:'Tên bài có căn cứ trong sách. Chưa xác nhận nội dung từng câu hỏi hoặc tuần dạy.',references:named,week:week||undefined};
  return {status:'UNCONFIRMED',message:number?'Có số bài nhưng chưa xác nhận tên và nội dung.'+(subject==='Tiếng Việt'?' Cần phân biệt tập một, tập hai.':''):'Chưa ghép được tiêu đề với bài trong sách; không tự đổi thứ tự hoặc đáp án.',references:numbered,week:week||undefined};
 }

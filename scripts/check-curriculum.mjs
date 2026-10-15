@@ -47,4 +47,12 @@ assert.equal(check('Toán','Tuần 20 – Bài 42 – Nhân với số có hai c
 assert.match(writing[9].prompt,/một đoạn văn/);assert.doesNotMatch(writing[9].prompt,/câu chuyện hoàn chỉnh/);
 assert.match(writing[14].prompt,/một đoạn văn/);assert.ok(!writing[14].model.includes('\n\n'));
 for(const lesson of writing)assert.ok(!lesson.checklist.some(item=>item.includes('đoạn văn, bài văn hoặc')),'Genre-specific checklist week '+lesson.week);
+assert.equal(check('Tập làm văn','Tuần 1 – Tập làm văn lớp 4').status,'REFERENCE');
+assert.equal(check('Tập làm văn','Tuần 13 – Tập làm văn lớp 4').status,'REFERENCE');
+assert.equal(check('Toán','Bài 28: Thực hành vẽ hai đường thẳng vuông góc').status,'UNCONFIRMED');
+const XLSX=await import('xlsx/xlsx.mjs');
+const report=XLSX.read(await fs.readFile('public/documents/ra-soat-ngan-hang-lop-4-20261015.xlsx'),{type:'buffer'});
+assert.equal(XLSX.utils.sheet_to_json(report.Sheets['Chi tiết sửa']).length,76);
+assert.equal(XLSX.utils.sheet_to_json(report.Sheets['Các bộ đã đọc']).length,213);
+assert.ok((await fs.readFile('src/pages/teacher/CurriculumAuditPage.tsx','utf8')).includes('/documents/ra-soat-ngan-hang-lop-4-20261015.xlsx'));
 console.log('PASS: six book identities, full numbered lesson catalogues, explicit 35-week Vietnamese sequence, source page offsets, corrected writing genres and conservative metadata audit.');

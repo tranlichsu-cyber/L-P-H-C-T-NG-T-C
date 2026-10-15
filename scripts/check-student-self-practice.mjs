@@ -5,6 +5,19 @@ import ts from 'typescript';
 const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
 const moduleUrl=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
 const grading=moduleUrl(compile(await fs.readFile('src/services/practice/grading.ts','utf8')));
+const {gradePractice}=await import(grading);
+const corrections=JSON.parse(await fs.readFile('data-migrations/curriculum-20261015.json','utf8'));
+for(const quiz of corrections.quizzes)for(const change of quiz.questions){
+ const q={...change.before,...change.changes};
+ if(change.changes.caseInsensitive===false){
+  assert.equal(gradePractice([q],{[q.id]:q.correctAnswer}).correctCount,1);
+  assert.equal(gradePractice([q],{[q.id]:q.correctAnswer.toLocaleLowerCase('vi-VN')}).correctCount,0,'Capitalization exercise must reject lower-case spelling.');
+ }
+ if(quiz.subject==='Toán'&&change.changes.correctAnswer){
+  assert.equal(gradePractice([q],{[q.id]:q.correctAnswer}).correctCount,1);
+  assert.equal(gradePractice([q],{[q.id]:change.before.correctAnswer}).correctCount,0,'New kg answer must not accept the previous result in tạ.');
+ }
+}
 // Exercise the actual local service; Firebase imports are inactive in mock mode.
 const source=compile(await fs.readFile('src/services/selfPractice/studentAccess.ts','utf8'))
  .replace(/^import .* from 'firebase\/[^']+';\n/gm,'')
