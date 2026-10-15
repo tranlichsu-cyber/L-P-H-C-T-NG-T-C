@@ -1,0 +1,150 @@
+{
+  "version": "curriculum-20261015-v1",
+  "mode": "validate",
+  "publicQuizzes": 60,
+  "sourceQuestions": 48,
+  "alreadyCorrectSources": 0,
+  "missingSources": [
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_exam-1791902080944",
+      "questionId": "C09b",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_exam-1791902080944",
+      "questionId": "C01",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_exam-1791902080944",
+      "questionId": "C02",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_exam-1791902080944",
+      "questionId": "C03",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_exam-1791902080944",
+      "questionId": "C04",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_exam-1791903086865",
+      "questionId": "C09b",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_exam-1791903547182",
+      "questionId": "C09b",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906010071",
+      "questionId": "tlv4-week-1-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906010619",
+      "questionId": "tlv4-week-2-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906010739",
+      "questionId": "tlv4-week-3-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906010739",
+      "questionId": "tlv4-week-3-question-3",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906010893",
+      "questionId": "tlv4-week-4-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906010982",
+      "questionId": "tlv4-week-5-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011108",
+      "questionId": "tlv4-week-6-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011211",
+      "questionId": "tlv4-week-7-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011302",
+      "questionId": "tlv4-week-8-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011394",
+      "questionId": "tlv4-week-9-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011494",
+      "questionId": "tlv4-week-10-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011609",
+      "questionId": "tlv4-week-11-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011703",
+      "questionId": "tlv4-week-12-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011825",
+      "questionId": "tlv4-week-13-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011825",
+      "questionId": "tlv4-week-13-question-2",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011825",
+      "questionId": "tlv4-week-13-question-3",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906011940",
+      "questionId": "tlv4-week-14-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906012024",
+      "questionId": "tlv4-week-15-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906012118",
+      "questionId": "tlv4-week-16-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906012285",
+      "questionId": "tlv4-week-17-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    },
+    {
+      "quizId": "z5YRBGHnI1fdVvnq6I5vCzQBXbt1_quiz-1791906012371",
+      "questionId": "tlv4-week-18-question-1",
+      "reason": "Source quiz no longer exists; public copy only."
+    }
+  ],
+  "writeCount": 108
+}
