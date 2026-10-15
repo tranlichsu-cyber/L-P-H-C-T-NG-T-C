@@ -21,5 +21,21 @@ try{
  value=JSON.stringify({outline:['a','b','c'],essay:'Bài đã viết',checked:[true,true,true],completed:true});
  html=render();assert.ok(html.includes('Xem gợi ý'));assert.ok(!html.includes(lessons[0].model.slice(0,70)));
  value='{bad';assert.doesNotThrow(render);
+ const revised=lessons.find(l=>l.week===15);assert.equal(revised.curriculumRevision,'sgk4-2026-v3');
+ const oldDraft={outline:['Ý cũ 1','Ý cũ 2','Ý cũ 3'],essay:'Bản nháp v2 của học sinh A',checked:[true,true,true],completed:true};
+ const savedDrafts=new Map([
+  ['writing-practice-sgk4-2026-v2-week-15-student-A',JSON.stringify(oldDraft)],
+  ['writing-practice-v1-week-15-student-A',JSON.stringify({...oldDraft,essay:'Bản nháp v1 của học sinh A'})],
+  ['writing-practice-sgk4-2026-v2-week-15-student-B',JSON.stringify({...oldDraft,essay:'Bài riêng của học sinh B'})]
+ ]);
+ globalThis.localStorage={getItem:key=>savedDrafts.get(key)||null};
+ let revisedHtml=renderToStaticMarkup(createElement(WritingPracticeRunner,{lesson:revised,studentKey:'student-A',onBack:()=>{}}));
+ assert.ok(revisedHtml.includes('Bản nháp v2 của học sinh A'));assert.ok(revisedHtml.includes('Bản nháp v1 của học sinh A'));
+ assert.ok(!revisedHtml.includes('Bài riêng của học sinh B'));assert.ok(!revisedHtml.includes('Xem gợi ý'));assert.ok(!revisedHtml.includes('readonly'));
+ savedDrafts.set('writing-practice-sgk4-2026-v3-week-15-student-A',JSON.stringify({...oldDraft,essay:'Bài theo đề mới'}));
+ revisedHtml=renderToStaticMarkup(createElement(WritingPracticeRunner,{lesson:revised,studentKey:'student-A',onBack:()=>{}}));
+ assert.ok(revisedHtml.includes('Bài theo đề mới'));assert.ok(revisedHtml.includes('Xem gợi ý'));
+ savedDrafts.set('writing-practice-sgk4-2026-v2-week-15-student-A','{broken');
+ assert.doesNotThrow(()=>renderToStaticMarkup(createElement(WritingPracticeRunner,{lesson:revised,studentKey:'student-A',onBack:()=>{}})));
  console.log('PASS: 35 distinct lessons, complete hints, four writing fields, hint gated and hidden until clicked, corrupted draft recovery.');
 }finally{fs.unlinkSync(tmp);delete globalThis.localStorage;}

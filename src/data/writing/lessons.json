@@ -6,15 +6,15 @@
     "prompt": "Viết một đoạn văn giới thiệu góc đọc sách của em. Chọn câu chủ đề, rồi thêm các câu làm rõ ý đó. Sau khi viết, nêu ý kiến của em về việc có góc đọc sách.",
     "focus": "Nhận ra câu chủ đề và các câu làm rõ; làm quen cách nêu ý kiến trong một đoạn văn.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Câu chủ đề: giới thiệu góc đọc sách và điều em muốn nhấn mạnh.",
+      "Các câu làm rõ: chọn vị trí, cách sắp xếp và việc em làm ở góc đọc sách.",
+      "Câu kết: nêu ý kiến của em về ích lợi của việc có góc đọc sách."
     ],
-    "model": "Trong căn phòng nhỏ của em, góc đọc sách nằm ngay bên cửa sổ. Đó là nơi em thích ngồi vào mỗi buổi chiều sau khi làm xong bài tập. Góc đọc sách tuy đơn giản nhưng rất gọn gàng. Trên chiếc giá thấp, em xếp truyện, sách khoa học và sách tham khảo thành từng nhóm. Một tấm đệm xanh đặt sát tường giúp em ngồi thoải mái. Ánh sáng ngoài cửa sổ khiến những trang sách như sáng hơn. Mỗi cuốn sách ở đây đều mang đến cho em một điều thú vị. Có hôm em theo chân nhân vật đi thám hiểm, có hôm lại tìm hiểu cách một hạt đậu nảy mầm. Đọc xong, em đặt sách về đúng chỗ và ghi một điều mình nhớ vào sổ. Em luôn giữ góc đọc sạch sẽ. Em mong nơi nhỏ bé này sẽ cùng mình lưu giữ thật nhiều câu chuyện đẹp.",
+    "model": "Trong căn phòng nhỏ của em, góc đọc sách nằm ngay bên cửa sổ. Đó là nơi em thích ngồi vào mỗi buổi chiều sau khi làm xong bài tập. Góc đọc sách tuy đơn giản nhưng rất gọn gàng. Trên chiếc giá thấp, em xếp truyện, sách khoa học và sách tham khảo thành từng nhóm. Một tấm đệm xanh đặt sát tường giúp em ngồi thoải mái. Ánh sáng ngoài cửa sổ khiến những trang sách như sáng hơn. Mỗi cuốn sách ở đây đều mang đến cho em một điều thú vị. Có hôm em theo chân nhân vật đi thám hiểm, có hôm lại tìm hiểu cách một hạt đậu nảy mầm. Đọc xong, em đặt sách về đúng chỗ và ghi một điều mình nhớ vào sổ. Em luôn giữ góc đọc sạch sẽ. Em mong nơi nhỏ bé này sẽ cùng mình lưu giữ thật nhiều câu chuyện đẹp. Theo em, mỗi bạn nên dành một góc nhỏ để đọc sách vì nơi ấy giúp chúng ta giữ thói quen đọc và khám phá điều mới.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -31,15 +31,15 @@
     "prompt": "Viết một đoạn văn nêu ý kiến của em về việc lớp dành một khoảng thời gian đọc sách chung mỗi tuần. Nêu lí do và ví dụ.",
     "focus": "Nêu rõ ý kiến, ít nhất hai lí do và một ví dụ gần gũi.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Ý kiến: em tán thành hay không tán thành việc được nêu trong đề?",
+      "Lí do và ví dụ: ghi những lí do thuyết phục, kèm một việc gần gũi để làm rõ.",
+      "Câu kết: khẳng định ý kiến hoặc đề nghị một cách thực hiện phù hợp."
     ],
     "model": "Theo em, lớp nên có một khoảng thời gian đọc sách chung mỗi tuần. Hoạt động này sẽ giúp chúng em vừa học thêm điều mới vừa biết lắng nghe nhau. Trước hết, đọc sách chung tạo cơ hội để mỗi bạn tìm được cuốn sách mình thích. Bạn thích động vật có thể chọn sách về thiên nhiên, còn bạn thích phiêu lưu có thể đọc truyện. Khi một bạn giới thiệu sách, cả lớp lại biết thêm một lựa chọn thú vị. Hơn nữa, chia sẻ sau khi đọc giúp chúng em mạnh dạn nói lên suy nghĩ. Chẳng hạn, cùng một câu chuyện, em thích hành động dũng cảm của nhân vật, còn bạn bên cạnh chú ý đến lòng nhân hậu. Nhờ nghe bạn, em hiểu câu chuyện đầy đủ hơn. Em mong lớp duy trì giờ đọc sách. Chỉ cần chuẩn bị sách vừa sức và giữ trật tự, chúng em sẽ có những giờ học thật bổ ích.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -62,9 +62,9 @@
     ],
     "model": "BÁO CÁO KẾT QUẢ THẢO LUẬN NHÓM\nVề việc chăm sóc bồn hoa\n(Tình huống giả định)\n\nThời gian: Giờ sinh hoạt lớp.\nThành phần: Bốn thành viên nhóm Hoa Nắng.\nNgười báo cáo: Minh, đại diện nhóm.\n\nNhóm thảo luận cách chăm sóc bồn hoa của lớp. Các bạn đề nghị nhặt lá khô, kiểm tra đất và tưới nước theo hướng dẫn của giáo viên. Nhóm thống nhất không ngắt hoa, không giẫm lên cây và không tự sử dụng phân bón hay thuốc.\n\nKết quả: Hai bạn phụ trách vệ sinh quanh bồn; một bạn ghi chép tình trạng cây; một bạn báo cô khi cần tưới. Các thành viên đổi nhiệm vụ ở lần chăm sóc tiếp theo để cùng được tham gia.\n\nNgười viết báo cáo\nMinh",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Báo cáo có tên, thời gian, thành phần và người báo cáo; em ghi rõ nếu dùng tình huống giả định.",
+      "Em đã ghi nội dung trao đổi, kết quả thống nhất và phân công của nhóm.",
+      "Em trình bày đúng dạng báo cáo, ghi tên người viết và đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -85,11 +85,11 @@
       "Nội dung thảo luận: những ý kiến và quyết định của nhóm.",
       "Kết thúc: nhiệm vụ được phân công và người viết báo cáo."
     ],
-    "model": "BÁO CÁO KẾT QUẢ THẢO LUẬN NHÓM\nVề việc sắp xếp góc sách lớp\n(Tình huống giả định)\n\nThời gian: Giờ sinh hoạt lớp chiều thứ Sáu.\nThành phần: Bốn thành viên nhóm Hoa Nắng.\nNgười báo cáo: Minh, đại diện nhóm.\n\nNhóm thảo luận cách sắp xếp góc sách để các bạn dễ tìm và giữ gìn sách. Các thành viên đều cho rằng sách đang để lẫn nhiều loại nên việc lựa chọn còn mất thời gian.\n\nSau khi trao đổi, nhóm thống nhất chia sách thành ba nhóm: truyện, sách tìm hiểu thiên nhiên và sách tham khảo. Mỗi nhóm sách có một nhãn dễ đọc. Hai bạn phụ trách phân loại, một bạn làm nhãn, một bạn kiểm tra và xếp sách lên giá. Sách bị rách sẽ được báo với cô để sửa đúng cách.\n\nNhóm đề nghị cả lớp lấy sách nhẹ tay và trả đúng vị trí. Chúng em mong được cô góp ý trước khi thực hiện.",
+    "model": "BÁO CÁO KẾT QUẢ THẢO LUẬN NHÓM\nVề việc sắp xếp góc sách lớp\n(Tình huống giả định)\n\nThời gian: Giờ sinh hoạt lớp chiều thứ Sáu.\nThành phần: Bốn thành viên nhóm Hoa Nắng.\nNgười báo cáo: Minh, đại diện nhóm.\n\nNhóm thảo luận cách sắp xếp góc sách để các bạn dễ tìm và giữ gìn sách. Các thành viên đều cho rằng sách đang để lẫn nhiều loại nên việc lựa chọn còn mất thời gian.\n\nSau khi trao đổi, nhóm thống nhất chia sách thành ba nhóm: truyện, sách tìm hiểu thiên nhiên và sách tham khảo. Mỗi nhóm sách có một nhãn dễ đọc. Hai bạn phụ trách phân loại, một bạn làm nhãn, một bạn kiểm tra và xếp sách lên giá. Sách bị rách sẽ được báo với cô để sửa đúng cách.\n\nNhóm đề nghị cả lớp lấy sách nhẹ tay và trả đúng vị trí. Chúng em mong được cô góp ý trước khi thực hiện.\n\nNgười viết báo cáo\nMinh",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Báo cáo có tên, thời gian, thành phần và người báo cáo; em ghi rõ nếu dùng tình huống giả định.",
+      "Em đã ghi nội dung trao đổi, kết quả thống nhất và phân công của nhóm.",
+      "Em trình bày đúng dạng báo cáo, ghi tên người viết và đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -103,26 +103,30 @@
     "week": 5,
     "topic": "Tìm hiểu cách viết bài văn thuật lại một sự việc; Lập dàn ý cho bài văn thuật lại một sự việc",
     "title": "Buổi làm quen thư viện",
-    "prompt": "Viết bài thuật lại một buổi em cùng lớp làm quen với thư viện trường. Nếu chưa tham gia, hãy chọn một buổi tham quan học tập em đã trải nghiệm.",
-    "focus": "Kể theo trình tự trước, trong và sau hoạt động; làm rõ một điều em học được.",
+    "prompt": "Chọn một buổi em cùng lớp làm quen với thư viện hoặc một buổi tham quan học tập em đã trải nghiệm. Lập dàn ý theo trình tự trước, trong và sau hoạt động; sau đó viết bản luyện thêm để chuẩn bị tuần 6.",
+    "focus": "Kể theo trình tự trước, trong và sau hoạt động; làm rõ một điều em học được. Bản viết hoàn chỉnh là bài luyện thêm của website; tiết viết bài chính thức vẫn theo lịch sách.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Tuần trước, lớp em được cô giáo đưa đến thư viện trường. Em háo hức vì đây là lần đầu cả lớp cùng tìm hiểu cách mượn sách.\n\nTrước khi đi, cô nhắc chúng em xếp hàng và nói nhỏ. Bước vào thư viện, em nhìn thấy những giá sách ngay ngắn và các bàn đọc sạch sẽ. Cô phụ trách thư viện chào cả lớp rồi giới thiệu từng khu vực.\n\nChúng em được hướng dẫn tìm sách theo nhãn và giữ trang sách phẳng khi đọc. Em chọn một cuốn về các loài chim. Khi chưa biết đặt sách trả ở đâu, em hỏi cô thay vì tự xếp vào giá bất kì. Sau đó, mỗi nhóm giới thiệu một cuốn sách mình thích.\n\nBuổi làm quen kết thúc nhanh hơn em tưởng. Em hiểu rằng thư viện là nơi mọi người cùng sử dụng, nên ai cũng cần giữ gìn sách và tôn trọng người đang đọc. Em mong sớm được trở lại.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
       42,
       46
     ],
-    "curriculumRevision": "sgk4-2026-v2",
-    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 42, 46. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK."
+    "curriculumRevision": "sgk4-2026-v3",
+    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 42, 46. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK.",
+    "previousRevisions": [
+      "sgk4-2026-v2",
+      "v1"
+    ]
   },
   {
     "week": 6,
@@ -131,15 +135,15 @@
     "prompt": "Viết bài thuật lại một buổi trồng hoặc chăm sóc cây em đã tham gia. Nêu rõ việc em làm và một tình huống đáng nhớ.",
     "focus": "Thuật lại việc em trực tiếp tham gia theo trình tự; phân biệt với kể lại một câu chuyện đã đọc hoặc nghe.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Sáng thứ Bảy, em cùng các bạn tham gia chăm sóc vườn trường. Điều em nhớ nhất là lần cả nhóm trồng một cây hoa nhỏ bên lối đi.\n\nĐầu tiên, cô giáo chỉ cho chúng em vị trí trồng. Bác bảo vệ đã chuẩn bị hố đất. Em giữ cây thẳng, còn hai bạn nhẹ nhàng vun đất quanh gốc theo hướng dẫn của cô. Cả nhóm làm chậm để không làm gãy những chiếc rễ nhỏ.\n\nĐang vun đất, một bạn lỡ nghiêng cây. Chúng em dừng lại, gọi cô giúp chỉnh cây ngay ngắn rồi mới tiếp tục. Sau đó, em dùng bình nhỏ tưới nước vừa đủ. Bạn Lan nhặt lá khô, bạn Nam thu gọn dụng cụ. Nhìn cây đứng vững, cả nhóm vui vẻ vỗ tay.\n\nTrước khi về, chúng em nhận lịch chăm sóc cây. Buổi lao động giúp em hiểu rằng trồng cây cần sự cẩn thận và chăm sóc lâu dài. Em mong cây lớn khỏe cùng những ngày đến lớp của chúng em.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -153,26 +157,30 @@
     "week": 7,
     "topic": "Luyện viết mở bài, kết bài cho bài văn kể lại một câu chuyện; Lập dàn ý cho bài văn kể lại một câu chuyện",
     "title": "Chuyện Bó đũa",
-    "prompt": "Kể lại câu chuyện dân gian Bó đũa bằng lời của em. Giữ các sự việc chính và nêu điều em hiểu từ câu chuyện.",
-    "focus": "Giới thiệu nhân vật; kể thử thách, cách giải thích và kết thúc; không chép bài mẫu.",
+    "prompt": "Chọn câu chuyện dân gian Bó đũa. Ghi các sự việc chính, lập dàn ý và luyện cách mở bài, kết bài. Sau đó kể lại thành bản luyện thêm để chuẩn bị tuần 8.",
+    "focus": "Giới thiệu nhân vật; kể thử thách, cách giải thích và kết thúc; không chép bài mẫu. Bản viết hoàn chỉnh là bài luyện thêm của website; tiết viết bài chính thức vẫn theo lịch sách.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu tên câu chuyện và ấn tượng chung của em.",
+      "Thân bài: kể các sự việc chính theo trình tự, làm rõ hành động của nhân vật và kết quả.",
+      "Kết bài: nêu suy nghĩ hoặc điều em học được từ câu chuyện."
     ],
     "model": "Trong những câu chuyện em được nghe, Bó đũa để lại một bài học giản dị mà sâu sắc về tình đoàn kết.\n\nChuyện kể rằng có một người cha rất buồn vì các con thường cãi nhau. Một hôm, ông gọi các con đến và đưa ra một bó đũa. Ông bảo từng người thử bẻ gãy cả bó. Ai cũng gắng sức nhưng không bẻ được.\n\nNgười cha liền tháo dây, chia đũa thành từng chiếc rồi bảo các con bẻ tiếp. Lần này, họ dễ dàng bẻ gãy. Thấy các con ngạc nhiên, ông giải thích rằng những chiếc đũa đứng riêng thì yếu, nhưng hợp lại thành bó sẽ chắc chắn hơn. Anh em cũng cần biết yêu thương và giúp đỡ nhau như vậy.\n\nNghe lời cha, các con hiểu ra lỗi của mình. Câu chuyện khiến em nhớ rằng đoàn kết bắt đầu từ những việc nhỏ như nhường nhịn, lắng nghe và cùng giải quyết khó khăn. Em sẽ cố gắng làm điều đó với anh chị em và bạn bè.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn đúng câu chuyện và ghi đủ các sự việc chính theo trình tự.",
+      "Bài kể có mở bài, thân bài, kết bài; giữ nội dung chính, không tự đổi kết thúc truyện.",
+      "Em kể bằng lời của mình, dùng từ nối phù hợp và đã đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
       57,
       61
     ],
-    "curriculumRevision": "sgk4-2026-v2",
-    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 57, 61. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK."
+    "curriculumRevision": "sgk4-2026-v3",
+    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 57, 61. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK.",
+    "previousRevisions": [
+      "sgk4-2026-v2",
+      "v1"
+    ]
   },
   {
     "week": 8,
@@ -181,15 +189,15 @@
     "prompt": "Kể lại truyện ngụ ngôn Rùa và Thỏ. Chú ý sự thay đổi của hai nhân vật trong cuộc chạy đua.",
     "focus": "Kể lại câu chuyện đủ sự việc chính, rồi đọc lại để sửa thứ tự và cách diễn đạt.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu tên câu chuyện và ấn tượng chung của em.",
+      "Thân bài: kể các sự việc chính theo trình tự, làm rõ hành động của nhân vật và kết quả.",
+      "Kết bài: nêu suy nghĩ hoặc điều em học được từ câu chuyện."
     ],
     "model": "Em từng nghĩ người chạy nhanh chắc chắn sẽ thắng. Nhưng câu chuyện Rùa và Thỏ giúp em hiểu rằng sự kiên trì cũng rất quan trọng.\n\nThỏ thường chê Rùa đi chậm. Một ngày, Rùa đề nghị cùng chạy thi. Thỏ nhận lời ngay vì tin mình sẽ thắng dễ dàng. Khi cuộc đua bắt đầu, Thỏ phóng đi rất nhanh, còn Rùa bước từng bước chắc chắn.\n\nChạy được một quãng xa, Thỏ ngoái lại không thấy Rùa. Nó nghĩ mình còn nhiều thời gian nên nằm dưới gốc cây nghỉ và ngủ quên. Rùa vẫn lặng lẽ tiến về phía trước, không dừng lại vì những lời chê cười.\n\nĐến khi tỉnh dậy, Thỏ vội chạy về đích nhưng đã muộn. Rùa đã đến nơi trước nó. Thỏ xấu hổ vì sự chủ quan của mình. Qua câu chuyện, em học được rằng cần kiên trì làm việc đến cùng và không coi thường người khác, dù mình có lợi thế nào đi nữa.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn đúng câu chuyện và ghi đủ các sự việc chính theo trình tự.",
+      "Bài kể có mở bài, thân bài, kết bài; giữ nội dung chính, không tự đổi kết thúc truyện.",
+      "Em kể bằng lời của mình, dùng từ nối phù hợp và đã đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -206,15 +214,15 @@
     "prompt": "Viết bài kể lại một lần em giúp người thân hoặc bạn bè. Chọn một việc nhỏ có thật, nêu diễn biến và cảm xúc.",
     "focus": "Ôn bố cục và trình tự; kể chi tiết thể hiện sự giúp đỡ thay vì chỉ nói em rất tốt.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Chiều hôm ấy, em đang chuẩn bị đi chơi thì thấy bà loay hoay tìm chiếc kính. Em quyết định ở lại giúp bà trước.\n\nEm hỏi bà đã dùng kính ở đâu lần cuối. Bà nhớ mình vừa đọc sách ngoài hiên rồi vào bếp. Em cùng bà kiểm tra trên bàn, bên ghế và cạnh giỏ len nhưng vẫn chưa thấy. Em không kéo mọi đồ vật ra mà tìm từng chỗ một để khỏi làm căn phòng bừa bộn.\n\nKhi nhìn xuống cuốn báo gấp trên ghế, em thấy gọng kính ló ra. Em cầm kính bằng hai tay đưa cho bà. Bà đeo thử rồi mỉm cười cảm ơn. Em còn giúp bà đặt một chiếc hộp nhỏ trên bàn để lần sau có chỗ cất kính cố định.\n\nViệc giúp bà chỉ mất ít phút nhưng khiến em rất vui. Em hiểu rằng quan tâm đến người thân không nhất thiết phải làm điều lớn lao. Đôi khi, chỉ cần chịu khó lắng nghe và dành một chút thời gian.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -227,51 +235,59 @@
     "week": 10,
     "topic": "Tìm hiểu cách viết đoạn văn tưởng tượng; Tìm ý cho đoạn văn tưởng tượng",
     "title": "Cuộc trò chuyện với giọt nước",
-    "prompt": "Tưởng tượng em gặp một giọt nước biết nói. Lập dàn ý và viết câu chuyện hoàn chỉnh về cuộc gặp ấy.",
-    "focus": "Bài mở rộng từ luyện đoạn tưởng tượng; có tình huống, diễn biến và kết thúc hợp lí.",
+    "prompt": "Tưởng tượng em gặp một giọt nước biết nói. Ghi các ý về cuộc gặp, rồi viết thành một đoạn văn tưởng tượng; các chi tiết cần nối tiếp hợp lí.",
+    "focus": "Tìm ý và viết một đoạn văn tưởng tượng có tình huống, chi tiết và câu kết phù hợp; không yêu cầu viết cả bài văn.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Tình huống: cuộc gặp hoặc sự việc tưởng tượng bắt đầu ở đâu, như thế nào?",
+      "Chi tiết: em hoặc nhân vật nói gì, làm gì; các chi tiết nối tiếp ra sao?",
+      "Câu kết: khép lại tình huống và nêu ấn tượng hoặc suy nghĩ phù hợp."
     ],
     "model": "Một buổi sáng, khi đang tưới cây, em nghe tiếng gọi rất nhỏ từ chiếc lá. Trên lá có một giọt nước long lanh đang nhìn em. Giọt nước kể rằng mình từng nằm trong một đám mây. Khi mây nặng dần, nó rơi xuống khu vườn cùng các bạn. Có giọt thấm vào đất, có giọt đọng trên hoa, còn nó được chiếc lá xanh giữ lại. Em thích thú hỏi giọt nước có buồn khi phải rời mây không. Giọt nước đáp rằng nó vui vì có thể giúp cây đỡ khát. Nhưng nó lo khi nhìn thấy vòi nước bên sân chưa được khóa kín. Em chạy đến vặn lại vòi. Khi quay về, giọt nước đã nhỏ dần dưới ánh nắng. Nó chào em và hẹn một ngày sẽ trở lại trong cơn mưa. Em đứng nhìn chiếc lá một lúc lâu. Dù chỉ là cuộc gặp trong tưởng tượng, câu chuyện khiến em nhớ phải sử dụng nước tiết kiệm mỗi ngày.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
       79,
       83
     ],
-    "curriculumRevision": "sgk4-2026-v2",
-    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 79, 83. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK."
+    "curriculumRevision": "sgk4-2026-v3",
+    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 79, 83. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK.",
+    "previousRevisions": [
+      "sgk4-2026-v2",
+      "v1"
+    ]
   },
   {
     "week": 11,
     "topic": "Viết đoạn văn tưởng tượng; Trả bài viết đoạn văn tưởng tượng",
     "title": "Chiếc bút chì lạc đường",
-    "prompt": "Tưởng tượng chiếc bút chì của em bị lạc và có thể trò chuyện. Viết một đoạn văn về cách em tìm lại chiếc bút; đọc lại và sửa một chi tiết chưa hợp lí.",
+    "prompt": "Tưởng tượng chiếc bút chì của em bị lạc và có thể trò chuyện. Viết một đoạn văn kể việc chiếc bút được tìm lại; chọn người kể và giữ cách xưng hô nhất quán. Đọc lại và sửa một chi tiết chưa hợp lí.",
     "focus": "Viết thành một đoạn văn tưởng tượng, có tình huống và chi tiết hợp lí; tự sửa đoạn viết.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Tình huống: cuộc gặp hoặc sự việc tưởng tượng bắt đầu ở đâu, như thế nào?",
+      "Chi tiết: em hoặc nhân vật nói gì, làm gì; các chi tiết nối tiếp ra sao?",
+      "Câu kết: khép lại tình huống và nêu ấn tượng hoặc suy nghĩ phù hợp."
     ],
     "model": "Giờ ra chơi vừa bắt đầu thì chiếc bút chì xanh lăn khỏi bàn. Nó mắc dưới chân ghế và lo lắng nhìn các bạn chạy ra sân. Một cục tẩy ở gần đó lên tiếng hỏi thăm. Bút chì kể rằng chủ của mình thường dùng nó để vẽ cây và những ngôi nhà. Nó rất muốn trở về hộp bút trước tiết Mĩ thuật. Cục tẩy khuyên bút chì hãy bình tĩnh chờ người quét lớp. Lát sau, bạn trực nhật phát hiện chiếc bút. Bạn không bỏ vào cặp riêng mà đặt nó ở hộp đồ dùng thất lạc trên bàn giáo viên. Trong tiết học, Lan nhìn thấy dấu ngôi sao nhỏ trên thân bút và nhận ra đồ của mình. Bạn cảm ơn người trực nhật rồi cất bút vào hộp. Chiếc bút chì thở phào nhẹ nhõm. Tối hôm đó, nó nằm cạnh cục tẩy và vui vẻ kể lại chuyến đi. Từ ấy, Lan luôn kiểm tra đồ dùng trước khi rời lớp.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
       88,
       91
     ],
-    "curriculumRevision": "sgk4-2026-v2",
-    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 88, 91. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK."
+    "curriculumRevision": "sgk4-2026-v3",
+    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 88, 91. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK.",
+    "previousRevisions": [
+      "sgk4-2026-v2",
+      "v1"
+    ]
   },
   {
     "week": 12,
@@ -286,9 +302,9 @@
     ],
     "model": "HƯỚNG DẪN CHUẨN BỊ CẶP SÁCH\n\nChuẩn bị cặp từ tối hôm trước giúp chúng ta tránh quên đồ và có buổi sáng thong thả. Em cần có thời khóa biểu, sách vở, hộp bút và chiếc cặp sạch.\n\nBước một, xem thời khóa biểu ngày mai và đặt những cuốn sách, vở cần dùng lên bàn. Kiểm tra xem có bài tập hoặc phiếu nào cần mang theo không.\n\nBước hai, xếp sách lớn ở phía trong cặp, vở và sách nhỏ ở phía ngoài. Để giấy rời vào túi riêng để không bị nhàu. Không nhét thêm những món đồ không cần thiết.\n\nBước ba, kiểm tra bút, thước, tẩy rồi cất hộp bút vào ngăn phù hợp. Nếu mang bình nước, hãy đậy kín và đặt ở ngăn dành cho bình.\n\nCuối cùng, đối chiếu lại với thời khóa biểu và đóng khóa cặp. Khi đã chuẩn bị xong, đặt cặp ở nơi dễ lấy. Cách làm này giúp em tự chủ và giữ đồ dùng gọn gàng.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã nêu mục đích và những đồ dùng hoặc điều cần chuẩn bị trước khi làm.",
+      "Các bước được sắp xếp theo thứ tự, rõ việc làm và có lưu ý an toàn phù hợp.",
+      "Em đã nêu cách kiểm tra kết quả hoặc giữ gìn sản phẩm và đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -311,9 +327,9 @@
     ],
     "model": "CỘNG HOÀ XÃ HỘI CHỦ NGHĨA VIỆT NAM\nĐộc lập – Tự do – Hạnh phúc\n\nSông Công, ngày 14 tháng 10 năm 2026\n\nĐƠN XIN THAM GIA CÂU LẠC BỘ ĐỌC SÁCH\n\nKính gửi: Ban phụ trách câu lạc bộ đọc sách của trường.\n\nEm tên là Minh, học sinh lớp 4A. Em viết đơn này xin được tham gia câu lạc bộ đọc sách. Em thích đọc truyện và sách tìm hiểu thiên nhiên, mong được chia sẻ những điều đã đọc với các bạn.\n\nNếu được tham gia, em sẽ thực hiện nội quy, giữ gìn sách và chuẩn bị nội dung trước mỗi buổi sinh hoạt. Em xin cảm ơn thầy cô đã xem xét nguyện vọng của em.\n\nNgười viết đơn\nMinh\n\nThông tin trên là ví dụ giả định; em thay bằng thông tin phù hợp với bài luyện của mình.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Đơn có quốc hiệu, tiêu ngữ, địa điểm, ngày tháng, tên đơn và người nhận.",
+      "Em đã giới thiệu người viết, nêu lí do và đề nghị xin tham gia câu lạc bộ.",
+      "Đơn có lời cảm ơn hoặc cam kết, tên người viết; em đã kiểm tra cách trình bày và chính tả."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -327,51 +343,59 @@
     "week": 14,
     "topic": "Tìm hiểu cách viết bài văn miêu tả con vật; Quan sát con vật",
     "title": "Chú mèo bên cửa sổ",
-    "prompt": "Quan sát một con vật ở nơi an toàn, ghi lại đặc điểm và hoạt động nổi bật. Dựa vào các ý ấy, viết bài tả con vật để luyện cách triển khai; không đến gần con vật lạ.",
-    "focus": "Nhận ra bố cục bài tả con vật và chọn chi tiết từ quan sát thực tế.",
+    "prompt": "Quan sát một con vật ở nơi an toàn, ghi lại đặc điểm và hoạt động nổi bật. Tìm hiểu bố cục bài tả con vật; sau đó viết bản luyện thêm từ các ý đã ghi. Không đến gần con vật lạ.",
+    "focus": "Nhận ra bố cục bài tả con vật và chọn chi tiết từ quan sát thực tế. Bản viết hoàn chỉnh là bài luyện thêm của website; tiết viết bài chính thức vẫn theo lịch sách.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu con vật em đã quan sát và sự gần gũi với em.",
+      "Thân bài: chọn đặc điểm hình dáng, hoạt động và thói quen nổi bật; sắp xếp theo thứ tự rõ ràng.",
+      "Kết bài: nêu tình cảm với con vật và việc em làm để chăm sóc, giữ khoảng cách an toàn."
     ],
     "model": "Nhà em nuôi một chú mèo tên Mướp. Chỗ ngồi yêu thích của chú là bậu cửa sổ nhìn ra khu vườn.\n\nMướp có bộ lông vàng xen những vệt nâu mềm mượt. Hai tai lúc nào cũng dựng lên như đang lắng nghe. Đôi mắt tròn đổi vẻ theo ánh sáng: khi lim dim buồn ngủ, khi lại sáng lên vì tò mò. Chú bước rất nhẹ, chiếc đuôi cong cong theo từng nhịp chân.\n\nMỗi sáng, Mướp thường ngồi liếm lông và dùng chân trước lau mặt. Thấy em kéo sợi dây đồ chơi, chú cúi thấp người rồi nhảy tới. Chơi một lúc, chú lại nằm cuộn tròn trên tấm thảm. Em thích nhất tiếng kêu nhỏ khi chú chạy ra đón em đi học về.\n\nEm cho Mướp ăn đúng chỗ và không trêu chọc khi chú đang ngủ. Với em, Mướp là một người bạn đáng yêu làm căn nhà thêm ấm áp.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn chi tiết hình dáng và hoạt động từ quan sát con vật.",
+      "Bài văn có mở bài, thân bài, kết bài; các chi tiết tập trung vào con vật được tả.",
+      "Em đã dùng từ ngữ phù hợp, nêu cảm nghĩ của mình và đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
       112,
       116
     ],
-    "curriculumRevision": "sgk4-2026-v2",
-    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 112, 116. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK."
+    "curriculumRevision": "sgk4-2026-v3",
+    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 112, 116. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK.",
+    "previousRevisions": [
+      "sgk4-2026-v2",
+      "v1"
+    ]
   },
   {
     "week": 15,
     "topic": "Luyện viết đoạn văn miêu tả con vật; Lập dàn ý cho bài văn miêu tả con vật",
     "title": "Đàn gà trong sân",
-    "prompt": "Viết bài tả một con gà hoặc đàn gà em đã quan sát. Trong thân bài, dành một đoạn tả hoạt động nổi bật.",
+    "prompt": "Quan sát một con gà hoặc đàn gà ở nơi an toàn. Viết một đoạn văn tả đặc điểm hoặc hoạt động nổi bật, rồi ghi các ý để chuẩn bị bài văn tả con vật ở tuần 16.",
     "focus": "Luyện đoạn tả đặc điểm, hoạt động của con vật; sắp xếp các ý ấy vào dàn ý bài văn miêu tả.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Câu mở đoạn: giới thiệu con gà hoặc đàn gà và đặc điểm em tập trung tả.",
+      "Các câu tiếp: chọn hình dáng, cử chỉ hoặc hoạt động em quan sát; sắp xếp các chi tiết hợp lí.",
+      "Câu cuối: nêu ấn tượng về con vật; ghi thêm ý để chuẩn bị bài văn ở tuần sau."
     ],
-    "model": "Mỗi lần về thăm bà, em đều thích ngắm đàn gà trong sân. Nổi bật nhất là cô gà mái vàng cùng mấy chú gà con nhỏ xíu.\n\nGà mẹ có bộ lông vàng sẫm, đôi chân chắc và chiếc mỏ nhọn. Mỗi khi bước đi, đầu cô lại đưa nhẹ về phía trước. Những chú gà con khoác bộ lông tơ mịn, trông như các cục bông đang chuyển động.\n\nBuổi sáng, gà mẹ dẫn đàn con ra góc sân kiếm ăn. Cô bới lớp đất mềm rồi cất tiếng gọi. Đàn con lập tức chạy đến, ríu rít chen quanh chân mẹ. Một chú mải nhìn chiếc lá bay nên tụt lại phía sau; nghe tiếng mẹ, chú vội lon ton chạy theo. Khi có tiếng động lạ, cả đàn nép sát vào nhau.\n\nEm đứng xa để không làm đàn gà hoảng sợ. Nhìn gà mẹ chăm con, em thấy khu sân bình dị của bà thật vui và ấm cúng.",
+    "model": "Mỗi sáng về thăm bà, em thích nhất cảnh cô gà mái vàng dẫn đàn con kiếm ăn trong sân. Gà mẹ có bộ lông vàng sẫm, đôi chân chắc và chiếc mỏ nhọn. Cô vừa bước vừa bới lớp đất mềm bằng hai chân. Tìm được thức ăn, cô cất tiếng gọi để những chú gà con chạy tới. Đàn con khoác lớp lông tơ vàng nhạt, trông như những cục bông bé xíu đang chuyển động. Chúng ríu rít chen quanh chân mẹ rồi cúi xuống mổ những hạt nhỏ. Một chú mải nhìn chiếc lá bay nên tụt lại phía sau; nghe tiếng mẹ, chú vội lon ton chạy theo. Khi có tiếng động lạ, gà mẹ ngẩng đầu nhìn quanh, còn đàn con nép sát vào nhau. Em đứng xa để không làm chúng hoảng sợ. Nhìn gà mẹ chăm con, em thấy khoảng sân nhà bà thật vui và ấm áp.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã ghi các chi tiết quan sát được về đặc điểm hoặc hoạt động của con gà, đàn gà.",
+      "Em viết một đoạn văn miêu tả và ghi thêm ý để chuẩn bị bài văn tuần 16.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
       120,
       123
     ],
-    "curriculumRevision": "sgk4-2026-v2",
-    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 120, 123. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK."
+    "curriculumRevision": "sgk4-2026-v3",
+    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập một, trang 120, 123. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK.",
+    "previousRevisions": [
+      "sgk4-2026-v2",
+      "v1"
+    ]
   },
   {
     "week": 16,
@@ -380,15 +404,15 @@
     "prompt": "Viết bài tả một con chó em biết, kết hợp hình dáng, thói quen và một kỉ niệm nhỏ.",
     "focus": "Viết bài tả con vật theo dàn ý, rồi đọc lại để sửa chi tiết, câu và dấu câu.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu con vật em đã quan sát và sự gần gũi với em.",
+      "Thân bài: chọn đặc điểm hình dáng, hoạt động và thói quen nổi bật; sắp xếp theo thứ tự rõ ràng.",
+      "Kết bài: nêu tình cảm với con vật và việc em làm để chăm sóc, giữ khoảng cách an toàn."
     ],
     "model": "Chú chó của gia đình em tên Đốm vì trên lưng có một mảng lông đen lớn. Chú đã quen với mọi người và thường nằm gần cửa mỗi chiều.\n\nĐốm không to lắm nhưng rất nhanh nhẹn. Bộ lông trắng ngắn ôm sát thân, còn đôi tai lúc cụp xuống, lúc vểnh lên. Khi nghe bước chân quen, chú ngẩng đầu, chiếc đuôi bắt đầu vẫy liên tục.\n\nEm nhớ một hôm đi học về dưới cơn mưa nhỏ. Đốm đứng trong hiên, nhìn em rồi chạy vòng quanh như muốn chào đón. Em cất áo mưa xong mới vuốt nhẹ lưng chú. Sau đó, chú ngoan ngoãn nằm cạnh bàn trong lúc em đọc sách. Thỉnh thoảng, chú nghiêng đầu nghe tiếng em đánh vần.\n\nGia đình em chăm sóc và đưa Đốm đi tiêm phòng theo hướng dẫn. Em luôn rửa tay sau khi chơi cùng chú. Đốm là người bạn gần gũi, khiến em mong về nhà sau mỗi ngày học.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn chi tiết hình dáng và hoạt động từ quan sát con vật.",
+      "Bài văn có mở bài, thân bài, kết bài; các chi tiết tập trung vào con vật được tả.",
+      "Em đã dùng từ ngữ phù hợp, nêu cảm nghĩ của mình và đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -411,9 +435,9 @@
     ],
     "model": "Sông Công, ngày 14 tháng 10 năm 2026\n\nÔng bà kính yêu!\n\nĐã một thời gian cháu chưa về thăm ông bà. Hôm nay, cháu viết thư để hỏi thăm sức khỏe và kể với ông bà chuyện học ở lớp. Dạo này ông còn chăm vườn mỗi sáng không ạ? Bà nhớ nghỉ ngơi khi thấy mệt nhé!\n\nỞ trường, cháu đang tập đọc sách đều đặn. Trước đây, cháu thường đọc vội nên quên nội dung. Bây giờ, mỗi lần đọc xong, cháu ghi lại một điều mình thích. Tuần vừa rồi, cháu đã tự giới thiệu được một cuốn truyện trước nhóm. Tuy còn hơi run, cháu rất vui vì đã cố gắng.\n\nCháu nhớ những buổi ngồi nghe ông kể chuyện và phụ bà nhặt rau. Cháu mong sớm được về thăm ông bà. Cháu chúc ông bà luôn mạnh khỏe, vui vẻ. Khi nhận được thư, ông bà viết cho cháu nhé!\n\nCháu của ông bà\nMinh",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Thư có địa điểm, ngày tháng và lời xưng hô phù hợp với ông bà.",
+      "Em đã hỏi thăm ông bà và kể điều muốn chia sẻ bằng lời chân thành.",
+      "Thư có lời chúc, lời chào, tên người viết; em đã đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -430,15 +454,15 @@
     "prompt": "Viết bài thuật lại một buổi sum họp gia đình khiến em nhớ mãi. Không cần kể việc lớn, hãy chọn khoảnh khắc có ý nghĩa.",
     "focus": "Ôn trình tự, bố cục và cảm xúc; tập trung một sự việc chính.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Buổi sum họp em nhớ nhất là chiều cả nhà cùng chuẩn bị bữa cơm mừng sinh nhật bà. Không có sân khấu hay quà đắt tiền, nhưng ai cũng rất vui.\n\nTừ sớm, bố mẹ đã phân công công việc. Em lau bàn, xếp bát và đặt tấm thiệp tự làm ở chỗ ngồi của bà. Em viết thiệp hơi chậm vì muốn những lời chúc thật ngay ngắn. Em gái thì tập hát, cứ quên lời lại bật cười.\n\nKhi bà bước vào phòng, chúng em cùng chúc mừng. Bà đọc thiệp rồi ôm hai chị em vào lòng. Trong bữa cơm, mọi người kể những chuyện vui. Em chăm chú nghe bố nhắc lại một kỉ niệm thời nhỏ với bà. Bỗng em hiểu rằng bà đã dành rất nhiều thời gian chăm sóc cả gia đình.\n\nĂn xong, em giúp thu dọn bàn. Buổi chiều ấy khiến em thấy hạnh phúc đến từ những người luôn yêu thương mình. Em mong gia đình có thêm nhiều dịp quây quần như vậy.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv1",
     "sourcePages": [
@@ -454,15 +478,15 @@
     "prompt": "Viết một đoạn văn nêu tình cảm với một người gần gũi, thân thiết. Chọn một kỉ niệm hoặc việc làm cho thấy vì sao em yêu quý người đó.",
     "focus": "Gọi tên tình cảm, chọn chi tiết làm rõ và trình bày trong một đoạn văn.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Ý chính: giới thiệu người hoặc nhân vật trong đề và tình cảm của em.",
+      "Chi tiết làm rõ: chọn lời nói, việc làm hoặc kỉ niệm khiến em có tình cảm ấy.",
+      "Câu kết: khẳng định tình cảm, lời chúc hoặc điều em muốn làm."
     ],
     "model": "Em rất yêu quý bố vì bố luôn lắng nghe và giúp em tự tin hơn. Mỗi tối, dù đã đi làm cả ngày, bố vẫn dành thời gian hỏi em về những điều xảy ra ở lớp. Có lần em buồn vì chưa hiểu một bài toán, bố không làm hộ mà ngồi bên cạnh, nhắc em đọc lại đề và chia công việc thành từng bước. Khi em tìm được cách giải, bố mỉm cười và khen sự cố gắng của em. Em còn thích những buổi cùng bố chăm cây trước nhà. Bố chỉ cho em quan sát đất, nhặt lá khô và tưới vừa đủ. Những việc nhỏ ấy khiến em cảm thấy mình được tin tưởng. Em mong bố luôn mạnh khoẻ và sẽ cố gắng học tập, giúp bố mẹ những việc vừa sức.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -479,15 +503,15 @@
     "prompt": "Viết một đoạn văn về người đã động viên em khi gặp khó khăn. Sau đó ghi các ý em muốn dùng để viết về một nhân vật văn học ở tuần tiếp theo.",
     "focus": "Hoàn thiện đoạn nêu tình cảm với người thân; chuẩn bị ý về nhân vật văn học.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Ý chính: giới thiệu người hoặc nhân vật trong đề và tình cảm của em.",
+      "Chi tiết làm rõ: chọn lời nói, việc làm hoặc kỉ niệm khiến em có tình cảm ấy.",
+      "Câu kết: khẳng định tình cảm, lời chúc hoặc điều em muốn làm."
     ],
     "model": "Trong gia đình, chị gái là người thường động viên em khi em nản lòng. Em rất yêu quý sự kiên nhẫn và cách quan tâm nhẹ nhàng của chị. Em nhớ lần mình tập đi xe đạp. Sau vài lần loạng choạng, em sợ và muốn bỏ cuộc. Chị không cười mà giúp em kiểm tra mũ bảo hiểm rồi chọn một khoảng sân an toàn. Chị giữ xe, nhắc em nhìn phía trước và thử từng đoạn ngắn. Khi em tự đi được vài vòng, chị vui mừng vỗ tay. Chị bảo rằng biết dừng lại nghỉ không có nghĩa là bỏ cuộc; quan trọng là mình sẵn sàng thử tiếp. Lời nói ấy giúp em bớt ngại những việc chưa làm tốt. Về sau, gặp bài toán khó, em cũng bình tĩnh suy nghĩ từng bước. Em biết chị có việc học riêng nhưng vẫn dành thời gian cho em. Em muốn nói lời cảm ơn và sẽ cố gắng tự lập hơn. Tình thương của chị giúp em tin vào sự tiến bộ của mình.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -504,15 +528,15 @@
     "prompt": "Viết một đoạn văn bày tỏ tình cảm với một nhân vật trong truyện em đã đọc. Nêu tên truyện và ít nhất hai chi tiết làm em yêu quý nhân vật.",
     "focus": "Nêu tình cảm với nhân vật bằng chi tiết trong truyện; đọc lại và sửa đoạn viết.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Ý chính: giới thiệu người hoặc nhân vật trong đề và tình cảm của em.",
+      "Chi tiết làm rõ: chọn lời nói, việc làm hoặc kỉ niệm khiến em có tình cảm ấy.",
+      "Câu kết: khẳng định tình cảm, lời chúc hoặc điều em muốn làm."
     ],
     "model": "Trong truyện Thạch Sanh, em yêu quý nhất nhân vật Thạch Sanh. Dù cuộc sống có nhiều thử thách, chàng vẫn giữ lòng tốt và sự dũng cảm. Em khâm phục Thạch Sanh vì chàng dám đối mặt với nguy hiểm. Việc chàng chiến đấu với chằn tinh cho thấy lòng can đảm và mong muốn bảo vệ mọi người. Khi đọc đến đoạn ấy, em hồi hộp rồi vui mừng trước chiến thắng của chàng. Em còn cảm động trước tấm lòng rộng lượng của nhân vật. Sau nhiều lần bị Lí Thông lừa hại, Thạch Sanh vẫn không chọn cách trả thù tàn nhẫn. Chi tiết ấy khiến em suy nghĩ về việc đối xử với người khác khi mình bị tổn thương. Lòng tốt cần đi cùng sự tỉnh táo, nhưng không nên biến thành lòng thù hận. Thạch Sanh là nhân vật cổ tích có những khả năng phi thường. Em không thể làm những việc như chàng, nhưng có thể học cách trung thực, giúp đỡ bạn và dũng cảm nhận lỗi trong cuộc sống hằng ngày.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -535,9 +559,9 @@
     ],
     "model": "HƯỚNG DẪN DÙNG BÌNH NƯỚC CÁ NHÂN\n\nBình nước cá nhân giúp em chủ động uống nước khi đến trường. Em nên chọn bình còn tốt, có nắp kín và phù hợp với lứa tuổi.\n\nTrước khi dùng, kiểm tra xem bình đã được làm sạch chưa. Nhờ người lớn hỗ trợ nếu bình có bộ phận khó tháo rửa. Cho nước uống an toàn, ở nhiệt độ phù hợp vào bình; không tự rót nước nóng vì dễ bị bỏng. Đậy nắp rồi kiểm tra nhẹ để tránh rò nước.\n\nKhi uống, mở nắp cẩn thận và không vừa chạy vừa uống. Dùng bình riêng, không đưa miệng bình cho nhiều người cùng uống. Nếu bình bị rơi bẩn, hãy báo người lớn để làm sạch trước khi dùng tiếp.\n\nCuối ngày, đổ phần nước còn thừa và vệ sinh bình theo hướng dẫn của sản phẩm. Để bình khô, thoáng rồi mới cất. Giữ bình sạch là một thói quen nhỏ giúp em chăm sóc bản thân.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã nêu mục đích và những đồ dùng hoặc điều cần chuẩn bị trước khi làm.",
+      "Các bước được sắp xếp theo thứ tự, rõ việc làm và có lưu ý an toàn phù hợp.",
+      "Em đã nêu cách kiểm tra kết quả hoặc giữ gìn sản phẩm và đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -554,15 +578,15 @@
     "prompt": "Lập dàn ý và kể lại truyện cổ tích Cây khế bằng lời của em. Nêu rõ sự khác nhau trong lựa chọn của hai anh em.",
     "focus": "Giữ mạch chính; chọn chi tiết túi ba gang để làm rõ tính cách và kết quả.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu tên câu chuyện và ấn tượng chung của em.",
+      "Thân bài: kể các sự việc chính theo trình tự, làm rõ hành động của nhân vật và kết quả.",
+      "Kết bài: nêu suy nghĩ hoặc điều em học được từ câu chuyện."
     ],
     "model": "Truyện Cây khế kể về hai anh em có cách sống rất khác nhau. Câu chuyện khiến em nhớ mãi bài học về lòng tham.\n\nSau khi cha mẹ mất, người anh lấy phần lớn gia tài, chỉ để người em một cây khế. Vợ chồng người em chăm chỉ làm ăn và chăm sóc cây. Một hôm, chim lạ đến ăn khế. Nghe người em than thở, chim hẹn trả vàng và dặn may túi ba gang.\n\nNgười em làm đúng lời dặn. Chim đưa em ra đảo lấy vàng rồi chở về an toàn. Biết chuyện, người anh đòi đổi gia tài để lấy cây khế. Khi chim đến, anh cũng xin được trả vàng nhưng lại may túi thật lớn. Ra đảo, anh nhặt quá nhiều. Trên đường về, vì chở nặng, chim nghiêng cánh khiến anh cùng túi vàng rơi xuống biển.\n\nKết thúc truyện làm em suy nghĩ. Em hiểu rằng không nên vì muốn có thật nhiều mà quên lời khuyên và sự an toàn. Sống chăm chỉ, biết đủ giúp con người tránh những lựa chọn đáng tiếc.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn đúng câu chuyện và ghi đủ các sự việc chính theo trình tự.",
+      "Bài kể có mở bài, thân bài, kết bài; giữ nội dung chính, không tự đổi kết thúc truyện.",
+      "Em kể bằng lời của mình, dùng từ nối phù hợp và đã đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -579,15 +603,15 @@
     "prompt": "Viết một đoạn văn nêu ý kiến về việc mỗi học sinh tự thu gom rác của mình sau giờ ăn nhẹ. Đề xuất một cách nhắc nhau lịch sự.",
     "focus": "Đọc lại bài kể chuyện để tự sửa; viết một đoạn văn nêu ý kiến có lí do và ví dụ.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Ý kiến: em tán thành hay không tán thành việc được nêu trong đề?",
+      "Lí do và ví dụ: ghi những lí do thuyết phục, kèm một việc gần gũi để làm rõ.",
+      "Câu kết: khẳng định ý kiến hoặc đề nghị một cách thực hiện phù hợp."
     ],
     "model": "Theo em, mỗi học sinh nên tự thu gom rác của mình sau giờ ăn nhẹ. Đây là việc vừa sức và thể hiện trách nhiệm với lớp học. Nếu ai cũng chờ bạn trực nhật dọn, rác có thể nằm lại trên bàn hoặc dưới chân ghế. Lớp sẽ mất vệ sinh, còn bạn trực nhật phải làm thêm việc. Trái lại, mỗi người dành một phút dọn chỗ ngồi thì cả lớp sẽ nhanh chóng gọn gàng. Em từng thấy một bạn quên vỏ hộp sữa trên bàn. Bạn bên cạnh chỉ nhẹ nhàng nhắc: “Bạn nhớ bỏ vỏ hộp đúng chỗ nhé!”. Người được nhắc vui vẻ làm ngay. Em nghĩ cách nói ấy hiệu quả hơn việc chê trách trước nhiều người. Lớp có thể đặt một lời nhắc nhỏ gần nơi ăn và cùng tìm hiểu cách bỏ rác đúng quy định của trường. Em sẽ bắt đầu bằng việc giữ sạch chỗ của mình. Sân trường đẹp cần những hành động đều đặn như thế.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -604,15 +628,15 @@
     "prompt": "Đọc lại đoạn nêu ý kiến ở tuần 24 và sửa một chỗ chưa thuyết phục. Lập dàn ý thuật lại buổi trao đổi sách của lớp; từ dàn ý, viết bản luyện thêm để chuẩn bị tuần 26.",
     "focus": "Sửa đoạn nêu ý kiến và lập dàn ý thuật lại sự việc; bài hoàn chỉnh là phần luyện thêm.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Chiều thứ Sáu, lớp em tổ chức một buổi trao đổi sách. Mỗi bạn mang một cuốn đã đọc và muốn giới thiệu với người khác.\n\nTrước buổi sinh hoạt, chúng em xếp sách trên bàn theo nhóm. Cô nhắc mọi người chỉ trao đổi khi chủ sách đồng ý và phải giữ sách cẩn thận. Em mang một cuốn truyện về tình bạn, trong lòng hơi lo không biết có ai thích không.\n\nĐến lượt mình, em kể ngắn gọn điều thú vị trong truyện mà không nói hết kết thúc. Một bạn hỏi vì sao em chọn cuốn ấy. Em trả lời rằng nhân vật đã biết xin lỗi sau một lần hiểu lầm. Bạn mỉm cười và đề nghị đổi cuốn sách về các loài cây với em. Chúng em ghi lại tên sách để nhớ ngày trả.\n\nKết thúc buổi sinh hoạt, em có một cuốn sách mới để khám phá. Em nhận ra rằng chia sẻ điều mình yêu thích có thể mở đầu một tình bạn và mang đến nhiều hiểu biết mới.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -629,15 +653,15 @@
     "prompt": "Thuật lại một trò chơi tập thể em đã tham gia trong ngày hội hoặc giờ sinh hoạt. Kể cách nhóm vượt qua một khó khăn.",
     "focus": "Thuật lại sự việc theo trình tự, thể hiện trải nghiệm của em và đọc lại để sửa bài.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Trong ngày hội của trường, em thích nhất trò chơi chuyền bóng theo hàng. Trò chơi không quá khó nhưng đòi hỏi mọi người phối hợp nhịp nhàng.\n\nTrước khi bắt đầu, cô hướng dẫn luật và cho các đội tập thử. Nhóm em đứng thành hàng, thống nhất chuyền bóng chậm mà chắc. Khi có hiệu lệnh, bạn đầu hàng đưa bóng cho người phía sau. Em tập trung đón bóng bằng hai tay rồi chuyển tiếp.\n\nGiữa lượt chơi, bóng rơi khỏi tay một bạn. Cả nhóm thoáng lúng túng nhưng không trách bạn. Chúng em làm theo hướng dẫn của cô để tiếp tục đúng luật. Em nhắc nhỏ: “Bình tĩnh nhé!”. Những lần chuyền sau đều cẩn thận hơn.\n\nĐội em không về nhất, nhưng ai cũng vui vì đã hoàn thành. Khi cùng thu dọn, chúng em còn nhắc lại khoảnh khắc cố gắng ấy. Em hiểu rằng niềm vui của trò chơi không chỉ ở phần thắng mà còn ở cách mọi người giúp nhau.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -654,15 +678,15 @@
     "prompt": "Viết bài kể về một lần em nhận được sự giúp đỡ và muốn nói lời cảm ơn. Kết hợp kể việc với bày tỏ cảm xúc.",
     "focus": "Ôn tập: có sự việc rõ, chi tiết đáng nhớ và lời cảm ơn phù hợp.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Em vẫn nhớ buổi sáng mình quên hộp bút ở nhà. Khi đến lớp và mở cặp, em lo đến mức không biết phải làm gì.\n\nEm kiểm tra các ngăn một lần nữa rồi nói thật với cô. Bạn Hà ngồi cạnh nghe thấy liền cho em mượn một chiếc bút. Bạn còn đặt thước giữa bàn để hai đứa cùng sử dụng khi cần. Em cảm ơn bạn và thấy lòng nhẹ nhõm hơn.\n\nTrong giờ học, em cố giữ chiếc bút sạch sẽ, không bấm nghịch hay làm rơi. Cuối buổi, em trả lại và kể rằng nhờ bạn, em đã hoàn thành bài đúng lúc. Hà chỉ cười: “Lần sau cậu nhớ kiểm tra cặp nhé!”. Lời nhắc nhẹ nhàng khiến em nhớ lâu hơn một lời trách.\n\nTối hôm ấy, em tự chuẩn bị đồ dùng và kiểm tra trước khi ngủ. Em biết ơn sự giúp đỡ của Hà. Em cũng muốn sẵn lòng giúp bạn khác khi có thể, bằng những việc nhỏ và chân thành.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -675,26 +699,30 @@
     "week": 28,
     "topic": "Tìm hiểu cách viết bài văn miêu tả cây cối; Tìm hiểu cách viết bài văn miêu tả cây cối (tiếp theo)",
     "title": "Cây bàng sân trường",
-    "prompt": "Viết bài tả một cây cho bóng mát em đã quan sát ở trường. Nêu hình dáng, tán lá và sự gắn bó với học sinh.",
-    "focus": "Tả từ bao quát đến bộ phận; chọn một thời điểm quan sát cụ thể.",
+    "prompt": "Chọn một cây cho bóng mát em đã quan sát ở trường. Tìm hiểu cách sắp xếp bài văn tả cây: giới thiệu cây, tả đặc điểm và nêu tình cảm. Sau đó viết bản luyện thêm từ các ý của mình.",
+    "focus": "Tả từ bao quát đến bộ phận; chọn một thời điểm quan sát cụ thể. Bản viết hoàn chỉnh là bài luyện thêm của website; tiết viết bài chính thức vẫn theo lịch sách.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu cây em chọn tả và nơi cây được trồng.",
+      "Thân bài: tả bao quát rồi chọn bộ phận, đặc điểm hoặc sự thay đổi em đã quan sát.",
+      "Kết bài: nêu tình cảm, sự gắn bó với cây hoặc mong muốn chăm sóc cây."
     ],
     "model": "Giữa sân trường em có một cây bàng lớn. Những giờ ra chơi nắng nhẹ, chúng em thường ngồi dưới tán cây trò chuyện.\n\nThân bàng màu nâu, bề mặt sần sùi với những vết nứt nhỏ. Từ thân chính, các cành vươn ngang tạo thành từng tầng. Nhìn xa, tán cây giống một chiếc ô rộng che mát khoảng sân.\n\nSáng hôm em quan sát, lá bàng còn xanh và dày. Mỗi chiếc lá có những đường gân rõ, rung nhẹ khi gió thổi qua. Một vài vệt nắng lọt giữa các kẽ lá, in xuống nền sân những đốm sáng thay đổi không ngừng. Tiếng chim từ trên cành khiến góc sân thêm vui.\n\nCây bàng gắn với những buổi chúng em đọc sách và nghỉ chân sau trò chơi. Em không bẻ cành hay khắc chữ lên thân cây. Em mong cây luôn khỏe để tiếp tục che mát cho nhiều thế hệ học sinh.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã ghi đặc điểm cây và một thời điểm quan sát cụ thể.",
+      "Bài văn có mở bài, thân bài, kết bài; các chi tiết tả cây được sắp xếp hợp lí.",
+      "Em đã nêu tình cảm với cây và đọc lại để sửa từ ngữ, chính tả, dấu câu."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
       83,
       87
     ],
-    "curriculumRevision": "sgk4-2026-v2",
-    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập hai, trang 83, 87. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK."
+    "curriculumRevision": "sgk4-2026-v3",
+    "sourceNote": "Tiếng Việt 4 – Kết nối tri thức với cuộc sống, tập hai, trang 83, 87. Đề luyện thêm do website biên soạn; không phải đề chép nguyên văn SGK.",
+    "previousRevisions": [
+      "sgk4-2026-v2",
+      "v1"
+    ]
   },
   {
     "week": 29,
@@ -709,9 +737,9 @@
     ],
     "model": "Trước hiên nhà em có một chậu hoa mười giờ do mẹ chăm sóc. Chậu không lớn nhưng mỗi khi hoa nở, góc hiên trở nên tươi sáng. Những thân cây nhỏ bò sát mặt đất rồi vươn ra quanh miệng chậu. Lá xanh, nhỏ và mọng. Khi chưa nở, nụ hoa khép lại như đang giữ một bí mật bé xíu. Một buổi gần trưa, em nhìn thấy những bông hoa hồng rực mở cánh dưới nắng. Cánh hoa mỏng xếp quanh phần nhị ở giữa. Bên cạnh bông đã nở vẫn có những nụ còn khép. Đến lúc quan sát lại, em nhận ra chậu hoa đã khác buổi sáng. Chính sự thay đổi ấy làm em thích đứng ngắm cây mỗi ngày. Em phụ mẹ nhặt lá khô và kiểm tra đất trước khi tưới. Em không hái hoa để chơi vì muốn những bông hoa tiếp tục làm đẹp hiên nhà. Chậu hoa nhỏ đã giúp em tập quan sát kiên nhẫn hơn.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -728,15 +756,15 @@
     "prompt": "Lập dàn ý bài tả cây chuối hoặc cây ăn quả em đã quan sát. Luyện cách mở bài và kết bài; viết bản luyện thêm dựa trên dàn ý để chuẩn bị tuần 31.",
     "focus": "Chọn cách mở bài, kết bài và sắp xếp dàn ý; không coi phần luyện thêm là tiết viết bài chính thức.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu cây em chọn tả và nơi cây được trồng.",
+      "Thân bài: tả bao quát rồi chọn bộ phận, đặc điểm hoặc sự thay đổi em đã quan sát.",
+      "Kết bài: nêu tình cảm, sự gắn bó với cây hoặc mong muốn chăm sóc cây."
     ],
     "model": "Ở góc vườn của bà có một bụi chuối xanh tốt. Trong bụi, cây lớn nhất đang mang một buồng quả khiến em rất thích thú.\n\nThân cây vươn thẳng, trông nhẵn và có những lớp bẹ ôm vào nhau. Phía trên, các tàu lá dài xòe ra nhiều hướng. Một số lá già bị gió xé thành những dải nhỏ, còn lá non cuộn lại rồi dần mở rộng.\n\nBuồng chuối cong xuống bên thân. Những quả xanh xếp sát nhau thành từng nải. Bà dặn em chỉ đứng quan sát, không kéo hay đu lên buồng chuối. Khi gió thổi, lá cọ vào nhau tạo tiếng xào xạc rất riêng của khu vườn.\n\nEm nhớ những lần bà mang chuối chín vào nhà, chia cho mỗi người một phần. Cây chuối không chỉ cho quả mà còn gắn với sự chăm chút của bà. Em mong được về vườn thường xuyên để theo dõi buồng chuối lớn lên.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã ghi đặc điểm cây và một thời điểm quan sát cụ thể.",
+      "Bài văn có mở bài, thân bài, kết bài; các chi tiết tả cây được sắp xếp hợp lí.",
+      "Em đã nêu tình cảm với cây và đọc lại để sửa từ ngữ, chính tả, dấu câu."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -753,15 +781,15 @@
     "prompt": "Viết bài văn hoàn chỉnh tả một cây ăn quả gần gũi. Kết hợp đặc điểm cây với việc em hoặc người thân chăm sóc cây.",
     "focus": "Viết bài miêu tả cây cối hoàn chỉnh, rồi đọc lại để sửa đặc điểm và cách sắp xếp đoạn.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu cây em chọn tả và nơi cây được trồng.",
+      "Thân bài: tả bao quát rồi chọn bộ phận, đặc điểm hoặc sự thay đổi em đã quan sát.",
+      "Kết bài: nêu tình cảm, sự gắn bó với cây hoặc mong muốn chăm sóc cây."
     ],
     "model": "Cây ổi bên hàng rào được bố trồng từ khi em còn nhỏ. Bây giờ cây đã cao hơn đầu em và cho những quả xanh thơm mát.\n\nThân ổi không thẳng tắp mà chia thành nhiều nhánh. Vỏ cây có những mảng màu khác nhau, chỗ nhẵn, chỗ đang bong nhẹ. Lá mọc dày trên cành, mặt lá hiện rõ những đường gân. Dưới tán xanh, các quả nhỏ ẩn hiện như đang chơi trốn tìm.\n\nEm thích nhìn bố kiểm tra cây vào cuối tuần. Bố nhắc em chỉ nhặt lá rụng ở dưới đất, không trèo lên cành để với quả. Có lần, bố hái xuống một quả vừa chín. Sau khi rửa sạch, cả nhà cùng ăn và nhận xét mùa này ổi giòn hơn. Em thấy trái cây trong vườn ngon còn vì có công chăm sóc của gia đình.\n\nMỗi khi đi ngang hàng rào, em đều nhìn cây một chút. Cây ổi khiến khu vườn gần gũi và lưu giữ nhiều kỉ niệm tuổi thơ của em.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã ghi đặc điểm cây và một thời điểm quan sát cụ thể.",
+      "Bài văn có mở bài, thân bài, kết bài; các chi tiết tả cây được sắp xếp hợp lí.",
+      "Em đã nêu tình cảm với cây và đọc lại để sửa từ ngữ, chính tả, dấu câu."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -778,15 +806,15 @@
     "prompt": "Tưởng tượng em đến một thư viện trên mây. Viết một đoạn văn về điều em nhìn thấy và việc em làm; đọc lại để sửa chi tiết chưa hợp lí.",
     "focus": "Viết và tự sửa một đoạn văn tưởng tượng.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Tình huống: cuộc gặp hoặc sự việc tưởng tượng bắt đầu ở đâu, như thế nào?",
+      "Chi tiết: em hoặc nhân vật nói gì, làm gì; các chi tiết nối tiếp ra sao?",
+      "Câu kết: khép lại tình huống và nêu ấn tượng hoặc suy nghĩ phù hợp."
     ],
     "model": "Trong giấc mơ, em bước lên chiếc thang ánh sáng và đến một thư viện nằm trên mây. Người thủ thư là một chú chim trắng đeo kính tròn. Chú nói rằng mỗi cuốn sách chỉ mở khi người đọc đặt một câu hỏi chân thành. Em chọn cuốn sách có bìa hình khu rừng và hỏi: “Làm sao để cây non lớn khỏe?”. Lập tức, những trang sách mở ra thành một khu vườn nhỏ, có nắng, đất và nước đang trò chuyện. Khi em định chuyển sang cuốn khác, một cơn gió làm tấm thẻ đánh dấu trang bay đi. Em cùng chú chim tìm quanh các giá sách. Cuối cùng, chúng em thấy tấm thẻ mắc ở đám mây cạnh cửa. Em nhẹ nhàng lấy lại rồi đặt đúng chỗ. Chú chim cảm ơn và tặng em một chiếc lá bằng giấy. Tỉnh dậy, em không thấy chiếc lá nhưng vẫn nhớ lời chú: “Câu hỏi mở cửa cho hiểu biết”. Em ghi lại điều muốn tìm hiểu và quyết định mang nó đến thư viện trường.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -803,15 +831,15 @@
     "prompt": "Tưởng tượng các cây trong vườn biết nói. Viết một đoạn văn về việc em lắng nghe chúng; sau đó ghi những nội dung cần có khi viết thư cho một người thân.",
     "focus": "Luyện đoạn văn tưởng tượng và nhận biết cấu trúc thư.",
     "outline": [
-      "Ý chính: nêu ý kiến, tình cảm hoặc tình huống tưởng tượng của đoạn.",
-      "Các ý làm rõ: chọn lí do, chi tiết hoặc hành động phù hợp.",
-      "Câu cuối: khép lại ý chính hoặc nêu suy nghĩ của em."
+      "Tình huống: cuộc gặp hoặc sự việc tưởng tượng bắt đầu ở đâu, như thế nào?",
+      "Chi tiết: em hoặc nhân vật nói gì, làm gì; các chi tiết nối tiếp ra sao?",
+      "Câu kết: khép lại tình huống và nêu ấn tượng hoặc suy nghĩ phù hợp."
     ],
     "model": "Sáng chủ nhật, em ra vườn thì nghe cây hoa bên lối đi khẽ gọi. Em ngạc nhiên đến mức đứng yên, tưởng mình vẫn còn mơ. Cây hoa than rằng một chiếc túi rỗng bị gió thổi mắc vào cành. Gần đó, cây non muốn em dời chiếc hộp đang che mất ánh sáng. Em nhìn quanh và thấy mỗi cây đều có một điều muốn nói. Cây lớn nhất chỉ nhắc em bước nhẹ để không giẫm lên những mầm nhỏ. Em nhặt chiếc túi, cất chiếc hộp và gọi bố ra giúp xử lí cành bị vướng. Em hỏi cây hoa có cần thêm nước không. Cây bảo em hãy kiểm tra đất và hỏi bố trước, vì tưới quá nhiều cũng không tốt. Làm xong, em nghe những chiếc lá rung lên như tiếng cảm ơn. Một lát sau, khu vườn yên lặng trở lại. Em không biết cuộc trò chuyện có thật hay không, nhưng từ hôm đó em quan sát cây cẩn thận hơn. Có lẽ cây vẫn luôn nói với chúng ta bằng chính sự thay đổi của chúng.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn ý chính đúng đề và ghi các chi tiết làm rõ ý ấy.",
+      "Em viết thành một đoạn văn; các câu cùng làm rõ ý chính và nối tiếp hợp lí.",
+      "Em đã đọc lại, sửa từ ngữ, chính tả và dấu câu; không chép nguyên phần gợi ý."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -834,9 +862,9 @@
     ],
     "model": "Sông Công, ngày 14 tháng 10 năm 2026\n\nLan thân mến!\n\nNhận được thư của bạn, mình vui lắm. Mình rất thích chuyện bạn kể về thư viện mới của trường. Hôm nay, mình muốn giới thiệu với bạn một nét đẹp quê mình.\n\nMình sống ở Thái Nguyên, nơi có những vùng trồng chè xanh mướt. Trong một lần đi cùng gia đình, mình được nhìn những hàng chè nối tiếp trên đồi. Người lớn làm việc cẩn thận, bàn tay thoăn thoắt chọn những búp chè. Mình đứng quan sát ở nơi được phép và nghe kể về công chăm sóc để có được sản phẩm thơm ngon.\n\nQuê mình còn có những con đường quen, mái trường và nhiều người thân thiện. Nếu có dịp cùng gia đình đến đây, bạn nhớ báo trước nhé. Mình mong được dẫn bạn thăm trường và cùng đọc sách ở góc sách lớp.\n\nChúc bạn luôn vui và học tốt. Mình chờ thư tiếp theo của bạn!\n\nBạn của Lan\nMinh\n\nGIẤY MỜI\n(Tình huống giả định)\n\nKính mời: Bạn Lan.\nĐến dự: Buổi giới thiệu sách của lớp 4A.\nThời gian: 15 giờ, ngày 20 tháng 10 năm 2026.\nĐịa điểm: Phòng học lớp 4A.\nRất mong bạn tham dự.\n\nNgười mời\nMinh",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Thư có nơi, ngày viết, lời xưng hô, nội dung chia sẻ, lời chúc và tên người viết.",
+      "Giấy mời có người được mời, hoạt động, thời gian, địa điểm và người mời.",
+      "Em đã trình bày thư và giấy mời thành hai văn bản riêng, ghi rõ tình huống giả định và sửa lỗi."
     ],
     "sourceBook": "tv2",
     "sourcePages": [
@@ -853,15 +881,15 @@
     "prompt": "Viết bài kể lại một trải nghiệm trong năm học giúp em tiến bộ. Nêu em trước đó thế nào, đã cố gắng ra sao và điều em muốn làm tiếp.",
     "focus": "Ôn tập cuối năm: kể sự việc, bày tỏ cảm xúc, tự sửa lỗi và giữ giọng văn riêng.",
     "outline": [
-      "Mở bài: giới thiệu đối tượng hoặc sự việc của đề bài theo cách của em.",
-      "Thân bài: ghi các ý chính theo thứ tự; thêm chi tiết, ví dụ hoặc cảm xúc để làm rõ từng ý.",
-      "Kết bài: nêu cảm nghĩ, điều học được hoặc mong muốn của em."
+      "Mở bài: giới thiệu sự việc em đã trải nghiệm, thời gian và nơi diễn ra.",
+      "Thân bài: thuật lại theo trình tự trước, trong và sau sự việc; làm rõ việc em tham gia và chi tiết đáng nhớ.",
+      "Kết bài: nêu cảm xúc hoặc điều em học được sau sự việc."
     ],
     "model": "Trong năm học vừa qua, trải nghiệm khiến em thấy mình lớn hơn là lần đầu trình bày ý kiến trước cả lớp. Trước đó, em thường cúi đầu vì sợ nói sai.\n\nKhi nhóm chuẩn bị giới thiệu cuốn sách yêu thích, cô khuyến khích em nhận một phần ngắn. Em viết ra các ý chính rồi tập nói ở nhà. Những lần đầu, em nói rất nhanh và hay quên. Mẹ nhắc em thở chậm, nhìn người nghe và không cần học thuộc từng chữ.\n\nĐến ngày trình bày, tay em vẫn hơi run. Em nhìn các bạn trong nhóm, thấy mọi người mỉm cười động viên. Em bắt đầu bằng điều mình thích nhất trong cuốn sách. Có một chỗ em dừng lại để nhớ ý, nhưng sau đó vẫn nói tiếp được. Tiếng vỗ tay cuối phần trình bày khiến em vui khó tả.\n\nEm chưa trở thành người nói giỏi ngay, nhưng đã dám thử. Sang năm học mới, em muốn tiếp tục luyện tập và giúp những bạn còn rụt rè như mình trước đây.",
     "checklist": [
-      "Em đã ghi các ý phù hợp với dạng văn bản được yêu cầu.",
-      "Bài viết đúng đề, đủ nội dung và đúng dạng đoạn văn, bài văn hoặc văn bản thực hành.",
-      "Em đã dùng chi tiết riêng và đọc lại để sửa từ ngữ, dấu câu, chính tả."
+      "Em đã chọn một sự việc có thật và ghi rõ việc mình tham gia hoặc chứng kiến.",
+      "Bài văn có mở bài, thân bài, kết bài; sự việc được thuật lại theo trình tự rõ ràng.",
+      "Em đã nêu cảm xúc hoặc điều học được, rồi đọc lại để sửa lỗi."
     ],
     "sourceBook": "tv2",
     "sourcePages": [

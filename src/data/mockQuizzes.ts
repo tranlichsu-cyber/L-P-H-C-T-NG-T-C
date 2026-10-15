@@ -20,10 +20,10 @@ export const INITIAL_QUIZZES: Quiz[] = [
       {
         id: 'q-102',
         type: 'TRUE_FALSE',
-        content: 'Khi nhân một số với 10, ta chỉ việc viết thêm một chữ số 0 vào bên phải số đó.',
+        content: 'Khi nhân một số tự nhiên với 10, ta chỉ việc viết thêm một chữ số 0 vào bên phải số đó.',
         options: ['Đúng', 'Sai'],
         correctAnswer: 'Đúng',
-        explanation: 'Quy tắc nhân nhẩm với 10.',
+        explanation: 'Với số tự nhiên, nhân với 10 được kết quả bằng cách viết thêm một chữ số 0 vào bên phải cách viết số đó.',
       },
       {
         id: 'q-103',

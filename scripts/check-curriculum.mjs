@@ -31,4 +31,18 @@ assert.equal(check('Tiếng Việt','Bài 1 – Hải Thượng Lãn Ông').refe
 assert.equal(check('Toán','Tuần 36').status,'MISMATCH');
 assert.equal(check('Toán','Bài 1','Khối 5').status,'OUTSIDE');
 assert.equal(check('Toán','Bài 1','Khối 14').status,'OUTSIDE');
+assert.equal(check('Toán','Tuần 0').status,'MISMATCH');
+assert.equal(check('Khoa học','Bài 0').status,'MISMATCH');
+assert.equal(check('Tiếng Việt','Tuần 1 – Bài 1 – Hải Thượng Lãn Ông').status,'MISMATCH');
+assert.equal(check('Tiếng Việt','Tuần 19 – Bài 1 – Hải Thượng Lãn Ông').status,'REFERENCE');
+assert.equal(check('Tiếng Việt','Tuần 2 – Bài 1 – Điều kì diệu').status,'MISMATCH');
+assert.equal(check('Tiếng Việt','Tuần 1 – Bài 2 – Điều kì diệu').status,'MISMATCH');
+assert.equal(check('Tiếng Việt','Tuần 1 – Tập hai').status,'MISMATCH');
+assert.equal(check('Tiếng Việt','Tuần 19 – Tập một').status,'MISMATCH');
+assert.equal(check('Tiếng Việt','Tuần 19 – Bài 1 – Tập 2').status,'REFERENCE');
+assert.equal(check('Tiếng Việt','Tuần 1 – Bài 1 – Tập 2').status,'MISMATCH');
+assert.equal(check('Toán','Tuần 20 – Bài 42 – Nhân với số có hai chữ số').status,'MISMATCH');
+assert.match(writing[9].prompt,/một đoạn văn/);assert.doesNotMatch(writing[9].prompt,/câu chuyện hoàn chỉnh/);
+assert.match(writing[14].prompt,/một đoạn văn/);assert.ok(!writing[14].model.includes('\n\n'));
+for(const lesson of writing)assert.ok(!lesson.checklist.some(item=>item.includes('đoạn văn, bài văn hoặc')),'Genre-specific checklist week '+lesson.week);
 console.log('PASS: six book identities, full numbered lesson catalogues, explicit 35-week Vietnamese sequence, source page offsets, corrected writing genres and conservative metadata audit.');

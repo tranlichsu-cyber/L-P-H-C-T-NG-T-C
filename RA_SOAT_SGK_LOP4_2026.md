@@ -35,3 +35,15 @@ Kiểm tra tự động: số bài liên tục, phân biệt hai tập Tiếng V
 Đã chạy lại truy vấn ngân hàng công khai: vẫn HTTP 429 `RESOURCE_EXHAUSTED` / `Quota exceeded`. Truy vấn giới hạn một tài liệu cũng trả cùng lỗi; không thể xử lý bằng cách chia nhỏ danh sách. Bằng chứng: các lượt kiểm tra GitHub Actions 38613134348 và 38613533724. Không sửa nội dung chưa đọc được và không xác nhận đã hoàn tất ngân hàng.
 
 Để tiếp tục khi máy chủ chưa đọc được, cần file câu hỏi thực tế đã nhập (Excel hoặc bản xuất JSON có câu hỏi, đáp án, môn và bài/tuần). Các PDF sách và báo cáo đối chiếu tiêu đề không thay thế được dữ liệu câu hỏi hiện hành.
+
+## Rà soát tiếp ngày 15/10/2026
+
+- Kiểm tra lại truy vấn ngân hàng sau bản tối ưu lượt đọc: vẫn HTTP 429 `RESOURCE_EXHAUSTED`, kể cả giới hạn một tài liệu. Bằng chứng: [GitHub Actions 38676648560](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/actions/runs/38676648560). Không đọc được nội dung ngân hàng; không có chỉnh sửa dữ liệu Firestore trong đợt này.
+- Đọc lại 35 đề, trọng tâm, ý chuẩn bị, bài mẫu và tiêu chí tự kiểm tra của luyện viết trong mã nguồn. Kiểm tra trực tiếp trang in 79 và 120 của Tiếng Việt tập một để xác nhận dạng đoạn văn tưởng tượng và đoạn văn miêu tả con vật.
+- Tuần 10: bỏ yêu cầu viết cả câu chuyện, sửa thành tìm ý và viết một đoạn văn tưởng tượng. Tuần 15: sửa yêu cầu và mẫu thành một đoạn miêu tả con gà/đàn gà, kèm chuẩn bị ý cho tuần 16. Tuần 11: làm rõ lựa chọn người kể để đề phù hợp mẫu kể theo nhân vật.
+- Tuần 5, 7, 14, 28: phân biệt phần tìm hiểu/lập ý theo sách với bản viết luyện thêm của website, không đổi lịch tiết viết chính thức. Tuần 1: bổ sung ý kiến về góc đọc sách trong mẫu. Báo cáo tuần 4 bổ sung tên người viết ở cuối.
+- Cả 35 tuần: thay tiêu chí chung bằng tiêu chí đúng dạng văn bản. Gợi ý chuẩn bị ý phân biệt kể chuyện, thuật lại sự việc, miêu tả, nêu ý kiến, nêu tình cảm và tưởng tượng. Các đề thay yêu cầu có phiên bản mới, giữ cả bản nháp v2 và v1 để xem/sao chép, không lấy bài đã hoàn thành theo đề trước làm bài mới.
+- Toán minh hoạ: giới hạn quy tắc viết thêm chữ số 0 khi nhân với 10 vào số tự nhiên, tránh khẳng định cho mọi loại số. Không coi đây là sửa câu hỏi đã nhập trên máy chủ.
+- Công cụ đối chiếu bốn môn: bắt tuần/bài 0, nhận biết tập một/hai, đối chiếu số bài và tên trước khi xử lí tuần. Với Tiếng Việt, phát hiện tên bài hoặc tập sách lệch tuần, thay vì chỉ thấy chữ “Tuần” là trả về mục tham chiếu. Vẫn không tự xác nhận đáp án hoặc suy đoán lịch 35 tuần của Toán, Khoa học, Lịch sử và Địa lí.
+
+Kiểm tra bổ sung: các tình huống bài–tuần–tập xung đột, đoạn văn tuần 10/15, tiêu chí từng thể loại, khôi phục cả hai phiên bản nháp, tách học sinh A/B và không mở gợi ý bằng trạng thái hoàn thành của đề cũ. Phạm vi đã rà và sửa trong đợt này là dữ liệu luyện viết, câu hỏi minh hoạ và logic đối chiếu; chưa phải toàn bộ câu hỏi các môn trên máy chủ.
