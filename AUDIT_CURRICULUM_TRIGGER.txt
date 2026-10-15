@@ -5,3 +5,4 @@ Use credential-file token exchange, matching existing deployment authentication.
 2026-10-15: Diagnose one-document read to distinguish exhausted quota from an oversized audit query.
 2026-10-15: Continue subject-content review after read-efficiency release; retry published-bank access once for the requested corrections.
 2026-10-15 20:38 ICT: Resume teacher-requested subject review after the daily quota reset; read the published question bank once.
+2026-10-15: Public bank is readable (213 quizzes); capture complete snapshot within the GitHub per-step annotation limit for review.

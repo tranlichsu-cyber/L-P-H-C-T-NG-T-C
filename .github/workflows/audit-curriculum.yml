@@ -40,8 +40,9 @@ jobs:
           function decode(value){if('mapValue'in value)return Object.fromEntries(Object.entries(value.mapValue.fields||{}).map(([key,item])=>[key,decode(item)]));if('arrayValue'in value)return (value.arrayValue.values||[]).map(decode);if('integerValue'in value)return Number(value.integerValue);if('doubleValue'in value)return value.doubleValue;if('nullValue'in value)return null;return Object.values(value)[0];}
           const items=result.filter(row=>row.document).map(row=>({id:row.document.name.split('/').at(-1),...decode({mapValue:{fields:row.document.fields}})}));
           const payload=gzipSync(JSON.stringify(items)).toString('base64');
-          const parts=Math.ceil(payload.length/20000);
-          if(parts>40)throw Error('Public snapshot too large for annotations; use artifact retrieval.');
+          const chunkSize=55000;
+          const parts=Math.ceil(payload.length/chunkSize);
+          if(parts>8)throw Error('Public snapshot too large for annotations; use artifact retrieval.');
           console.log('::notice title=CURRICULUM_COUNT::'+items.length+' public quizzes, '+parts+' snapshot parts.');
-          for(let i=0;i<parts;i++)console.log('::notice title=CURRICULUM_SNAPSHOT_'+String(i).padStart(3,'0')+'::'+payload.slice(i*20000,(i+1)*20000));
+          for(let i=0;i<parts;i++)console.log('::notice title=CURRICULUM_SNAPSHOT_'+String(i).padStart(3,'0')+'::'+payload.slice(i*chunkSize,(i+1)*chunkSize));
           JS
