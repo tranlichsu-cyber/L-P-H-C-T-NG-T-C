@@ -1,0 +1,2 @@
+validate
+2026-10-15: Validate 76 reviewed corrections across 60 public grade-four quizzes and paired source questions; no student records or scores.

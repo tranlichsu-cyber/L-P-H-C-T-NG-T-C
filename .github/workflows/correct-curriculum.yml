@@ -1,0 +1,42 @@
+name: Apply reviewed grade-four curriculum corrections
+on:
+  push:
+    branches: [main]
+    paths: [CURRICULUM_CORRECTIONS_TRIGGER.txt]
+permissions:
+  contents: write
+jobs:
+  correct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify reviewed correction plan
+        run: node scripts/check-curriculum-corrections.mjs
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Validate or atomically apply teaching-content corrections
+        shell: bash
+        run: |
+          mode="$(head -n 1 CURRICULUM_CORRECTIONS_TRIGGER.txt)"
+          if [[ "$mode" != "validate" && "$mode" != "apply" ]]; then
+            echo 'Invalid correction mode.'
+            exit 1
+          fi
+          node scripts/apply-curriculum-corrections.mjs "$mode"
+      - name: Retain public-content rollback and verification on audit branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "audit/curriculum-corrections-${{ github.run_id }}"
+          git add audit-snapshots/curriculum-correction-*.json
+          git commit -m 'Retain reviewed public teaching correction validation and rollback'
+          git push origin "HEAD:refs/heads/audit/curriculum-corrections-${{ github.run_id }}"
+          cat audit-snapshots/curriculum-correction-summary.json >> "$GITHUB_STEP_SUMMARY"
