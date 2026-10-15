@@ -15,9 +15,11 @@ export function checkGrade4Quiz(quiz:{title:string;subject:string;grade:string})
  const numberMatch=title.match(/\bbai\s+(\d+)(?!\d)/);
  const number=Number(numberMatch?.[1]);
  const bookHint=subject==='Tiếng Việt'?( /\btap (1|mot)\b/.test(title)?'tv1':/\btap (2|hai)\b/.test(title)?'tv2':null):null;
- const candidates=data.lessons.filter(l=>l.subject===subject&&(!bookHint||l.book===bookHint));
- const named=candidates.filter(l=>(' '+title+' ').includes(' '+curriculumText(l.title)+' ')&&curriculumText(l.title).length>=8&&!/^(luyen tap chung|on tap)/.test(curriculumText(l.title)));
+ const allCandidates=data.lessons.filter(l=>l.subject===subject);
+ const candidates=allCandidates.filter(l=>!bookHint||l.book===bookHint);
+ const named=allCandidates.filter(l=>(' '+title+' ').includes(' '+curriculumText(l.title)+' ')&&curriculumText(l.title).length>=8&&!/^(luyen tap chung|on tap)/.test(curriculumText(l.title)));
  const numbered=number?candidates.filter(l=>l.number===number):[];
+ if(bookHint&&named.length===1&&named[0].book!==bookHint)return {status:'MISMATCH',message:'Tên bài thuộc tập khác với tập sách ghi trong tiêu đề. Cần kiểm tra nội dung trước khi sửa.',references:named,week:week||undefined};
  if(number&&named.length===1&&named[0].number!==number)return {status:'MISMATCH',message:'Tên bài khớp Bài '+named[0].number+' trong sách, nhưng tiêu đề đang ghi Bài '+number+'. Cần kiểm tra nội dung trước khi đổi số bài.',references:named,week:week||undefined};
  if(numberMatch&&!numbered.length)return {status:'MISMATCH',message:'Không có Bài '+number+' trong môn này theo sách được cung cấp.',references:[],week:week||undefined};
  if(subject==='Tiếng Việt'&&week){

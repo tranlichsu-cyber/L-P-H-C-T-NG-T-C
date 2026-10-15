@@ -31,6 +31,8 @@ assert.equal(check('Tiếng Việt','Bài 1 – Hải Thượng Lãn Ông').refe
 assert.equal(check('Toán','Tuần 36').status,'MISMATCH');
 assert.equal(check('Toán','Bài 1','Khối 5').status,'OUTSIDE');
 assert.equal(check('Toán','Bài 1','Khối 14').status,'OUTSIDE');
+assert.equal(check('Tiếng Việt','Tuần 19 – Bài 1 – Điều kì diệu – Tập 2').status,'MISMATCH');
+assert.equal(check('Tiếng Việt','Bài 1 – Hải Thượng Lãn Ông – Tập một').status,'MISMATCH');
 assert.equal(check('Toán','Tuần 0').status,'MISMATCH');
 assert.equal(check('Khoa học','Bài 0').status,'MISMATCH');
 assert.equal(check('Tiếng Việt','Tuần 1 – Bài 1 – Hải Thượng Lãn Ông').status,'MISMATCH');

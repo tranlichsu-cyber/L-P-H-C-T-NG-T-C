@@ -74,3 +74,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-15: Raise desktop homepage welcome and entry content by an additional 40px; retain mobile spacing.
 
 2026-10-15: Continue textbook review: correct weekly paragraph requirements, genre-specific planning and self-checks, preserve previous writing drafts, detect lesson/week/volume conflicts and clarify natural-number sample. Published-bank review remains blocked by Firestore quota.
+
+2026-10-15: Keep named-lesson matching across both Vietnamese volumes to flag explicit wrong-volume titles as well as week conflicts.
