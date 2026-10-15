@@ -1,2 +1,3 @@
-validate
+apply
 2026-10-15: Validate 76 reviewed corrections across 60 public grade-four quizzes and paired source questions; no student records or scores.
+Validation run 38746888181 passed: 60 public quizzes, 48 existing source questions, 108 atomic writes; 28 changed public questions have no retained source quiz. Apply with update-time preconditions and verify every written field.

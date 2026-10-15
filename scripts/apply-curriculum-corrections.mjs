@@ -94,4 +94,4 @@ async function main(){
  await fs.writeFile('audit-snapshots/curriculum-correction-result.json',JSON.stringify({version:plan.version,verified:true,commitTime:result.commitTime,...prepared.summary,writeCount:prepared.writes.length},null,2)+'\n');
  console.log('All correction writes verified. Student submissions and scores were not accessed.');
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{console.error(error.message);process.exitCode=1;});
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(error=>{console.error('::error::'+String(error.message).replace(/%/g,'%25').replace(/\r/g,'%0D').replace(/\n/g,'%0A'));process.exitCode=1;});
