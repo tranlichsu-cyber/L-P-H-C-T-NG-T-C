@@ -7,41 +7,10 @@ import {WritingPracticeRunner} from '../components/writing/WritingPracticeRunner
 import {Link} from 'react-router-dom';
 import {BookOpen,Search,ClipboardList} from 'lucide-react';
 import {SelfPracticeService} from '../services/selfPractice/SelfPracticeService';
+import {catalogueSearch,quizWeeks,compareQuiz,withoutRepeatedWritingSets} from '../services/selfPractice/catalogue';
 import {matchesGrade,type SelfPracticeQuiz} from '../services/selfPractice/content';
 import {curatedTraditionQuizzes} from '../data/traditionQuizzes';
 import {TraditionQuizRunner} from '../components/tradition/TraditionQuizRunner';
-const lessonOrder=(title:string,kind:'week'|'lesson')=>{
- const clean=title.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
- const expression=kind==='week'?/(?:^|[^a-z])(?:tuan|week)\s*[:.\-–]?\s*0*(\d{1,2})(?!\d)/:/(?:^|[^a-z])(?:bai|lesson)\s*[:.\-–]?\s*0*(\d{1,3})(?!\d)/;
- const match=clean.match(expression);
- return match?Number(match[1]):Number.POSITIVE_INFINITY;
-};
-const compareQuiz=(a:SelfPracticeQuiz,b:SelfPracticeQuiz)=>{
- const gradeA=Number(a.grade.match(/[1-5]/)?.[0]||99),gradeB=Number(b.grade.match(/[1-5]/)?.[0]||99);
- const common=gradeA-gradeB||a.subject.localeCompare(b.subject,'vi');
- if(common)return common;
- // Môn Toán thường đánh số bài xuyên suốt năm học. Ưu tiên Bài 1, 2, 3... hơn Tuần.
- const math=/^toan$/i.test(a.subject.normalize('NFD').replace(/[\u0300-\u036f]/g,''));
- const lesson=lessonOrder(a.title,'lesson')-lessonOrder(b.title,'lesson');
- const week=lessonOrder(a.title,'week')-lessonOrder(b.title,'week');
- return (math?(lesson||week):(week||lesson))||a.title.localeCompare(b.title,'vi',{numeric:true});
-};
-const withoutRepeatedWritingSets=(quizzes:SelfPracticeQuiz[])=>{
- const unique=new Map<string,SelfPracticeQuiz>();
- const other:SelfPracticeQuiz[]=[];
- for(const quiz of quizzes){
-  const subject=quiz.subject.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').trim().toLowerCase();
-  const week=lessonOrder(quiz.title,'week');
-  if(subject!=='tap lam van'||!Number.isFinite(week)){other.push(quiz);continue;}
-  const grade=quiz.grade.match(/[1-5]/)?.[0]||quiz.grade;
-  const key=[grade,subject,week,quiz.category||'PRACTICE'].join(':');
-  const old=unique.get(key);
-  if(!old||quiz.questions.length>old.questions.length||(quiz.questions.length===old.questions.length&&quiz.updatedAt>old.updatedAt)){
-   unique.set(key,quiz);
-  }
- }
- return [...other,...unique.values()];
-};
 const builtIn:SelfPracticeQuiz[]=curatedTraditionQuizzes.map(q=>({...q,teacherId:'editorial',subject:'Giáo dục địa phương',published:true,updatedAt:'2026-10-13'}));
 export function SelfPracticePage(){
  const [student,setStudent]=useState<StudentAccess|null>(null),[work,setWork]=useState<WorkPayload|null>(null),[saved,setSaved]=useState(true);
@@ -49,8 +18,12 @@ export function SelfPracticePage(){
  const complete=useCallback((data:WorkPayload['data'])=>{setSaved(false);setWork({id:crypto.randomUUID(),data});},[]);
  const [weekFilter,setWeekFilter]=useState(''),[items,setItems]=useState<SelfPracticeQuiz[]>(builtIn),[loading,setLoading]=useState(true),[error,setError]=useState(''),[grade,setGrade]=useState(''),[subject,setSubject]=useState(''),[search,setSearch]=useState(''),[selected,setSelected]=useState<SelfPracticeQuiz|null>(null),[retry,setRetry]=useState(0),[section,setSection]=useState<'PRACTICE'|'EXAM'>('PRACTICE');
  useEffect(()=>{let alive=true;SelfPracticeService.list(true,retry>0).then(data=>{if(alive){setItems([...data,...builtIn]);setError('');}}).catch(()=>{if(alive)setError('Chưa tải được bộ đề giáo viên đã công khai. Em có thể làm các bộ đề có sẵn hoặc bấm tải lại.');}).finally(()=>{if(alive)setLoading(false);});return()=>{alive=false;};},[retry]);
- const norm=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d').toLowerCase().trim();
- const shown=withoutRepeatedWritingSets(items.filter(q=>q.questions.length>0&&(q.category||'PRACTICE')===section&&matchesGrade(q.grade,grade)&&(!subject||q.subject===subject)&&(!weekFilter||lessonOrder(q.title,'week')===Number(weekFilter))&&norm(q.title).includes(norm(search)))).sort(compareQuiz);
+ const shown=withoutRepeatedWritingSets(items.filter(q=>{
+  const writing=getWritingLesson(q);
+  return q.questions.length>0&&(q.category||'PRACTICE')===section&&matchesGrade(q.grade,grade)&&(!subject||q.subject===subject)&&(!weekFilter||quizWeeks(q.title).includes(Number(weekFilter)))&&catalogueSearch(search,[q.title,q.subject,writing?.title,writing?.topic,quizWeeks(q.title).map(w=>'tuần '+w).join(' ')]);
+ })).sort(compareQuiz);
+ const hasFilters=Boolean(grade||subject||weekFilter||search.trim());
+ const clearFilters=()=>{setGrade('');setSubject('');setWeekFilter('');setSearch('');};
  const writingLesson=selected?getWritingLesson(selected):undefined;
  const back=()=>{if(!saved&&!window.confirm('Bài chưa được gửi cho giáo viên. Em muốn rời bài này?'))return;setWork(null);setSaved(true);setSelected(null);requestAnimationFrame(()=>document.getElementById('practice-list-heading')?.focus());};
  return <div className="learning-shell min-h-screen text-slate-900"><header className="bg-sky-900 text-white px-5 py-4"><div className="max-w-6xl mx-auto flex flex-wrap justify-between gap-3"><p className="font-bold">TRƯỜNG TIỂU HỌC SÔNG CÔNG • Phân hiệu Lý Tự Trọng</p><Link to="/" className="underline">Về trang chủ</Link></div></header><main className="max-w-6xl mx-auto p-4 sm:p-6 space-y-5">
@@ -59,11 +32,12 @@ export function SelfPracticePage(){
  {selected&&work&&<WorkDelivery key={work.id} student={student} quiz={selected} work={work} onSaved={markSaved}/>}
  {selected?(writingLesson?<WritingPracticeRunner key={selected.id} lesson={writingLesson} onBack={back} studentKey={student.classId+'-'+student.studentId} onComplete={data=>complete(data)}/>:<TraditionQuizRunner key={selected.id} quiz={selected} onBack={back} onComplete={answers=>complete({answers})} mode="practice" durationMinutes={selected.category==='EXAM'?(selected.durationMinutes||30):undefined}/>):<>
  <nav aria-label="Chọn nội dung tự luyện" className="grid grid-cols-2 gap-3"><button type="button" aria-pressed={section==='PRACTICE'} onClick={()=>setSection('PRACTICE')} className={`rounded-2xl px-4 py-4 font-black flex items-center justify-center gap-2 ${section==='PRACTICE'?'bg-sky-700 text-white':'bg-white text-sky-900 border-2 border-sky-200'}`}><BookOpen size={22}/> Luyện tập</button><button type="button" aria-pressed={section==='EXAM'} onClick={()=>setSection('EXAM')} className={`rounded-2xl px-4 py-4 font-black flex items-center justify-center gap-2 ${section==='EXAM'?'bg-amber-500 text-slate-950':'bg-white text-amber-900 border-2 border-amber-200'}`}><ClipboardList size={22}/> Đề thi</button></nav>
- <section className="bg-white border-2 border-sky-100 rounded-2xl p-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><label className="font-bold">Lớp<select className="block mt-2 w-full border rounded-xl p-3" value={grade} onChange={e=>setGrade(e.target.value)}><option value="">Tất cả các lớp</option>{[1,2,3,4,5].map(n=><option key={n} value={n}>Lớp {n}</option>)}</select></label><label className="font-bold">Môn học<select className="block mt-2 w-full border rounded-xl p-3" value={subject} onChange={e=>setSubject(e.target.value)}><option value="">Tất cả các môn</option>{[...new Set(items.map(q=>q.subject))].sort((a,b)=>a.localeCompare(b,'vi')).map(s=><option key={s}>{s}</option>)}</select></label><label className="font-bold">Tuần học<select className="block mt-2 w-full border rounded-xl p-3" value={weekFilter} onChange={e=>setWeekFilter(e.target.value)}><option value="">Tất cả các tuần</option>{Array.from({length:35},(_,i)=>i+1).map(n=><option key={n} value={n}>Tuần {n}</option>)}</select></label><label className="font-bold"><span className="flex items-center gap-2"><Search size={18}/>Tìm bộ đề</span><input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nhập tên bài hoặc tuần…" className="block mt-2 w-full border rounded-xl p-3"/></label></section>
+ <section className="bg-white border-2 border-sky-100 rounded-2xl p-4 grid sm:grid-cols-2 lg:grid-cols-4 gap-4"><label className="font-bold">Lớp<select className="block mt-2 w-full border rounded-xl p-3" value={grade} onChange={e=>setGrade(e.target.value)}><option value="">Tất cả các lớp</option>{[1,2,3,4,5].map(n=><option key={n} value={n}>Lớp {n}</option>)}</select></label><label className="font-bold">Môn học<select className="block mt-2 w-full border rounded-xl p-3" value={subject} onChange={e=>setSubject(e.target.value)}><option value="">Tất cả các môn</option>{[...new Set(items.map(q=>q.subject))].sort((a,b)=>a.localeCompare(b,'vi')).map(s=><option key={s}>{s}</option>)}</select></label><label className="font-bold">Tuần học<select className="block mt-2 w-full border rounded-xl p-3" value={weekFilter} onChange={e=>setWeekFilter(e.target.value)}><option value="">Tất cả các tuần</option>{Array.from({length:35},(_,i)=>i+1).map(n=><option key={n} value={n}>Tuần {n}</option>)}</select></label><label className="font-bold"><span className="flex items-center gap-2"><Search size={18}/>Tìm bộ đề</span><input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tên bài, nội dung hoặc tuần…" className="block mt-2 w-full border rounded-xl p-3"/></label></section>
  <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-slate-600">{loading?'Đang đồng bộ danh sách bài học…':'Em có thể chọn bộ đề rồi bắt đầu ngay.'}</p><button type="button" disabled={loading} onClick={()=>{setLoading(true);setRetry(n=>n+1);}} className="min-h-11 rounded-xl border-2 border-sky-200 bg-white px-4 py-2 font-bold text-sky-800 hover:bg-sky-50 disabled:opacity-50">Tải lại danh sách</button></div>
  {error&&<div role="alert" className="bg-amber-50 border border-amber-200 p-4 rounded-xl">{error}<button className="ml-3 underline font-bold" onClick={()=>{setLoading(true);setRetry(n=>n+1);}}>Tải lại</button></div>}
+ {hasFilters&&<div className="flex flex-wrap items-center gap-2 text-sm" aria-label="Bộ lọc đang dùng">{grade&&<span className="rounded-full bg-sky-100 px-3 py-2 font-semibold">Lớp {grade}</span>}{subject&&<span className="rounded-full bg-emerald-100 px-3 py-2 font-semibold">{subject}</span>}{weekFilter&&<span className="rounded-full bg-violet-100 px-3 py-2 font-semibold">Tuần {weekFilter}</span>}{search.trim()&&<span className="rounded-full bg-amber-100 px-3 py-2 font-semibold break-all">Tìm: {search.trim()}</span>}<button type="button" onClick={clearFilters} className="min-h-11 px-3 underline font-bold text-sky-800">Xóa bộ lọc</button></div>}
  <h2 id="practice-list-heading" tabIndex={-1} className="text-xl font-bold">{section==='EXAM'?'Đề thi':'Bộ đề luyện tập'} ({shown.length})</h2>{loading&&<p role="status">Đang tải thêm bộ đề…</p>}
- {!loading&&!shown.length?<section className="bg-white rounded-xl p-5"><p>Chưa có {section==='EXAM'?'đề thi':'bộ luyện tập'} phù hợp. Em thử lớp hoặc môn khác.</p><button onClick={()=>{setGrade('');setSubject('');setWeekFilter('');setSearch('');}} className="mt-3 underline font-bold text-sky-800">Xem tất cả bộ đề</button></section>:<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{shown.map(q=><article key={q.id} className="rounded-3xl border-2 border-sky-100 bg-white p-5 space-y-3 shadow-sm transition-shadow hover:shadow-md"><p className="font-bold text-emerald-800">{q.grade} • {q.subject}</p><h3 className="text-xl font-black">{q.title}</h3>{getWritingLesson(q)&&<p className="font-semibold text-violet-800">{getWritingLesson(q)?.title}</p>}<p>{getWritingLesson(q)?'Chuẩn bị ý và viết đúng dạng văn bản':q.questions.length+' câu hỏi'} {q.category==='EXAM'&&`• ${q.durationMinutes||30} phút`}</p><button onClick={()=>{setWork(null);setSaved(true);setSelected(q);window.scrollTo({top:0});}} className="min-h-12 rounded-xl bg-sky-700 hover:bg-sky-800 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700 text-white font-bold px-5 py-3">Làm bài</button></article>)}</div>}
+ {!loading&&!shown.length?<section className="bg-white rounded-xl p-5"><p>Chưa có {section==='EXAM'?'đề thi':'bộ luyện tập'} phù hợp. Em thử lớp hoặc môn khác.</p><button onClick={clearFilters} className="mt-3 underline font-bold text-sky-800">Xem tất cả bộ đề</button></section>:<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{shown.map(q=><article key={q.id} className="rounded-3xl border-2 border-sky-100 bg-white p-5 space-y-3 shadow-sm transition-shadow hover:shadow-md"><p className="font-bold text-emerald-800">{q.grade} • {q.subject}</p><h3 className="text-xl font-black">{q.title}</h3>{getWritingLesson(q)&&<p className="font-semibold text-violet-800">{getWritingLesson(q)?.title}</p>}<p>{getWritingLesson(q)?'Chuẩn bị ý và viết đúng dạng văn bản':q.questions.length+' câu hỏi'} {q.category==='EXAM'&&`• ${q.durationMinutes||30} phút`}</p><button onClick={()=>{setWork(null);setSaved(true);setSelected(q);window.scrollTo({top:0});}} className="min-h-12 rounded-xl bg-sky-700 hover:bg-sky-800 focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700 text-white font-bold px-5 py-3">Làm bài</button></article>)}</div>}
  </>}
  </>}
  </main></div>;
