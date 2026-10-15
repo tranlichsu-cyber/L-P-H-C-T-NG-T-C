@@ -3,3 +3,4 @@ Use existing project read identity; query only published practice content.
 Use credential-file token exchange, matching existing deployment authentication.
 2026-10-15: Resume the requested full lesson/week audit and check whether published content can now be read.
 2026-10-15: Diagnose one-document read to distinguish exhausted quota from an oversized audit query.
+2026-10-15: Continue subject-content review after read-efficiency release; retry published-bank access once for the requested corrections.
