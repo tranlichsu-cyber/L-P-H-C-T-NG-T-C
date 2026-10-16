@@ -3,7 +3,10 @@ import fs from 'node:fs/promises';
 import ts from 'typescript';
 const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
 const load=source=>import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
-const content=await load(compile(await fs.readFile('src/services/worksheets/content.ts','utf8')));
+const groupSource=compile(await fs.readFile('src/services/worksheets/groups.ts','utf8'));
+const groups=await load(groupSource);
+const groupUrl='data:text/javascript;base64,'+Buffer.from(groupSource).toString('base64');
+const content=await load(compile(await fs.readFile('src/services/worksheets/content.ts','utf8')).replace(/(['"])\.\/groups\1/g,JSON.stringify(groupUrl)));
 const activity=await load(compile(await fs.readFile('src/services/worksheets/activities.ts','utf8')));
 const {activityDraft,boardValue,parseBoardAnswer,validateActivityAnswers,understandingLevels,exitSummary}=activity;
 const board=activityDraft('BOARD','Bảng con',['Tính 125 + 275, rồi vẽ cách em nghĩ.']);
@@ -24,7 +27,7 @@ const {createSharedSubscriptions}=await load(compile(await fs.readFile('src/serv
 const storage=new Map(),subscribers=new Set();let events=0;
 const room={id:'room',status:'ACTIVE',participants:{s1:{name:'An',mockAuthUid:'u1'},s2:{name:'Bình',mockAuthUid:'u2'},s3:{name:'Chi',mockAuthUid:'u3'}}};
 globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
-globalThis.__activities={...content,...activity,createSharedSubscriptions,auth:{currentUser:{uid:'teacher'}},db:null,isFirebaseActive:false,getRoomById:()=>room,eventBus:{publish:e=>{events++;subscribers.forEach(callback=>callback(e));},subscribe:callback=>{subscribers.add(callback);return()=>subscribers.delete(callback);}}};
+globalThis.__activities={...content,...activity,...groups,createSharedSubscriptions,auth:{currentUser:{uid:'teacher'}},db:null,isFirebaseActive:false,getRoomById:()=>room,eventBus:{publish:e=>{events++;subscribers.forEach(callback=>callback(e));},subscribe:callback=>{subscribers.add(callback);return()=>subscribers.delete(callback);}}};
 const source=compile(await fs.readFile('src/services/worksheets/WorksheetService.ts','utf8')).replace(/^import .*;\n/gm,'');
 const {WorksheetService:S}=await load('const {'+Object.keys(globalThis.__activities).join(',')+'}=globalThis.__activities;\n'+source);
 try{
@@ -44,8 +47,24 @@ try{
  let all=[];const stopAll=S.subscribeResponses('room',exitId,null,r=>all=r,assert.fail);assert.deepEqual(exitSummary(all).map(s=>s.count),[1,0,1]);assert.equal(own.length,1,'New activity never mixes responses into an old student scope.');
  await S.review('room',boardId,'s1',{comment:'Cách nghĩ rõ ràng.',score:null,questionComments:{}},true);
  let returned=[];const stopReturned=S.subscribeReturns('room','s1',r=>returned=r,assert.fail);assert(returned.includes(boardId));
- room.status='FINISHED';await assert.rejects(()=>S.submit('room',exitId,'s3',answer(understandingLevels[0])));await assert.rejects(()=>S.publish('room',board));
+ const distributed=groups.distributeGroups(['s1','s2','s3'],2);assert.deepEqual(distributed.map(g=>g.memberIds.length).sort(),[1,2]);assert.equal(new Set(distributed.flatMap(g=>g.memberIds)).size,3);
+ const groupPlan=[{id:'group-1',name:'Nhóm 1',leaderId:'s1',memberIds:['s1','s2']},{id:'group-2',name:'Nhóm 2',leaderId:'s3',memberIds:['s3']}];
+ const grouped=groups.groupDraft('Thảo luận','Cùng đề xuất ba ý kiến.',groupPlan,room.participants);assert.doesNotThrow(()=>content.validateWorksheet(grouped));assert(grouped.html.includes('Cùng đề xuất'));
+ assert.throws(()=>groups.groupDraft('Lỗi','Nhiệm vụ',[{...groupPlan[0],leaderId:'s3'}],room.participants));
+ assert.throws(()=>groups.groupDraft('Lỗi','Nhiệm vụ',[groupPlan[0],{...groupPlan[1],memberIds:['s1']}],room.participants));
+ const groupId=await S.publish('room',grouped);await assert.rejects(()=>S.submit('room',groupId,'s2',{'answer-1':'Không phải đại diện'}));await S.submit('room',groupId,'s1',{'answer-1':'Bài chung của nhóm'});
+ await S.review('room',groupId,'s1',{comment:'Các em phối hợp tốt.',score:null,questionComments:{}},true);
+ let memberReturns=[];const stopGroupReturns=S.subscribeReturns('room','s2',ids=>memberReturns=ids,assert.fail);assert(memberReturns.includes(groupId));stopGroupReturns();assert.deepEqual(groups.groupReviewMembers(grouped,'s1'),['s1','s2']);
+ const timed=groups.groupDraft('Có thời gian','Nhiệm vụ',groupPlan,room.participants,1),timedId=await S.publish('room',timed);const realNow=Date.now;try{Date.now=()=>realNow()+61000;await assert.rejects(()=>S.submit('room',timedId,'s1',{'answer-1':'Bài nộp muộn'}));}finally{Date.now=realNow;}
+ assert.throws(()=>content.validateWorksheet({...timed,durationMinutes:61}));
+ const signalSource=compile(await fs.readFile('src/services/worksheets/LearningSignalService.ts','utf8')).replace(/^import .*;\n/gm,'');const {LearningSignalService:L}=await load('const {'+Object.keys(globalThis.__activities).join(',')+'}=globalThis.__activities;\n'+signalSource);
+ let signals=[],mySignal=[];const stopSignals=L.subscribe('room',null,s=>signals=s,assert.fail),stopMy=L.subscribe('room','s2',s=>mySignal=s,assert.fail);
+ await L.send('room','s1','HELP');const request=signals[0].requestId,eventsBefore=events;await L.send('room','s1','HELP');assert.equal(events,eventsBefore);assert.equal(mySignal.length,0);
+ await L.acknowledge('room','s1',request);assert.equal(signals[0].handled,true);await L.send('room','s1','HELP');assert.notEqual(signals[0].requestId,request);await assert.rejects(()=>L.acknowledge('room','s1',request));
+ await L.send('room','s2','UNDERSTOOD');assert.equal(mySignal[0].level,'UNDERSTOOD');await assert.rejects(()=>L.send('room','s2','INVALID'));
+ stopSignals();stopMy();
+ room.status='FINISHED';await assert.rejects(()=>L.send('room','s1','HELP'));await assert.rejects(()=>S.submit('room',exitId,'s3',answer(understandingLevels[0])));await assert.rejects(()=>S.publish('room',board));
  await S.project('room','s1',false,boardId);assert.equal(state.projectedWorksheetId,boardId,'Archived work remains projectable.');
  for(const stop of [stopState,stopOwn,stopAll,stopReturned])stop();a();assert.equal(subscribers.size,1);b();assert.equal(subscribers.size,0);assert(events>0);
- console.log('PASS: bounded drawing/text, escaped projected prompts, two activity kinds, real service publish/submit/retry/close, exit summary, private response scope, archived review/projection, finished-room gates and shared history cleanup.');
+ console.log('PASS: bounded drawing/text, escaped projected prompts, board/exit/group kinds, help signals and stale acknowledgment protection, real service publish/submit/retry/close, exit summary, private response scope, archived review/projection, finished-room gates and shared history cleanup.');
 }finally{delete globalThis.localStorage;delete globalThis.__activities;}

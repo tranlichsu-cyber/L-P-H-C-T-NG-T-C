@@ -1,3 +1,4 @@
+import {groupForStudent,groupReviewMembers} from './groups';
 import {createSharedSubscriptions} from '../data/readEfficiency';
 import {validateActivityAnswers} from './activities';
 import {arrayUnion,collection,doc,onSnapshot,runTransaction,writeBatch,setDoc,updateDoc,getDoc} from 'firebase/firestore';
@@ -41,7 +42,7 @@ export class WorksheetService {
   const emit=()=>{const responses=read(roomId).responses[id]||{};callback(studentId?(responses[studentId]?[responses[studentId]]:[]):Object.values(responses));};emit();return eventBus.subscribe(e=>{if(e.roomId===roomId)emit();});
  }
  static async publish(roomId:string,draft:WorksheetDraft):Promise<string>{
-  validateWorksheet(draft);const id=crypto.randomUUID();const sheet:RoomWorksheet={...draft,title:draft.title.trim(),id,roomId,status:'OPEN',createdAt:new Date().toISOString()};const state={worksheetId:id,projectedStudentId:null,projectedWorksheetId:null,showStudentName:!draft.kind};
+  validateWorksheet(draft);const id=crypto.randomUUID();const sheet:RoomWorksheet={...draft,title:draft.title.trim(),id,roomId,status:'OPEN',createdAt:new Date().toISOString(),...(draft.kind==='GROUP'&&draft.durationMinutes?{deadlineAt:Date.now()+draft.durationMinutes*60000}:{})};const state={worksheetId:id,projectedStudentId:null,projectedWorksheetId:null,showStudentName:!draft.kind};
   if(isFirebaseActive&&db){const firestore=db;await runTransaction(firestore,async tx=>{
    const room=await tx.get(doc(firestore,'rooms',roomId));if(!room.exists()||room.data().status==='FINISHED')throw new Error('Buổi học đã kết thúc.');
    const current=await tx.get(doc(firestore,'rooms',roomId,'worksheetState','current'));
@@ -83,20 +84,21 @@ export class WorksheetService {
   const review={...input,updatedAt:new Date().toISOString(),returnedAt:returnWork?new Date().toISOString():input.returnedAt};
   if(isFirebaseActive&&db){const sheet=await getDoc(doc(db,'rooms',roomId,'worksheets',id));if(!sheet.exists())throw new Error('Không tìm thấy phiếu.');validateWorksheetReview(review,sheet.data().questions);
    const batch=writeBatch(db);batch.set(doc(db,'rooms',roomId,'worksheets',id,'reviews',studentId),review);
-   if(returnWork){const work=await getDoc(doc(db,'rooms',roomId,'worksheets',id,'responses',studentId));if(!work.exists())throw new Error('Học sinh chưa nộp bài.');batch.update(doc(db,'rooms',roomId,'worksheets',id),{returnedUids:arrayUnion(work.data().authUid)});batch.set(doc(db,'rooms',roomId,'worksheets',id,'feedback',studentId),review);batch.set(doc(db,'rooms',roomId,'worksheetReturns',studentId),{worksheetIds:arrayUnion(id)},{merge:true});}await batch.commit();
+   if(returnWork){const work=await getDoc(doc(db,'rooms',roomId,'worksheets',id,'responses',studentId));if(!work.exists())throw new Error('Học sinh chưa nộp bài.');const source=sheet.data() as RoomWorksheet;const members=groupReviewMembers(source,studentId);const uids=source.kind==='GROUP'?Object.entries(source.groupAccess||{}).filter(([,a])=>a.leaderId===studentId).map(([uid])=>uid):[work.data().authUid];batch.update(doc(db,'rooms',roomId,'worksheets',id),{returnedUids:arrayUnion(...uids)});batch.set(doc(db,'rooms',roomId,'worksheets',id,'feedback',studentId),review);members.forEach(sid=>batch.set(doc(db!,'rooms',roomId,'worksheetReturns',sid),{worksheetIds:arrayUnion(id)},{merge:true}));}await batch.commit();
   }else{const data=read(roomId);if(!data.responses[id]?.[studentId])throw new Error('Học sinh chưa nộp bài.');validateWorksheetReview(review,data.sheets[id].questions);data.reviews??={};data.reviews[id]??={};data.reviews[id][studentId]=review;
-   if(returnWork){data.feedback??={};data.feedback[id]??={};data.feedback[id][studentId]=review;data.returns??={};data.returns[studentId]=[...new Set([...(data.returns[studentId]||[]),id])];}write(roomId,data);
+   if(returnWork){data.feedback??={};data.feedback[id]??={};data.feedback[id][studentId]=review;data.returns??={};for(const sid of groupReviewMembers(data.sheets[id],studentId))data.returns[sid]=[...new Set([...(data.returns[sid]||[]),id])];}write(roomId,data);
   }
  }
  static async submit(roomId:string,id:string,studentId:string,answers:Record<string,string>):Promise<void>{
   if(isFirebaseActive&&db){const firestore=db;await runTransaction(firestore,async tx=>{
    const ref=doc(firestore,'rooms',roomId,'worksheets',id,'responses',studentId);const existing=await tx.get(ref);if(existing.exists())return;
    const room=await tx.get(doc(firestore,'rooms',roomId));const sheet=await tx.get(doc(firestore,'rooms',roomId,'worksheets',id));const participant=await tx.get(doc(firestore,'rooms',roomId,'participants',studentId));
-   if(!sheet.exists()||sheet.data().status!=='OPEN'||room.data()?.status==='FINISHED')throw new Error('Giáo viên đã khóa nhận bài hoặc kết thúc buổi học.');
+   if(!sheet.exists()||sheet.data().status!=='OPEN'||room.data()?.status==='FINISHED'||(sheet.data().deadlineAt&&Date.now()>=sheet.data().deadlineAt))throw new Error('Giáo viên đã khóa nhận bài hoặc kết thúc buổi học.');
    if(!participant.exists()||participant.data().mockAuthUid!==auth?.currentUser?.uid)throw new Error('Em cần vào phòng và chọn đúng tên của mình.');
+   if(sheet.data().kind==='GROUP'&&groupForStudent(sheet.data() as RoomWorksheet,studentId)?.leaderId!==studentId)throw new Error('Chỉ đại diện được chọn mới nộp bài chung.');
    validateWorksheetAnswers(sheet.data().questions,answers);
    validateActivityAnswers(sheet.data().kind,answers);
    tx.set(ref,{studentId,studentName:participant.data().name,authUid:auth!.currentUser!.uid,answers,submittedAt:new Date().toISOString()});
-  });}else{const data=read(roomId);if(data.responses[id]?.[studentId])return;const sheet=data.sheets[id],room=getRoomById(roomId),participant=room?.participants[studentId];if(!sheet||sheet.status!=='OPEN'||room?.status==='FINISHED')throw new Error('Giáo viên đã khóa nhận bài hoặc kết thúc buổi học.');if(!participant)throw new Error('Em chưa vào phòng học.');validateWorksheetAnswers(sheet.questions,answers);validateActivityAnswers(sheet.kind,answers);data.responses[id]??={};data.responses[id][studentId]={studentId,studentName:participant.name,authUid:participant.mockAuthUid||studentId,answers,submittedAt:new Date().toISOString()};write(roomId,data);}
+  });}else{const data=read(roomId);if(data.responses[id]?.[studentId])return;const sheet=data.sheets[id],room=getRoomById(roomId),participant=room?.participants[studentId];if(!sheet||sheet.status!=='OPEN'||room?.status==='FINISHED'||(sheet.deadlineAt&&Date.now()>=sheet.deadlineAt))throw new Error('Giáo viên đã khóa nhận bài hoặc kết thúc buổi học.');if(!participant)throw new Error('Em chưa vào phòng học.');if(sheet.kind==='GROUP'&&groupForStudent(sheet,studentId)?.leaderId!==studentId)throw new Error('Chỉ đại diện được chọn mới nộp bài chung.');validateWorksheetAnswers(sheet.questions,answers);validateActivityAnswers(sheet.kind,answers);data.responses[id]??={};data.responses[id][studentId]={studentId,studentName:participant.name,authUid:participant.mockAuthUid||studentId,answers,submittedAt:new Date().toISOString()};write(roomId,data);}
  }
 }

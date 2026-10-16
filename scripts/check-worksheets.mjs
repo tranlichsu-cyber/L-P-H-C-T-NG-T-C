@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import ts from 'typescript';
+const groupJs=ts.transpileModule(await fs.readFile('src/services/worksheets/groups.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+const groupUrl='data:text/javascript;base64,'+Buffer.from(groupJs).toString('base64');
 const {outputText}=ts.transpileModule(await fs.readFile('src/services/worksheets/content.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}});
-const {detectWorksheetQuestions,validateWorksheet,validateWorksheetAnswers,validateWorksheetReview}=await import('data:text/javascript;base64,'+Buffer.from(outputText).toString('base64'));
+const {detectWorksheetQuestions,validateWorksheet,validateWorksheetAnswers,validateWorksheetReview}=await import('data:text/javascript;base64,'+Buffer.from(outputText.replace(/(['"])\.\/groups\1/g,JSON.stringify(groupUrl))).toString('base64'));
 const questions=detectWorksheetQuestions('PHIẾU\nCâu 1: Tính 125 + 275.\nCâu 2. Giải thích.\n3) Viết lời giải.');assert.equal(questions.length,3);assert.equal(new Set(questions.map(q=>q.id)).size,3);
 assert.equal(detectWorksheetQuestions('Viết đoạn văn về quê hương.')[0].label,'Bài làm của em');
 assert.equal(detectWorksheetQuestions(Array.from({length:41},(_,i)=>'Câu '+(i+1)+': Trả lời.').join('\n')).length,41,'Never silently drop prompts from a long worksheet');

@@ -1,6 +1,7 @@
+import {validateGroups,type ActivityGroup,type GroupAccess} from './groups';
 export interface WorksheetQuestion {id:string;label:string}
-export interface WorksheetDraft {title:string;html:string;questions:WorksheetQuestion[];fileName:string;kind?:'BOARD'|'EXIT'}
-export interface RoomWorksheet extends WorksheetDraft {id:string;roomId:string;status:'OPEN'|'CLOSED';createdAt:string}
+export interface WorksheetDraft {title:string;html:string;questions:WorksheetQuestion[];fileName:string;kind?:'BOARD'|'EXIT'|'GROUP';groups?:ActivityGroup[];groupAccess?:Record<string,GroupAccess>;durationMinutes?:number}
+export interface RoomWorksheet extends WorksheetDraft {id:string;roomId:string;status:'OPEN'|'CLOSED';createdAt:string;deadlineAt?:number}
 export interface WorksheetResponse {studentId:string;studentName:string;authUid:string;answers:Record<string,string>;submittedAt:string}
 export interface WorksheetState {worksheetId:string|null;projectedStudentId:string|null;projectedWorksheetId:string|null;showStudentName:boolean}
 export const emptyWorksheetState=():WorksheetState=>({worksheetId:null,projectedStudentId:null,projectedWorksheetId:null,showStudentName:true});
@@ -9,8 +10,10 @@ export function detectWorksheetQuestions(text:string):WorksheetQuestion[]{
  return (labels.length?labels:['Bài làm của em']).map((label,i)=>({id:'answer-'+(i+1),label:label.slice(0,1000)}));
 }
 export function validateWorksheet(draft:WorksheetDraft){
- if(draft.kind!==undefined&&!['BOARD','EXIT'].includes(draft.kind))throw new Error('Loại hoạt động không hợp lệ.');
- if(draft.kind&&(draft.questions.length!==(draft.kind==='BOARD'?1:3)||draft.questions.some((q,i)=>q.id!=='answer-'+(i+1))))throw new Error('Các ô trả lời của hoạt động không hợp lệ.');
+ if(draft.kind!==undefined&&!['BOARD','EXIT','GROUP'].includes(draft.kind))throw new Error('Loại hoạt động không hợp lệ.');
+ if(draft.kind&&(draft.questions.length!==(draft.kind==='EXIT'?3:1)||draft.questions.some((q,i)=>q.id!=='answer-'+(i+1))))throw new Error('Các ô trả lời của hoạt động không hợp lệ.');
+ if(draft.durationMinutes!==undefined&&(draft.kind!=='GROUP'||!Number.isInteger(draft.durationMinutes)||draft.durationMinutes<0||draft.durationMinutes>60))throw new Error('Thời gian nhóm cần từ 0 đến 60 phút.');
+ if(draft.kind==='GROUP')validateGroups(draft.groups!,draft.groupAccess!);
  if(!draft.title.trim()||draft.title.length>200)throw new Error('Tên phiếu cần từ 1 đến 200 ký tự.');
  if(!draft.html.trim()||new TextEncoder().encode(draft.html).length>450000)throw new Error('Nội dung phiếu quá lớn. Thầy/cô hãy giảm kích thước hình ảnh hoặc chia thành nhiều phiếu.');
  if(!draft.questions.length||draft.questions.length>40)throw new Error('Mỗi phiếu cần từ 1 đến 40 ô trả lời.');

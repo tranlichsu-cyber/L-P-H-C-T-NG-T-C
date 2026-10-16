@@ -176,6 +176,28 @@ service cloud.firestore {
       );
       allow delete: if canManageRoom(roomId);
 
+      match /learningSignals/{studentId} {
+        function ownsSignal() {
+          return isAuthenticated() && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.mockAuthUid == request.auth.uid;
+        }
+        function validStudentSignal() {
+          let d = request.resource.data;
+          return ownsSignal()
+            && get(/databases/$(database)/documents/rooms/$(roomId)).data.status != 'FINISHED'
+            && d.keys().hasOnly(['studentId','studentName','authUid','level','handled','updatedAt','requestId'])
+            && d.studentId == studentId && d.authUid == request.auth.uid
+            && d.studentName == get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.name
+            && d.level in ['UNDERSTOOD','UNSURE','HELP'] && d.handled == false && d.updatedAt is string && d.requestId is string && d.requestId.size() > 0 && d.requestId.size() <= 100;
+        }
+        allow get: if canManageRoom(roomId) || ownsSignal();
+        allow list: if canManageRoom(roomId);
+        allow create: if validStudentSignal();
+        allow update: if validStudentSignal() || (canManageRoom(roomId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['handled'])
+          && request.resource.data.handled == true);
+        allow delete: if false;
+      }
+
       match /worksheetState/{stateId} {
         function validWorksheetState() {
           let s = request.resource.data;
@@ -206,8 +228,10 @@ service cloud.firestore {
         allow list: if canManageRoom(roomId);
         allow create: if canManageRoom(roomId)
           && get(/databases/$(database)/documents/rooms/$(roomId)).data.status != 'FINISHED'
-          && request.resource.data.keys().hasOnly(['id','roomId','title','html','questions','questionIds','fileName','status','createdAt','kind'])
-          && request.resource.data.get('kind', 'WORD') in ['WORD','BOARD','EXIT']
+          && request.resource.data.keys().hasOnly(['id','roomId','title','html','questions','questionIds','fileName','status','createdAt','kind','groups','groupAccess','durationMinutes','deadlineAt'])
+          && request.resource.data.get('kind', 'WORD') in ['WORD','BOARD','EXIT','GROUP']
+          && (!('durationMinutes' in request.resource.data) || (request.resource.data.get('kind','WORD') == 'GROUP' && request.resource.data.durationMinutes is int && request.resource.data.durationMinutes >= 0 && request.resource.data.durationMinutes <= 60))
+          && (!('deadlineAt' in request.resource.data) || (request.resource.data.get('kind','WORD') == 'GROUP' && request.resource.data.deadlineAt is int && request.resource.data.deadlineAt > request.time.toMillis() && request.resource.data.deadlineAt <= request.time.toMillis() + 3660000))
           && request.resource.data.id == worksheetId && request.resource.data.roomId == roomId
           && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 200
           && request.resource.data.html is string && request.resource.data.html.size() <= 450000
@@ -215,6 +239,7 @@ service cloud.firestore {
           && request.resource.data.questionIds is list && request.resource.data.questionIds.size() == request.resource.data.questions.size()
           && request.resource.data.questionIds.toSet().size() == request.resource.data.questionIds.size()
           && (request.resource.data.get('kind','WORD') != 'BOARD' || request.resource.data.questionIds == ['answer-1'])
+          && (request.resource.data.get('kind','WORD') != 'GROUP' || (request.resource.data.questionIds == ['answer-1'] && request.resource.data.groups is list && request.resource.data.groups.size() > 0 && request.resource.data.groups.size() <= 10 && request.resource.data.groupAccess is map && request.resource.data.groupAccess.size() > 0 && request.resource.data.groupAccess.size() <= 60))
           && (request.resource.data.get('kind','WORD') != 'EXIT' || request.resource.data.questionIds == ['answer-1','answer-2','answer-3'])
           && request.resource.data.status == 'OPEN' && request.resource.data.createdAt is string && request.resource.data.fileName is string;
         allow update: if canManageRoom(roomId)
@@ -224,6 +249,13 @@ service cloud.firestore {
           && request.resource.data.get('returnedUids', []) is list;
         allow delete: if false;
 
+        function canReadGroupResponse(studentId) {
+          let sheet = get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data;
+          let access = sheet.get('groupAccess', {}).get(request.auth.uid, {});
+          return isAuthenticated() && sheet.get('kind','WORD') == 'GROUP'
+            && access.get('leaderId','') == studentId && access.get('studentId','') != ''
+            && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(access.studentId)).data.mockAuthUid == request.auth.uid;
+        }
         function validReview(studentId) {
           let r = request.resource.data;
           return r.keys().hasOnly(['comment','score','questionComments','updatedAt','returnedAt'])
@@ -240,7 +272,7 @@ service cloud.firestore {
           allow delete: if false;
         }
         match /feedback/{studentId} {
-          allow get: if canManageRoom(roomId) || (isAuthenticated() && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.mockAuthUid == request.auth.uid);
+          allow get: if canManageRoom(roomId) || (isAuthenticated() && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.mockAuthUid == request.auth.uid) || canReadGroupResponse(studentId);
           allow list: if canManageRoom(roomId);
           allow create, update: if canManageRoom(roomId) && validReview(studentId) && request.resource.data.returnedAt is string;
           allow delete: if false;
@@ -249,12 +281,13 @@ service cloud.firestore {
           function ownsWorksheetResponse() {
             return isAuthenticated() && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.mockAuthUid == request.auth.uid;
           }
-          allow get: if canManageRoom(roomId) || ownsWorksheetResponse();
+          allow get: if canManageRoom(roomId) || ownsWorksheetResponse() || canReadGroupResponse(studentId);
           allow list: if canManageRoom(roomId);
           allow create: if ownsWorksheetResponse()
             && get(/databases/$(database)/documents/rooms/$(roomId)).data.status != 'FINISHED'
             && get(/databases/$(database)/documents/rooms/$(roomId)/worksheetState/current).data.worksheetId == worksheetId
             && get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.status == 'OPEN'
+            && (!('deadlineAt' in get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data) || request.time.toMillis() < get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.deadlineAt)
             && request.resource.data.keys().hasOnly(['studentId','studentName','authUid','answers','submittedAt'])
             && request.resource.data.studentId == studentId && request.resource.data.authUid == request.auth.uid
             && request.resource.data.studentName == get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.name
@@ -263,6 +296,7 @@ service cloud.firestore {
             && request.resource.data.answers.keys().hasAll(get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.questionIds)
             && (get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.get('kind','WORD') != 'BOARD' || (request.resource.data.answers['answer-1'] is string && request.resource.data.answers['answer-1'].size() > 0 && request.resource.data.answers['answer-1'].size() <= 10000))
             && (get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.get('kind','WORD') != 'EXIT' || (request.resource.data.answers['answer-1'] is string && request.resource.data.answers['answer-1'].size() > 0 && request.resource.data.answers['answer-1'].size() <= 10000 && request.resource.data.answers['answer-2'] is string && request.resource.data.answers['answer-2'].size() > 0 && request.resource.data.answers['answer-2'].size() <= 10000 && request.resource.data.answers['answer-3'] in ['Em đã hiểu bài','Em còn phân vân','Em cần thầy/cô giúp']))
+            && (get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.get('kind','WORD') != 'GROUP' || (get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.groupAccess[request.auth.uid].studentId == studentId && get(/databases/$(database)/documents/rooms/$(roomId)/worksheets/$(worksheetId)).data.groupAccess[request.auth.uid].leaderId == studentId && request.resource.data.answers['answer-1'] is string && request.resource.data.answers['answer-1'].size() > 0 && request.resource.data.answers['answer-1'].size() <= 10000))
             && request.resource.data.submittedAt is string;
           allow update, delete: if false;
         }

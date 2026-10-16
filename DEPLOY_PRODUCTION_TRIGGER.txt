@@ -90,3 +90,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-16: Support two reviewed PDF-based grade-four midterm exams by subject, full Vietnamese reading and multiline teacher-reviewed answers; distinguish partial automatic scores from pending written responses and exclude unfinished grades from cumulative points.
 
 2026-10-16: Add classroom digital mini-boards with typed/drawn private submissions, anonymous selected-work projection with local teacher annotation, and three-question exit tickets with help summary. Reuse worksheet delivery/review/history; preserve legacy Word sheets; verify new activity rules before deployment and share history listeners.
+
+2026-10-16: Add private live learning signals with teacher acknowledgment and group activities with editable teams, representatives, shared returned feedback and optional timed submission lock. Verify same-group access and expired-deadline rejection before deployment; preserve Word, mini-board and exit-ticket workflows.
