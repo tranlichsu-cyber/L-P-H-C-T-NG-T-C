@@ -1,4 +1,5 @@
 import {createSharedSubscriptions} from '../data/readEfficiency';
+import {validateActivityAnswers} from './activities';
 import {arrayUnion,collection,doc,onSnapshot,runTransaction,writeBatch,setDoc,updateDoc,getDoc} from 'firebase/firestore';
 import {auth,db} from '../firebase/firebase';
 import {isFirebaseActive} from '../realtime/realtimeServiceSwitch';
@@ -11,6 +12,7 @@ const read=(roomId:string):LocalData=>JSON.parse(localStorage.getItem(key(roomId
 const write=(roomId:string,data:LocalData)=>{localStorage.setItem(key(roomId),JSON.stringify(data));eventBus.publish({type:'ROOM_UPDATED',roomId,timestamp:new Date().toISOString()});};
 const shareState=createSharedSubscriptions<WorksheetState>();
 const shareSheet=createSharedSubscriptions<RoomWorksheet|null>();
+const shareHistory=createSharedSubscriptions<RoomWorksheet[]>();
 const shareResponses=createSharedSubscriptions<WorksheetResponse[]>();
 const ownerScope=()=>JSON.stringify([auth?.currentUser?.uid||'local',auth?.currentUser?.isAnonymous||false]);
 export class WorksheetService {
@@ -39,7 +41,7 @@ export class WorksheetService {
   const emit=()=>{const responses=read(roomId).responses[id]||{};callback(studentId?(responses[studentId]?[responses[studentId]]:[]):Object.values(responses));};emit();return eventBus.subscribe(e=>{if(e.roomId===roomId)emit();});
  }
  static async publish(roomId:string,draft:WorksheetDraft):Promise<string>{
-  validateWorksheet(draft);const id=crypto.randomUUID();const sheet:RoomWorksheet={...draft,title:draft.title.trim(),id,roomId,status:'OPEN',createdAt:new Date().toISOString()};const state={worksheetId:id,projectedStudentId:null,projectedWorksheetId:null,showStudentName:true};
+  validateWorksheet(draft);const id=crypto.randomUUID();const sheet:RoomWorksheet={...draft,title:draft.title.trim(),id,roomId,status:'OPEN',createdAt:new Date().toISOString()};const state={worksheetId:id,projectedStudentId:null,projectedWorksheetId:null,showStudentName:!draft.kind};
   if(isFirebaseActive&&db){const firestore=db;await runTransaction(firestore,async tx=>{
    const room=await tx.get(doc(firestore,'rooms',roomId));if(!room.exists()||room.data().status==='FINISHED')throw new Error('Buổi học đã kết thúc.');
    const current=await tx.get(doc(firestore,'rooms',roomId,'worksheetState','current'));
@@ -62,6 +64,9 @@ export class WorksheetService {
   else{const data=read(roomId);data.state.projectedStudentId=id;data.state.projectedWorksheetId=worksheetId;data.state.showStudentName=showStudentName;write(roomId,data);}
  }
  static subscribeSheets(roomId:string,callback:(sheets:RoomWorksheet[])=>void,onError:(error:Error)=>void){
+  return shareHistory(JSON.stringify([ownerScope(),roomId]),(next,error)=>this.subscribeSheetsSource(roomId,next,error),callback,onError);
+ }
+ static subscribeSheetsSource(roomId:string,callback:(sheets:RoomWorksheet[])=>void,onError:(error:Error)=>void){
   if(isFirebaseActive&&db)return onSnapshot(collection(db,'rooms',roomId,'worksheets'),s=>callback(s.docs.map(d=>d.data() as RoomWorksheet).sort((a,b)=>b.createdAt.localeCompare(a.createdAt))),onError);
   const emit=()=>callback(Object.values(read(roomId).sheets).sort((a,b)=>b.createdAt.localeCompare(a.createdAt)));emit();return eventBus.subscribe(e=>{if(e.roomId===roomId)emit();});
  }
@@ -90,7 +95,8 @@ export class WorksheetService {
    if(!sheet.exists()||sheet.data().status!=='OPEN'||room.data()?.status==='FINISHED')throw new Error('Giáo viên đã khóa nhận bài hoặc kết thúc buổi học.');
    if(!participant.exists()||participant.data().mockAuthUid!==auth?.currentUser?.uid)throw new Error('Em cần vào phòng và chọn đúng tên của mình.');
    validateWorksheetAnswers(sheet.data().questions,answers);
+   validateActivityAnswers(sheet.data().kind,answers);
    tx.set(ref,{studentId,studentName:participant.data().name,authUid:auth!.currentUser!.uid,answers,submittedAt:new Date().toISOString()});
-  });}else{const data=read(roomId);if(data.responses[id]?.[studentId])return;const sheet=data.sheets[id],room=getRoomById(roomId),participant=room?.participants[studentId];if(!sheet||sheet.status!=='OPEN'||room?.status==='FINISHED')throw new Error('Giáo viên đã khóa nhận bài hoặc kết thúc buổi học.');if(!participant)throw new Error('Em chưa vào phòng học.');validateWorksheetAnswers(sheet.questions,answers);data.responses[id]??={};data.responses[id][studentId]={studentId,studentName:participant.name,authUid:participant.mockAuthUid||studentId,answers,submittedAt:new Date().toISOString()};write(roomId,data);}
+  });}else{const data=read(roomId);if(data.responses[id]?.[studentId])return;const sheet=data.sheets[id],room=getRoomById(roomId),participant=room?.participants[studentId];if(!sheet||sheet.status!=='OPEN'||room?.status==='FINISHED')throw new Error('Giáo viên đã khóa nhận bài hoặc kết thúc buổi học.');if(!participant)throw new Error('Em chưa vào phòng học.');validateWorksheetAnswers(sheet.questions,answers);validateActivityAnswers(sheet.kind,answers);data.responses[id]??={};data.responses[id][studentId]={studentId,studentName:participant.name,authUid:participant.mockAuthUid||studentId,answers,submittedAt:new Date().toISOString()};write(roomId,data);}
  }
 }

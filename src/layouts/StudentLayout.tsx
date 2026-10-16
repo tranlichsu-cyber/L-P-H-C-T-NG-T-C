@@ -58,7 +58,7 @@ const StudentLayoutInner: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-4">
-        {session.studentId&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Phiếu Word và bài giáo viên đã trả</Link>}
+        {session.studentId&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Phiếu / Hoạt động và bài đã trả</Link>}
         <Outlet />
       </main>
 

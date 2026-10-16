@@ -148,7 +148,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         {lesson && <Button variant={showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(true)}>Bài giảng: {lesson.title}</Button>}
         <Button variant={!showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(false)}>Câu hỏi / Bài học sinh</Button>
       </div>}
-      {(worksheetState.worksheetId||worksheetState.projectedWorksheetId)&&<div className="flex gap-3 shrink-0"><button onClick={()=>setShowWorksheet(true)} className="rounded-xl bg-sky-700 text-white px-4 py-2 font-bold">Phiếu Word / Bài được chọn</button><button onClick={()=>setShowWorksheet(false)} className="rounded-xl bg-slate-800 text-white px-4 py-2 font-bold">Câu hỏi / Bài giảng</button></div>}
+      {(worksheetState.worksheetId||worksheetState.projectedWorksheetId)&&<div className="flex gap-3 shrink-0"><button onClick={()=>setShowWorksheet(true)} className="rounded-xl bg-sky-700 text-white px-4 py-2 font-bold">Hoạt động / Bài được chọn</button><button onClick={()=>setShowWorksheet(false)} className="rounded-xl bg-slate-800 text-white px-4 py-2 font-bold">Câu hỏi / Bài giảng</button></div>}
       {/* Main Content Area */}
       <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_280px] gap-4 py-2">
       <main className="min-w-0 min-h-0 overflow-y-auto pr-1" aria-label="Câu hỏi và đáp án đang trình chiếu">

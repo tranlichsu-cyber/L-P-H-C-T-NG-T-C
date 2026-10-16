@@ -49,7 +49,7 @@ export const RoomControllerPage: React.FC = () => {
   const { currentUser } = useAuth();
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'students' | 'scoreboard' | 'worksheets'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'students' | 'scoreboard' | 'worksheets' | 'activities'>('overview');
 
   // Modals state
   const lessons = useLessonLibrary();
@@ -624,6 +624,7 @@ export const RoomControllerPage: React.FC = () => {
           >
             📊 TỔNG QUAN
           </button>
+          <button onClick={()=>setActiveTab('activities')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='activities'?'bg-violet-700 text-white':'bg-violet-50 text-violet-900'}`}>BẢNG CON / VÉ RA CỬA</button>
           <button onClick={()=>setActiveTab('worksheets')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='worksheets'?'bg-sky-600 text-white':'bg-slate-100 text-slate-700'}`}>PHIẾU WORD</button>
           <button
             onClick={() => setActiveTab('questions')}
@@ -658,6 +659,7 @@ export const RoomControllerPage: React.FC = () => {
       </div>
 
       {activeTab==='worksheets'&&<WorksheetTeacherPanel room={room} onProject={()=>setIsPresenting(true)}/>}
+      {activeTab==='activities'&&<WorksheetTeacherPanel room={room} onProject={()=>setIsPresenting(true)} activityMode/>}
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
