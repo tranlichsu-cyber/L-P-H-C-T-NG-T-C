@@ -80,3 +80,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-15: Publish verified live-bank review report for 213 grade-four public quizzes and 2143 questions; 76 content/scoring/explanation corrections applied and read back, paired with 48 retained source questions. Add report download and fix two real-title audit false positives.
 
 2026-10-15: Improve student week-range/list filtering and accent-insensitive content search; add teacher audit search, filters and pagination with account isolation, using already loaded data.
+
+2026-10-16: Add teacher Excel downloads with student names, classes and student codes for class rosters and self-practice access.

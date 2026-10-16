@@ -1,3 +1,4 @@
+import { downloadStudentExcel } from '../../utils/studentExcel';
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -219,6 +220,19 @@ export const ClassDetailsPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="outline" onClick={() => navigate(`/teacher/history?classId=${currentClass.id}`)}>
               <FileText className="w-4 h-4 mr-1.5 text-indigo-600" /> LỊCH SỬ BÀI HỌC LỚP
+            </Button>
+
+            <Button variant="outline" disabled={!currentClass.students.length} onClick={() => {
+              try {
+                downloadStudentExcel(currentClass.students.map(student => ({
+                  name: student.name, className: currentClass.name, code: student.studentCode || '',
+                })), currentClass.name);
+                showToast('Đã xuất danh sách toàn bộ lớp ra Excel.', 'success');
+              } catch {
+                showToast('Không thể tải Excel. Vui lòng thử lại.', 'error');
+              }
+            }}>
+              <FileText className="w-4 h-4 mr-1.5 text-emerald-600" /> Tải danh sách Excel
             </Button>
 
             <Button variant="outline" onClick={handleOpenBulk}>
