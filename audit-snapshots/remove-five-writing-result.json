@@ -1,0 +1,363 @@
+{
+  "verified": true,
+  "publicCopies": 53,
+  "sourceQuizzes": 35,
+  "sourceQuestions": 175,
+  "retainedPublicCopies": 0,
+  "retainedSourceQuizzes": 0,
+  "titles": [
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 1 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 2 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 3 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 4 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 5 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 6 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 7 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 8 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 9 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 10 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 11 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 12 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 13 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 14 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 15 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 16 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 17 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 18 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 1 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 10 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 11 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 12 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 13 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 14 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 15 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 16 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 17 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 18 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 19 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 2 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 20 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 21 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 22 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 23 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 24 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 25 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 26 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 27 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 28 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 29 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 3 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 30 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 31 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 32 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 33 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 34 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 35 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 4 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 5 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 6 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 7 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 8 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "selfPracticeQuizzes",
+      "title": "Tuần 9 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 1 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 10 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 11 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 12 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 13 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 14 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 15 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 16 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 17 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 18 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 19 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 2 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 20 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 21 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 22 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 23 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 24 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 25 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 26 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 27 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 28 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 29 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 3 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 30 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 31 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 32 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 33 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 34 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 35 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 4 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 5 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 6 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 7 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 8 – Tập làm văn lớp 4"
+    },
+    {
+      "source": "quizzes",
+      "title": "Tuần 9 – Tập làm văn lớp 4"
+    }
+  ],
+  "deletedDocuments": 263
+}
