@@ -25,3 +25,12 @@
 ## Xác minh
 
 `check-activities.mjs` kiểm tra phân nhóm, thành viên/đại diện, quyền nhóm, nộp lặp, nhận xét gửi đủ thành viên, chặn nộp muộn, tín hiệu trùng và xử lý yêu cầu cũ. `check-self-practice-rules.cjs` bổ sung kiểm tra Firebase Emulator cho tín hiệu riêng tư, đại diện nộp, đọc đúng nhóm, không xem nháp, liên kết phiên, bất biến nhóm/thời gian và chặn phía máy chủ khi hết giờ/kết thúc phòng. Kiểm tra trình duyệt dùng nhiều vai trò ở máy tính và điện thoại; kiểm tra lại bảng con/vé ra cửa và phiếu Word.
+
+## Theo dõi và báo cáo
+
+- Trong phiếu Word hoặc hoạt động đã chọn, thầy/cô có thể tìm tên không dấu, lọc **Chờ trả bài / Đã trả bài**. Với nhóm, tìm được cả tên nhóm lẫn tên thành viên hiện có trong phòng. Bộ lọc tên/trạng thái được làm mới khi đổi hoạt động.
+- Số chờ trả và đã trả cập nhật từ dữ liệu hoạt động đang theo dõi, không mở thêm đăng ký nhận xét từng em. “Đã trả bài” nghĩa là đã gửi nhận xét cho học sinh, không khẳng định đã có điểm.
+- **Tải báo cáo Excel** xuất toàn bộ hoạt động đã chọn, không phụ thuộc bộ lọc: trạng thái, thời gian nộp theo giờ Việt Nam và câu trả lời. Báo cáo nhóm có đại diện, thành viên và nhóm chưa nộp; báo cáo cá nhân dùng các em hiện có trong phòng, đồng thời giữ người đã nộp nhưng không còn trong danh sách hiện tại. Danh sách chưa nộp cá nhân không phải ảnh chụp sĩ số từ lúc phát phiếu.
+- Excel không chứa nhận xét/điểm riêng hoặc bản nháp học sinh. Bảng con xuất phần chữ và ghi chú nếu có hình; xem hình trên website. Nội dung bắt đầu bằng dấu bằng được giữ dưới dạng chữ trong Excel.
+- Tìm kiếm/lọc/xuất dùng dữ liệu đã tải, không đọc hoặc ghi thêm Firestore. Tải thư viện Excel khi bấm nút.
+- `check-worksheet-report.mjs` xác minh báo cáo cá nhân/nhóm, bài chưa nộp, người nộp cũ, tìm không dấu, trạng thái trả, múi giờ Việt Nam, bảng con và nội dung Excel an toàn. Kiểm thử trình duyệt mở tệp Excel tải thật khi đang lọc, kiểm tra vẫn có đủ hai nhóm và đúng trạng thái trả.

@@ -1,7 +1,7 @@
 import {validateGroups,type ActivityGroup,type GroupAccess} from './groups';
 export interface WorksheetQuestion {id:string;label:string}
 export interface WorksheetDraft {title:string;html:string;questions:WorksheetQuestion[];fileName:string;kind?:'BOARD'|'EXIT'|'GROUP';groups?:ActivityGroup[];groupAccess?:Record<string,GroupAccess>;durationMinutes?:number}
-export interface RoomWorksheet extends WorksheetDraft {id:string;roomId:string;status:'OPEN'|'CLOSED';createdAt:string;deadlineAt?:number}
+export interface RoomWorksheet extends WorksheetDraft {id:string;roomId:string;status:'OPEN'|'CLOSED';createdAt:string;deadlineAt?:number;returnedUids?:string[]}
 export interface WorksheetResponse {studentId:string;studentName:string;authUid:string;answers:Record<string,string>;submittedAt:string}
 export interface WorksheetState {worksheetId:string|null;projectedStudentId:string|null;projectedWorksheetId:string|null;showStudentName:boolean}
 export const emptyWorksheetState=():WorksheetState=>({worksheetId:null,projectedStudentId:null,projectedWorksheetId:null,showStudentName:true});

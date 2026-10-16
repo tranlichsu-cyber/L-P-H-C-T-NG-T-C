@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import ts from 'typescript';
+import * as XLSX from 'xlsx';
+const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+const url=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
+const activities=url(compile(await fs.readFile('src/services/worksheets/activities.ts','utf8')));
+const {worksheetReport,matchesResponse}=await import(url(compile(await fs.readFile('src/services/worksheets/report.ts','utf8')).replace(/(['"])\.\/activities\1/g,JSON.stringify(activities))));
+const participants={s1:{name:'Đặng An'},s2:{name:'Bình'},s3:{name:'Chi'}};
+const sheet={id:'work',title:'Bài học',questions:[{id:'answer-1',label:'Nhiệm vụ'}],returnedUids:['u1']};
+const response={studentId:'s1',studentName:'Đặng An',authUid:'u1',submittedAt:'2026-10-16T01:00:00Z',answers:{'answer-1':'=1+2'}};
+assert(matchesResponse(sheet,response,'dang an','RETURNED',participants));assert(!matchesResponse(sheet,response,'dang an','WAITING',participants));
+const rows=worksheetReport(sheet,[response],participants);assert.equal(rows.length,8);assert.equal(rows[5][3],'Đã trả bài');assert.equal(rows[6][3],'Chưa nộp');assert.equal(rows[5][4],'08:00:00 16/10/2026');
+const departed={...response,studentId:'departed',studentName:'Dũng'};assert(worksheetReport(sheet,[departed],participants).some(row=>row[0]==='Dũng'));
+const group={...sheet,kind:'GROUP',groups:[{id:'group-1',name:'Nhóm 1',leaderId:'s1',memberIds:['s1','s2']},{id:'group-2',name:'Nhóm 2',leaderId:'s3',memberIds:['s3']}]};
+assert(matchesResponse(group,response,'binh','ALL',participants));const grouped=worksheetReport(group,[response],participants);assert.equal(grouped.length,7);assert.equal(grouped[5][2],'Đặng An, Bình');assert.equal(grouped[6][3],'Chưa nộp');
+const board={...sheet,kind:'BOARD'};const answer={...response,answers:{'answer-1':JSON.stringify({v:1,text:'400',strokes:[[[.1,.2]]]})}};const text=worksheetReport(board,[answer],participants)[5][5];assert(text.startsWith('400'));assert(text.includes('hình vẽ'));assert(!text.includes('strokes'));
+// Excel must preserve student content as text, never a spreadsheet formula.
+const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.aoa_to_sheet(rows),'Bao_cao');const read=XLSX.read(XLSX.write(book,{type:'buffer',bookType:'xlsx'}),{type:'buffer'});assert.equal(read.Sheets.Bao_cao.F6.v,'=1+2');assert.equal(read.Sheets.Bao_cao.F6.t,'s');assert.equal(read.Sheets.Bao_cao.F6.f,undefined);
+console.log('PASS worksheet reports: individual/group missing work, returned filters, accent search, historical submitters, Vietnam time, drawn board representation and safe Excel text roundtrip');
