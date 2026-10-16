@@ -1,3 +1,4 @@
+import {LessonDashboard,type LessonTab} from '../../components/teacher/LessonDashboard';
 import {TeacherLearningSignals} from '../../components/activities/LearningSignals';
 import {WorksheetTeacherPanel} from '../../components/worksheets/WorksheetTeacherPanel';
 import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
@@ -50,7 +51,7 @@ export const RoomControllerPage: React.FC = () => {
   const { currentUser } = useAuth();
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'questions' | 'students' | 'scoreboard' | 'worksheets' | 'activities'>('overview');
+  const [activeTab, setActiveTab] = useState<LessonTab>('dashboard');
 
   // Modals state
   const lessons = useLessonLibrary();
@@ -617,6 +618,7 @@ export const RoomControllerPage: React.FC = () => {
       {/* Quick Actions Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">
+          <button onClick={()=>setActiveTab('dashboard')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='dashboard'?'bg-indigo-700 text-white':'bg-indigo-50 text-indigo-900'}`}>BẢNG ĐIỀU KHIỂN TIẾT HỌC</button>
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
@@ -659,7 +661,8 @@ export const RoomControllerPage: React.FC = () => {
         </Button>
       </div>
 
-      <TeacherLearningSignals key={room.id} roomId={room.id}/>
+      {activeTab!=='dashboard'&&<TeacherLearningSignals key={room.id} roomId={room.id}/>}
+      {activeTab==='dashboard'&&<LessonDashboard key={room.id} room={room} onNavigate={setActiveTab} onProject={()=>setIsPresenting(true)} onCall={()=>setIsCallModalOpen(true)} onFinish={()=>setIsFinishModalOpen(true)} questionActions={{open:handleOpenQuestion,close:handleCloseQuestion,result:handleShowResult,next:handleNextQuestion,canOpen:canOpenQuestion,canClose:canCloseQuestion,canResult:canShowResult,canNext:canNextQuestion&&currentIndex<questionIds.length-1}}/>}
       {activeTab==='worksheets'&&<WorksheetTeacherPanel room={room} onProject={()=>setIsPresenting(true)}/>}
       {activeTab==='activities'&&<WorksheetTeacherPanel room={room} onProject={()=>setIsPresenting(true)} activityMode/>}
       {/* TAB 1: OVERVIEW */}

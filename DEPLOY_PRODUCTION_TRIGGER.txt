@@ -94,3 +94,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-16: Add private live learning signals with teacher acknowledgment and group activities with editable teams, representatives, shared returned feedback and optional timed submission lock. Verify same-group access and expired-deadline rejection before deployment; preserve Word, mini-board and exit-ticket workflows.
 
 2026-10-16: Complete classroom follow-up with accent-insensitive student/group/member search, waiting/returned filters and counts, and full Excel activity reports using already loaded data. Include missing submissions, Vietnam timestamps and safe board text; verify actual desktop/mobile downloads and retain lazy private reviews.
+
+2026-10-16: Add default lesson dashboard with roster attendance, current activity/question progress, integrated private help signals and context-aware close/project/return controls. Add quick navigation and preserve confirmed finish flow; verify desktop/mobile group updates and existing read-sharing checks.
