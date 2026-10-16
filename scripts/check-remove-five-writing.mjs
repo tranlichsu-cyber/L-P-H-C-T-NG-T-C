@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {deletionPlan} from './remove-five-question-writing.mjs';
+import {encode} from './apply-curriculum-corrections.mjs';
+const root='projects/lop-hoc-tuong-tac-a62a5/databases/(default)/documents/';
+const doc=(path,value)=>({name:root+path,updateTime:'2026-10-16T00:00:00Z',fields:Object.fromEntries(Object.entries(value).map(([key,value])=>[key,encode(value)]))});
+const pub=(id,n)=>doc('selfPracticeQuizzes/'+id,{subject:'Tập làm văn',title:id,questions:Array.from({length:n},(_,id)=>({id:String(id)}))});
+const source=(id,n,metadata=n)=>({doc:doc('quizzes/'+id,{subject:'Tập làm văn',title:id,questionCount:metadata}),questions:Array.from({length:n},(_,i)=>doc('quizzes/'+id+'/questions/q'+i,{content:'Câu '+i}))});
+const plan=deletionPlan([pub('p5',5),pub('p10',10),pub('p4',4)],[source('s5',5),source('s10',10)]);
+assert.equal(plan.documents.length,7);assert.equal(plan.summary.publicCopies,1);assert.equal(plan.summary.sourceQuizzes,1);assert.equal(plan.summary.sourceQuestions,5);
+assert.equal(plan.summary.retainedPublicCopies,2);assert.equal(plan.summary.retainedSourceQuizzes,1);
+assert(plan.documents.every(d=>!d.name.includes('p10')&&!d.name.includes('s10')&&!d.name.includes('p4')));
+assert.throws(()=>deletionPlan([doc('selfPracticeQuizzes/math',{subject:'Toán',questions:Array(5).fill({})})],[]));
+assert.throws(()=>deletionPlan([],[source('mismatch',5,10)]));
+assert.throws(()=>deletionPlan([pub('same',5),pub('same',5)],[]));
+assert.throws(()=>deletionPlan([{...pub('missingTime',5),updateTime:undefined}],[]));
+assert.throws(()=>deletionPlan([doc('studentWork/unsafe',{subject:'Tập làm văn',questions:Array(5).fill({})})],[]));
+assert.throws(()=>deletionPlan(Array.from({length:501},(_,i)=>pub('p'+i,5)),[]));
+console.log('PASS: delete exactly five-question writing sets, retain other counts, enforce subject/path/count/concurrency and atomic batch limits; no student data targets.');

@@ -1,0 +1,43 @@
+name: Remove writing quizzes containing exactly five questions
+on:
+  push:
+    branches: [main]
+    paths: [REMOVE_FIVE_WRITING_TRIGGER.txt]
+permissions:
+  contents: write
+jobs:
+  remove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-remove-five-writing.mjs
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Prepare exact deletion plan and recovery copy
+        run: node scripts/remove-five-question-writing.mjs prepare "$RUNNER_TEMP/five-writing-backup.json"
+      - name: Retain recovery copy before deleting
+        uses: actions/upload-artifact@v4
+        with:
+          name: five-writing-recovery-${{ github.run_id }}
+          path: ${{ runner.temp }}/five-writing-backup.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Delete exact five-question writing sets and verify
+        run: node scripts/remove-five-question-writing.mjs apply "$RUNNER_TEMP/five-writing-backup.json"
+      - name: Save verified result without teaching content or student data
+        run: |
+          mkdir -p audit-snapshots
+          cp "$RUNNER_TEMP/five-writing-backup.json.result.json" audit-snapshots/remove-five-writing-result.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "audit/remove-five-writing-${{ github.run_id }}"
+          git add audit-snapshots/remove-five-writing-result.json
+          git commit -m 'Record verified deletion of five-question writing sets'
+          git push origin "HEAD:refs/heads/audit/remove-five-writing-${{ github.run_id }}"

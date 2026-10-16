@@ -1,0 +1,1 @@
+2026-10-16: User requested deletion of Tập làm văn question sets with exactly five questions, in source bank and public practice copies. Back up exact documents before atomic deletion; preserve other sets and student history.
