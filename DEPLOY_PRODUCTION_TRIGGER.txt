@@ -84,3 +84,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-16: Add teacher Excel downloads with student names, classes and student codes for class rosters and self-practice access.
 
 2026-10-16: Automatically include best self-practice quiz scores on a ten-point scale in student cumulative history and show live class practice totals.
+
+2026-10-16: Rebuild grade-four self-practice writing as 35 direct weekly assignments with one essay field, optional planning hints, saved draft recovery and teacher delivery. Replace legacy weekly quiz cards in student catalogue; preserve restored question banks and student history.

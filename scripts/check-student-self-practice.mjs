@@ -37,7 +37,8 @@ try{
  let works=await S.listWork();assert.equal(works.length,1);assert.equal(works[0].studentId,'s1');assert.equal(works[0].result.earnedPoints,5);assert.equal(works[0].result.breakdown[0].answer,'5');
  await S.submit(student,quiz,{answers:{q1:'4'}},'attempt2');works=await S.listWork();assert.equal(works.length,2);assert.equal(works.find(w=>w.id==='attempt2').result.correctCount,0);
  await S.submit(student,quiz,{outline:[' Mở ','Thân','Kết'],essay:' Bài của em '},'writing');const writing=(await S.listWork()).find(w=>w.id==='writing');assert.equal(writing.kind,'WRITING');assert.equal(writing.essay,'Bài của em');assert.deepEqual(writing.outline,['Mở','Thân','Kết']);
+ await S.submit(student,{...quiz,id:'writing-grade4-week-13',title:'Tuần 13 – Đơn xin tham gia câu lạc bộ',subject:'Tập làm văn',questions:[]},{outline:['','',''],essay:' Bài viết trực tiếp '},'direct-writing');const direct=(await S.listWork()).find(w=>w.id==='direct-writing');assert.equal(direct.kind,'WRITING');assert.equal(direct.essay,'Bài viết trực tiếp');assert.deepEqual(direct.outline,['','','']);assert.equal(direct.result,undefined);
  await S.revoke(student.code);await assert.rejects(()=>S.enter(student.code));await assert.rejects(()=>S.submit(student,quiz,{answers:{}},'revoked'));
- assert.equal((await S.listWork()).length,3);assert.equal((await S.enter(first[1].code)).studentId,'s2');
+ assert.equal((await S.listWork()).length,4);assert.equal((await S.enter(first[1].code)).studentId,'s2');
  console.log('PASS: stable unique personal codes, normalization, bound student, answer/points persistence, delivery deduplication, separate attempts, writing, revocation and retained history.');
 }finally{delete globalThis.localStorage;}
