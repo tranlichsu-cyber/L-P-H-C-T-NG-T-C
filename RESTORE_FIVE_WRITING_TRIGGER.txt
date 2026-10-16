@@ -1,0 +1,1 @@
+2026-10-16: Restore all five-question writing sets just deleted, from the recovery artifact of run 38908158068. Restore original IDs and fields; preserve existing newer data and student history.

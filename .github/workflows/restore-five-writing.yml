@@ -1,0 +1,42 @@
+name: Restore deleted writing quizzes from recovery copy
+on:
+  push:
+    branches: [main]
+    paths: [RESTORE_FIVE_WRITING_TRIGGER.txt]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-restore-five-writing.mjs
+      - name: Retrieve original recovery copy
+        uses: actions/download-artifact@v4
+        with:
+          name: five-writing-recovery-38908158068
+          run-id: 38908158068
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/writing-recovery
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Restore original documents without overwriting newer data and verify
+        run: node scripts/restore-five-question-writing.mjs "$RUNNER_TEMP/writing-recovery/five-writing-backup.json"
+      - name: Save verified recovery result
+        run: |
+          mkdir -p audit-snapshots
+          cp "$RUNNER_TEMP/writing-recovery/five-writing-backup.json.restored.json" audit-snapshots/restore-five-writing-result.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "audit/restore-five-writing-${{ github.run_id }}"
+          git add audit-snapshots/restore-five-writing-result.json
+          git commit -m 'Record verified writing quiz recovery'
+          git push origin "HEAD:refs/heads/audit/restore-five-writing-${{ github.run_id }}"
