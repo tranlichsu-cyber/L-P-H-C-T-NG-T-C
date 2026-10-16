@@ -1,0 +1,423 @@
+{
+  "version": "gk1-grade4-20261016",
+  "sourceSha256": "bb392dd78e13ebf8c9f2087ad0f78237ab630162d820ecba73eef2b9f45a5934",
+  "exams": [
+    {
+      "id": "gk1-2026-grade4-math-01",
+      "title": "Giữa học kì I – Toán lớp 4 – Đề 01",
+      "subject": "Toán",
+      "questions": [
+        {
+          "id": "tn1",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 1. Số “một trăm hai mươi tám triệu, bốn trăm nghìn, ba trăm sáu mươi” viết là:",
+          "options": [
+            "128 400 360",
+            "128 040 360",
+            "128 004 306",
+            "128 400"
+          ],
+          "correctAnswer": "128 400 360",
+          "points": 0.5,
+          "explanation": "128 triệu + 400 nghìn + 360 = 128 400 360.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tn2",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 2. Số làm tròn đến hàng trăm nghìn thì được 500 000 là:",
+          "options": [
+            "409 999",
+            "439 000",
+            "39 900",
+            "495 000"
+          ],
+          "correctAnswer": "495 000",
+          "points": 0.5,
+          "explanation": "495 000 có chữ số hàng chục nghìn là 9 nên làm tròn lên 500 000. Phương án C giữ giá trị 39 900 theo bản quét.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tn3",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 3. Bác Hồ ra đi tìm đường cứu nước vào năm 1911. Năm đó thuộc thế kỉ nào?",
+          "options": [
+            "VII",
+            "XVIII",
+            "XIX",
+            "XX"
+          ],
+          "correctAnswer": "XX",
+          "points": 0.5,
+          "explanation": "Các năm từ 1901 đến 2000 thuộc thế kỉ XX.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tn4",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 4. 6 giờ 10 phút bằng bao nhiêu phút?",
+          "options": [
+            "370",
+            "480",
+            "470",
+            "450"
+          ],
+          "correctAnswer": "370",
+          "points": 0.5,
+          "explanation": "6 × 60 + 10 = 370 phút.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tn5",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 5. Giá trị của biểu thức 30 465 − 700 × n với n = 8 là:",
+          "options": [
+            "25 465",
+            "24 965",
+            "5 600",
+            "24 865"
+          ],
+          "correctAnswer": "24 865",
+          "points": 0.5,
+          "explanation": "700 × 8 = 5 600; 30 465 − 5 600 = 24 865.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tn6",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 6. 3 tấn 5 tạ bằng bao nhiêu ki-lô-gam?",
+          "options": [
+            "30 050",
+            "305",
+            "3 500",
+            "35"
+          ],
+          "correctAnswer": "3 500",
+          "points": 0.5,
+          "explanation": "3 tấn = 3 000 kg; 5 tạ = 500 kg; tổng là 3 500 kg.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tn7",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 7. Lớp 4A có 35 học sinh; lớp 4B nhiều hơn lớp 4A 4 học sinh. Cả hai lớp có bao nhiêu học sinh?",
+          "options": [
+            "39",
+            "74",
+            "47",
+            "90"
+          ],
+          "correctAnswer": "74",
+          "points": 0.5,
+          "explanation": "Lớp 4B: 35 + 4 = 39 học sinh. Cả hai lớp: 35 + 39 = 74 học sinh.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tn8",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 8. Góc nào bằng tổng hai góc vuông?",
+          "options": [
+            "Góc nhọn",
+            "Góc bẹt",
+            "Góc tù",
+            "Góc vuông"
+          ],
+          "correctAnswer": "Góc bẹt",
+          "points": 0.5,
+          "explanation": "Hai góc vuông có tổng số đo 90° + 90° = 180°, bằng một góc bẹt.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl1a",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 1a. Đặt tính trên giấy nháp rồi tính 54 176 + 18 032. Nhập kết quả (chỉ ghi số).",
+          "correctAnswer": "72208",
+          "points": 0.5,
+          "explanation": "54 176 + 18 032 = 72 208.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl1b",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 1b. Đặt tính trên giấy nháp rồi tính 60 152 − 8 034. Nhập kết quả (chỉ ghi số).",
+          "correctAnswer": "52118",
+          "points": 0.5,
+          "explanation": "60 152 − 8 034 = 52 118.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl1c",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 1c. Đặt tính trên giấy nháp rồi tính 15 124 × 3. Nhập kết quả (chỉ ghi số).",
+          "correctAnswer": "45372",
+          "points": 0.5,
+          "explanation": "15 124 × 3 = 45 372.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl1d-thuong",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 1d – Thương (0,25 điểm). Đặt tính trên giấy nháp rồi tính 36 788 : 6. Nhập phần thương (chỉ ghi số).",
+          "correctAnswer": "6131",
+          "points": 0.25,
+          "explanation": "36 788 = 6 × 6 131 + 2, nên thương là 6 131, dư 2. Bản gốc không yêu cầu chia hết.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl1d-du",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 1d – Số dư (0,25 điểm). Phép chia 36 788 : 6 có số dư bằng bao nhiêu? Chỉ ghi số.",
+          "correctAnswer": "2",
+          "points": 0.25,
+          "explanation": "36 788 = 6 × 6 131 + 2, nên thương là 6 131, dư 2. Bản gốc không yêu cầu chia hết.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl2",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 2 (2 điểm). Ô tô thứ nhất chở 4 tạ 25 kg hàng. Ô tô thứ hai chở nhiều hơn ô tô thứ nhất 45 kg nhưng ít hơn ô tô thứ ba 36 kg. Hỏi cả ba ô tô chở được bao nhiêu ki-lô-gam hàng? Trình bày các bước giải và đáp số.",
+          "correctAnswer": "4 tạ 25 kg = 425 kg. Xe thứ hai: 425 + 45 = 470 kg. Xe thứ ba: 470 + 36 = 506 kg. Cả ba xe: 425 + 470 + 506 = 1 401 kg.",
+          "points": 2,
+          "explanation": "Giáo viên xem cách đổi đơn vị, xác định xe thứ ba và tổng. Gợi ý biểu điểm: đổi đơn vị 0,25; xe thứ hai 0,5; xe thứ ba 0,5; tổng 0,5; đáp số và đơn vị 0,25.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl3",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 3 (1 điểm). Nhà bác An thu hoạch 12 487 kg cà phê; nhà bác Thành thu hoạch ít hơn nhà bác An 563 kg. Hỏi cả hai bác thu hoạch bao nhiêu ki-lô-gam cà phê? Trình bày bài giải.",
+          "correctAnswer": "Nhà bác Thành: 12 487 − 563 = 11 924 kg. Cả hai bác: 12 487 + 11 924 = 24 411 kg.",
+          "points": 1,
+          "explanation": "Giáo viên xem hai phép tính và đáp số, có thể chia 0,5 điểm cho mỗi bước đúng.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl4a",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 4a (0,5 điểm). Tính bằng cách thuận tiện nhất, ghi cách nhóm hoặc đặt thừa số chung: 2 357 × 25 + 41 × 2 357 + 2 357 × 34.",
+          "correctAnswer": "2 357 × 25 + 41 × 2 357 + 2 357 × 34 = 2 357 × (25 + 41 + 34) = 2 357 × 100 = 235 700.",
+          "points": 0.5,
+          "explanation": "Giáo viên xem cách vận dụng tính chất giao hoán và phân phối; không chỉ đối chiếu kết quả cuối.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl4b1",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 4b, ô thứ nhất (0,25 điểm). Điền số tiếp theo: 1 010; 2 010; 3 010; …; … (chỉ nhập số ở ô thứ nhất).",
+          "correctAnswer": "4010",
+          "points": 0.25,
+          "explanation": "Mỗi số sau hơn số trước 1 000: 3 010 + 1 000 = 4 010.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tl4b2",
+          "type": "SHORT_ANSWER",
+          "content": "Bài 4b, ô thứ hai (0,25 điểm). Điền số còn lại: 1 010; 2 010; 3 010; 4 010; … (chỉ nhập số ở ô thứ hai).",
+          "correctAnswer": "5010",
+          "points": 0.25,
+          "explanation": "4 010 + 1 000 = 5 010.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        }
+      ],
+      "sourcePages": [
+        1,
+        2
+      ],
+      "instructions": "Đề biên soạn từ PDF giáo viên cung cấp. Các phép tính đặt tính được luyện trên giấy nháp và nhập kết quả; bài giải và cách tính thuận tiện do giáo viên xem. Thời gian 40 phút do website quy định vì PDF không ghi thời gian.",
+      "grade": "Khối 4",
+      "category": "EXAM",
+      "durationMinutes": 40,
+      "sourceFile": "Đề thi GK1 lớp 4 mới.pdf"
+    },
+    {
+      "id": "gk1-2026-grade4-vietnamese-01",
+      "title": "Giữa học kì I – Tiếng Việt lớp 4 – Đề 01",
+      "subject": "Tiếng Việt",
+      "questions": [
+        {
+          "id": "tv1",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 1. Chi tiết nói lên cảnh cơ cực, nghèo đói của gia đình bác Lê là:",
+          "options": [
+            "Ăn đói, mặc rách, nhà cửa lụp xụp, từ sáng đã ra cánh đồng kiếm con cua, con ốc.",
+            "Ăn đói mặc rách, nhà tập thể chật chội, từ sáng đã ra đồng kiếm con cua, con ốc.",
+            "Ăn đói, mặc rách, nhà cửa lụp xụp, chỉ có một thửa ruộng con con.",
+            "Ăn no, mặc ấm, nhà cửa lụp xụp, chỉ có một thửa ruộng con con."
+          ],
+          "correctAnswer": "Ăn đói, mặc rách, nhà cửa lụp xụp, từ sáng đã ra cánh đồng kiếm con cua, con ốc.",
+          "points": 0.5,
+          "explanation": "Đoạn đọc kể nhà lụp xụp, áo rách, cả nhà chịu đói; hai con lớn phải kiếm cua, ốc.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv2",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 2. Nguồn sống của gia đình bác Lê thu nhập từ:",
+          "options": [
+            "Ruộng của nhà bác Lê.",
+            "Đi làm mướn.",
+            "Đồng lương của bác Lê.",
+            "Đi cày đất."
+          ],
+          "correctAnswer": "Đi làm mướn.",
+          "points": 0.5,
+          "explanation": "Bác Lê đi làm mướn cho những người có ruộng để kiếm gạo và tiền nuôi con.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv3",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 3. Vào mùa trời rét, gia đình bác Lê ngủ trên:",
+          "options": [
+            "Ổ rơm rải trong nhà.",
+            "Chiếc nệm mới.",
+            "Chiếc chiếu rách.",
+            "Chiếc chiếu hoa đầy màu sắc."
+          ],
+          "correctAnswer": "Ổ rơm rải trong nhà.",
+          "points": 0.5,
+          "explanation": "Bài đọc viết: “Mùa rét thì rải ổ rơm đầy nhà, mẹ con cùng nằm ngủ trên đó.” Đã sửa phương án A vì bản quét không có lựa chọn đúng.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv4",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 4. Nguyên nhân dẫn đến gia đình bác Lê nghèo đói là:",
+          "options": [
+            "Các con bác Lê bị tàn tật, ốm đau.",
+            "Bị thiên tai, mất mùa.",
+            "Gia đình không có ruộng, đông con.",
+            "Gia đình có ruộng, ít con."
+          ],
+          "correctAnswer": "Gia đình không có ruộng, đông con.",
+          "points": 0.5,
+          "explanation": "Gia đình phải sống nhờ làm mướn; khi hết mùa không ai thuê thì cả nhà chịu đói.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv5",
+          "type": "SHORT_ANSWER",
+          "content": "Câu 5 (1 điểm). Hai người con lớn của bác Lê làm gì để giúp mẹ?",
+          "correctAnswer": "Hai con lớn ra cánh đồng kiếm cua, ốc và mót những bông lúa còn sót lại để đem về cho mẹ.",
+          "points": 1,
+          "explanation": "Chấp nhận diễn đạt tương đương. Gợi ý: kiếm cua, ốc 0,5 điểm; mót lúa đem về 0,5 điểm.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv6",
+          "type": "SHORT_ANSWER",
+          "content": "Câu 6 (1 điểm). Đến mùa rét, khi không có ai mướn, nhà bác Lê phải chịu cảnh gì? Chi tiết nào cho em biết điều đó?",
+          "correctAnswer": "Cả nhà chịu đói và rét. Những đứa nhỏ khóc lả vì không có cái ăn; dưới manh áo rách nát, thịt chúng thâm tím vì rét.",
+          "points": 1,
+          "explanation": "Giáo viên xem ý trả lời và dẫn chứng: nêu cảnh đói rét 0,5; dẫn chứng phù hợp 0,5. Không buộc học sinh chép đúng từng chữ.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv7",
+          "type": "SHORT_ANSWER",
+          "content": "Câu 7 (2 điểm). Qua câu chuyện “Cánh đồng con”, em học được điều gì?",
+          "correctAnswer": "Có thể nêu: biết thương cảm, chia sẻ với người khó khăn; trân trọng tình mẹ con; biết giúp đỡ gia đình bằng việc phù hợp.",
+          "points": 2,
+          "explanation": "Câu mở: chấp nhận bài học hợp lí gắn với câu chuyện. Gợi ý: bài học rõ 1; giải thích hoặc liên hệ phù hợp 1. Không yêu cầu trùng đáp án mẫu.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv8",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 8. Dòng nào sau đây chỉ gồm danh từ?",
+          "options": [
+            "Hàng chuối, con sông, đám mây.",
+            "Hàng chuối, xanh rì, con sông.",
+            "Con sông, đám mây, lao xao.",
+            "Con suối, hàng chuối, vàng hoe."
+          ],
+          "correctAnswer": "Hàng chuối, con sông, đám mây.",
+          "points": 0.5,
+          "explanation": "Hàng chuối, con sông, đám mây gọi tên sự vật; xanh rì, lao xao, vàng hoe không phải các danh từ trong ngữ cảnh này.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv9",
+          "type": "MULTIPLE_CHOICE",
+          "content": "Câu 9. Từ “Việt Nam” thuộc loại nào?",
+          "options": [
+            "Động từ.",
+            "Danh từ chung.",
+            "Tính từ.",
+            "Danh từ riêng."
+          ],
+          "correctAnswer": "Danh từ riêng.",
+          "points": 0.5,
+          "explanation": "Việt Nam là tên riêng của một quốc gia, thuộc danh từ riêng.",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv10a",
+          "type": "SHORT_ANSWER",
+          "content": "Câu 10a (1,5 điểm). Viết tiếp để hoàn thành câu, sử dụng ít nhất một động từ: “Vì mưa, em …”. Em ghi cả câu hoàn chỉnh.",
+          "correctAnswer": "Ví dụ: Vì mưa, em mang áo mưa đến trường.",
+          "points": 1.5,
+          "explanation": "Chấp nhận nhiều câu đúng. Gợi ý: hoàn thành câu có nghĩa phù hợp 0,75; có động từ 0,5; viết hoa và dấu kết thúc câu 0,25.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        },
+        {
+          "id": "tv10b",
+          "type": "SHORT_ANSWER",
+          "content": "Câu 10b (1,5 điểm). Viết tiếp để hoàn thành câu, sử dụng ít nhất một động từ: “Để đạt kết quả cao trong học tập, em …”. Em ghi cả câu hoàn chỉnh.",
+          "correctAnswer": "Ví dụ: Để đạt kết quả cao trong học tập, em chăm chỉ đọc sách và làm bài.",
+          "points": 1.5,
+          "explanation": "Chấp nhận nhiều câu đúng. Gợi ý: hoàn thành câu có nghĩa phù hợp 0,75; có động từ 0,5; viết hoa và dấu kết thúc câu 0,25.",
+          "reviewMode": "TEACHER",
+          "caseInsensitive": true,
+          "trimWhitespace": true
+        }
+      ],
+      "sourcePages": [
+        3,
+        4
+      ],
+      "passageTitle": "Cánh đồng con",
+      "passage": "Mẹ con bác Lê ở một căn nhà cuối phố, một căn nhà cũng lụp xụp như những căn nhà khác, có mỗi một chiếc giường nan đã gãy nát. Mùa rét thì rải ổ rơm đầy nhà, mẹ con cùng nằm ngủ trên đó. Từ sáng sớm tinh sương, mùa nực cũng như mùa rét, bác ta phải trở dậy đi làm mướn cho những người có ruộng trong làng. Những ngày có người mướn, tuy bác phải làm vất vả, nhưng chắc chắn buổi tối được mấy bát gạo và mấy đồng xu về nuôi lũ con đói đợi ở nhà. Đó là những ngày sung sướng. Nhưng đến mùa rét, khi các ruộng kia đã gặt rồi, cánh đồng chỉ còn trơ cuống rạ, bác Lê lo sợ vì không ai mướn làm việc gì nữa. Thế là cả nhà chịu đói. Mấy đứa nhỏ nhất khóc lả đi mà không có cái ăn. Dưới manh áo rách nát, thịt chúng nó thâm tím lại vì rét. Bác Lê ôm lấy con trong ổ rơm lấy cái hơi ấm của mình ấp ủ cho nó.\n\nHai thằng con lớn thì từ sáng đã ra cánh đồng kiếm con cua, con ốc hay đi mót những bông lúa còn sót lại trong khe ruộng. Thật là sung sướng, nếu chúng đem về được một lượm, trong những ngày may mắn. Vội vàng bác Lê đẩy con ra lấy bó lúa để dưới chân vò nát, vét hột thóc, giã lấy gạo. Rồi một bữa cơm lúc buổi tối giá rét, mẹ con xúm quanh nồi, trong khi bên ngoài gió lạnh rít qua mái tranh.",
+      "passageAttribution": "Thạch Lam – trích “Nhà mẹ Lê”, theo bản đọc trong PDF giáo viên cung cấp.",
+      "instructions": "Đọc bài “Cánh đồng con”, sau đó trả lời câu hỏi. Câu tự luận chấp nhận nhiều cách diễn đạt và được gửi cho giáo viên xem. Biểu điểm và thời gian 40 phút do website biên soạn vì PDF không ghi các thông tin này.",
+      "grade": "Khối 4",
+      "category": "EXAM",
+      "durationMinutes": 40,
+      "sourceFile": "Đề thi GK1 lớp 4 mới.pdf"
+    }
+  ]
+}

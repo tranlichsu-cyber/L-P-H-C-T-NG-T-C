@@ -1,6 +1,6 @@
 import type {Quiz} from '../../types';
 import type {PracticeQuestion} from '../practice/types';
-export interface SelfPracticeQuiz {id:string;teacherId:string;title:string;grade:string;subject:string;questions:PracticeQuestion[];published:true;updatedAt:string;category?:'PRACTICE'|'EXAM';durationMinutes?:number}
+export interface SelfPracticeQuiz {id:string;teacherId:string;title:string;grade:string;subject:string;questions:PracticeQuestion[];published:true;updatedAt:string;category?:'PRACTICE'|'EXAM';durationMinutes?:number;passageTitle?:string;passage?:string;passageAttribution?:string;instructions?:string;sourceFile?:string;sourcePages?:number[]}
 export function publicQuizCopy(quiz:Quiz,teacherId:string,category:'PRACTICE'|'EXAM'='PRACTICE',durationMinutes=30):SelfPracticeQuiz{
  if(category==='EXAM'&&(!Number.isInteger(durationMinutes)||durationMinutes<1||durationMinutes>180))throw new Error('Thời gian làm đề thi phải từ 1 đến 180 phút.');
  if(!teacherId)throw new Error('Cần đăng nhập tài khoản giáo viên.');

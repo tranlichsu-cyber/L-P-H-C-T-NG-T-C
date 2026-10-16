@@ -3,7 +3,7 @@ import { auth, db, isFirebaseConfigured } from '../firebase/firebase';
 import type { Quiz } from '../../types';
 import type { PracticeQuestion } from '../practice/types';
 export interface TraditionQuiz { id:string; teacherId:string; title:string; grade:string; questions:PracticeQuestion[]; published:boolean; updatedAt:string; }
-export type TraditionQuizContent=Pick<TraditionQuiz,'id'|'title'|'grade'|'questions'>;
+export type TraditionQuizContent=Pick<TraditionQuiz,'id'|'title'|'grade'|'questions'>&{passageTitle?:string;passage?:string;passageAttribution?:string;instructions?:string};
 const key='tradition-public-quizzes';
 export class TraditionService {
  static async list(publicOnly=true):Promise<TraditionQuiz[]> {

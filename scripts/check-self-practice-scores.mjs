@@ -16,4 +16,5 @@ assert.equal(total([work('q',8,10,{studentId:'other'}),work('q',8,10,{classId:'o
 for(const points of [NaN,Infinity,-1,11])assert.equal(total([work('q',points)]),0);
 assert.equal(total([work('q',0,0)]),0);
 assert.equal(selfPracticePoints([work('q',8)],'c','s','Tiếng Việt'),0);
+assert.equal(total([work('pending',3,10,{result:{earnedPoints:3,maxPoints:10,pendingReview:true,pendingPoints:7}})]),0);
 console.log('PASS: ten-point conversion, highest attempt, retries, class/student/subject isolation, writing and invalid results excluded.');

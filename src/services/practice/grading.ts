@@ -20,14 +20,15 @@ export function gradePractice(questions: PracticeQuestion[], answers: Record<str
       return index>=0 && q.options?.[index]!==undefined?q.options[index]:value;
     };
     const comparable=(value:string)=>{const normalized=normalize(value);if(!['SHORT_ANSWER','FILL_BLANK'].includes(q.type))return normalized;const compact=normalized.replace(/[\u00a0\u202f\s]/g,'');return /^[+-]?\d+(?:[.,]\d+)?$/.test(compact)?compact.replace(',','.'):normalized;};
-    const isCorrect=Boolean(answer.trim()) && (q.type==='MULTIPLE_CHOICE'
+    const isCorrect=q.reviewMode!=='TEACHER' && Boolean(answer.trim()) && (q.type==='MULTIPLE_CHOICE'
       ? normalize(optionValue(answer))===normalize(optionValue(q.correctAnswer))
       : comparable(answer)===comparable(q.correctAnswer));
     const maxPoints=questionPoints(q);
-    return {questionId:q.id,content:q.content,answer,correctAnswer:q.correctAnswer,explanation:q.explanation || '',isCorrect,maxPoints,earnedPoints:isCorrect?maxPoints:0};
+    return {questionId:q.id,content:q.content,answer,correctAnswer:q.correctAnswer,explanation:q.explanation || '',isCorrect,maxPoints,earnedPoints:isCorrect?maxPoints:0,...(q.reviewMode==='TEACHER'?{pendingReview:true}:{})};
   });
   const correctCount=breakdown.filter((q)=>q.isCorrect).length;
-  return {score:questions.length?Math.round(correctCount/questions.length*100):0,correctCount,totalCount:questions.length,
+  const pendingPoints=roundPoints(breakdown.filter(q=>q.pendingReview).reduce((sum,q)=>sum+q.maxPoints,0));
+  return {...(pendingPoints?{pendingReview:true,pendingPoints}:{}),score:questions.length?Math.round(correctCount/questions.length*100):0,correctCount,totalCount:questions.length,
     earnedPoints:roundPoints(breakdown.reduce((sum,q)=>sum+q.earnedPoints,0)),maxPoints:totalPoints(questions),breakdown};
 }
 export function validateTestQuestions(questions: PracticeQuestion[]) {

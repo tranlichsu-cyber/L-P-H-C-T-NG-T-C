@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import ts from 'typescript';
+import {replacementPlan} from './replace-gk1-exams.mjs';
+import {encode} from './apply-curriculum-corrections.mjs';
+const manifest=JSON.parse(await fs.readFile('src/data/exams/gk1-grade4-2026.json','utf8'));
+const source=await fs.readFile('src/services/practice/grading.ts','utf8');
+const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext}}).outputText;
+const {gradePractice,validateTestQuestions}=await import('data:text/javascript;base64,'+Buffer.from(js).toString('base64'));
+assert.equal(manifest.exams.length,2);assert.match(manifest.sourceSha256,/^[a-f0-9]{64}$/);
+const [math,tv]=manifest.exams;assert.deepEqual([math.subject,tv.subject],['Toán','Tiếng Việt']);
+assert.deepEqual(math.sourcePages,[1,2]);assert.deepEqual(tv.sourcePages,[3,4]);
+assert.equal(math.questions.length,18);assert.equal(tv.questions.length,11);
+assert(tv.passage.includes('Mùa rét thì rải ổ rơm đầy nhà'));assert(!JSON.stringify(manifest).includes('zalo'));
+for(const [exam,autoPoints,pendingPoints] of [[math,6.5,3.5],[tv,3,7]]){
+ validateTestQuestions(exam.questions);assert.equal(exam.durationMinutes,40);
+ const answers=Object.fromEntries(exam.questions.map(q=>[q.id,q.correctAnswer]));
+ const result=gradePractice(exam.questions,answers);
+ assert.equal(result.earnedPoints,autoPoints);assert.equal(result.maxPoints,10);assert.equal(result.pendingPoints,pendingPoints);assert.equal(result.pendingReview,true);
+ for(const q of exam.questions){assert(q.explanation);if(q.type==='MULTIPLE_CHOICE'){assert.equal(q.options.length,4);assert.equal(new Set(q.options).size,4);assert(q.options.includes(q.correctAnswer));}}
+ assert(result.breakdown.filter(q=>q.pendingReview).every(q=>q.earnedPoints===0&&!q.isCorrect),'Free responses never receive automatic exact-match grades.');
+ assert.equal(gradePractice(exam.questions,{}).earnedPoints,0);
+}
+const get=id=>math.questions.find(q=>q.id===id);
+assert.equal(Number(get('tl1a').correctAnswer),54176+18032);
+assert.equal(Number(get('tl1b').correctAnswer),60152-8034);
+assert.equal(Number(get('tl1c').correctAnswer),15124*3);
+assert.equal(Number(get('tl1d-thuong').correctAnswer),Math.floor(36788/6));assert.equal(Number(get('tl1d-du').correctAnswer),36788%6);
+assert.equal(get('tn5').correctAnswer.replaceAll(' ',''),String(30465-700*8));
+assert.equal(get('tn7').correctAnswer,String(35+35+4));
+assert.equal(Number(get('tl4b1').correctAnswer),3010+1000);assert.equal(Number(get('tl4b2').correctAnswer),3010+2000);
+assert.equal(tv.questions.find(q=>q.id==='tv3').correctAnswer,'Ổ rơm rải trong nhà.');
+const root='projects/lop-hoc-tuong-tac-a62a5/databases/(default)/documents/';
+const old=(id,extra={})=>({name:root+'selfPracticeQuizzes/'+id,updateTime:'2026-10-16T00:00:00Z',fields:Object.fromEntries(Object.entries({teacherId:'teacher',title:id,category:'EXAM',grade:'Khối 4',...extra}).map(([k,v])=>[k,encode(v)]))});
+const plan=replacementPlan([old('old1'),old('old2')],manifest);
+assert.equal(plan.old.length,2);assert.equal(plan.replacements.length,2);
+assert(plan.replacements.every(doc=>doc.name.startsWith(root+'selfPracticeQuizzes/teacher_')));
+assert.throws(()=>replacementPlan([old('practice',{category:'PRACTICE'})],manifest));
+assert.throws(()=>replacementPlan([old('other',{grade:'Khối 5'})],manifest));
+assert.throws(()=>replacementPlan([old('one'),old('two',{teacherId:'someone-else'})],manifest));
+assert.throws(()=>replacementPlan([{...old('missing-time'),updateTime:null}],manifest));
+assert.throws(()=>replacementPlan([{...old('bad-path'),name:root+'selfPracticeWork/unsafe'}],manifest));
+console.log('PASS: two subject-specific PDF exams, all source pages, 10 points each, arithmetic/remainder, corrected reading choice, manual answers pending, safe exact-scope replacement.');

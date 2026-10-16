@@ -27,20 +27,22 @@ export function TraditionQuizRunner({ quiz, onBack, mode='tradition', durationMi
   return <section aria-label={mode==='practice'?'Làm bài tự luyện':'Làm câu hỏi tương tác'} className="mx-auto max-w-3xl space-y-5">
     <button type="button" className={`${buttonClass} flex items-center gap-2 bg-white border-2 border-sky-200 text-sky-900`} onClick={onBack}><ArrowLeft size={20} aria-hidden="true"/>Chọn bộ câu hỏi khác</button>
     <h2 className="text-2xl sm:text-3xl font-black text-sky-950">{quiz.title}</h2>
+    {quiz.instructions&&<p className="rounded-xl bg-sky-50 p-4 text-sm leading-6">{quiz.instructions}</p>}
+    {quiz.passage&&!result&&<details open className="rounded-2xl border-2 border-violet-200 bg-white p-5"><summary className="cursor-pointer text-xl font-black text-violet-900">Bài đọc: {quiz.passageTitle||'Đọc văn bản'}</summary><div className="mt-4 space-y-4 text-lg leading-8">{quiz.passage.split('\n\n').map((paragraph,i)=><p key={i}>{paragraph}</p>)}</div>{quiz.passageAttribution&&<p className="mt-4 text-sm italic">{quiz.passageAttribution}</p>}</details>}
     {exam&&!result&&<div role="timer" aria-label="Thời gian còn lại" className={`rounded-2xl p-4 text-xl font-black ${secondsLeft<=60?'bg-red-100 text-red-900':'bg-amber-100 text-amber-950'}`}>⏳ Còn lại: {String(Math.floor(secondsLeft/60)).padStart(2,'0')}:{String(secondsLeft%60).padStart(2,'0')}</div>}
     {result ? <>
       <div role="status" className="rounded-3xl border-2 border-emerald-200 bg-emerald-50 p-6 sm:p-8 text-center space-y-3">
         <Trophy className="mx-auto text-amber-600" size={44} aria-hidden="true"/>
         <h3 ref={heading} tabIndex={-1} className="text-2xl font-black outline-none">{expired?'Đã hết giờ! Bài được tự động nộp.':'Em đã hoàn thành!'}</h3>
-        {mode==='practice'&&<p className="text-2xl font-black">Điểm tự luyện: {result.maxPoints?Math.round(result.earnedPoints/result.maxPoints*100)/10:0}/10</p>}
-        <p className="text-xl font-bold text-emerald-900">Em trả lời đúng {result.correctCount}/{result.totalCount} câu</p>
+        {mode==='practice'&&(result.pendingReview?<><p className="text-xl font-black">Điểm phần tự chấm: {result.earnedPoints}/{Math.round((result.maxPoints-(result.pendingPoints||0))*100)/100}</p><p className="font-bold text-amber-900">Còn {result.pendingPoints} điểm tự luận cần giáo viên xem. Đây chưa phải điểm toàn bài và chưa cộng vào điểm tích lũy.</p></>:<p className="text-2xl font-black">Điểm tự luyện: {result.maxPoints?Math.round(result.earnedPoints/result.maxPoints*100)/10:0}/10</p>)}
+        <p className="text-xl font-bold text-emerald-900">Em trả lời đúng {result.correctCount}/{result.breakdown.filter(q=>!q.pendingReview).length} câu tự chấm</p>
         <p className="text-lg">{result.correctCount === result.totalCount ? (mode==='practice'?'Rất tốt! Em hãy tiếp tục luyện tập nhé.':'Rất tốt! Em hãy tiếp tục khám phá quê hương nhé.') : (mode==='practice'?'Em hãy xem lời giải và thử lại nhé.':'Em hãy xem lời giải để hiểu thêm về quê hương nhé.')}</p>
         <button type="button" className={`${buttonClass} inline-flex gap-2 items-center bg-sky-700 text-white hover:bg-sky-800`} onClick={() => { setAnswers({}); setCurrentIndex(0); setResult(null); setExpired(false); const end=Date.now()+(durationMinutes||0)*60000;setDeadline(end);setSecondsLeft(Math.ceil((end-Date.now())/1000)); }}><RotateCcw size={20} aria-hidden="true"/>Làm lại</button>
       </div>
       <h3 className="text-xl font-bold">Cùng xem lại đáp án</h3>
       {quiz.questions.map((q, index) => <details key={q.id} className="rounded-2xl border-2 border-slate-200 bg-white p-4">
-        <summary className="cursor-pointer text-lg font-bold leading-relaxed">Câu {index + 1}. {q.content} <span className={result.breakdown[index].isCorrect ? 'text-emerald-800' : 'text-amber-900'}>{result.breakdown[index].isCorrect ? ' — Đúng' : ' — Cần xem lại'}</span></summary>
-        <div className="mt-3 space-y-2 text-lg leading-relaxed"><p>Em chọn: {answers[q.id] || 'Chưa trả lời'}</p><p className="font-bold text-emerald-900">Đáp án: {q.correctAnswer}</p>{q.explanation && <p>{q.explanation}</p>}</div>
+        <summary className="cursor-pointer text-lg font-bold leading-relaxed">Câu {index + 1}. {q.content} <span className={result.breakdown[index].isCorrect ? 'text-emerald-800' : 'text-amber-900'}>{result.breakdown[index].pendingReview?' — Chờ giáo viên xem':result.breakdown[index].isCorrect ? ' — Đúng' : ' — Cần xem lại'}</span></summary>
+        <div className="mt-3 space-y-2 text-lg leading-relaxed"><p className="whitespace-pre-wrap break-words">Bài làm: {answers[q.id] || 'Chưa trả lời'}</p><p className="font-bold text-emerald-900 whitespace-pre-wrap">{q.reviewMode==='TEACHER'?'Gợi ý trả lời / hướng dẫn xem bài:':'Đáp án:'} {q.correctAnswer}</p>{q.explanation && <p>{q.explanation}</p>}</div>
       </details>)}
     </> : question ? <>
       <div className="rounded-2xl bg-white border-2 border-sky-100 p-4 space-y-2">
@@ -56,7 +58,7 @@ export function TraditionQuizRunner({ quiz, onBack, mode='tradition', durationMi
           </label>)}
         </fieldset>}
         {question.type === 'ORDERING' && <OrderingAnswer key={question.id} options={question.options || []} value={answers[question.id] || ''} onChange={answer}/>}
-        {(question.type === 'SHORT_ANSWER' || question.type === 'FILL_BLANK') && <label className="block text-lg font-bold">Câu trả lời của em<input className="mt-2 block w-full rounded-2xl border-2 border-sky-200 p-4 font-normal focus:outline-sky-700" value={answers[question.id] || ''} onChange={event => answer(event.target.value)}/></label>}
+        {question.reviewMode==='TEACHER'?<label className="block text-lg font-bold">Bài tự luận của em<textarea rows={7} maxLength={6000} className="mt-2 block w-full rounded-2xl border-2 border-sky-200 p-4 font-normal leading-8 focus:outline-sky-700" value={answers[question.id]||''} onChange={event=>answer(event.target.value)} placeholder="Em trình bày câu trả lời hoặc các bước giải ở đây…"/><span className="mt-2 block text-sm font-normal text-slate-600">Phần này dành cho giáo viên xem, không đối chiếu máy móc từng chữ với đáp án mẫu.</span></label>:(question.type === 'SHORT_ANSWER' || question.type === 'FILL_BLANK') && <label className="block text-lg font-bold">Câu trả lời của em<input maxLength={1000} className="mt-2 block w-full rounded-2xl border-2 border-sky-200 p-4 font-normal focus:outline-sky-700" value={answers[question.id] || ''} onChange={event => answer(event.target.value)}/></label>}
         <p className="text-base text-slate-600">{answers[question.id]?.trim() ? 'Em có thể đổi câu trả lời trước khi xem kết quả.' : 'Em hãy chọn hoặc nhập câu trả lời, rồi sang câu tiếp theo.'}</p>
       </div>
       <div className="flex flex-wrap justify-between gap-3">

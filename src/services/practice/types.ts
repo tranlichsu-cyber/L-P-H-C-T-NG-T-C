@@ -6,6 +6,7 @@ export type AssignmentStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'EX
 export type PracticeFeedbackMode = 'AFTER_FINISH' | 'PER_QUESTION' | 'TEACHER_ONLY';
 
 export interface PracticeQuestion {
+  reviewMode?: 'TEACHER';
   id: string;
   type: QuestionType;
   content: string;
@@ -19,12 +20,14 @@ export interface PracticeQuestion {
 }
 
 export interface PracticeResult {
+  pendingReview?: boolean;
+  pendingPoints?: number;
   score: number;
   correctCount: number;
   totalCount: number;
   earnedPoints: number;
   maxPoints: number;
-  breakdown: { questionId: string; content: string; answer: string; correctAnswer: string; explanation: string; isCorrect: boolean; earnedPoints: number; maxPoints: number }[];
+  breakdown: { questionId: string; content: string; answer: string; correctAnswer: string; explanation: string; isCorrect: boolean; earnedPoints: number; maxPoints: number; pendingReview?: boolean }[];
 }
 
 export interface PracticeAssignment {

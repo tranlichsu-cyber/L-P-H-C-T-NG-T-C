@@ -7,7 +7,7 @@ export function selfPracticePoints(works:StudentWork[],classId:string,studentId:
  for(const work of works){
   if(work.classId!==classId||work.studentId!==studentId||work.kind!=='QUIZ'||(subject!=='ALL'&&work.subject!==subject))continue;
   const result=work.result;
-  if(!result||!Number.isFinite(result.earnedPoints)||!Number.isFinite(result.maxPoints)||result.maxPoints<=0||result.earnedPoints<0||result.earnedPoints>result.maxPoints)continue;
+  if(!result||result.pendingReview||!Number.isFinite(result.earnedPoints)||!Number.isFinite(result.maxPoints)||result.maxPoints<=0||result.earnedPoints<0||result.earnedPoints>result.maxPoints)continue;
   const points=roundPoints(result.earnedPoints/result.maxPoints*10);
   best.set(work.quizId,Math.max(best.get(work.quizId)||0,points));
  }

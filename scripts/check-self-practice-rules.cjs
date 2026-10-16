@@ -19,6 +19,7 @@ try{
  await assertSucceeds(getDocs(query(collection(teacher,'selfPracticeWork'),where('teacherId','==','teacher'))));await assertFails(getDoc(doc(pupil,'selfPracticeWork','attempt')));await assertFails(getDoc(doc(other,'selfPracticeWork','attempt')));
  await assertSucceeds(setDoc(doc(pupil,'selfPracticeWork','writing'),{...work,id:'writing',kind:'WRITING',outline:['Mở','Thân','Kết'],essay:'Bài viết'}));
  await assertSucceeds(setDoc(doc(pupil,'selfPracticeWork','direct-writing'),{...work,id:'direct-writing',quizId:'writing-grade4-week-13',kind:'WRITING',outline:['','',''],essay:'Bài viết trực tiếp theo tuần'}));
+ await assertSucceeds(setDoc(doc(pupil,'selfPracticeWork','exam-pending'),{...work,id:'exam-pending',quizId:'gk1-2026-grade4-vietnamese-01',result:{earnedPoints:3,maxPoints:10,pendingReview:true,pendingPoints:7,breakdown:[{questionId:'tv5',answer:'Cách diễn đạt của học sinh',pendingReview:true}]}}));
  await assertSucceeds(deleteDoc(doc(teacher,'selfPracticeAccess',code)));await assertFails(setDoc(doc(pupil,'selfPracticeWork','revoked'),{...work,id:'revoked'}));
  await env.withSecurityRulesDisabled(async c=>{const db=c.firestore();await setDoc(doc(db,'rooms','live1'),{teacherId:'teacher',status:'ACTIVE'});await setDoc(doc(db,'rooms','live1','participants','s1'),{studentId:'s1',name:'Minh Anh',mockAuthUid:'pupil'});await setDoc(doc(db,'rooms','live1','participants','s2'),{studentId:'s2',name:'Gia Bảo',mockAuthUid:'pupil2'});});
  const pupil2=env.authenticatedContext('pupil2',{firebase:{sign_in_provider:'anonymous'}}).firestore();

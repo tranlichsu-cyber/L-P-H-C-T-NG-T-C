@@ -1,0 +1,52 @@
+name: Replace self-practice exams from reviewed grade-four PDF
+on:
+  push:
+    branches: [main]
+    paths: [REPLACE_GK1_EXAMS_TRIGGER.txt]
+permissions:
+  contents: write
+jobs:
+  replace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/check-gk1-exams.mjs
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Prepare atomic replacement and recovery copy of old exams
+        run: node scripts/replace-gk1-exams.mjs prepare "$RUNNER_TEMP/gk1-exam-backup.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gk1-exam-recovery-${{ github.run_id }}
+          path: ${{ runner.temp }}/gk1-exam-backup.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Apply only in explicit apply mode
+        run: |
+          mode="$(head -n 1 REPLACE_GK1_EXAMS_TRIGGER.txt)"
+          if [[ "$mode" == "apply" ]]; then
+            node scripts/replace-gk1-exams.mjs apply "$RUNNER_TEMP/gk1-exam-backup.json"
+          elif [[ "$mode" != "inspect" ]]; then
+            exit 1
+          fi
+      - name: Save teaching-content summary and verification
+        run: |
+          mkdir -p audit-snapshots
+          cp "$RUNNER_TEMP/gk1-exam-backup.json.summary.json" audit-snapshots/gk1-exam-summary.json
+          if [[ -f "$RUNNER_TEMP/gk1-exam-backup.json.result.json" ]]; then
+            cp "$RUNNER_TEMP/gk1-exam-backup.json.result.json" audit-snapshots/gk1-exam-result.json
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "audit/gk1-exams-${{ github.run_id }}"
+          git add audit-snapshots/gk1-exam-*.json
+          git commit -m 'Retain grade-four exam replacement review result'
+          git push origin "HEAD:refs/heads/audit/gk1-exams-${{ github.run_id }}"
