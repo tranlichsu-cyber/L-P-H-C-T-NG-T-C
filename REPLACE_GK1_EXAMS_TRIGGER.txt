@@ -1,2 +1,2 @@
-inspect
-2026-10-16: Inspect current self-practice exams and prepare recovery copy before replacing them with the two reviewed subject-specific exams from the uploaded PDF. Do not touch student submissions, regular practice or writing lessons.
+apply
+2026-10-16: Apply the exact reviewed plan from run 38914051795 after successful website deployment 38914051808. Create two subject-specific PDF exams and delete the three reviewed old grade-four exam copies atomically, with concurrency preconditions and recovery retained. Preserve source banks, regular practice, weekly writing and all student history.

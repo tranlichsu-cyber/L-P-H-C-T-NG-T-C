@@ -5,6 +5,7 @@ on:
     paths: [REPLACE_GK1_EXAMS_TRIGGER.txt]
 permissions:
   contents: write
+  actions: read
 jobs:
   replace:
     runs-on: ubuntu-latest
@@ -21,8 +22,28 @@ jobs:
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
       - uses: google-github-actions/setup-gcloud@v2
+      - name: Select operation
+        id: operation
+        run: |
+          mode="$(head -n 1 REPLACE_GK1_EXAMS_TRIGGER.txt)"
+          [[ "$mode" == "inspect" || "$mode" == "apply" ]]
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
       - name: Prepare atomic replacement and recovery copy of old exams
+        if: steps.operation.outputs.mode == 'inspect'
         run: node scripts/replace-gk1-exams.mjs prepare "$RUNNER_TEMP/gk1-exam-backup.json"
+      - name: Retrieve exact reviewed recovery copy for application
+        if: steps.operation.outputs.mode == 'apply'
+        uses: actions/download-artifact@v4
+        with:
+          name: gk1-exam-recovery-38914051795
+          run-id: 38914051795
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/gk1-reviewed
+      - name: Use the three already reviewed old exams only
+        if: steps.operation.outputs.mode == 'apply'
+        run: |
+          cp "$RUNNER_TEMP/gk1-reviewed/gk1-exam-backup.json" "$RUNNER_TEMP/gk1-exam-backup.json"
+          node --input-type=module -e 'import fs from "node:fs"; const p=process.argv[1]; fs.writeFileSync(p+".summary.json",JSON.stringify(JSON.parse(fs.readFileSync(p,"utf8")).summary,null,2));' "$RUNNER_TEMP/gk1-exam-backup.json"
       - uses: actions/upload-artifact@v4
         with:
           name: gk1-exam-recovery-${{ github.run_id }}
