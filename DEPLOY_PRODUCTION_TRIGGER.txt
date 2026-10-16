@@ -82,3 +82,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-15: Improve student week-range/list filtering and accent-insensitive content search; add teacher audit search, filters and pagination with account isolation, using already loaded data.
 
 2026-10-16: Add teacher Excel downloads with student names, classes and student codes for class rosters and self-practice access.
+
+2026-10-16: Automatically include best self-practice quiz scores on a ten-point scale in student cumulative history and show live class practice totals.

@@ -1,3 +1,5 @@
+import {useSelfPracticeScores} from '../../hooks/useSelfPracticeScores';
+import {selfPracticePoints} from '../../services/selfPractice/scores';
 import { downloadStudentExcel } from '../../utils/studentExcel';
 import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -24,6 +26,7 @@ import {
 export const ClassDetailsPage: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
+  const practiceScores = useSelfPracticeScores(classId);
   const { classes, addStudent, bulkAddStudents, updateStudent, deleteStudent } = useTeacherData();
   const { showToast } = useToast();
 
@@ -279,6 +282,8 @@ export const ClassDetailsPage: React.FC = () => {
         </div>
       </Card>
 
+      <p className="mb-3 text-sm text-slate-600">Điểm tự luyện tính theo thang 10, mỗi bài lấy điểm cao nhất. Điểm này tự cộng vào tổng tích lũy trong Lịch sử tiến bộ.</p>
+      {practiceScores.error&&<p role="alert" className="mb-3 text-red-800">{practiceScores.error}</p>}
       {/* Roster List Table / Cards */}
       <Card>
         {filteredStudents.length === 0 ? (
@@ -295,6 +300,7 @@ export const ClassDetailsPage: React.FC = () => {
                   <th className="py-3 px-4 w-16">STT</th>
                   <th className="py-3 px-4">Họ và Tên Học Sinh</th>
                   <th className="py-3 px-4">Mã Học Sinh</th>
+                  <th className="py-3 px-4">Điểm tự luyện</th>
                   <th className="py-3 px-4 text-right">Thao Tác</th>
                 </tr>
               </thead>
@@ -304,6 +310,7 @@ export const ClassDetailsPage: React.FC = () => {
                     <td className="py-3.5 px-4 font-bold text-slate-400">{idx + 1}</td>
                     <td className="py-3.5 px-4 font-bold text-slate-900 text-base">{std.name}</td>
                     <td className="py-3.5 px-4 text-slate-500 font-mono text-xs">{std.studentCode || 'N/A'}</td>
+                    <td className="py-3.5 px-4 font-bold text-emerald-700">{practiceScores.loading?'Đang tải…':practiceScores.error?'Chưa tải được':selfPracticePoints(practiceScores.works,currentClass.id,std.id)}</td>
                     <td className="py-3.5 px-4 text-right space-x-2">
                       <Button
                         variant="outline"

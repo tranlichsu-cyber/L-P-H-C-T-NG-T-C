@@ -1,3 +1,6 @@
+import {useSelfPracticeScores} from '../../hooks/useSelfPracticeScores';
+import {selfPracticePoints} from '../../services/selfPractice/scores';
+import {roundPoints} from '../../services/practice/grading';
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common/Card';
@@ -18,6 +21,7 @@ import {
 export const StudentHistoryPage: React.FC = () => {
   const { classId, studentId } = useParams<{ classId: string; studentId: string }>();
   const navigate = useNavigate();
+  const practiceScores=useSelfPracticeScores(classId);
   const { classes } = useTeacherData();
   const { showToast } = useToast();
 
@@ -28,11 +32,13 @@ export const StudentHistoryPage: React.FC = () => {
   const [studentName, setStudentName] = useState<string>(currentStudent?.name || 'Học sinh');
   const [records, setRecords] = useState<StudentLongitudinalRecord[]>([]);
   const [averageAccuracy, setAverageAccuracy] = useState<number>(0);
+  const [historyError,setHistoryError]=useState('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (!classId || !studentId) return;
     setIsLoading(true);
+    setHistoryError('');
 
     HistoryService.getStudentLongitudinalHistory(classId, studentId, subjectFilter)
       .then((res) => {
@@ -40,7 +46,7 @@ export const StudentHistoryPage: React.FC = () => {
         setRecords(res.records);
         setAverageAccuracy(res.averageAccuracy);
       })
-      .catch(() => showToast('Lỗi khi tải lịch sử học sinh.', 'error'))
+      .catch(() => {setHistoryError('Chưa tải được điểm các buổi học.');showToast('Lỗi khi tải lịch sử học sinh.', 'error');})
       .finally(() => setIsLoading(false));
   }, [classId, studentId, subjectFilter]);
 
@@ -66,6 +72,14 @@ export const StudentHistoryPage: React.FC = () => {
         </div>
       </div>
 
+      <Card className="p-5 border-2 border-emerald-200">
+        <h2 className="font-bold text-emerald-900">Điểm tích lũy {subjectFilter==='ALL'?'':`• ${subjectFilter}`}</h2>
+        {(practiceScores.error||historyError)?<p role="alert">{practiceScores.error||historyError} Chưa xác định được tổng điểm.</p>:isLoading||practiceScores.loading?<p role="status">Đang tính điểm…</p>:<>
+          <p className="text-3xl font-black text-emerald-800 mt-2">{roundPoints(records.reduce((sum,r)=>sum+r.score,0)+selfPracticePoints(practiceScores.works,classId||'',studentId||'',subjectFilter))} điểm</p>
+          <p className="mt-2 text-sm">Điểm các buổi học: {roundPoints(records.reduce((sum,r)=>sum+r.score,0))} • Tự luyện: {selfPracticePoints(practiceScores.works,classId||'',studentId||'',subjectFilter)}</p>
+          <p className="mt-2 text-sm text-slate-600">Tự luyện cộng nguyên điểm trên thang 10; mỗi bài chỉ lấy điểm cao nhất, làm lại không cộng trùng. Bài tự luận chưa chấm chưa được cộng. Điểm buổi học theo phạm vi lịch sử đã tải (tối đa 100 buổi, không gồm buổi lưu trữ).</p>
+        </>}
+      </Card>
       {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 border-2 border-slate-200 bg-white">

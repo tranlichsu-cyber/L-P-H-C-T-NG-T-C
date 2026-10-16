@@ -62,7 +62,7 @@ export class StudentAccessService {
   if(current.studentId!==access.studentId||current.classId!==access.classId)throw new Error('Mã học sinh đã thay đổi. Em vui lòng vào lại.');
   const work:StudentWork={id,teacherId:current.teacherId,classId:current.classId,className:current.className,studentId:current.studentId,studentName:current.studentName,quizId:quiz.id,quizTitle:quiz.title,subject:quiz.subject,submittedAt:new Date().toISOString(),...('answers' in payload?{kind:'QUIZ',result:gradePractice(quiz.questions,payload.answers)}:{kind:'WRITING',outline:payload.outline.map(s=>s.trim()),essay:payload.essay.trim()})};
   if(isFirebaseConfigured&&db)await setDoc(doc(db,'selfPracticeWork',id),{...work,accessCode:access.code,authUid:auth?.currentUser?.uid});
-  else localStorage.setItem(workKey,JSON.stringify([work,...read<StudentWork>(workKey).filter(w=>w.id!==id)]));
+  else {localStorage.setItem(workKey,JSON.stringify([work,...read<StudentWork>(workKey).filter(w=>w.id!==id)]));if(typeof window!=='undefined')window.dispatchEvent(new Event('self-practice-work-updated'));}
  }
  static async listWork():Promise<StudentWork[]>{
   const uid=teacherId();
