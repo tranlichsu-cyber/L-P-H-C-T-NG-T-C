@@ -1,0 +1,30 @@
+name: Check automatic reward backend readiness
+on:
+  push:
+    branches: [main]
+    paths: [REWARDS_BACKEND_PREFLIGHT.txt]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: lop-hoc-tuong-tac-a62a5
+      - name: Read billing and function readiness without enabling services
+        shell: bash
+        run: |
+          if enabled=$(gcloud billing projects describe lop-hoc-tuong-tac-a62a5 --format='value(billingEnabled)' 2> "$RUNNER_TEMP/billing-error"); then
+            echo "::notice::Reward backend billing enabled: $enabled"
+          else
+            echo "::warning::Cannot read billing readiness with current deployment identity"
+            tail -c 700 "$RUNNER_TEMP/billing-error"
+          fi
+          gcloud services list --enabled --project lop-hoc-tuong-tac-a62a5 --filter='config.name:(cloudfunctions.googleapis.com run.googleapis.com)' --format='value(config.name)' || true

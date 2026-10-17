@@ -1,0 +1,1 @@
+2026-10-17: Read-only readiness check for authenticated automatic point-to-badge conversion.
