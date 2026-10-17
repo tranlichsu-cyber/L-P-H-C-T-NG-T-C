@@ -125,7 +125,7 @@ service cloud.firestore {
       allow create: if isTeacher();
       allow update, delete: if canManageClass(classId);
 
-      // Spark-compatible proof: every two immutable answers are checked against the public question bank.
+      // Spark-compatible proof: each immutable answer are checked against the public question bank.
       function rewardNormalize(value, q) {
         let trimmed = q.get('trimWhitespace',true) ? value.replace('^\\s+|\\s+$','') : value;
         let text = q.get('caseInsensitive',true) ? trimmed.lower() : trimmed;
@@ -145,7 +145,7 @@ service cloud.firestore {
         return index<end && qs[index].get('reviewMode','AUTO')!='TEACHER'
           && answers[index].questionId==qs[index].id && answers[index].answer is string
           && answers[index].answer.replace('^\\s+|\\s+$','')!=''
-          && rewardNormalize(rewardOption(answers[index].answer,qs[index]),qs[index])==rewardNormalize(rewardOption(qs[index].correctAnswer,qs[index]),qs[index]) ? rewardUnits(qs[index]) : 0;
+          && rewardNormalize(qs[index].type=='MULTIPLE_CHOICE'?rewardOption(answers[index].answer,qs[index]):answers[index].answer,qs[index])==rewardNormalize(qs[index].type=='MULTIPLE_CHOICE'?rewardOption(qs[index].correctAnswer,qs[index]):qs[index].correctAnswer,qs[index]) ? rewardUnits(qs[index]) : 0;
       }
       function rewardMax(qs,index,end) { return index<end ? rewardUnits(qs[index]) : 0; }
       function rewardPending(qs,index,end) { return index<end && qs[index].get('reviewMode','AUTO')=='TEACHER' ? rewardUnits(qs[index]) : 0; }
@@ -154,7 +154,7 @@ service cloud.firestore {
           let d=request.resource.data;
           let w=get(/databases/$(database)/documents/selfPracticeWork/$(attemptId)).data;
           let quiz=get(/databases/$(database)/documents/selfPracticeQuizzes/$(d.quizId)).data;
-          return ownsRewardWallet(classId,d.studentId) && d.keys().hasOnly(['studentId','quizId','workId','version','cursor','earnedUnits','maxUnits','pendingUnits'])
+          return isAuthenticated() && get(/databases/$(database)/documents/selfPracticeAccess/$(w.accessCode)).data.classId==classId && get(/databases/$(database)/documents/selfPracticeAccess/$(w.accessCode)).data.studentId==d.studentId && d.keys().hasOnly(['studentId','quizId','workId','version','cursor','earnedUnits','maxUnits','pendingUnits'])
             && d.workId==attemptId && w.classId==classId && w.studentId==d.studentId && w.quizId==d.quizId && w.kind=='QUIZ'
             && w.get('rewardVersion',0)==2 && w.authUid==request.auth.uid && quiz.published==true && d.version==quiz.updatedAt
             && quiz.questions.size()>0 && quiz.questions.size()<=200 && w.result.breakdown.size()==quiz.questions.size()
@@ -167,11 +167,11 @@ service cloud.firestore {
           let qs=get(/databases/$(database)/documents/selfPracticeQuizzes/$(d.quizId)).data.questions;
           let answers=get(/databases/$(database)/documents/selfPracticeWork/$(attemptId)).data.result.breakdown;
           let start=old.cursor;
-          let end=start+2<qs.size()?start+2:qs.size();
+          let end=start+1;
           return d.diff(old).affectedKeys().hasOnly(['cursor','earnedUnits','maxUnits','pendingUnits']) && start<qs.size() && d.cursor==end
-            && d.earnedUnits==old.earnedUnits+rewardEarn(qs,answers,start,end)+rewardEarn(qs,answers,start+1,end)
-            && d.maxUnits==old.maxUnits+rewardMax(qs,start,end)+rewardMax(qs,start+1,end)
-            && d.pendingUnits==old.pendingUnits+rewardPending(qs,start,end)+rewardPending(qs,start+1,end);
+            && d.earnedUnits==old.earnedUnits+rewardEarn(qs,answers,start,end)
+            && d.maxUnits==old.maxUnits+rewardMax(qs,start,end)
+            && d.pendingUnits==old.pendingUnits+rewardPending(qs,start,end);
         }
         allow get: if canManageClass(classId) || (isAuthenticated() && (resource==null || ownsRewardWallet(classId,resource.data.studentId)));
         allow list,delete: if false;

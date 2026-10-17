@@ -1,5 +1,5 @@
-import {collection,doc,getDoc,getDocs,runTransaction,setDoc} from 'firebase/firestore';
-import {auth,db} from '../firebase/firebase';
+import {collection,doc,getDoc,getDocs,runTransaction} from 'firebase/firestore';
+import {db} from '../firebase/firebase';
 import {gradePractice} from '../practice/grading';
 import type {PracticeQuestion} from '../practice/types';
 import type {StudentWork} from '../selfPractice/studentAccess';
@@ -8,9 +8,10 @@ import {curatedTraditionQuizzes} from '../../data/traditionQuizzes';
 import type {MockRoomData} from '../realtime/types';
 import type {StudentLongitudinalRecord} from '../history/types';
 import {advanceAttempt,attemptPoints,emptyPoints,type RewardAttempt,type RewardPoints} from './freePoints';
+import {bindRewardIdentity} from './rewardBinding';
 import {creditWallet,type RewardIdentity,type RewardWallet} from './content';
 export class FreeRewardService {
- static async bind(i:RewardIdentity){if(!db||!auth?.currentUser)throw Error('Em cần đăng nhập lại.');if(!i.teacher)await setDoc(doc(db,'rewardAccess',auth.currentUser.uid),{classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||''});}
+ static bind=bindRewardIdentity;
  static async refresh(i:RewardIdentity,action:'VIEW'|'CLAIM'){
   const firestore=db!;await this.bind(i);
   return runTransaction(firestore,async tx=>{

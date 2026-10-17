@@ -44,9 +44,9 @@ await assertSucceeds(setDoc(doc(teacher,'selfPracticeAccess',code),{...access,st
 // Exercise the actual application service against the emulator, not just matching test transactions.
 await assertSucceeds(setDoc(doc(teacher,'selfPracticeAccess',code),access));
 const walletPolicy=await load(fs.readFileSync('src/services/rewards/content.ts','utf8'));
-globalThis.__freeRewardFixture={doc,collection,getDoc,getDocs,setDoc,runTransaction,auth:{currentUser:{uid:'u'}},db:student,gradePractice,SelfPracticeService:{list:async()=>[]},curatedTraditionQuizzes:[],...policy,...walletPolicy};
+globalThis.__freeRewardFixture={doc,collection,getDoc,getDocs,setDoc,runTransaction,auth:{currentUser:{uid:'u'}},db:student,gradePractice,SelfPracticeService:{list:async()=>[]},curatedTraditionQuizzes:[],bindRewardIdentity:async i=>{await setDoc(doc(student,'rewardAccess','u'),{classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||''});},...policy,...walletPolicy};
 const serviceSource=ts.transpileModule(fs.readFileSync('src/services/rewards/FreeRewardService.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/^import .*;\n/gm,'');
-const service=await import('data:text/javascript;base64,'+Buffer.from('const {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
+const service=await import('data:text/javascript;base64,'+Buffer.from('const {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
 await prepare('actual-service',bank);const actualGrade=gradePractice(bank,answers);
 await assertSucceeds(setDoc(doc(student,'selfPracticeWork','service-work'),{id:'service-work',teacherId:'t',classId:'c',className:'4A',studentId:'s',studentName:'An',quizId:'actual-service',quizTitle:'Đề',subject:'Toán',submittedAt:'now',kind:'QUIZ',result:actualGrade,rewardVersion:2,accessCode:code,authUid:'u'}));
 const identity={classId:'c',studentId:'s',accessCode:code};

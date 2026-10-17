@@ -1,13 +1,14 @@
-import {doc,onSnapshot,runTransaction,setDoc} from 'firebase/firestore';
+import {doc,onSnapshot,runTransaction} from 'firebase/firestore';
 import {auth,db} from '../firebase/firebase';
 import {isFirebaseActive} from '../realtime/realtimeServiceSwitch';
 import {eventBus} from '../realtime/broadcastChannel';
 import {getRoomById} from '../realtime/mockStorage';
 import {StudentAccessService} from '../selfPractice/studentAccess';
+import {bindRewardIdentity} from './rewardBinding';
 import {FreeRewardService} from './FreeRewardService';
 import {createSharedSubscriptions} from '../data/readEfficiency';
 import {creditWallet,selectAvatar,type RewardIdentity,type RewardWallet,type AvatarId} from './content';
-const shared=createSharedSubscriptions<RewardWallet|null>(),bindQueue=new Map<string,Promise<void>>();
+const shared=createSharedSubscriptions<RewardWallet|null>();
 const key=(i:RewardIdentity)=>'lhtt-reward-v1-'+i.classId+'-'+i.studentId;
 const read=(i:RewardIdentity):RewardWallet|undefined=>JSON.parse(localStorage.getItem(key(i))||'null')||undefined;
 const write=(i:RewardIdentity,w:RewardWallet)=>{localStorage.setItem(key(i),JSON.stringify(w));eventBus.publish({type:'ROOM_UPDATED',roomId:'rewards:'+i.classId,timestamp:new Date().toISOString()});};
@@ -27,7 +28,7 @@ export class RewardService{
  static subscribe(i:RewardIdentity,next:(w:RewardWallet|null)=>void,error:(e:Error)=>void){
   const uid=auth?.currentUser?.uid||'local';return shared(JSON.stringify([uid,i]),(emit,fail)=>{
    let active=true,stop=()=>{};
-   void (async()=>{if(isFirebaseActive&&db){if(!i.teacher){const previous=bindQueue.get(uid)||Promise.resolve();const request=previous.catch(()=>{}).then(async()=>{if(active)await setDoc(doc(db!,'rewardAccess',uid),{classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||''});});bindQueue.set(uid,request);try{await request;}finally{if(bindQueue.get(uid)===request)bindQueue.delete(uid);}}
+   void (async()=>{if(isFirebaseActive&&db){await bindRewardIdentity(i,()=>active);
      if(active){let wallet:RewardWallet|null=null,points:Record<string,unknown>|null=null,walletReady=false,pointsReady=false;
      const send=()=>{if(walletReady&&pointsReady)emit(wallet?{...wallet,currentPoints:Math.max(wallet.totalPoints,Number(points?.currentPoints)||0),livePoints:Number(points?.livePoints)||0,practicePoints:Number(points?.practicePoints)||0,legacyImported:points?.legacyImported===true}:null);};
      const a=onSnapshot(doc(db,'classes',i.classId,'rewardWallets',i.studentId),snap=>{wallet=snap.exists()?snap.data() as RewardWallet:null;walletReady=true;send();},fail);
