@@ -1,3 +1,4 @@
+import {SelfPracticeService} from '../services/selfPractice/SelfPracticeService';
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import {loadVisibleClasses,loadVisibleQuizzes} from '../services/data/teacherQueries';
 import {useLocation} from 'react-router-dom';
@@ -105,6 +106,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
           return;
         }
 
+        void SelfPracticeService.ensureRewardBanks().catch(error=>console.warn('Chưa khởi tạo được đề đối chiếu huy hiệu.',error));
         const isAdmin = profile.role === 'SCHOOL_ADMIN';
 
         const classSnap=await loadVisibleClasses(firestore,uid,isAdmin);

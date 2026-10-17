@@ -15,3 +15,5 @@ Capture only emulator comparison values and error headers for normalization diag
 Preserve original Vietnamese responses alongside canonical equivalents for exact Rules comparison.
 
 Use exact canonical answers, preserve original responses, and check bounded five-question proofs without Unicode string transforms.
+
+Limit each canonical checkpoint to one question for consistent Rules evaluation budget.

@@ -6,7 +6,7 @@ Học sinh xem điểm trong Huy hiệu & cửa hàng avatar, tự đổi 20 đi
 
 ## Điểm mới
 
-Khi nộp bài, bài làm được lưu trước. Sau đó Firestore kiểm tra đáp án theo đề công bố, theo nhóm tối đa 5 câu. Với đáp án đúng tương đương về chữ hoa/dấu/cách viết số, lưu đáp án chuẩn để Rules đối chiếu, đồng thời giữ nguyên câu trả lời gốc ở `originalAnswer` cho giáo viên xem. Quy tắc đối chiếu đáp án chuẩn, trọng số, thứ tự câu và phiên bản đề; không tin điểm hoặc cờ đúng/sai do trình duyệt gửi. Tiến trình xác minh có thể tiếp tục khi gửi lại; không phải nộp một bài mới. Nếu lỗi mạng hoặc đề thay đổi, bài đã lưu vẫn còn và giao diện báo điểm chờ xác minh.
+Khi nộp bài, bài làm được lưu trước. Sau đó Firestore kiểm tra đáp án theo đề công bố, theo từng câu. Với đáp án đúng tương đương về chữ hoa/dấu/cách viết số, lưu đáp án chuẩn để Rules đối chiếu, đồng thời giữ nguyên câu trả lời gốc ở `originalAnswer` cho giáo viên xem. Quy tắc đối chiếu đáp án chuẩn, trọng số, thứ tự câu và phiên bản đề; không tin điểm hoặc cờ đúng/sai do trình duyệt gửi. Tiến trình xác minh có thể tiếp tục khi gửi lại; không phải nộp một bài mới. Nếu lỗi mạng hoặc đề thay đổi, bài đã lưu vẫn còn và giao diện báo điểm chờ xác minh.
 
 Chỉ khi tiến trình hoàn tất, điểm được quy về thang 10 và ghi nhận bằng giao dịch cùng sổ điểm. Mỗi bài chỉ giữ điểm cao nhất. Bài có phần tự luận chờ chấm không tự cấp điểm. Biểu điểm trên hai chữ số thập phân sẽ chờ đối soát, không tự cộng một số điểm gần đúng. Đề có sẵn trong ứng dụng nhưng chưa có bản công bố trên Firestore cần được giáo viên đối soát bằng đề gốc.
 
@@ -22,6 +22,6 @@ Bài cũ không còn đề gốc được báo riêng, chưa tự cấp thêm đ
 
 ## Hạn mức
 
-Hai listener dùng chung cho hồ sơ/cửa hàng: ví huy hiệu và sổ điểm, không đọc lại toàn bộ lịch sử khi học sinh mở cửa hàng. Kiểm tra đáp án dùng khoảng `ceil(số câu/5)` giao dịch tiến trình, cộng giao dịch khởi tạo và ghi kết quả; mỗi giao dịch đọc một tiến trình, các quy tắc đọc đề và bài đã lưu. Cơ chế này tiết kiệm hạ tầng máy chủ nhưng vẫn tiêu thụ lượt đọc/ghi Firestore và chịu hạn mức Spark. Không có cam kết sử dụng miễn phí vô hạn.
+Hai listener dùng chung cho hồ sơ/cửa hàng: ví huy hiệu và sổ điểm, không đọc lại toàn bộ lịch sử khi học sinh mở cửa hàng. Kiểm tra đáp án dùng một giao dịch tiến trình cho mỗi câu, cộng giao dịch khởi tạo và ghi kết quả; mỗi giao dịch đọc một tiến trình, các quy tắc đọc đề và bài đã lưu. Cơ chế này tiết kiệm hạ tầng máy chủ nhưng vẫn tiêu thụ lượt đọc/ghi Firestore và chịu hạn mức Spark. Không có cam kết sử dụng miễn phí vô hạn.
 
 Kiểm tra phát hành gồm build, chính sách điểm/avatar, các chức năng cũ, trình duyệt 1280/390px với dịch vụ mô phỏng và Firestore Emulator cho toàn bộ luồng xác minh/đổi huy hiệu. Trạng thái triển khai được ghi sau khi CI hoàn tất.
