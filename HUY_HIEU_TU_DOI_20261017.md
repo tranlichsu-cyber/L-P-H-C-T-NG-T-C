@@ -27,3 +27,7 @@ Hai listener dùng chung cho hồ sơ/cửa hàng: ví huy hiệu và sổ đi�
 Kiểm tra phát hành gồm build, chính sách điểm/avatar, các chức năng cũ, trình duyệt 1280/390px với dịch vụ mô phỏng và Firestore Emulator cho toàn bộ luồng xác minh/đổi huy hiệu. Trạng thái triển khai được ghi sau khi CI hoàn tất.
 
 Kiểm tra bảo mật trước phát hành: workflow [39045125624](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/actions/runs/39045125624) đạt, gồm đề 200 câu, dịch vụ ứng dụng thật chạy trên Emulator, sửa điểm giả, nhận trùng, giữ avatar đã đổi và thu hồi mã. CI phát hành chạy thêm đối soát điểm cũ và kết thúc phòng lặp lại trước khi triển khai.
+
+## Đã phát hành
+
+Bản Spark-only `fe5f8ca` đã triển khai thành công (workflow 39045807830). Bản hoàn thiện `ede7c41` đã triển khai thành công trong [workflow 39046164043](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/actions/runs/39046164043), gồm hiển thị điểm ngay ở dòng cửa hàng và làm tròn tổng điểm thập phân đúng mốc 20. Build, toàn bộ kiểm tra hiện có, Firestore Emulator (bao gồm dịch vụ thật, đổi phiên bản đề, nguồn điểm phòng, đối soát cũ lặp lại và ngưỡng 6,10 + 9,95 + 3,95) đều đạt trước phát hành. Giao diện mô phỏng đã kiểm tra ở 1280/390px. Không nâng gói thanh toán, không dùng Functions, không tạo chỉ mục tổng hợp mới.
