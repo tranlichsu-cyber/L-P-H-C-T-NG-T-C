@@ -1,33 +1,4 @@
 {
-  "indexes": [
-    {
-      "collectionGroup": "selfPracticeWork",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "classId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "studentId",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "selfPracticeQuizzes",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "published",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "id",
-          "order": "ASCENDING"
-        }
-      ]
-    }
-  ],
+  "indexes": [],
   "fieldOverrides": []
 }

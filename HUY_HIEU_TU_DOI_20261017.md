@@ -1,6 +1,6 @@
 # Tự đổi huy hiệu trên gói Firebase Spark
 
-Không dùng Cloud Functions hoặc API bên ngoài. Chỉ triển khai Hosting và Firestore rules/indexes; không nâng gói thanh toán.
+Không dùng Cloud Functions hoặc API bên ngoài. Chỉ triển khai Hosting và Firestore rules; không nâng gói thanh toán.
 
 Học sinh xem điểm trong Huy hiệu & cửa hàng avatar, tự đổi 20 điểm = 1 huy hiệu, rồi mua avatar giá riêng 3–8 huy hiệu. Điểm học tập không bị trừ. Huy hiệu đã nhận và avatar đang sở hữu được giữ nguyên.
 

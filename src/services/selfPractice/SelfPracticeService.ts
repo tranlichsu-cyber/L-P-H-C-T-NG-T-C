@@ -13,7 +13,7 @@ export class SelfPracticeService{
  static async ensureRewardBanks(){
   const uid=auth?.currentUser?.uid;if(!isFirebaseConfigured||!db||!uid||auth?.currentUser?.isAnonymous)return;
   const pending=bankSetup.get(uid);if(pending)return pending;
-  const operation=(async()=>{const firestore=db!;for(let offset=0;offset<curatedTraditionQuizzes.length;offset+=30){const items=curatedTraditionQuizzes.slice(offset,offset+30),existing=await getDocs(query(collection(firestore,'selfPracticeQuizzes'),where('published','==',true),where('id','in',items.map(q=>q.id))));const ids=new Set(existing.docs.map(d=>d.id));for(const q of items.filter(q=>!ids.has(q.id)))await setDoc(doc(firestore,'selfPracticeQuizzes',q.id),{id:q.id,teacherId:uid,title:q.title,grade:q.grade,subject:'Giáo dục địa phương',questions:q.questions,published:true,updatedAt:'2026-10-13'});}listCache.clear();})();
+  const operation=(async()=>{const firestore=db!;for(const q of curatedTraditionQuizzes){const ref=doc(firestore,'selfPracticeQuizzes',q.id),existing=await getDoc(ref);if(!existing.exists())await setDoc(ref,{id:q.id,teacherId:uid,title:q.title,grade:q.grade,subject:'Giáo dục địa phương',questions:q.questions,published:true,updatedAt:'2026-10-13'});}listCache.clear();})();
   bankSetup.set(uid,operation);try{await operation;}catch(error){bankSetup.delete(uid);throw error;}
  }
 
