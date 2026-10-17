@@ -9,3 +9,7 @@ VIEW cập nhật báo cáo, không cấp huy hiệu. CLAIM dùng giao dịch v�
 Triển khai cần Cloud Functions thế hệ 2 (Node 22), quyền triển khai Functions và gói Firebase hỗ trợ chức năng này. Không tự kích hoạt thanh toán. CI triển khai máy chủ trước frontend và rules; lỗi máy chủ dừng việc phát hành frontend. Cài `npm ci --prefix functions`, chạy `node scripts/build-reward-functions.mjs`, `node scripts/check-automatic-rewards.mjs` trước triển khai. Mã tạo trong functions/lib được bỏ qua Git.
 
 Kiểm tra: build TypeScript/Vite, chính sách quy đổi/avatar, chấm lại và kiểm tra danh tính máy chủ, trình duyệt 1280/390px với dịch vụ mô phỏng, và bộ kiểm tra Firestore trong CI. Kiểm tra trình duyệt mô phỏng không chứng minh endpoint production hoạt động; trạng thái phát hành được báo riêng.
+
+## Trạng thái phát hành
+
+Commit chức năng `0a8e6d4`. CI [39042908762](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/actions/runs/39042908762) đã qua cài đặt, lint, build, các kiểm tra chức năng và Firestore Emulator. Bước triển khai Functions bị Firebase từ chối: dự án phải dùng Blaze để bật Artifact Registry và các API bắt buộc. Hosting và Firestore rules/indexes chưa triển khai, website vẫn dùng bản trước. Chưa nâng gói hay liên kết thanh toán. Sau khi chủ dự án cấu hình gói phù hợp, chạy lại workflow Deploy PRODUCTION; có thể cần cấp quyền triển khai Functions cho tài khoản dịch vụ hiện có nếu Firebase báo thiếu quyền ở bước kế tiếp.
