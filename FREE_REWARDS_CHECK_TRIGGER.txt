@@ -7,3 +7,5 @@ Bound each proof transaction to two questions to respect Firestore evaluation li
 Verify one-question checkpoints and reduce repeated ownership/option evaluation.
 
 Inspect emulator checkpoints and numeric comparisons without changing production permissions.
+
+Make rounding explicit with math.floor before integer conversion.

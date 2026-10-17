@@ -139,7 +139,7 @@ service cloud.firestore {
       }
       function rewardUnits(q) {
         let value=q.get('points',1);
-        return int((value is number && value>=0 ? value : 1)*100+0.5);
+        return int(math.floor((value is number && value>=0 ? value : 1)*100+0.5));
       }
       function rewardEarn(qs, answers, index, end) {
         return index<end && qs[index].get('reviewMode','AUTO')!='TEACHER'
@@ -204,7 +204,7 @@ service cloud.firestore {
             let d=request.resource.data;
             let attempt=get(/databases/$(database)/documents/classes/$(classId)/rewardAttempts/$(d.attemptId)).data;
             let quiz=get(/databases/$(database)/documents/selfPracticeQuizzes/$(quizId)).data;
-            let expected=attempt.pendingUnits>0 || attempt.maxUnits==0 ? 0 : int(attempt.earnedUnits * 1000.0 / attempt.maxUnits + 0.5) / 100.0;
+            let expected=attempt.pendingUnits>0 || attempt.maxUnits==0 ? 0 : int(math.floor(attempt.earnedUnits * 1000.0 / attempt.maxUnits + 0.5)) / 100.0;
             let previous=resource==null?0:resource.data.points;
             let pointPath=/databases/$(database)/documents/classes/$(classId)/rewardPoints/$(studentId);
             return ownsRewardWallet(classId,studentId) && d.keys().hasOnly(['points','attemptId','updatedAt'])
