@@ -27,7 +27,7 @@ export interface PracticeResult {
   totalCount: number;
   earnedPoints: number;
   maxPoints: number;
-  breakdown: { questionId: string; content: string; answer: string; correctAnswer: string; explanation: string; isCorrect: boolean; earnedPoints: number; maxPoints: number; pendingReview?: boolean }[];
+  breakdown: { questionId: string; content: string; answer: string; originalAnswer?:string; correctAnswer: string; explanation: string; isCorrect: boolean; earnedPoints: number; maxPoints: number; pendingReview?: boolean }[];
 }
 
 export interface PracticeAssignment {

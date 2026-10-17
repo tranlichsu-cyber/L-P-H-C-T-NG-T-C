@@ -125,18 +125,7 @@ service cloud.firestore {
       allow create: if isTeacher();
       allow update, delete: if canManageClass(classId);
 
-      // Spark-compatible proof: each immutable answer are checked against the public question bank.
-      function rewardNormalize(value, q) {
-        let trimmed = q.get('trimWhitespace',true) ? value.replace('^\\s+|\\s+$','') : value;
-        let text = q.get('caseInsensitive',true) ? trimmed.lower() : trimmed;
-        let compact = text.replace('[\\s\u00a0\u202f]','');
-        return q.type in ['SHORT_ANSWER','FILL_BLANK'] && compact.matches('[+-]?[0-9]+([.,][0-9]+)?') ? compact.replace(',','.') : text;
-      }
-      function rewardOption(value,q) {
-        let letter=value.replace('^\\s+|\\s+$','').upper();
-        let index=letter=='A'?0:letter=='B'?1:letter=='C'?2:letter=='D'?3:-1;
-        return q.type=='MULTIPLE_CHOICE' && index>=0 && q.get('options',[]).size()>index ? q.options[index] : value;
-      }
+      // Spark-compatible proof: each set of five immutable answers is checked against the public question bank.
       function rewardUnits(q) {
         let value=q.get('points',1);
         return int(math.floor((value is number && value>=0 ? value : 1)*100+0.5));
@@ -144,8 +133,7 @@ service cloud.firestore {
       function rewardEarn(qs, answers, index, end) {
         return index<end && qs[index].get('reviewMode','AUTO')!='TEACHER'
           && answers[index].questionId==qs[index].id && answers[index].answer is string
-          && answers[index].answer.replace('^\\s+|\\s+$','')!=''
-          && rewardNormalize(qs[index].type=='MULTIPLE_CHOICE'?rewardOption(answers[index].answer,qs[index]):answers[index].answer,qs[index])==rewardNormalize(qs[index].type=='MULTIPLE_CHOICE'?rewardOption(qs[index].correctAnswer,qs[index]):qs[index].correctAnswer,qs[index]) ? rewardUnits(qs[index]) : 0;
+          && answers[index].answer!='' && answers[index].answer==qs[index].correctAnswer ? rewardUnits(qs[index]) : 0;
       }
       function rewardMax(qs,index,end) { return index<end ? rewardUnits(qs[index]) : 0; }
       function rewardPending(qs,index,end) { return index<end && qs[index].get('reviewMode','AUTO')=='TEACHER' ? rewardUnits(qs[index]) : 0; }
@@ -167,11 +155,11 @@ service cloud.firestore {
           let qs=get(/databases/$(database)/documents/selfPracticeQuizzes/$(d.quizId)).data.questions;
           let answers=get(/databases/$(database)/documents/selfPracticeWork/$(attemptId)).data.result.breakdown;
           let start=old.cursor;
-          let end=start+1;
+          let end=start+5<qs.size()?start+5:qs.size();
           return d.diff(old).affectedKeys().hasOnly(['cursor','earnedUnits','maxUnits','pendingUnits']) && start<qs.size() && d.cursor==end
-            && d.earnedUnits==old.earnedUnits+rewardEarn(qs,answers,start,end)
-            && d.maxUnits==old.maxUnits+rewardMax(qs,start,end)
-            && d.pendingUnits==old.pendingUnits+rewardPending(qs,start,end);
+            && d.earnedUnits==old.earnedUnits+rewardEarn(qs,answers,start,end)+rewardEarn(qs,answers,start+1,end)+rewardEarn(qs,answers,start+2,end)+rewardEarn(qs,answers,start+3,end)+rewardEarn(qs,answers,start+4,end)
+            && d.maxUnits==old.maxUnits+rewardMax(qs,start,end)+rewardMax(qs,start+1,end)+rewardMax(qs,start+2,end)+rewardMax(qs,start+3,end)+rewardMax(qs,start+4,end)
+            && d.pendingUnits==old.pendingUnits+rewardPending(qs,start,end)+rewardPending(qs,start+1,end)+rewardPending(qs,start+2,end)+rewardPending(qs,start+3,end)+rewardPending(qs,start+4,end);
         }
         allow get: if canManageClass(classId) || (isAuthenticated() && (resource==null || ownsRewardWallet(classId,resource.data.studentId)));
         allow list,delete: if false;

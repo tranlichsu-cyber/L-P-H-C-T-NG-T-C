@@ -6,6 +6,7 @@ const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.Scri
 const moduleUrl=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
 const grading=moduleUrl(compile(await fs.readFile('src/services/practice/grading.ts','utf8')));
 const {gradePractice}=await import(grading);
+const rewardPolicy=moduleUrl(compile(await fs.readFile('src/services/rewards/freePoints.ts','utf8')));
 const corrections=JSON.parse(await fs.readFile('data-migrations/curriculum-20261015.json','utf8'));
 for(const quiz of corrections.quizzes)for(const change of quiz.questions){
  const q={...change.before,...change.changes};
@@ -22,7 +23,8 @@ for(const quiz of corrections.quizzes)for(const change of quiz.questions){
 const source=compile(await fs.readFile('src/services/selfPractice/studentAccess.ts','utf8'))
  .replace(/^import .* from 'firebase\/[^']+';\n/gm,'')
  .replace(/^import .* from '\.\.\/firebase\/firebase';\n/m,"const auth=null,db=null,isFirebaseConfigured=false;\n")
- .replace("'../practice/grading'",JSON.stringify(grading));
+ .replace("'../practice/grading'",JSON.stringify(grading))
+ .replace("'../rewards/freePoints'",JSON.stringify(rewardPolicy));
 const {StudentAccessService:S,normalizeAccessCode}=await import(moduleUrl(source));
 const storage=new Map();globalThis.localStorage={getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)};
 try{
@@ -34,7 +36,7 @@ try{
  const student=await S.enter(first[0].code.toLowerCase());assert.equal(student.studentId,'s1');
  const quiz={id:'quiz',title:'Toán',subject:'Toán',questions:[{id:'q1',type:'MULTIPLE_CHOICE',content:'2 + 3?',options:['3','4','5','6'],correctAnswer:'C',points:5}]};
  await S.submit(student,quiz,{answers:{q1:'5'}},'attempt1');await S.submit(student,quiz,{answers:{q1:'5'}},'attempt1');
- let works=await S.listWork();assert.equal(works.length,1);assert.equal(works[0].studentId,'s1');assert.equal(works[0].result.earnedPoints,5);assert.equal(works[0].result.breakdown[0].answer,'5');
+ let works=await S.listWork();assert.equal(works.length,1);assert.equal(works[0].studentId,'s1');assert.equal(works[0].result.earnedPoints,5);assert.equal(works[0].result.breakdown[0].answer,'C');assert.equal(works[0].result.breakdown[0].originalAnswer,'5');
  await S.submit(student,quiz,{answers:{q1:'4'}},'attempt2');works=await S.listWork();assert.equal(works.length,2);assert.equal(works.find(w=>w.id==='attempt2').result.correctCount,0);
  await S.submit(student,quiz,{outline:[' Mở ','Thân','Kết'],essay:' Bài của em '},'writing');const writing=(await S.listWork()).find(w=>w.id==='writing');assert.equal(writing.kind,'WRITING');assert.equal(writing.essay,'Bài của em');assert.deepEqual(writing.outline,['Mở','Thân','Kết']);
  await S.submit(student,{...quiz,id:'writing-grade4-week-13',title:'Tuần 13 – Đơn xin tham gia câu lạc bộ',subject:'Tập làm văn',questions:[]},{outline:['','',''],essay:' Bài viết trực tiếp '},'direct-writing');const direct=(await S.listWork()).find(w=>w.id==='direct-writing');assert.equal(direct.kind,'WRITING');assert.equal(direct.essay,'Bài viết trực tiếp');assert.deepEqual(direct.outline,['','','']);assert.equal(direct.result,undefined);

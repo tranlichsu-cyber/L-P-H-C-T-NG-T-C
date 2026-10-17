@@ -11,3 +11,7 @@ Inspect emulator checkpoints and numeric comparisons without changing production
 Make rounding explicit with math.floor before integer conversion.
 
 Capture only emulator comparison values and error headers for normalization diagnosis.
+
+Preserve original Vietnamese responses alongside canonical equivalents for exact Rules comparison.
+
+Use exact canonical answers, preserve original responses, and check bounded five-question proofs without Unicode string transforms.

@@ -4,8 +4,7 @@ const {doc,collection,getDocs,setDoc,getDoc,updateDoc,writeBatch,runTransaction}
 const fs=require('node:fs'),ts=require('typescript');
 const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
 (async()=>{const {gradePractice}=await load(fs.readFileSync('src/services/practice/grading.ts','utf8')),policy=await load(fs.readFileSync('src/services/rewards/freePoints.ts','utf8'));
-let rules=fs.readFileSync('firestore.rules','utf8');
-if(process.env.REWARD_RULE_DEBUG){for(const key of ['earnedUnits','maxUnits','pendingUnits']){rules=rules.replace('d.'+key+'==old.'+key+'+', 'debug(d.'+key+')==debug(old.'+key+'+');const name=key==='earnedUnits'?'rewardEarn(qs,answers,start,end)':key==='maxUnits'?'rewardMax(qs,start,end)':'rewardPending(qs,start,end)';rules=rules.replace(name+'\n',name+')\n').replace(name+';',name+');');}rules=rules.replace('validAttempt() && step()','debug(validAttempt()) && debug(step())');rules=rules.replace('return q.type in', 'return debug(q.type) in').replace(' : text;', ' : debug(text);');}
+const rules=fs.readFileSync('firestore.rules','utf8');
 const env=await initializeTestEnvironment({projectId:'demo-self-practice',firestore:{rules}});await env.clearFirestore();
 try{
 const teacher=env.authenticatedContext('t',{firebase:{sign_in_provider:'password'}}).firestore(),student=env.authenticatedContext('u',{firebase:{sign_in_provider:'anonymous'}}).firestore(),other=env.authenticatedContext('v',{firebase:{sign_in_provider:'anonymous'}}).firestore();
@@ -21,12 +20,12 @@ const bank=[{id:'q0',type:'MULTIPLE_CHOICE',options:['Một','Hai','Ba','Bốn']
 const answers={q0:' hai ',q1:'1.5',q2:'ĐÚNG',q3:'1 000',q4:'a b c',q5:' THÁI NGUYÊN ',q6:'học'};
 async function prepare(quizId,questions){await assertSucceeds(setDoc(doc(teacher,'selfPracticeQuizzes',quizId),{id:quizId,teacherId:'t',title:'Đề',grade:'4',subject:'Toán',questions,published:true,updatedAt:'v1'}));}
 async function attempt(id,quizId,questions,input=answers,{forged=false}={}){
- const grade=gradePractice(questions,input),work={id,...access,kind:'QUIZ',quizId,quizTitle:'Đề',subject:'Toán',submittedAt:'now',result:forged?{...grade,earnedPoints:99999,breakdown:grade.breakdown.map(q=>({...q,earnedPoints:99999,isCorrect:true}))}:grade,accessCode:code,authUid:'u',rewardVersion:2};delete work.code;delete work.grade;
+ const grade=policy.prepareRewardResult(questions,gradePractice(questions,input)),work={id,...access,kind:'QUIZ',quizId,quizTitle:'Đề',subject:'Toán',submittedAt:'now',result:forged?{...grade,earnedPoints:99999,breakdown:grade.breakdown.map(q=>({...q,earnedPoints:99999,isCorrect:true}))}:grade,accessCode:code,authUid:'u',rewardVersion:2};delete work.code;delete work.grade;
  await assertSucceeds(setDoc(doc(student,'selfPracticeWork',id),work));
  const ref=doc(student,'classes','c','rewardAttempts',id);let state={studentId:'s',quizId,workId:id,version:'v1',cursor:0,earnedUnits:0,maxUnits:0,pendingUnits:0};
  await assertFails(setDoc(ref,{...state,cursor:5,earnedUnits:1000}));await assertSucceeds(setDoc(ref,state));
  const first=policy.advanceAttempt(state,questions,grade);await assertFails(setDoc(ref,{...first,earnedUnits:first.earnedUnits+1}));await assertFails(setDoc(ref,{...first,cursor:first.cursor+1}));
- while(state.cursor<questions.length){state=policy.advanceAttempt(state,questions,grade);console.log('Checkpoint',id,JSON.stringify(state));await assertSucceeds(setDoc(ref,state));}
+ while(state.cursor<questions.length){state=policy.advanceAttempt(state,questions,grade);if(state.cursor===questions.length)console.log('Verified',id,state.cursor,'questions');await assertSucceeds(setDoc(ref,state));}
  await assertFails(updateDoc(ref,{workId:'other'}));await assertFails(getDoc(doc(other,'classes','c','rewardAttempts',id)));
  return {state,points:policy.attemptPoints(state),ref};
 }
@@ -49,7 +48,7 @@ const walletPolicy=await load(fs.readFileSync('src/services/rewards/content.ts',
 globalThis.__freeRewardFixture={doc,collection,getDoc,getDocs,setDoc,runTransaction,auth:{currentUser:{uid:'u'}},db:student,gradePractice,SelfPracticeService:{list:async()=>[]},curatedTraditionQuizzes:[],bindRewardIdentity:async i=>{await setDoc(doc(student,'rewardAccess','u'),{classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||''});},...policy,...walletPolicy};
 const serviceSource=ts.transpileModule(fs.readFileSync('src/services/rewards/FreeRewardService.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/^import .*;\n/gm,'');
 const service=await import('data:text/javascript;base64,'+Buffer.from('const {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
-await prepare('actual-service',bank);const actualGrade=gradePractice(bank,answers);
+await prepare('actual-service',bank);const actualGrade=policy.prepareRewardResult(bank,gradePractice(bank,answers));
 await assertSucceeds(setDoc(doc(student,'selfPracticeWork','service-work'),{id:'service-work',teacherId:'t',classId:'c',className:'4A',studentId:'s',studentName:'An',quizId:'actual-service',quizTitle:'Đề',subject:'Toán',submittedAt:'now',kind:'QUIZ',result:actualGrade,rewardVersion:2,accessCode:code,authUid:'u'}));
 const identity={classId:'c',studentId:'s',accessCode:code};
 await service.FreeRewardService.refresh(identity,'VIEW');await service.FreeRewardService.recordPractice(identity,'service-work');await service.FreeRewardService.recordPractice(identity,'service-work');
