@@ -129,7 +129,7 @@ service cloud.firestore {
           return id == 'cat' ? 3 : id == 'bunny' ? 4 : id == 'panda' ? 5 : id == 'robot' ? 6 : id == 'fox' ? 7 : id == 'astro' ? 8 : 0;
         }
         function validWallet(d) {
-          return d.keys().hasOnly(['classId','studentId','studentName','teacherId','totalPoints','earnedBadges','spentBadges','ownedAvatars','equippedAvatar','updatedAt'])
+          return d.keys().hasOnly(['classId','studentId','studentName','teacherId','totalPoints','earnedBadges','spentBadges','ownedAvatars','equippedAvatar','updatedAt','currentPoints','livePoints','practicePoints','checkedAt','lastClaimedAt','unavailableAttempts','pendingAttempts'])
             && d.classId == classId && d.studentId == studentId && d.studentName is string && d.teacherId is string
             && d.totalPoints is number && d.totalPoints >= 0 && d.totalPoints <= 1000000000
             && d.earnedBadges is int && d.earnedBadges >= 0 && d.earnedBadges * 20 <= d.totalPoints && d.totalPoints < (d.earnedBadges + 1) * 20

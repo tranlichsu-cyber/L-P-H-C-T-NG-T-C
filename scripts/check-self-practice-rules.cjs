@@ -201,6 +201,9 @@ try{
  await assertSucceeds(getDoc(walletPupil));await assertFails(getDoc(doc(pupil2,'classes','class1','rewardWallets','s1')));
  await assertFails(getDocs(collection(pupil,'classes','class1','rewardWallets')));await assertSucceeds(getDocs(collection(teacher,'classes','class1','rewardWallets')));
  await assertFails(updateDoc(walletPupil,{totalPoints:2000,earnedBadges:100}));
+ await assertFails(updateDoc(walletPupil,{currentPoints:99999,checkedAt:new Date().toISOString()}));
+ await env.withSecurityRulesDisabled(async context=>{await updateDoc(doc(context.firestore(),'classes','class1','rewardWallets','s1'),{currentPoints:200,livePoints:180,practicePoints:20,checkedAt:'2026-10-17T00:00:00Z'});});
+ Object.assign(wallet,{currentPoints:200,livePoints:180,practicePoints:20,checkedAt:'2026-10-17T00:00:00Z'});
  const catWallet={...wallet,spentBadges:3,ownedAvatars:['starter','cat'],equippedAvatar:'cat'};
  await assertFails(setDoc(walletPupil,{...catWallet,spentBadges:0}));await assertSucceeds(setDoc(walletPupil,catWallet));
  await assertFails(setDoc(walletPupil,{...catWallet,spentBadges:2}));
