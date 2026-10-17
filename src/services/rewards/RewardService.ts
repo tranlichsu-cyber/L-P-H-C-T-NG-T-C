@@ -4,6 +4,7 @@ import {isFirebaseActive} from '../realtime/realtimeServiceSwitch';
 import {eventBus} from '../realtime/broadcastChannel';
 import {getRoomById} from '../realtime/mockStorage';
 import {StudentAccessService} from '../selfPractice/studentAccess';
+import {roundPoints} from '../practice/grading';
 import {bindRewardIdentity} from './rewardBinding';
 import {FreeRewardService} from './FreeRewardService';
 import {createSharedSubscriptions} from '../data/readEfficiency';
@@ -30,7 +31,7 @@ export class RewardService{
    let active=true,stop=()=>{};
    void (async()=>{if(isFirebaseActive&&db){await bindRewardIdentity(i,()=>active);
      if(active){let wallet:RewardWallet|null=null,points:Record<string,unknown>|null=null,walletReady=false,pointsReady=false;
-     const send=()=>{if(walletReady&&pointsReady)emit(wallet?{...wallet,currentPoints:Math.max(wallet.totalPoints,Number(points?.currentPoints)||0),livePoints:Number(points?.livePoints)||0,practicePoints:Number(points?.practicePoints)||0,legacyImported:points?.legacyImported===true}:null);};
+     const send=()=>{if(walletReady&&pointsReady)emit(wallet?{...wallet,currentPoints:Math.max(wallet.totalPoints,roundPoints(Number(points?.currentPoints)||0)),livePoints:Number(points?.livePoints)||0,practicePoints:Number(points?.practicePoints)||0,legacyImported:points?.legacyImported===true}:null);};
      const a=onSnapshot(doc(db,'classes',i.classId,'rewardWallets',i.studentId),snap=>{wallet=snap.exists()?snap.data() as RewardWallet:null;walletReady=true;send();},fail);
      const b=onSnapshot(doc(db,'classes',i.classId,'rewardPoints',i.studentId),snap=>{points=snap.exists()?snap.data():null;pointsReady=true;send();},fail);stop=()=>{a();b();};}
     }else{await mockAccess(i);if(!active)return;const send=()=>emit(read(i)||null);send();stop=eventBus.subscribe(e=>{if(e.roomId==='rewards:'+i.classId)send();});}

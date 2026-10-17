@@ -173,7 +173,7 @@ service cloud.firestore {
           return d.keys().hasOnly(['currentPoints','livePoints','practicePoints','legacyImported','updatedAt','sourceId'])
             && d.currentPoints is number && d.currentPoints>=0 && d.currentPoints<=1000000000
             && d.livePoints is number && d.livePoints>=0 && d.practicePoints is number && d.practicePoints>=0
-            && d.currentPoints==d.livePoints+d.practicePoints && d.legacyImported is bool && d.updatedAt is string && d.sourceId is string;
+            && d.currentPoints==math.floor((d.livePoints+d.practicePoints)*100+0.5) / 100.0 && d.legacyImported is bool && d.updatedAt is string && d.sourceId is string;
         }
         function practiceIncrement() {
           let d=request.resource.data;
@@ -182,7 +182,7 @@ service cloud.firestore {
           let before=exists(path)?get(path).data.points:0;
           let after=getAfter(path).data.points;
           return d.diff(old).affectedKeys().hasOnly(['currentPoints','practicePoints','updatedAt','sourceId'])
-            && after>before && d.practicePoints==old.practicePoints+(after-before);
+            && after>before && d.practicePoints==math.floor((old.practicePoints+(after-before))*100+0.5) / 100.0;
         }
         allow get: if canManageClass(classId) || ownsRewardWallet(classId,studentId);
         allow list: if canManageClass(classId);
@@ -201,7 +201,7 @@ service cloud.firestore {
               && attempt.studentId==studentId && attempt.quizId==quizId && attempt.cursor==quiz.questions.size() && attempt.version==quiz.updatedAt
               && d.points==expected && d.points>previous && d.points<=10 && d.updatedAt is string
               && getAfter(pointPath).data.sourceId==quizId
-              && getAfter(pointPath).data.practicePoints==get(pointPath).data.practicePoints+(d.points-previous);
+              && getAfter(pointPath).data.practicePoints==math.floor((get(pointPath).data.practicePoints+(d.points-previous))*100+0.5) / 100.0;
           }
           allow get: if canManageClass(classId) || ownsRewardWallet(classId,studentId);
           allow list: if canManageClass(classId);
@@ -248,7 +248,7 @@ service cloud.firestore {
         function studentClaim() {
           let d=request.resource.data;
           let pointPath=/databases/$(database)/documents/classes/$(classId)/rewardPoints/$(studentId);
-          let points=exists(pointPath)?get(pointPath).data.currentPoints:0;
+          let points=exists(pointPath)?math.floor(get(pointPath).data.currentPoints*100+0.5) / 100.0:0;
           let old=resource==null?0:resource.data.totalPoints;
           return ownsRewardWallet(classId,studentId) && validWallet(d)
             && d.teacherId==get(/databases/$(database)/documents/classes/$(classId)).data.teacherId

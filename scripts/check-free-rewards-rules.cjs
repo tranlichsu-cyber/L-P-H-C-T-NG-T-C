@@ -3,7 +3,7 @@ const req=require('node:module').createRequire(require.resolve('@firebase/rules-
 const {doc,collection,getDocs,setDoc,getDoc,deleteDoc,updateDoc,writeBatch,runTransaction}=req('firebase/firestore');
 const fs=require('node:fs'),ts=require('typescript');
 const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
-(async()=>{const {gradePractice}=await load(fs.readFileSync('src/services/practice/grading.ts','utf8')),policy=await load(fs.readFileSync('src/services/rewards/freePoints.ts','utf8'));
+(async()=>{const {gradePractice,roundPoints}=await load(fs.readFileSync('src/services/practice/grading.ts','utf8')),policy=await load(fs.readFileSync('src/services/rewards/freePoints.ts','utf8'));
 const rules=fs.readFileSync('firestore.rules','utf8');
 const env=await initializeTestEnvironment({projectId:'demo-self-practice',firestore:{rules}});await env.clearFirestore();
 try{
@@ -45,9 +45,9 @@ await assertSucceeds(deleteDoc(doc(teacher,'selfPracticeAccess',code)));await as
 // Exercise the actual application service against the emulator, not just matching test transactions.
 await assertSucceeds(setDoc(doc(teacher,'selfPracticeAccess',code),access));
 const walletPolicy=await load(fs.readFileSync('src/services/rewards/content.ts','utf8'));
-globalThis.__freeRewardFixture={doc,collection,getDoc,getDocs,setDoc,runTransaction,auth:{currentUser:{uid:'u'}},db:student,gradePractice,SelfPracticeService:{list:async()=>[]},curatedTraditionQuizzes:[],bindRewardIdentity:async i=>{await setDoc(doc(student,'rewardAccess','u'),{classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||''});},...policy,...walletPolicy};
+globalThis.__freeRewardFixture={doc,collection,getDoc,getDocs,setDoc,runTransaction,auth:{currentUser:{uid:'u'}},db:student,gradePractice,roundPoints,SelfPracticeService:{list:async()=>[]},curatedTraditionQuizzes:[],bindRewardIdentity:async i=>{await setDoc(doc(student,'rewardAccess','u'),{classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||''});},...policy,...walletPolicy};
 const serviceSource=ts.transpileModule(fs.readFileSync('src/services/rewards/FreeRewardService.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/^import .*;\n/gm,'');
-const service=await import('data:text/javascript;base64,'+Buffer.from('const {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
+const service=await import('data:text/javascript;base64,'+Buffer.from('const {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,roundPoints,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
 await prepare('actual-service',bank);const actualGrade=policy.prepareRewardResult(bank,gradePractice(bank,answers));
 await assertSucceeds(setDoc(doc(student,'selfPracticeWork','service-work'),{id:'service-work',teacherId:'t',classId:'c',className:'4A',studentId:'s',studentName:'An',quizId:'actual-service',quizTitle:'Đề',subject:'Toán',submittedAt:'now',kind:'QUIZ',result:actualGrade,rewardVersion:2,rewardQuizVersion:'v1',accessCode:code,authUid:'u'}));
 const identity={classId:'c',studentId:'s',accessCode:code};
@@ -62,7 +62,7 @@ await assertFails(setDoc(doc(student,'classes','c','rewardAttempts','stale-work'
 await require('node:assert/strict').rejects(()=>service.FreeRewardService.recordPractice(identity,'stale-work'),/Đề đã thay đổi/);
 // Legacy migration shares source keys with new work and regrades instead of trusting old claimed totals.
 globalThis.__freeRewardFixture={...globalThis.__freeRewardFixture,db:teacher,auth:{currentUser:{uid:'t'}},SelfPracticeService:{list:async()=>[{id:'legacy',questions:bank},{id:'quiz',questions:bank}]}};
-const teacherService=await import('data:text/javascript;base64,'+Buffer.from('// teacher migration\nconst {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
+const teacherService=await import('data:text/javascript;base64,'+Buffer.from('// teacher migration\nconst {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,roundPoints,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
 const room={id:'r2',classId:'c',roster:[{id:'s',name:'An'}],participants:{},scores:{s:{score:10}},scoreEvents:{}};
 await teacherService.FreeRewardService.recordRoom(room);await teacherService.FreeRewardService.recordRoom(room);
 if((await getDoc(pointRef)).data().currentPoints!==80)throw Error('Finishing a room twice must not duplicate points');
@@ -70,5 +70,11 @@ const legacyWork={classId:'c',studentId:'s',teacherId:'t',kind:'QUIZ',quizId:'le
 const records=[{roomId:'r',score:30}];let missing=await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork,{...legacyWork,quizId:'missing'}]);if(missing!==1)throw Error('Missing legacy banks must be reported');
 await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork]);await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork]);
 const migrated=(await getDoc(pointRef)).data();if(migrated.currentPoints!==90||!migrated.legacyImported)throw Error('Legacy migration must regrade, preserve room sources and remain idempotent');
+// Decimal grades must reach an exact threshold, rather than 19.999999999999996.
+for(const [id,points] of [['decimal-a',6.1],['decimal-b',9.95],['decimal-c',3.95]])await teacherService.FreeRewardService.creditSource('c','other','quiz',id,points);
+const decimalPoints=(await getDoc(doc(teacher,'classes','c','rewardPoints','other'))).data();if(decimalPoints.currentPoints!==20)throw Error('Decimal total must round to exactly 20 points');
+const otherCode='ABCDEFGH2346';await assertSucceeds(setDoc(doc(teacher,'selfPracticeAccess',otherCode),{...access,code:otherCode,studentId:'other',studentName:'Bình'}));
+await assertSucceeds(setDoc(doc(other,'rewardAccess','v'),{classId:'c',studentId:'other',roomId:'',accessCode:otherCode}));
+await assertSucceeds(setDoc(doc(other,'classes','c','rewardWallets','other'),{...wallet,studentId:'other',studentName:'Bình',totalPoints:20,earnedBadges:1}));
 console.log('PASS free reward rules: canonical answer proofs, forged score/cursor denial, weighted normalization, 200-question support, best-only retries, atomic source/ledger, self-claim thresholds, preserved avatar spend, identity and revocation.');
 }finally{await env.cleanup();}})().catch(e=>{console.error('Free rewards check failed:',e.code||'',e.message||String(e));process.exit(1)});

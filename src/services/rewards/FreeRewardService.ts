@@ -1,6 +1,6 @@
 import {collection,doc,getDoc,getDocs,runTransaction} from 'firebase/firestore';
 import {db} from '../firebase/firebase';
-import {gradePractice} from '../practice/grading';
+import {gradePractice,roundPoints} from '../practice/grading';
 import type {PracticeQuestion} from '../practice/types';
 import type {StudentWork} from '../selfPractice/studentAccess';
 import {SelfPracticeService} from '../selfPractice/SelfPracticeService';
@@ -23,7 +23,7 @@ export class FreeRewardService {
    const next=action==='CLAIM'?creditWallet(previous,identity,p.currentPoints):previous||creditWallet(undefined,identity,0);
    if(!points.exists())tx.set(pointRef,p);
    if(!previous||next.totalPoints!==previous.totalPoints||next.studentName!==previous.studentName)tx.set(walletRef,next);
-   return {...next,currentPoints:Math.max(next.totalPoints,p.currentPoints),livePoints:p.livePoints,practicePoints:p.practicePoints,legacyImported:p.legacyImported};
+   return {...next,currentPoints:Math.max(next.totalPoints,roundPoints(p.currentPoints)),livePoints:p.livePoints,practicePoints:p.practicePoints,legacyImported:p.legacyImported};
   });
  }
  static async recordPractice(i:RewardIdentity,workId:string){
@@ -44,10 +44,11 @@ export class FreeRewardService {
  }
  static async creditSource(classId:string,studentId:string,kind:'quiz'|'room',sourceId:string,points:number,attemptId='legacy'){
   if(!Number.isFinite(points)||points<0||points>1e9)throw Error('Điểm chưa hợp lệ.');
+  points=roundPoints(points);
   const firestore=db!,pointRef=doc(firestore,'classes',classId,'rewardPoints',studentId),creditRef=doc(pointRef,kind==='quiz'?'quizCredits':'roomCredits',sourceId);
   await runTransaction(firestore,async tx=>{const [pointSnap,source]=await Promise.all([tx.get(pointRef),tx.get(creditRef)]),old=source.exists()?source.data().points:0;if(points<=old)return;
    const before=pointSnap.exists()?pointSnap.data() as RewardPoints:emptyPoints(),field=kind==='quiz'?'practicePoints':'livePoints';
-   const next={...before,[field]:before[field]+(points-old),sourceId,updatedAt:new Date().toISOString()};next.currentPoints=next.livePoints+next.practicePoints;
+   const next={...before,[field]:roundPoints(before[field]+(points-old)),sourceId,updatedAt:new Date().toISOString()};next.currentPoints=roundPoints(next.livePoints+next.practicePoints);
    tx.set(pointRef,next);tx.set(creditRef,{points,attemptId,updatedAt:next.updatedAt});
   });
  }
@@ -72,7 +73,7 @@ export class FreeRewardService {
   }
   for(const record of records)await this.creditSource(classId,studentId,'room',record.roomId,Math.max(0,record.score));
   for(const [quizId,points] of best)await this.creditSource(classId,studentId,'quiz',quizId,points);
-  await runTransaction(db!,async tx=>{const ref=doc(db!,'classes',classId,'rewardPoints',studentId),snap=await tx.get(ref),old=snap.exists()?snap.data() as RewardPoints:emptyPoints();tx.set(ref,{...old,legacyImported:missing===0,updatedAt:new Date().toISOString()});});
+  await runTransaction(db!,async tx=>{const ref=doc(db!,'classes',classId,'rewardPoints',studentId),snap=await tx.get(ref),old=snap.exists()?snap.data() as RewardPoints:emptyPoints();tx.set(ref,{...old,currentPoints:roundPoints(old.livePoints+old.practicePoints),legacyImported:missing===0,updatedAt:new Date().toISOString()});});
   return missing;
  }
 }
