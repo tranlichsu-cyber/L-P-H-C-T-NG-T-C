@@ -9,3 +9,5 @@ Verify one-question checkpoints and reduce repeated ownership/option evaluation.
 Inspect emulator checkpoints and numeric comparisons without changing production permissions.
 
 Make rounding explicit with math.floor before integer conversion.
+
+Capture only emulator comparison values and error headers for normalization diagnosis.
