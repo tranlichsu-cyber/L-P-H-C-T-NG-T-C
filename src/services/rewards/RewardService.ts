@@ -1,9 +1,10 @@
 import {doc,onSnapshot,runTransaction,setDoc} from 'firebase/firestore';
-import {app,auth,db} from '../firebase/firebase';
+import {auth,db} from '../firebase/firebase';
 import {isFirebaseActive} from '../realtime/realtimeServiceSwitch';
 import {eventBus} from '../realtime/broadcastChannel';
 import {getRoomById} from '../realtime/mockStorage';
 import {StudentAccessService} from '../selfPractice/studentAccess';
+import {FreeRewardService} from './FreeRewardService';
 import {createSharedSubscriptions} from '../data/readEfficiency';
 import {creditWallet,selectAvatar,type RewardIdentity,type RewardWallet,type AvatarId} from './content';
 const shared=createSharedSubscriptions<RewardWallet|null>(),bindQueue=new Map<string,Promise<void>>();
@@ -17,7 +18,7 @@ export class RewardService{
   const cacheKey=JSON.stringify([auth?.currentUser?.uid,i,action]);
   const pending=refreshes.get(cacheKey);if(pending)return pending;
   const operation=(async()=>{
-   if(isFirebaseActive&&app){const {getFunctions,httpsCallable}=await import('firebase/functions');const call=httpsCallable<unknown,RewardWallet>(getFunctions(app,'us-central1'),'automaticRewardPoints');const result=await call({classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||'',action});return result.data;}
+   if(isFirebaseActive&&db)return FreeRewardService.refresh(i,action);
    await mockAccess(i);const previous=read(i);const identity={classId:i.classId,studentId:i.studentId,studentName:previous?.studentName||'Học sinh',teacherId:previous?.teacherId||'local'};
    const currentPoints=previous?.currentPoints??previous?.totalPoints??0;const base=previous||creditWallet(undefined,identity,0);const next={...(action==='CLAIM'?creditWallet(base,identity,currentPoints):base),currentPoints,checkedAt:new Date().toISOString()};write(i,next);return next;
   })();refreshes.set(cacheKey,operation);try{return await operation;}finally{if(refreshes.get(cacheKey)===operation)refreshes.delete(cacheKey);}
@@ -27,7 +28,10 @@ export class RewardService{
   const uid=auth?.currentUser?.uid||'local';return shared(JSON.stringify([uid,i]),(emit,fail)=>{
    let active=true,stop=()=>{};
    void (async()=>{if(isFirebaseActive&&db){if(!i.teacher){const previous=bindQueue.get(uid)||Promise.resolve();const request=previous.catch(()=>{}).then(async()=>{if(active)await setDoc(doc(db!,'rewardAccess',uid),{classId:i.classId,studentId:i.studentId,roomId:i.roomId||'',accessCode:i.accessCode||''});});bindQueue.set(uid,request);try{await request;}finally{if(bindQueue.get(uid)===request)bindQueue.delete(uid);}}
-     if(active)stop=onSnapshot(doc(db,'classes',i.classId,'rewardWallets',i.studentId),snap=>emit(snap.exists()?snap.data() as RewardWallet:null),fail);
+     if(active){let wallet:RewardWallet|null=null,points:Record<string,unknown>|null=null,walletReady=false,pointsReady=false;
+     const send=()=>{if(walletReady&&pointsReady)emit(wallet?{...wallet,currentPoints:Math.max(wallet.totalPoints,Number(points?.currentPoints)||0),livePoints:Number(points?.livePoints)||0,practicePoints:Number(points?.practicePoints)||0,legacyImported:points?.legacyImported===true}:null);};
+     const a=onSnapshot(doc(db,'classes',i.classId,'rewardWallets',i.studentId),snap=>{wallet=snap.exists()?snap.data() as RewardWallet:null;walletReady=true;send();},fail);
+     const b=onSnapshot(doc(db,'classes',i.classId,'rewardPoints',i.studentId),snap=>{points=snap.exists()?snap.data():null;pointsReady=true;send();},fail);stop=()=>{a();b();};}
     }else{await mockAccess(i);if(!active)return;const send=()=>emit(read(i)||null);send();stop=eventBus.subscribe(e=>{if(e.roomId==='rewards:'+i.classId)send();});}
    })().catch(e=>{if(active)fail(e);});return()=>{active=false;stop();};
   },next,error);

@@ -1,3 +1,4 @@
+import {FreeRewardService} from '../rewards/FreeRewardService';
 import {openGameRound,toggleGamePause} from '../realtime/gamePolicy';
 import {createSharedSubscriptions} from '../data/readEfficiency';
 import {
@@ -701,12 +702,10 @@ export class FirestoreRealtimeService {
       throw new Error('Không tìm thấy phòng học.');
     }
 
-    const rawRoomData = roomSnap.data() as MockRoomData & { createdAt?: any };
-    if (rawRoomData.status === 'FINISHED' && rawRoomData.finishedAt) {
-      return true;
-    }
+    const rawRoomData = roomSnap.data() as MockRoomData & { createdAt?: any; rewardSyncPending?:boolean };
+    if (rawRoomData.status === 'FINISHED' && rawRoomData.finishedAt && !rawRoomData.rewardSyncPending) return true;
 
-    const finishedAt = new Date().toISOString();
+    const finishedAt = rawRoomData.finishedAt || new Date().toISOString();
     const [
       rosterSnap,
       participantsSnap,
@@ -828,6 +827,8 @@ export class FirestoreRealtimeService {
     batch.set(doc(firestore, 'rooms', roomId, 'summary', 'main'), summary, { merge: true });
 
     await batch.commit();
+    try{await FreeRewardService.recordRoom(fullRoom);await updateDoc(roomRef,{rewardSyncPending:false});}
+    catch(error){await updateDoc(roomRef,{rewardSyncPending:true});console.error('Tiết đã kết thúc nhưng chưa ghi đủ điểm huy hiệu.',error);throw Error('Tiết đã kết thúc. Điểm huy hiệu chưa cập nhật đủ; thầy/cô có thể thử lại hoặc đối soát trong Lịch sử tiến bộ.');}
     return true;
   }
 

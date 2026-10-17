@@ -12,7 +12,7 @@ export interface StudentAccess {
 export interface StudentWork {
  id:string; teacherId:string; classId:string; className:string; studentId:string; studentName:string;
  quizId:string; quizTitle:string; subject:string; submittedAt:string;
- kind:'QUIZ'|'WRITING'; result?:PracticeResult; outline?:string[]; essay?:string;
+ kind:'QUIZ'|'WRITING'; rewardStatus?:'RECORDED'|'PENDING'; result?:PracticeResult; outline?:string[]; essay?:string;
 }
 const accessKey='self-practice-student-access',workKey='self-practice-student-work';
 const read=<T,>(key:string):T[]=>JSON.parse(localStorage.getItem(key)||'[]');
@@ -57,12 +57,15 @@ export class StudentAccessService {
   if(!item)throw new Error('Mã không tồn tại hoặc đã bị thu hồi. Em liên hệ giáo viên.');
   return item;
  }
- static async submit(access:StudentAccess,quiz:SelfPracticeQuiz,payload:{answers:Record<string,string>}|{outline:string[];essay:string},id:string):Promise<void>{
+ static async submit(access:StudentAccess,quiz:SelfPracticeQuiz,payload:{answers:Record<string,string>}|{outline:string[];essay:string},id:string):Promise<'RECORDED'|'PENDING'>{
   const current=await this.enter(access.code);
   if(current.studentId!==access.studentId||current.classId!==access.classId)throw new Error('Mã học sinh đã thay đổi. Em vui lòng vào lại.');
   const work:StudentWork={id,teacherId:current.teacherId,classId:current.classId,className:current.className,studentId:current.studentId,studentName:current.studentName,quizId:quiz.id,quizTitle:quiz.title,subject:quiz.subject,submittedAt:new Date().toISOString(),...('answers' in payload?{kind:'QUIZ',result:gradePractice(quiz.questions,payload.answers)}:{kind:'WRITING',outline:payload.outline.map(s=>s.trim()),essay:payload.essay.trim()})};
-  if(isFirebaseConfigured&&db)await setDoc(doc(db,'selfPracticeWork',id),{...work,accessCode:access.code,authUid:auth?.currentUser?.uid});
+  if(isFirebaseConfigured&&db){await setDoc(doc(db,'selfPracticeWork',id),{...work,rewardVersion:2,accessCode:access.code,authUid:auth?.currentUser?.uid});
+   if(work.kind==='QUIZ'){try{const {FreeRewardService}=await import('../rewards/FreeRewardService');await FreeRewardService.refresh({classId:access.classId,studentId:access.studentId,accessCode:access.code},'VIEW');await FreeRewardService.recordPractice({classId:access.classId,studentId:access.studentId,accessCode:access.code},id);}catch(error){console.warn('Bài nộp đã lưu, điểm huy hiệu chờ đối soát.',error);return 'PENDING';}}
+  }
   else {localStorage.setItem(workKey,JSON.stringify([work,...read<StudentWork>(workKey).filter(w=>w.id!==id)]));if(typeof window!=='undefined')window.dispatchEvent(new Event('self-practice-work-updated'));}
+  return 'RECORDED';
  }
  static async listWork():Promise<StudentWork[]>{
   const uid=teacherId();

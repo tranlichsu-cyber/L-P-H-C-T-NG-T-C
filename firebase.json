@@ -66,12 +66,5 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
-  },
-  "functions": {
-    "source": "functions",
-    "codebase": "automatic-rewards",
-    "predeploy": [
-      "node scripts/build-reward-functions.mjs"
-    ]
   }
 }

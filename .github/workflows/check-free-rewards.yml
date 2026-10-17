@@ -1,0 +1,31 @@
+name: Check free student reward rules
+on:
+  push:
+    branches: [main]
+    paths: [FREE_REWARDS_CHECK_TRIGGER.txt]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify free reward rules
+        run: |
+          npm install --prefix "$RUNNER_TEMP/rule-tools" --no-audit --no-fund firebase-tools@15.32.1 @firebase/rules-unit-testing@6.0.0 firebase@13.0.0
+          export NODE_PATH="$RUNNER_TEMP/rule-tools/node_modules:$GITHUB_WORKSPACE/node_modules"
+          if ! "$RUNNER_TEMP/rule-tools/node_modules/.bin/firebase" emulators:exec --only firestore --project demo-self-practice 'node scripts/check-free-rewards-rules.cjs' > "$RUNNER_TEMP/free-rules.log" 2>&1; then
+            node -e 'const fs=require("fs");console.log("::error::"+fs.readFileSync(process.argv[1],"utf8").slice(-8000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A"))' "$RUNNER_TEMP/free-rules.log"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/free-rules.log"

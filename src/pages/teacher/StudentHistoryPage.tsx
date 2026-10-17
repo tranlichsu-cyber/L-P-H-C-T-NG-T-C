@@ -88,7 +88,7 @@ export const StudentHistoryPage: React.FC = () => {
           <p className="mt-2 text-sm text-slate-600">Tự luyện cộng nguyên điểm trên thang 10; mỗi bài chỉ lấy điểm cao nhất, làm lại không cộng trùng. Bài tự luận chưa chấm chưa được cộng. Điểm buổi học theo phạm vi lịch sử đã tải (tối đa 100 buổi, không gồm buổi lưu trữ).</p>
         </>}
       </Card>
-      {classId&&studentId&&currentClass&&<TeacherRewardPanel key={classId+studentId+(currentUser?.uid||'')} classId={classId} studentId={studentId} studentName={currentStudent?.name||studentName} teacherId={currentClass.teacherId||currentUser?.uid||'mock-teacher'} totalPoints={subjectFilter!=='ALL'||isLoading||historyError||loadedHistoryKey!==historyKey||practiceScores.loading||practiceScores.error?undefined:roundPoints(records.reduce((n,r)=>n+r.score,0)+selfPracticePoints(practiceScores.works,classId,studentId))}/>}
+      {classId&&studentId&&currentClass&&<TeacherRewardPanel key={classId+studentId+(currentUser?.uid||'')} classId={classId} studentId={studentId} records={records} works={practiceScores.works} studentName={currentStudent?.name||studentName} teacherId={currentClass.teacherId||currentUser?.uid||'mock-teacher'} totalPoints={subjectFilter!=='ALL'||isLoading||historyError||loadedHistoryKey!==historyKey||practiceScores.loading||practiceScores.error?undefined:roundPoints(records.reduce((n,r)=>n+r.score,0)+selfPracticePoints(practiceScores.works,classId,studentId))}/>}
       {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 border-2 border-slate-200 bg-white">
