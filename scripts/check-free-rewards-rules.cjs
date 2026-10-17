@@ -38,7 +38,7 @@ await prepare('quiz2',bank);await attempt('a3','quiz2',bank);await credit('quiz2
 const pendingBank=[{...bank[0],reviewMode:'TEACHER'}];await prepare('manual',pendingBank);await attempt('manual-a','manual',pendingBank,{q0:'Hai'});await credit('manual','manual-a',10,false);
 const many=Array.from({length:200},(_,i)=>({id:'m'+i,type:'SHORT_ANSWER',content:'Số',correctAnswer:'1',points:1}));await prepare('large',many);await attempt('large-a','large',many,Object.fromEntries(many.map(q=>[q.id,'1'])));await credit('large','large-a',10);
 // Teacher records live points with a stable room source; no anonymous authority over room points.
-await assertFails(updateDoc(pointRef,{livePoints:100,currentPoints:130}));const p=(await getDoc(pointRef)).data();await assertSucceeds(setDoc(doc(teacher,'classes','c','rewardPoints','s'),{...p,livePoints:30,currentPoints:60}));
+await assertFails(updateDoc(pointRef,{livePoints:100,currentPoints:130}));const p=(await getDoc(pointRef)).data();await assertSucceeds(setDoc(doc(teacher,'classes','c','rewardPoints','s'),{...p,livePoints:30,currentPoints:60}));await assertSucceeds(setDoc(doc(teacher,'classes','c','rewardPoints','s','roomCredits','r'),{points:30,attemptId:'legacy',updatedAt:'now'}));
 await assertSucceeds(updateDoc(walletRef,{totalPoints:60,earnedBadges:3}));const purchased={...wallet,totalPoints:60,earnedBadges:3,spentBadges:3,ownedAvatars:['starter','cat'],equippedAvatar:'cat'};await assertSucceeds(setDoc(walletRef,purchased));await assertSucceeds(updateDoc(walletRef,{totalPoints:60,earnedBadges:3}));await assertFails(updateDoc(walletRef,{spentBadges:0}));
 // Revoked code blocks claims and new evidence, even when an attempt already exists.
 await assertSucceeds(deleteDoc(doc(teacher,'selfPracticeAccess',code)));await assertFails(updateDoc(walletRef,{totalPoints:60,earnedBadges:3}));await assertFails(getDoc(pointRef));
@@ -54,5 +54,15 @@ const identity={classId:'c',studentId:'s',accessCode:code};
 await service.FreeRewardService.refresh(identity,'VIEW');await service.FreeRewardService.recordPractice(identity,'service-work');await service.FreeRewardService.recordPractice(identity,'service-work');
 if((await getDoc(pointRef)).data().currentPoints!==70)throw Error('Actual service failed best-only resumable recording');
 const actualWallet=await service.FreeRewardService.refresh(identity,'CLAIM');if(actualWallet.totalPoints!==70||actualWallet.spentBadges!==3||actualWallet.equippedAvatar!=='cat')throw Error('Actual self-claim must preserve purchase and grades');
+// Legacy migration shares source keys with new work and regrades instead of trusting old claimed totals.
+globalThis.__freeRewardFixture={...globalThis.__freeRewardFixture,db:teacher,auth:{currentUser:{uid:'t'}},SelfPracticeService:{list:async()=>[{id:'legacy',questions:bank},{id:'quiz',questions:bank}]}};
+const teacherService=await import('data:text/javascript;base64,'+Buffer.from('// teacher migration\nconst {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
+const room={id:'r2',classId:'c',roster:[{id:'s',name:'An'}],participants:{},scores:{s:{score:10}},scoreEvents:{}};
+await teacherService.FreeRewardService.recordRoom(room);await teacherService.FreeRewardService.recordRoom(room);
+if((await getDoc(pointRef)).data().currentPoints!==80)throw Error('Finishing a room twice must not duplicate points');
+const legacyWork={classId:'c',studentId:'s',teacherId:'t',kind:'QUIZ',quizId:'legacy',result:{...actualGrade,earnedPoints:99999}};
+const records=[{roomId:'r',score:30}];let missing=await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork,{...legacyWork,quizId:'missing'}]);if(missing!==1)throw Error('Missing legacy banks must be reported');
+await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork]);await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork]);
+const migrated=(await getDoc(pointRef)).data();if(migrated.currentPoints!==90||!migrated.legacyImported)throw Error('Legacy migration must regrade, preserve room sources and remain idempotent');
 console.log('PASS free reward rules: canonical answer proofs, forged score/cursor denial, weighted normalization, 200-question support, best-only retries, atomic source/ledger, self-claim thresholds, preserved avatar spend, identity and revocation.');
 }finally{await env.cleanup();}})().catch(e=>{console.error(e);process.exit(1)});

@@ -25,3 +25,5 @@ Bài cũ không còn đề gốc được báo riêng, chưa tự cấp thêm đ
 Hai listener dùng chung cho hồ sơ/cửa hàng: ví huy hiệu và sổ điểm, không đọc lại toàn bộ lịch sử khi học sinh mở cửa hàng. Kiểm tra đáp án dùng một giao dịch tiến trình cho mỗi câu, cộng giao dịch khởi tạo và ghi kết quả; mỗi giao dịch đọc một tiến trình, các quy tắc đọc đề và bài đã lưu. Cơ chế này tiết kiệm hạ tầng máy chủ nhưng vẫn tiêu thụ lượt đọc/ghi Firestore và chịu hạn mức Spark. Không có cam kết sử dụng miễn phí vô hạn.
 
 Kiểm tra phát hành gồm build, chính sách điểm/avatar, các chức năng cũ, trình duyệt 1280/390px với dịch vụ mô phỏng và Firestore Emulator cho toàn bộ luồng xác minh/đổi huy hiệu. Trạng thái triển khai được ghi sau khi CI hoàn tất.
+
+Kiểm tra bảo mật trước phát hành: workflow [39045125624](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/actions/runs/39045125624) đạt, gồm đề 200 câu, dịch vụ ứng dụng thật chạy trên Emulator, sửa điểm giả, nhận trùng, giữ avatar đã đổi và thu hồi mã. CI phát hành chạy thêm đối soát điểm cũ và kết thúc phòng lặp lại trước khi triển khai.
