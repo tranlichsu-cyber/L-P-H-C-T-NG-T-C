@@ -96,4 +96,10 @@ jobs:
           project_id: lop-hoc-tuong-tac-a62a5
 
       - name: Deploy PRODUCTION
-        run: npx firebase-tools@15.32.1 deploy --only hosting,firestore:rules,firestore:indexes --project lop-hoc-tuong-tac-a62a5 --non-interactive
+        run: |
+          if ! npx firebase-tools@15.32.1 deploy --only hosting,firestore:rules,firestore:indexes --project lop-hoc-tuong-tac-a62a5 --non-interactive > "$RUNNER_TEMP/production-deploy.log" 2>&1; then
+            cat "$RUNNER_TEMP/production-deploy.log"
+            node -e 'const fs=require("fs");console.log("::error::"+fs.readFileSync(process.argv[1],"utf8").slice(-5000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A"))' "$RUNNER_TEMP/production-deploy.log"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/production-deploy.log"

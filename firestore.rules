@@ -146,7 +146,7 @@ service cloud.firestore {
           let quiz=get(/databases/$(database)/documents/selfPracticeQuizzes/$(d.quizId)).data;
           return isAuthenticated() && get(/databases/$(database)/documents/selfPracticeAccess/$(w.accessCode)).data.classId==classId && get(/databases/$(database)/documents/selfPracticeAccess/$(w.accessCode)).data.studentId==d.studentId && d.keys().hasOnly(['studentId','quizId','workId','version','cursor','earnedUnits','maxUnits','pendingUnits'])
             && d.workId==attemptId && w.classId==classId && w.studentId==d.studentId && w.quizId==d.quizId && w.kind=='QUIZ'
-            && w.get('rewardVersion',0)==2 && w.authUid==request.auth.uid && quiz.published==true && d.version==quiz.updatedAt
+            && w.get('rewardVersion',0)==2 && w.get('rewardQuizVersion','')==quiz.updatedAt && w.authUid==request.auth.uid && quiz.published==true && d.version==quiz.updatedAt
             && quiz.questions.size()>0 && quiz.questions.size()<=200 && w.result.breakdown.size()==quiz.questions.size()
             && d.cursor is int && d.earnedUnits is int && d.maxUnits is int && d.pendingUnits is int
             && d.earnedUnits>=0 && d.maxUnits>=d.earnedUnits && d.pendingUnits>=0;
@@ -641,7 +641,7 @@ service cloud.firestore {
         let w = request.resource.data;
         let a = get(/databases/$(database)/documents/selfPracticeAccess/$(w.accessCode)).data;
         let student = get(/databases/$(database)/documents/classes/$(a.classId)/students/$(a.studentId)).data;
-        return w.keys().hasOnly(['id','teacherId','classId','className','studentId','studentName','quizId','quizTitle','subject','submittedAt','kind','result','outline','essay','accessCode','authUid','rewardVersion'])
+        return w.keys().hasOnly(['id','teacherId','classId','className','studentId','studentName','quizId','quizTitle','subject','submittedAt','kind','result','outline','essay','accessCode','authUid','rewardVersion','rewardQuizVersion'])
           && w.id == workId && w.authUid == request.auth.uid
           && w.teacherId == a.teacherId && w.classId == a.classId
           && w.studentId == a.studentId && w.studentName == a.studentName

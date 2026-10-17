@@ -20,7 +20,7 @@ const bank=[{id:'q0',type:'MULTIPLE_CHOICE',options:['Một','Hai','Ba','Bốn']
 const answers={q0:' hai ',q1:'1.5',q2:'ĐÚNG',q3:'1 000',q4:'a b c',q5:' THÁI NGUYÊN ',q6:'học'};
 async function prepare(quizId,questions){await assertSucceeds(setDoc(doc(teacher,'selfPracticeQuizzes',quizId),{id:quizId,teacherId:'t',title:'Đề',grade:'4',subject:'Toán',questions,published:true,updatedAt:'v1'}));}
 async function attempt(id,quizId,questions,input=answers,{forged=false}={}){
- const grade=policy.prepareRewardResult(questions,gradePractice(questions,input)),work={id,...access,kind:'QUIZ',quizId,quizTitle:'Đề',subject:'Toán',submittedAt:'now',result:forged?{...grade,earnedPoints:99999,breakdown:grade.breakdown.map(q=>({...q,earnedPoints:99999,isCorrect:true}))}:grade,accessCode:code,authUid:'u',rewardVersion:2};delete work.code;delete work.grade;
+ const grade=policy.prepareRewardResult(questions,gradePractice(questions,input)),work={id,...access,kind:'QUIZ',quizId,quizTitle:'Đề',subject:'Toán',submittedAt:'now',result:forged?{...grade,earnedPoints:99999,breakdown:grade.breakdown.map(q=>({...q,earnedPoints:99999,isCorrect:true}))}:grade,accessCode:code,authUid:'u',rewardVersion:2,rewardQuizVersion:'v1'};delete work.code;delete work.grade;
  await assertSucceeds(setDoc(doc(student,'selfPracticeWork',id),work));
  const ref=doc(student,'classes','c','rewardAttempts',id);let state={studentId:'s',quizId,workId:id,version:'v1',cursor:0,earnedUnits:0,maxUnits:0,pendingUnits:0};
  await assertFails(setDoc(ref,{...state,cursor:5,earnedUnits:1000}));await assertSucceeds(setDoc(ref,state));
@@ -49,11 +49,17 @@ globalThis.__freeRewardFixture={doc,collection,getDoc,getDocs,setDoc,runTransact
 const serviceSource=ts.transpileModule(fs.readFileSync('src/services/rewards/FreeRewardService.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/^import .*;\n/gm,'');
 const service=await import('data:text/javascript;base64,'+Buffer.from('const {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
 await prepare('actual-service',bank);const actualGrade=policy.prepareRewardResult(bank,gradePractice(bank,answers));
-await assertSucceeds(setDoc(doc(student,'selfPracticeWork','service-work'),{id:'service-work',teacherId:'t',classId:'c',className:'4A',studentId:'s',studentName:'An',quizId:'actual-service',quizTitle:'Đề',subject:'Toán',submittedAt:'now',kind:'QUIZ',result:actualGrade,rewardVersion:2,accessCode:code,authUid:'u'}));
+await assertSucceeds(setDoc(doc(student,'selfPracticeWork','service-work'),{id:'service-work',teacherId:'t',classId:'c',className:'4A',studentId:'s',studentName:'An',quizId:'actual-service',quizTitle:'Đề',subject:'Toán',submittedAt:'now',kind:'QUIZ',result:actualGrade,rewardVersion:2,rewardQuizVersion:'v1',accessCode:code,authUid:'u'}));
 const identity={classId:'c',studentId:'s',accessCode:code};
 await service.FreeRewardService.refresh(identity,'VIEW');await service.FreeRewardService.recordPractice(identity,'service-work');await service.FreeRewardService.recordPractice(identity,'service-work');
 if((await getDoc(pointRef)).data().currentPoints!==70)throw Error('Actual service failed best-only resumable recording');
 const actualWallet=await service.FreeRewardService.refresh(identity,'CLAIM');if(actualWallet.totalPoints!==70||actualWallet.spentBadges!==3||actualWallet.equippedAvatar!=='cat')throw Error('Actual self-claim must preserve purchase and grades');
+// A bank edited after submission must not silently regrade the attempt under another version.
+await assertSucceeds(updateDoc(doc(teacher,'selfPracticeQuizzes','actual-service'),{updatedAt:'v2'}));
+const staleWork={...(await getDoc(doc(student,'selfPracticeWork','service-work'))).data(),id:'stale-work'};
+await assertSucceeds(setDoc(doc(student,'selfPracticeWork','stale-work'),staleWork));
+await assertFails(setDoc(doc(student,'classes','c','rewardAttempts','stale-work'),{studentId:'s',quizId:'actual-service',workId:'stale-work',version:'v2',cursor:0,earnedUnits:0,maxUnits:0,pendingUnits:0}));
+await require('node:assert/strict').rejects(()=>service.FreeRewardService.recordPractice(identity,'stale-work'),/Đề đã thay đổi/);
 // Legacy migration shares source keys with new work and regrades instead of trusting old claimed totals.
 globalThis.__freeRewardFixture={...globalThis.__freeRewardFixture,db:teacher,auth:{currentUser:{uid:'t'}},SelfPracticeService:{list:async()=>[{id:'legacy',questions:bank},{id:'quiz',questions:bank}]}};
 const teacherService=await import('data:text/javascript;base64,'+Buffer.from('// teacher migration\nconst {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet,bindRewardIdentity}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
@@ -65,4 +71,4 @@ const records=[{roomId:'r',score:30}];let missing=await teacherService.FreeRewar
 await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork]);await teacherService.FreeRewardService.importLegacy('c','s',records,[legacyWork]);
 const migrated=(await getDoc(pointRef)).data();if(migrated.currentPoints!==90||!migrated.legacyImported)throw Error('Legacy migration must regrade, preserve room sources and remain idempotent');
 console.log('PASS free reward rules: canonical answer proofs, forged score/cursor denial, weighted normalization, 200-question support, best-only retries, atomic source/ledger, self-claim thresholds, preserved avatar spend, identity and revocation.');
-}finally{await env.cleanup();}})().catch(e=>{console.error(e);process.exit(1)});
+}finally{await env.cleanup();}})().catch(e=>{console.error('Free rewards check failed:',e.code||'',e.message||String(e));process.exit(1)});

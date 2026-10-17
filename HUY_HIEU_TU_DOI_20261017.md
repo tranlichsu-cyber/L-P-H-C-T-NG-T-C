@@ -18,7 +18,7 @@ Học sinh tự bấm đổi điểm khi đủ mốc. Firestore giới hạn t�
 
 Giáo viên mở Lịch sử tiến bộ học sinh, chọn Tất cả các môn, chờ tải xong và bấm **Đối soát điểm cũ một lần**. Dùng các bản ghi đang tải (tối đa 100 tiết chưa lưu trữ theo phạm vi lịch sử hiện tại) và chấm lại bài tự luyện bằng đề gốc. Các nguồn cũ dùng cùng mã bài/phòng với nguồn mới nên đối soát lại không cộng trùng. Không cộng nguyên tổng điểm khai báo từ bài cũ.
 
-Bài cũ không còn đề gốc được báo riêng, chưa tự cấp thêm điểm. Bài tự luận chưa chấm chưa được cộng. Mốc huy hiệu cũ giữ nguyên nếu tổng đối soát thấp hơn. Học sinh thấy cảnh báo điểm cũ chờ đối soát cho đến khi hoàn tất. Sau bước chuyển đổi này, bài mới không cần giáo viên bấm đồng bộ.
+Bài cũ không còn đề gốc hoặc đề công bố đã đổi sau khi nộp bài được báo riêng, chưa tự cấp thêm điểm. Bài mới lưu phiên bản đề ngay lúc nộp; nếu phiên bản thay đổi thì dừng tự xác minh để tránh chấm theo đề khác. Bài tự luận chưa chấm chưa được cộng. Mốc huy hiệu cũ giữ nguyên nếu tổng đối soát thấp hơn. Học sinh thấy cảnh báo điểm cũ chờ đối soát cho đến khi hoàn tất. Sau bước chuyển đổi này, bài mới không cần giáo viên bấm đồng bộ.
 
 ## Hạn mức
 

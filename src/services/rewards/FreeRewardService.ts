@@ -29,9 +29,10 @@ export class FreeRewardService {
  static async recordPractice(i:RewardIdentity,workId:string){
   const firestore=db!;await this.bind(i);
   const workSnap=await getDoc(doc(firestore,'selfPracticeWork',workId));if(!workSnap.exists())throw Error('Chưa tìm thấy bài nộp.');
-  const work=workSnap.data() as StudentWork&{rewardVersion?:number};if(work.kind!=='QUIZ'||work.rewardVersion!==2)return;
+  const work=workSnap.data() as StudentWork&{rewardVersion?:number;rewardQuizVersion?:string};if(work.kind!=='QUIZ'||work.rewardVersion!==2)return;
   const quizSnap=await getDoc(doc(firestore,'selfPracticeQuizzes',work.quizId));if(!quizSnap.exists()||quizSnap.data().published!==true)throw Error('Bài đã lưu; điểm cần đối soát với đề gốc.');
   const quiz=quizSnap.data(),questions=quiz.questions as PracticeQuestion[];
+  if(work.rewardQuizVersion!==quiz.updatedAt)throw Error('Đề đã thay đổi từ lúc làm bài; bài đã lưu và cần đối soát.');
   if(questions.some(q=>Number.isFinite(q.points)&&Math.abs((q.points??0)*100-Math.round((q.points??0)*100))>0.000001))throw Error('Biểu điểm quá hai chữ số thập phân; bài đã lưu và cần đối soát.');
   const result=gradePractice(questions,Object.fromEntries((work.result?.breakdown||[]).map(q=>[q.questionId,q.answer])));
   const ref=doc(firestore,'classes',i.classId,'rewardAttempts',workId);
@@ -60,10 +61,12 @@ export class FreeRewardService {
  }
  static async importLegacy(classId:string,studentId:string,records:StudentLongitudinalRecord[],works:StudentWork[]){
   const publicQuizzes=await SelfPracticeService.list(false),banks=new Map<string,PracticeQuestion[]>([...curatedTraditionQuizzes.map(q=>[q.id,q.questions] as [string,PracticeQuestion[]]),...publicQuizzes.map(q=>[q.id,q.questions] as [string,PracticeQuestion[]])]);
+  const versions=new Map<string,string>([...curatedTraditionQuizzes.map(q=>[q.id,'2026-10-13'] as [string,string]),...publicQuizzes.map(q=>[q.id,q.updatedAt] as [string,string])]);
   const best=new Map<string,number>();let missing=0;
   for(const w of works.filter(w=>w.classId===classId&&w.studentId===studentId&&w.kind==='QUIZ')){
    if(!banks.has(w.quizId)&&w.quizId.startsWith(w.teacherId+'_')){const id=w.quizId.slice(w.teacherId.length+1),meta=await getDoc(doc(db!,'quizzes',id));if(meta.exists()&&meta.data().teacherId===w.teacherId){const qs=await getDocs(collection(meta.ref,'questions'));if(qs.size)banks.set(w.quizId,qs.docs.map(d=>({...d.data(),id:d.id,points:d.data().correctPoints>0?d.data().correctPoints:1}) as PracticeQuestion));}}
-   const bank=banks.get(w.quizId);if(!bank){missing++;continue;}
+   const bank=banks.get(w.quizId),version=versions.get(w.quizId),savedVersion=(w as StudentWork&{rewardQuizVersion?:string}).rewardQuizVersion;
+   if(!bank||(savedVersion&&version&&savedVersion!==version)||(version&&Date.parse(version)>Date.parse(w.submittedAt))||bank.length!==w.result?.breakdown.length){missing++;continue;}
    const result=gradePractice(bank,Object.fromEntries((w.result?.breakdown||[]).map(q=>[q.questionId,q.answer])));if(result.pendingReview||!result.maxPoints)continue;
    best.set(w.quizId,Math.max(best.get(w.quizId)||0,Math.round(result.earnedPoints/result.maxPoints*1000)/100));
   }
