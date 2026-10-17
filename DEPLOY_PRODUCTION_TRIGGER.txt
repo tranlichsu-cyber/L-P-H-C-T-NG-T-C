@@ -100,3 +100,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-17: Complete classroom games: persisted unlimited/timed rounds and pause/resume with server submission gates; proportional team results; aligned, pauseable wheel and idempotent oral rewards; unique question doors, selected-question result controls, symbolic hidden gifts, working sound setting and keyboard/mobile layouts. Preserve old points/work; run game regressions and emulator rules before deploy.
 
 2026-10-17: Correct emulator game fixture to join using the student identity and teacher-owned roster, retaining strict participant ownership; keep the final failure details visible in CI annotations.
+
+2026-10-17: Add six private teacher-issued effort badges with specific encouragement, per-room per-category deduplication, editable notes and version-checked revoke. Add teacher tab/dashboard shortcut and own-student display; preserve scores/work, share listeners and verify strict badge rules before deployment.

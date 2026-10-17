@@ -1,3 +1,4 @@
+import {StudentEncouragementPanel} from '../components/activities/EncouragementPanel';
 import {StudentLearningSignal} from '../components/activities/LearningSignals';
 import {SCHOOL_LOGO_SRC} from '../assets/schoolLogo';
 import React,{useEffect,useRef} from 'react';
@@ -61,6 +62,7 @@ const StudentLayoutInner: React.FC = () => {
       <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-4">
         {session.studentId&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Phiếu / Hoạt động và bài đã trả</Link>}
         {session.studentId&&session.roomId&&<StudentLearningSignal key={session.roomId+session.studentId} roomId={session.roomId} studentId={session.studentId} finished={room?.status==='FINISHED'}/>}
+        {session.studentId&&session.roomId&&<StudentEncouragementPanel key={session.roomId+session.studentId} roomId={session.roomId} studentId={session.studentId}/>}
         <Outlet />
       </main>
 

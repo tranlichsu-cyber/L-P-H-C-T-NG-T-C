@@ -176,6 +176,33 @@ service cloud.firestore {
       );
       allow delete: if canManageRoom(roomId);
 
+      match /encouragements/{studentId} {
+        function validBadge(badge) {
+          return badge is map && badge.keys().hasOnly(['id','reason','awardedAt']) && badge.keys().hasAll(['id','reason','awardedAt'])
+            && badge.id is string && badge.id.size() > 0 && badge.id.size() <= 100
+            && badge.reason is string && badge.reason.size() > 0 && badge.reason.size() <= 300
+            && badge.awardedAt is string && badge.awardedAt.size() <= 40;
+        }
+        function validEncouragement() {
+          let d = request.resource.data;
+          let p = get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data;
+          return d.keys().hasOnly(['studentId','studentName','teacherId','updatedAt','badges'])
+            && d.studentId == studentId && d.studentName == p.name
+            && d.teacherId == get(/databases/$(database)/documents/rooms/$(roomId)).data.teacherId
+            && d.updatedAt is string && d.updatedAt.size() <= 40 && d.badges is map
+            && d.badges.keys().hasOnly(['EFFORT','PROGRESS','TEAMWORK','KINDNESS','DILIGENCE','COURAGE'])
+            && (!('EFFORT' in d.badges) || validBadge(d.badges.EFFORT))
+            && (!('PROGRESS' in d.badges) || validBadge(d.badges.PROGRESS))
+            && (!('TEAMWORK' in d.badges) || validBadge(d.badges.TEAMWORK))
+            && (!('KINDNESS' in d.badges) || validBadge(d.badges.KINDNESS))
+            && (!('DILIGENCE' in d.badges) || validBadge(d.badges.DILIGENCE))
+            && (!('COURAGE' in d.badges) || validBadge(d.badges.COURAGE));
+        }
+        allow get: if canManageRoom(roomId) || (isAuthenticated() && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.mockAuthUid == request.auth.uid);
+        allow list: if canManageRoom(roomId);
+        allow create, update: if canManageRoom(roomId) && validEncouragement();
+        allow delete: if false;
+      }
       match /learningSignals/{studentId} {
         function ownsSignal() {
           return isAuthenticated() && get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(studentId)).data.mockAuthUid == request.auth.uid;

@@ -169,6 +169,28 @@ try{
  await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'QUICK_ANSWER',status:'RUNNING',roundQuestionId:'q1',roundDeadlineAt:Date.now()+60000}}));await assertSucceeds(setDoc(answerRef,gameSubmission));await assertSucceeds(deleteDoc(doc(teacher,'rooms','games','submissions','q1_s1')));
  await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'TEAM_RACE',status:'PAUSED'}}));await assertFails(setDoc(answerRef,gameSubmission));
  await assertSucceeds(updateDoc(gameRef,{activeGame:null,status:'FINISHED'}));await assertFails(setDoc(answerRef,gameSubmission));
+ // Teacher-issued encouragement is private, bounded and separate from scores.
+ const encouragement={studentId:'s1',studentName:'Minh Anh',teacherId:'teacher',updatedAt:new Date().toISOString(),badges:{EFFORT:{id:'badge-1',reason:'Kiên trì thử lại hai cách giải.',awardedAt:new Date().toISOString()}}};
+ const ownBadge=doc(pupil,'rooms','games','encouragements','s1'),teacherBadge=doc(teacher,'rooms','games','encouragements','s1');
+ await assertSucceeds(setDoc(teacherBadge,encouragement));await assertSucceeds(getDoc(ownBadge));
+ await assertFails(getDoc(doc(other,'rooms','games','encouragements','s1')));
+ await assertFails(getDoc(doc(pupil2,'rooms','games','encouragements','s1')));
+ await assertFails(getDocs(collection(pupil,'rooms','games','encouragements')));
+ await assertSucceeds(getDocs(collection(teacher,'rooms','games','encouragements')));
+ await assertFails(setDoc(ownBadge,encouragement));await assertFails(updateDoc(ownBadge,{badges:{}}));
+ await assertFails(setDoc(doc(other,'rooms','games','encouragements','s1'),encouragement));
+ await assertFails(setDoc(teacherBadge,{...encouragement,studentName:'Giả tên'}));
+ await assertFails(setDoc(teacherBadge,{...encouragement,points:10}));
+ await assertFails(setDoc(teacherBadge,{...encouragement,badges:{UNKNOWN:encouragement.badges.EFFORT}}));
+ await assertFails(setDoc(teacherBadge,{...encouragement,badges:{EFFORT:{...encouragement.badges.EFFORT,reason:'x'.repeat(301)}}}));
+ await assertFails(setDoc(teacherBadge,{...encouragement,badges:{EFFORT:{...encouragement.badges.EFFORT,points:10}}}));
+ await assertSucceeds(setDoc(teacherBadge,{...encouragement,badges:Object.fromEntries(['EFFORT','PROGRESS','TEAMWORK','KINDNESS','DILIGENCE','COURAGE'].map(kind=>[kind,{...encouragement.badges.EFFORT,id:kind}]))}));
+ await assertSucceeds(setDoc(teacherBadge,{...encouragement,badges:{}}));
+ await assertSucceeds(setDoc(teacherBadge,encouragement));
+ await assertFails(deleteDoc(ownBadge));
+ await assertSucceeds(updateDoc(doc(teacher,'rooms','games','participants','s1'),{mockAuthUid:'new-session'}));
+ await assertFails(getDoc(ownBadge));
+ console.log('PASS: teacher-only encouragement, own-student privacy, no list/foreign access, bounded category/reason, no points, revoke and rebound-session denial.');
  console.log('PASS: game pause, exact current timed question, unlimited rounds, future deadline acceptance, expired deadline and finished-room rejection.');
  console.log('PASS: private help signals, teacher acknowledgment, representative-only group submission, same-group response/feedback access, no other-group/list/draft access, immutable membership, revoked session binding and closed/finished gates.');
  console.log('PASS: private drafts, teacher-only release, bounded reviews, own returned feedback and archived sheet access after finished room, private inbox and preserved published feedback.');

@@ -1,3 +1,4 @@
+import {TeacherEncouragementPanel} from '../../components/activities/EncouragementPanel';
 import {useWorksheetState} from '../../hooks/useWorksheet';
 import {setSoundMuted} from '../../utils/audio';
 import {LessonDashboard,type LessonTab} from '../../components/teacher/LessonDashboard';
@@ -633,6 +634,7 @@ export const RoomControllerPage: React.FC = () => {
           >
             📊 TỔNG QUAN
           </button>
+          <button onClick={()=>setActiveTab('encouragement')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='encouragement'?'bg-amber-700 text-white':'bg-amber-50 text-amber-950'}`}>HUY HIỆU CỐ GẮNG</button>
           <button onClick={()=>setActiveTab('activities')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='activities'?'bg-violet-700 text-white':'bg-violet-50 text-violet-900'}`}>HOẠT ĐỘNG LỚP HỌC</button>
           <button onClick={()=>setActiveTab('worksheets')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='worksheets'?'bg-sky-600 text-white':'bg-slate-100 text-slate-700'}`}>PHIẾU WORD</button>
           <button
@@ -669,6 +671,7 @@ export const RoomControllerPage: React.FC = () => {
 
       {activeTab!=='dashboard'&&<TeacherLearningSignals key={room.id} roomId={room.id}/>}
       {activeTab==='dashboard'&&<LessonDashboard key={room.id} room={room} onNavigate={setActiveTab} onProject={()=>setIsPresenting(true)} onCall={()=>setIsCallModalOpen(true)} onFinish={()=>setIsFinishModalOpen(true)} questionActions={{open:handleOpenQuestion,close:handleCloseQuestion,result:handleShowResult,next:handleNextQuestion,canOpen:canOpenQuestion,canClose:canCloseQuestion,canResult:canShowResult,canNext:canNextQuestion&&currentIndex<questionIds.length-1}}/>}
+      {activeTab==='encouragement'&&<TeacherEncouragementPanel key={room.id+(currentUser?.uid||'')} room={room}/>}
       {activeTab==='worksheets'&&<WorksheetTeacherPanel room={room} onProject={()=>setIsPresenting(true)}/>}
       {activeTab==='activities'&&<WorksheetTeacherPanel room={room} onProject={()=>setIsPresenting(true)} activityMode/>}
       {/* TAB 1: OVERVIEW */}

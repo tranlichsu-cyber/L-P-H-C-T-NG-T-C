@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';import fs from 'node:fs/promises';import ts from 'typescript';
+const compile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const load=s=>import('data:text/javascript;base64,'+Buffer.from(s).toString('base64'));
+const content=await load(compile(await fs.readFile('src/services/encouragement/content.ts','utf8')));assert.equal(Object.keys(content.encouragementKinds).length,6);assert.throws(()=>content.validateEncouragement('FAKE','Giỏi'));assert.throws(()=>content.validateEncouragement('EFFORT',' '));assert.throws(()=>content.validateEncouragement('EFFORT','x'.repeat(301)));
+let stored={};const listeners=new Set();const auth={currentUser:{uid:'teacher'}};const room={teacherId:'teacher',participants:{s1:{name:'An'},s2:{name:'Bình'}}};
+globalThis.localStorage={getItem:key=>stored[key]||null,setItem:(key,value)=>{stored[key]=value}};
+const efficiency=await load(compile(await fs.readFile('src/services/data/readEfficiency.ts','utf8')));
+globalThis.__encouragementFixture={...content,...efficiency,auth,db:null,isFirebaseActive:false,getRoomById:()=>room,eventBus:{publish:()=>[...listeners].forEach(fn=>fn({roomId:'r'})),subscribe:fn=>{listeners.add(fn);return()=>listeners.delete(fn)}}};
+const source=compile(await fs.readFile('src/services/encouragement/EncouragementService.ts','utf8')).replace(/^import .*;\n/gm,'');
+const {EncouragementService:S}=await load('const {validateEncouragement,createSharedSubscriptions,auth,db,isFirebaseActive,getRoomById,eventBus}=globalThis.__encouragementFixture;\n'+source);
+let a,b,all;const stop1=S.subscribe('r','s1',x=>a=x,()=>{}),stop2=S.subscribe('r','s1',x=>b=x,()=>{}),stop3=S.subscribe('r',null,x=>all=x,()=>{});assert.equal(listeners.size,2);
+await S.change('r','s1','EFFORT','Kiên trì thử lại.');assert.equal(a[0].badges.EFFORT.reason,'Kiên trì thử lại.');assert.deepEqual(a,b);const first=a[0].badges.EFFORT;await S.change('r','s1','EFFORT','Kiên trì thử lại.');assert.equal(a[0].badges.EFFORT.id,first.id);assert.equal(Object.keys(a[0].badges).length,1);
+await S.change('r','s1','PROGRESS','Em đã viết rõ ý hơn.');assert.equal(Object.keys(a[0].badges).length,2);await S.change('r','s1','EFFORT','Em thử thêm một cách giải.');assert.equal(a[0].badges.EFFORT.awardedAt,first.awardedAt);assert.notEqual(a[0].badges.EFFORT.id,first.id);await assert.rejects(()=>S.change('r','s1','EFFORT',null,first.id));
+await S.change('r','s1','EFFORT',null,a[0].badges.EFFORT.id);assert(!a[0].badges.EFFORT);assert(a[0].badges.PROGRESS);await S.change('r','s2','KINDNESS','Biết giúp bạn.');assert.equal(all.length,2);assert.equal(a.length,1);assert(!a[0].badges.KINDNESS);assert(!Object.hasOwn(a[0],'score'));
+auth.currentUser.uid='student';await assert.rejects(()=>S.change('r','s1','EFFORT','Tự trao'));auth.currentUser.uid='teacher';await assert.rejects(()=>S.change('r','missing','EFFORT','Sai học sinh'));
+stop1();stop2();stop3();assert.equal(listeners.size,0);console.log('PASS encouragement: 6 categories, bounded specific reasons, real service grant/edit/revoke, duplicate no-op, stale revoke protection, separate pupils, no score mutations and shared listener cleanup');
