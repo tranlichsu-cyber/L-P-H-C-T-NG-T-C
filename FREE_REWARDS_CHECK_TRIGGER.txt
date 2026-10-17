@@ -5,3 +5,5 @@ Check arithmetic token spacing in rules.
 Bound each proof transaction to two questions to respect Firestore evaluation limits; run actual service integration.
 
 Verify one-question checkpoints and reduce repeated ownership/option evaluation.
+
+Inspect emulator checkpoints and numeric comparisons without changing production permissions.

@@ -4,7 +4,9 @@ const {doc,collection,getDocs,setDoc,getDoc,updateDoc,writeBatch,runTransaction}
 const fs=require('node:fs'),ts=require('typescript');
 const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
 (async()=>{const {gradePractice}=await load(fs.readFileSync('src/services/practice/grading.ts','utf8')),policy=await load(fs.readFileSync('src/services/rewards/freePoints.ts','utf8'));
-const env=await initializeTestEnvironment({projectId:'demo-self-practice',firestore:{rules:fs.readFileSync('firestore.rules','utf8')}});await env.clearFirestore();
+let rules=fs.readFileSync('firestore.rules','utf8');
+if(process.env.REWARD_RULE_DEBUG){for(const key of ['earnedUnits','maxUnits','pendingUnits']){rules=rules.replace('d.'+key+'==old.'+key+'+', 'debug(d.'+key+')==debug(old.'+key+'+');const name=key==='earnedUnits'?'rewardEarn(qs,answers,start,end)':key==='maxUnits'?'rewardMax(qs,start,end)':'rewardPending(qs,start,end)';rules=rules.replace(name+'\n',name+')\n').replace(name+';',name+');');}rules=rules.replace('validAttempt() && step()','debug(validAttempt()) && debug(step())');}
+const env=await initializeTestEnvironment({projectId:'demo-self-practice',firestore:{rules}});await env.clearFirestore();
 try{
 const teacher=env.authenticatedContext('t',{firebase:{sign_in_provider:'password'}}).firestore(),student=env.authenticatedContext('u',{firebase:{sign_in_provider:'anonymous'}}).firestore(),other=env.authenticatedContext('v',{firebase:{sign_in_provider:'anonymous'}}).firestore();
 const code='ABCDEFGH2345',access={code,classId:'c',className:'4A',grade:'Khối 4',studentId:'s',studentName:'An',teacherId:'t'};
@@ -24,7 +26,7 @@ async function attempt(id,quizId,questions,input=answers,{forged=false}={}){
  const ref=doc(student,'classes','c','rewardAttempts',id);let state={studentId:'s',quizId,workId:id,version:'v1',cursor:0,earnedUnits:0,maxUnits:0,pendingUnits:0};
  await assertFails(setDoc(ref,{...state,cursor:5,earnedUnits:1000}));await assertSucceeds(setDoc(ref,state));
  const first=policy.advanceAttempt(state,questions,grade);await assertFails(setDoc(ref,{...first,earnedUnits:first.earnedUnits+1}));await assertFails(setDoc(ref,{...first,cursor:first.cursor+1}));
- while(state.cursor<questions.length){state=policy.advanceAttempt(state,questions,grade);await assertSucceeds(setDoc(ref,state));}
+ while(state.cursor<questions.length){state=policy.advanceAttempt(state,questions,grade);console.log('Checkpoint',id,JSON.stringify(state));await assertSucceeds(setDoc(ref,state));}
  await assertFails(updateDoc(ref,{workId:'other'}));await assertFails(getDoc(doc(other,'classes','c','rewardAttempts',id)));
  return {state,points:policy.attemptPoints(state),ref};
 }

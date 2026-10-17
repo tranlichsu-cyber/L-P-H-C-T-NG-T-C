@@ -8,7 +8,7 @@ Học sinh xem điểm trong Huy hiệu & cửa hàng avatar, tự đổi 20 đi
 
 Khi nộp bài, bài làm được lưu trước. Sau đó Firestore kiểm tra đáp án theo đề công bố, theo từng câu. Quy tắc đối chiếu câu trả lời, trọng số, thứ tự câu và phiên bản đề; không tin điểm hoặc cờ đúng/sai do trình duyệt gửi. Tiến trình xác minh có thể tiếp tục khi gửi lại; không phải nộp một bài mới. Nếu lỗi mạng hoặc đề thay đổi, bài đã lưu vẫn còn và giao diện báo điểm chờ xác minh.
 
-Chỉ khi tiến trình hoàn tất, điểm được quy về thang 10 và ghi nhận bằng giao dịch cùng sổ điểm. Mỗi bài chỉ giữ điểm cao nhất. Bài có phần tự luận chờ chấm không tự cấp điểm. Đề có sẵn trong ứng dụng nhưng chưa có bản công bố trên Firestore cần được giáo viên đối soát bằng đề gốc.
+Chỉ khi tiến trình hoàn tất, điểm được quy về thang 10 và ghi nhận bằng giao dịch cùng sổ điểm. Mỗi bài chỉ giữ điểm cao nhất. Bài có phần tự luận chờ chấm không tự cấp điểm. Biểu điểm trên hai chữ số thập phân hoặc khác biệt chuẩn Unicode không đối chiếu được bằng Rules sẽ chờ đối soát, không tự cộng một số điểm gần đúng. Đề có sẵn trong ứng dụng nhưng chưa có bản công bố trên Firestore cần được giáo viên đối soát bằng đề gốc.
 
 Điểm trên lớp tự ghi theo từng phòng khi giáo viên kết thúc tiết. Sử dụng điểm giáo viên đã chấm, nguồn mỗi phòng chỉ cộng một lần. Nếu ghi điểm chưa hoàn tất, phòng đánh dấu chờ cập nhật và thông báo cho giáo viên; đối soát lịch sử có thể bổ sung phần còn thiếu.
 

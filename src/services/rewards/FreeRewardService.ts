@@ -32,6 +32,7 @@ export class FreeRewardService {
   const work=workSnap.data() as StudentWork&{rewardVersion?:number};if(work.kind!=='QUIZ'||work.rewardVersion!==2)return;
   const quizSnap=await getDoc(doc(firestore,'selfPracticeQuizzes',work.quizId));if(!quizSnap.exists()||quizSnap.data().published!==true)throw Error('Bài đã lưu; điểm cần đối soát với đề gốc.');
   const quiz=quizSnap.data(),questions=quiz.questions as PracticeQuestion[];
+  if(questions.some(q=>Number.isFinite(q.points)&&Math.abs((q.points??0)*100-Math.round((q.points??0)*100))>0.000001))throw Error('Biểu điểm quá hai chữ số thập phân; bài đã lưu và cần đối soát.');
   const result=gradePractice(questions,Object.fromEntries((work.result?.breakdown||[]).map(q=>[q.questionId,q.answer])));
   const ref=doc(firestore,'classes',i.classId,'rewardAttempts',workId);
   await runTransaction(firestore,async tx=>{if(!(await tx.get(ref)).exists())tx.set(ref,{studentId:i.studentId,quizId:work.quizId,workId,version:quiz.updatedAt,cursor:0,earnedUnits:0,maxUnits:0,pendingUnits:0} satisfies RewardAttempt);});
