@@ -1,6 +1,6 @@
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
 const req=require('node:module').createRequire(require.resolve('@firebase/rules-unit-testing'));
-const {doc,setDoc,getDoc,updateDoc,writeBatch,runTransaction}=req('firebase/firestore');
+const {doc,collection,getDocs,setDoc,getDoc,updateDoc,writeBatch,runTransaction}=req('firebase/firestore');
 const fs=require('node:fs'),ts=require('typescript');
 const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
 (async()=>{const {gradePractice}=await load(fs.readFileSync('src/services/practice/grading.ts','utf8')),policy=await load(fs.readFileSync('src/services/rewards/freePoints.ts','utf8'));
@@ -41,5 +41,17 @@ await assertFails(updateDoc(pointRef,{livePoints:100,currentPoints:130}));const 
 await assertSucceeds(updateDoc(walletRef,{totalPoints:60,earnedBadges:3}));const purchased={...wallet,totalPoints:60,earnedBadges:3,spentBadges:3,ownedAvatars:['starter','cat'],equippedAvatar:'cat'};await assertSucceeds(setDoc(walletRef,purchased));await assertSucceeds(updateDoc(walletRef,{totalPoints:60,earnedBadges:3}));await assertFails(updateDoc(walletRef,{spentBadges:0}));
 // Revoked code blocks claims and new evidence, even when an attempt already exists.
 await assertSucceeds(setDoc(doc(teacher,'selfPracticeAccess',code),{...access,studentId:'other',studentName:'Bình'}));await assertFails(updateDoc(walletRef,{totalPoints:60,earnedBadges:3}));await assertFails(getDoc(pointRef));
+// Exercise the actual application service against the emulator, not just matching test transactions.
+await assertSucceeds(setDoc(doc(teacher,'selfPracticeAccess',code),access));
+const walletPolicy=await load(fs.readFileSync('src/services/rewards/content.ts','utf8'));
+globalThis.__freeRewardFixture={doc,collection,getDoc,getDocs,setDoc,runTransaction,auth:{currentUser:{uid:'u'}},db:student,gradePractice,SelfPracticeService:{list:async()=>[]},curatedTraditionQuizzes:[],...policy,...walletPolicy};
+const serviceSource=ts.transpileModule(fs.readFileSync('src/services/rewards/FreeRewardService.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/^import .*;\n/gm,'');
+const service=await import('data:text/javascript;base64,'+Buffer.from('const {doc,collection,getDoc,getDocs,setDoc,runTransaction,auth,db,gradePractice,SelfPracticeService,curatedTraditionQuizzes,advanceAttempt,attemptPoints,emptyPoints,creditWallet}=globalThis.__freeRewardFixture;\n'+serviceSource).toString('base64'));
+await prepare('actual-service',bank);const actualGrade=gradePractice(bank,answers);
+await assertSucceeds(setDoc(doc(student,'selfPracticeWork','service-work'),{id:'service-work',teacherId:'t',classId:'c',className:'4A',studentId:'s',studentName:'An',quizId:'actual-service',quizTitle:'Đề',subject:'Toán',submittedAt:'now',kind:'QUIZ',result:actualGrade,rewardVersion:2,accessCode:code,authUid:'u'}));
+const identity={classId:'c',studentId:'s',accessCode:code};
+await service.FreeRewardService.refresh(identity,'VIEW');await service.FreeRewardService.recordPractice(identity,'service-work');await service.FreeRewardService.recordPractice(identity,'service-work');
+if((await getDoc(pointRef)).data().currentPoints!==70)throw Error('Actual service failed best-only resumable recording');
+const actualWallet=await service.FreeRewardService.refresh(identity,'CLAIM');if(actualWallet.totalPoints!==70||actualWallet.spentBadges!==3||actualWallet.equippedAvatar!=='cat')throw Error('Actual self-claim must preserve purchase and grades');
 console.log('PASS free reward rules: canonical answer proofs, forged score/cursor denial, weighted normalization, 200-question support, best-only retries, atomic source/ledger, self-claim thresholds, preserved avatar spend, identity and revocation.');
 }finally{await env.cleanup();}})().catch(e=>{console.error(e);process.exit(1)});

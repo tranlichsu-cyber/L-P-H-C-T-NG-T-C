@@ -125,7 +125,7 @@ service cloud.firestore {
       allow create: if isTeacher();
       allow update, delete: if canManageClass(classId);
 
-      // Spark-compatible proof: every five immutable answers are checked against the public question bank.
+      // Spark-compatible proof: every two immutable answers are checked against the public question bank.
       function rewardNormalize(value, q) {
         let trimmed = q.get('trimWhitespace',true) ? value.replace('^\\s+|\\s+$','') : value;
         let text = q.get('caseInsensitive',true) ? trimmed.lower() : trimmed;
@@ -167,11 +167,11 @@ service cloud.firestore {
           let qs=get(/databases/$(database)/documents/selfPracticeQuizzes/$(d.quizId)).data.questions;
           let answers=get(/databases/$(database)/documents/selfPracticeWork/$(attemptId)).data.result.breakdown;
           let start=old.cursor;
-          let end=start+5<qs.size()?start+5:qs.size();
+          let end=start+2<qs.size()?start+2:qs.size();
           return d.diff(old).affectedKeys().hasOnly(['cursor','earnedUnits','maxUnits','pendingUnits']) && start<qs.size() && d.cursor==end
-            && d.earnedUnits==old.earnedUnits+rewardEarn(qs,answers,start,end)+rewardEarn(qs,answers,start+1,end)+rewardEarn(qs,answers,start+2,end)+rewardEarn(qs,answers,start+3,end)+rewardEarn(qs,answers,start+4,end)
-            && d.maxUnits==old.maxUnits+rewardMax(qs,start,end)+rewardMax(qs,start+1,end)+rewardMax(qs,start+2,end)+rewardMax(qs,start+3,end)+rewardMax(qs,start+4,end)
-            && d.pendingUnits==old.pendingUnits+rewardPending(qs,start,end)+rewardPending(qs,start+1,end)+rewardPending(qs,start+2,end)+rewardPending(qs,start+3,end)+rewardPending(qs,start+4,end);
+            && d.earnedUnits==old.earnedUnits+rewardEarn(qs,answers,start,end)+rewardEarn(qs,answers,start+1,end)
+            && d.maxUnits==old.maxUnits+rewardMax(qs,start,end)+rewardMax(qs,start+1,end)
+            && d.pendingUnits==old.pendingUnits+rewardPending(qs,start,end)+rewardPending(qs,start+1,end);
         }
         allow get: if canManageClass(classId) || (isAuthenticated() && (resource==null || ownsRewardWallet(classId,resource.data.studentId)));
         allow list,delete: if false;
@@ -267,7 +267,7 @@ service cloud.firestore {
         }
         allow get: if canManageClass(classId) || ownsRewardWallet(classId,studentId);
         allow list: if canManageClass(classId);
-        allow create: if (teacherCredit() || studentClaim()) && request.resource.data.spentBadges == 0 && request.resource.data.ownedAvatars == ['starter'] && request.resource.data.equippedAvatar == 'starter';
+        allow create: if (teacherCredit() || (studentClaim() && request.resource.data.keys().hasOnly(['classId','studentId','studentName','teacherId','totalPoints','earnedBadges','spentBadges','ownedAvatars','equippedAvatar','updatedAt']))) && request.resource.data.spentBadges == 0 && request.resource.data.ownedAvatars == ['starter'] && request.resource.data.equippedAvatar == 'starter';
         allow update: if (teacherCredit() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentName','teacherId','totalPoints','earnedBadges','updatedAt']) && request.resource.data.totalPoints >= resource.data.totalPoints) || studentChoice() || (studentClaim() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentName','teacherId','totalPoints','earnedBadges','updatedAt']));
         allow delete: if false;
       }

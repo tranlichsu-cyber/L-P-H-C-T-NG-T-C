@@ -1,3 +1,5 @@
 2026-10-17: Check Spark-compatible canonical answer proofs, bounded steps, best-only credits and student badge claims before releasing.
 
 Check arithmetic token spacing in rules.
+
+Bound each proof transaction to two questions to respect Firestore evaluation limits; run actual service integration.

@@ -1,3 +1,5 @@
+> Cập nhật: cơ chế tự đổi trên gói miễn phí được mô tả trong [HUY_HIEU_TU_DOI_20261017.md](HUY_HIEU_TU_DOI_20261017.md). Phần đồng bộ thủ công dưới đây là thiết kế cũ.
+
 # Huy hiệu từ tổng điểm và cửa hàng avatar
 
 ## Quy tắc đã chọn
