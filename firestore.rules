@@ -128,7 +128,9 @@ service cloud.firestore {
       // Spark-compatible proof: each immutable answer is checked against the public question bank.
       function rewardUnits(q) {
         let value=q.get('points',1);
-        return int(math.floor((value is number && value>=0 ? value : 1)*100+0.5));
+        let points=value is number && value>=0 ? value : 1;
+        let units=int(math.floor(points*100+0.5));
+        return math.abs(points*100-units)<0.000001 ? units : -1;
       }
       function rewardEarn(qs, answers, index, end) {
         return index<end && qs[index].get('reviewMode','AUTO')!='TEACHER'
@@ -156,7 +158,7 @@ service cloud.firestore {
           let answers=get(/databases/$(database)/documents/selfPracticeWork/$(attemptId)).data.result.breakdown;
           let start=old.cursor;
           let end=start+1;
-          return d.diff(old).affectedKeys().hasOnly(['cursor','earnedUnits','maxUnits','pendingUnits']) && start<qs.size() && d.cursor==end
+          return d.diff(old).affectedKeys().hasOnly(['cursor','earnedUnits','maxUnits','pendingUnits']) && start<qs.size() && d.cursor==end && d.maxUnits>=old.maxUnits
             && d.earnedUnits==old.earnedUnits+rewardEarn(qs,answers,start,end)
             && d.maxUnits==old.maxUnits+rewardMax(qs,start,end)
             && d.pendingUnits==old.pendingUnits+rewardPending(qs,start,end);
