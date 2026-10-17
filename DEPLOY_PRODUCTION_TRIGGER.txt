@@ -96,3 +96,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-16: Complete classroom follow-up with accent-insensitive student/group/member search, waiting/returned filters and counts, and full Excel activity reports using already loaded data. Include missing submissions, Vietnam timestamps and safe board text; verify actual desktop/mobile downloads and retain lazy private reviews.
 
 2026-10-16: Add default lesson dashboard with roster attendance, current activity/question progress, integrated private help signals and context-aware close/project/return controls. Add quick navigation and preserve confirmed finish flow; verify desktop/mobile group updates and existing read-sharing checks.
+
+2026-10-17: Complete classroom games: persisted unlimited/timed rounds and pause/resume with server submission gates; proportional team results; aligned, pauseable wheel and idempotent oral rewards; unique question doors, selected-question result controls, symbolic hidden gifts, working sound setting and keyboard/mobile layouts. Preserve old points/work; run game regressions and emulator rules before deploy.

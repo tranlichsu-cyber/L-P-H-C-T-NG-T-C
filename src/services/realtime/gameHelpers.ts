@@ -7,6 +7,12 @@ export const buildInitialGameSession = (
   questionIds: string[],
   participants: { studentId: string; name: string }[]
 ): GameSessionData => {
+  if(settings.timerSeconds!==undefined&&(!Number.isInteger(settings.timerSeconds)||settings.timerSeconds<0||settings.timerSeconds>120))throw Error('Thời gian trò chơi cần từ 0 đến 120 giây.');
+  if(settings.teamCount!==undefined&&(!Number.isInteger(settings.teamCount)||settings.teamCount<2||settings.teamCount>4))throw Error('Số đội cần từ 2 đến 4.');
+  questionIds=[...new Set(questionIds)];
+  if(type!=='RANDOM_WHEEL'&&!questionIds.length)throw Error('Thầy/cô cần thêm câu hỏi trước khi mở trò chơi này.');
+  if(type==='RANDOM_WHEEL'&&!participants.length)throw Error('Hãy chờ học sinh vào phòng trước khi quay.');
+  if(type==='TEAM_RACE'&&participants.length<(settings.teamCount||2))throw Error('Số học sinh cần ít nhất bằng số đội.');
   const now = new Date().toISOString();
   const gameId = `game-${Date.now()}`;
 
@@ -29,6 +35,7 @@ export const buildInitialGameSession = (
       teamScoringMode: settings.teamScoringMode || 'CORRECT_COUNT',
     },
     currentRound: 1,
+    questionIds,
     activeQuestionId: questionIds[0] || null,
   };
 
@@ -39,7 +46,7 @@ export const buildInitialGameSession = (
 
   // 2. MYSTERY DOOR
   if (type === 'MYSTERY_DOOR') {
-    const doorCount = settings.doorCount || 6;
+    const doorCount = Math.min(settings.doorCount || 6,questionIds.length);
     const doors: MysteryDoorItem[] = [];
     for (let i = 1; i <= doorCount; i++) {
       const qId = questionIds[(i - 1) % Math.max(1, questionIds.length)] || 'q1';
@@ -54,7 +61,7 @@ export const buildInitialGameSession = (
 
   // 3. QUICK ANSWER
   if (type === 'QUICK_ANSWER') {
-    baseSession.roundDurationSeconds = settings.timerSeconds || 15;
+    baseSession.roundDurationSeconds = settings.timerSeconds ?? 0;
     baseSession.roundStatus = 'READY';
   }
 
@@ -101,28 +108,25 @@ export const buildInitialGameSession = (
     const boxCount = settings.boxCount || 6;
     const boxes: KnowledgeBoxItem[] = [];
 
-    const boxTypes: Array<'QUESTION' | 'BONUS_POINTS' | 'SPECIAL_ACTION'> = [
+    const boxTypes: Array<'QUESTION' | 'SPECIAL_ACTION'> = [
       'QUESTION',
-      'BONUS_POINTS',
+      'SPECIAL_ACTION',
       'QUESTION',
-      'BONUS_POINTS',
+      'SPECIAL_ACTION',
       'SPECIAL_ACTION',
       'QUESTION',
     ];
 
     for (let i = 1; i <= boxCount; i++) {
       const bType = boxTypes[(i - 1) % boxTypes.length];
-      const qId = questionIds[(i - 1) % Math.max(1, questionIds.length)] || 'q1';
+      const qId = questionIds[boxes.filter(b=>b.type==='QUESTION').length];
+      if(bType==='QUESTION'&&!qId)break;
 
       let title = `Hộp Quà ${i}`;
-      let bonusPoints = undefined;
       let specialActionText = undefined;
 
-      if (bType === 'BONUS_POINTS') {
-        bonusPoints = i % 2 === 0 ? 10 : 5;
-        title = `Hộp Quà May Mắn +${bonusPoints} điểm`;
-      } else if (bType === 'SPECIAL_ACTION') {
-        specialActionText = 'Mời một bạn trả lời câu hỏi!';
+      if (bType === 'SPECIAL_ACTION') {
+        specialActionText = i%2===0?'Cả lớp dành một tràng vỗ tay cho sự cố gắng!':'Mời một bạn cùng giải thích cách làm. Không cộng điểm may mắn.';
         title = 'Hộp Quà Thử Thách';
       }
 
@@ -131,7 +135,6 @@ export const buildInitialGameSession = (
         type: bType,
         title,
         questionId: bType === 'QUESTION' ? qId : undefined,
-        bonusPoints,
         specialActionText,
         isOpened: false,
       });

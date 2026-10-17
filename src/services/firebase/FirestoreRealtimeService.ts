@@ -1,3 +1,4 @@
+import {openGameRound,toggleGamePause} from '../realtime/gamePolicy';
 import {createSharedSubscriptions} from '../data/readEfficiency';
 import {
   doc,
@@ -395,47 +396,22 @@ export class FirestoreRealtimeService {
   }
 
   // 5. Open Question (Teacher: Privacy Isolated)
-  public async openQuestion(roomId: string, questionId: string): Promise<boolean> {
-    if (!db) return false;
-
-    const qRef = doc(db!, 'rooms', roomId, 'liveQuestions', questionId);
-    const roomRef = doc(db!, 'rooms', roomId);
-
-    const batch = writeBatch(db!);
-    batch.update(qRef, {
-      status: 'OPEN',
-      startedAt: serverTimestamp(),
+  public async openQuestion(roomId:string,questionId:string):Promise<boolean>{
+    if(!db)return false;const firestore=db;
+    return runTransaction(firestore,async tx=>{
+      const roomRef=doc(firestore,'rooms',roomId),questionRef=doc(firestore,'rooms',roomId,'liveQuestions',questionId);
+      const roomSnap=await tx.get(roomRef);if(!roomSnap.exists())return false;const room=roomSnap.data() as MockRoomData;
+      if(room.status==='FINISHED'||room.activeGame?.status==='PAUSED')return false;
+      const question=await tx.get(questionRef);if(!question.exists())return false;
+      if(room.activeQuestionId===questionId&&question.data().status==='OPEN')return true;
+      let previousRef=null,previousOpen=false;
+      if(room.activeQuestionId&&room.activeQuestionId!==questionId){previousRef=doc(firestore,'rooms',roomId,'liveQuestions',room.activeQuestionId);previousOpen=(await tx.get(previousRef)).data()?.status==='OPEN';}
+      if(previousRef&&previousOpen)tx.update(previousRef,{status:'CLOSED'});
+      tx.update(questionRef,{status:'OPEN',startedAt:serverTimestamp()});
+      tx.update(roomRef,{activeQuestionId:questionId,status:'ACTIVE',...(room.activeGame?{activeGame:openGameRound(room.activeGame,questionId)}:{})});
+      if(room.roomCode)tx.set(doc(firestore,'roomCodes',room.roomCode),{roomId,roomCode:room.roomCode,teacherId:room.teacherId,classId:room.classId,className:room.className,subject:room.subject,status:'ACTIVE',expiresAt:room.expiresAt,rosterCount:room.rosterCount??0},{merge:true});
+      return true;
     });
-    batch.update(roomRef, {
-      activeQuestionId: questionId,
-      status: 'ACTIVE',
-    });
-
-    const roomSnap = await getDoc(roomRef);
-    if (roomSnap.exists()) {
-      const roomData = roomSnap.data() as MockRoomData;
-      const roomCode = roomData.roomCode;
-      if (roomCode) {
-        batch.set(
-          doc(db!, 'roomCodes', roomCode),
-          {
-            roomId,
-            roomCode,
-            teacherId: roomData.teacherId,
-            classId: roomData.classId,
-            className: roomData.className,
-            subject: roomData.subject,
-            status: 'ACTIVE',
-            expiresAt: roomData.expiresAt,
-            rosterCount: roomData.rosterCount ?? 0,
-          },
-          { merge: true }
-        );
-      }
-    }
-
-    await batch.commit();
-    return true;
   }
 
   // 6. Close Question (Teacher)
@@ -616,37 +592,21 @@ export class FirestoreRealtimeService {
     studentId: string,
     studentName: string,
     points: number,
-    reason?: string
+    reason?: string,
+    awardKey?: string
   ): Promise<boolean> {
     if (!db) return false;
 
-    const eventId = `manual_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const eventId = awardKey || `manual_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const eventRef = doc(db!, 'rooms', roomId, 'scoreEvents', eventId);
     const scoreRef = doc(db!, 'rooms', roomId, 'scores', studentId);
 
-    const scoreSnap = await getDoc(scoreRef);
-    const currentScore = scoreSnap.exists() ? scoreSnap.data()?.score || 0 : 0;
-    const newScore = Math.max(0, currentScore + points);
-
-    const batch = writeBatch(db!);
-    batch.set(eventRef, {
-      id: eventId,
-      studentId,
-      type: 'MANUAL',
-      points,
-      reason: reason || null,
-      createdAt: serverTimestamp(),
-      createdBy: 'teacher',
+    await runTransaction(db!,async tx=>{
+      const existing=await tx.get(eventRef);if(existing.exists())return;
+      const scoreSnap=await tx.get(scoreRef);const currentScore=scoreSnap.exists()?scoreSnap.data()?.score||0:0;
+      tx.set(eventRef,{id:eventId,studentId,type:'MANUAL',points,reason:reason||null,createdAt:serverTimestamp(),createdBy:'teacher'});
+      tx.set(scoreRef,{studentId,studentName,score:Math.max(0,currentScore+points),updatedAt:serverTimestamp()},{merge:true});
     });
-
-    batch.set(scoreRef, {
-      studentId,
-      studentName,
-      score: newScore,
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-
-    await batch.commit();
     return true;
   }
 
@@ -880,8 +840,8 @@ export class FirestoreRealtimeService {
   ): Promise<GameSessionData | null> {
     if (!db) return null;
 
-    const pSnap = await getDocs(collection(db!, 'rooms', roomId, 'participants'));
-    const participants = pSnap.docs.map((d) => d.data() as MockParticipant);
+    const roomCheck=await getDoc(doc(db!,'rooms',roomId));if(!roomCheck.exists()||roomCheck.data().status==='FINISHED')throw Error('Tiết học đã kết thúc.');
+    const participants = type==='RANDOM_WHEEL'||type==='TEAM_RACE'?(await getDocs(collection(db!,'rooms',roomId,'participants'))).docs.map(d=>d.data() as MockParticipant):[];
 
     const game = buildInitialGameSession(roomId, type, settings, questionIds, participants);
 
@@ -891,6 +851,7 @@ export class FirestoreRealtimeService {
       sanitizeFirestoreData({
         activeGameId: game.id,
         activeGame: game,
+        ...(type!=='RANDOM_WHEEL'&&game.activeQuestionId?{activeQuestionId:game.activeQuestionId}:{}),
       })
     );
 
@@ -905,10 +866,10 @@ export class FirestoreRealtimeService {
     if (!snap.exists()) return false;
 
     const roomData = snap.data() as MockRoomData;
-    if (!roomData.activeGame) return false;
+    if (!roomData.activeGame||roomData.status==='FINISHED') return false;
 
     const updatedGame: GameSessionData = {
-      ...roomData.activeGame,
+      ...openGameRound(roomData.activeGame,roomData.activeQuestionId||roomData.activeGame.activeQuestionId||''),
       status: 'RUNNING',
       startedAt: new Date().toISOString(),
       roundStartedAt: new Date().toISOString(),
@@ -918,34 +879,20 @@ export class FirestoreRealtimeService {
     return true;
   }
 
-  public async pauseGameSession(roomId: string): Promise<boolean> {
-    if (!db) return false;
-
-    const roomRef = doc(db!, 'rooms', roomId);
-    const snap = await getDoc(roomRef);
-    if (!snap.exists()) return false;
-
-    const roomData = snap.data() as MockRoomData;
-    if (!roomData.activeGame) return false;
-
-    const updatedGame: GameSessionData = {
-      ...roomData.activeGame,
-      status: roomData.activeGame.status === 'PAUSED' ? 'RUNNING' : 'PAUSED',
-    };
-
-    await updateDoc(roomRef, { activeGame: sanitizeFirestoreData(updatedGame) });
-    return true;
+  public async pauseGameSession(roomId:string):Promise<boolean>{
+    if(!db)return false;const firestore=db;
+    return runTransaction(firestore,async tx=>{const roomRef=doc(firestore,'rooms',roomId);const snap=await tx.get(roomRef);if(!snap.exists())return false;const room=snap.data() as MockRoomData;
+      if(!room.activeGame||room.status==='FINISHED')return false;
+      tx.update(roomRef,{activeGame:sanitizeFirestoreData(toggleGamePause(room.activeGame))});return true;
+    });
   }
 
-  public async finishGameSession(roomId: string): Promise<boolean> {
-    if (!db) return false;
-
-    const roomRef = doc(db!, 'rooms', roomId);
-    await updateDoc(roomRef, {
-      activeGameId: null,
-      activeGame: null,
-    });
-    return true;
+  public async finishGameSession(roomId:string):Promise<boolean>{
+    if(!db)return false;const firestore=db;
+    await runTransaction(firestore,async tx=>{const roomRef=doc(firestore,'rooms',roomId);const snap=await tx.get(roomRef);if(!snap.exists())throw Error('Không tìm thấy phòng.');const room=snap.data() as MockRoomData;
+      if(room.activeGame&&room.activeQuestionId){const questionRef=doc(firestore,'rooms',roomId,'liveQuestions',room.activeQuestionId);const question=await tx.get(questionRef);if(question.data()?.status==='OPEN')tx.update(questionRef,{status:'CLOSED'});}
+      tx.update(roomRef,{activeGameId:null,activeGame:null});
+    });return true;
   }
 
   public async updateGamePayload(roomId: string, updateFn: (game: GameSessionData) => GameSessionData): Promise<boolean> {
@@ -956,7 +903,7 @@ export class FirestoreRealtimeService {
     if (!snap.exists()) return false;
 
     const roomData = snap.data() as MockRoomData;
-    if (!roomData.activeGame) return false;
+    if (!roomData.activeGame||roomData.status==='FINISHED') return false;
 
     const updatedGame = updateFn({ ...roomData.activeGame });
     await updateDoc(roomRef, { activeGame: sanitizeFirestoreData(updatedGame) });

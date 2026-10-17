@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import type { GameType, GameSessionData } from '../../services/realtime/types';
-import { Sparkles, Award, Zap, Flag, Gift, Volume2, VolumeX, Clock, Users } from 'lucide-react';
+import { Sparkles, Award, Zap, Flag, Gift, Clock, Users } from 'lucide-react';
 
 interface GameHubModalProps {
   isOpen: boolean;
@@ -12,13 +12,13 @@ interface GameHubModalProps {
 
 export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onStartGame }) => {
   const [selectedGame, setSelectedGame] = useState<GameType>('RANDOM_WHEEL');
-  const [timerSeconds, setTimerSeconds] = useState<number>(15);
+  const [timerSeconds, setTimerSeconds] = useState<number>(0);
   const [doorCount, setDoorCount] = useState<number>(6);
   const [boxCount, setBoxCount] = useState<number>(6);
   const [teamNames, setTeamNames] = useState('');
   const [teamCount, setTeamCount] = useState<number>(2);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [enableSpeedScore] = useState<boolean>(true);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
+  const [enableSpeedScore] = useState<boolean>(false);
 
   const gamesList: {
     type: GameType;
@@ -46,8 +46,8 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
     },
     {
       type: 'QUICK_ANSWER',
-      title: '3. Nhanh Tay Chọn Đáp ÁN',
-      description: 'Thi đấu trả lời nhanh toàn lớp. Thưởng thêm điểm tốc độ cho câu trả lời chính xác.',
+      title: '3. Cùng Chọn Đáp Án',
+      description: 'Cả lớp suy nghĩ và chọn đáp án. Không thưởng tốc độ; giáo viên chọn thời gian phù hợp.',
       icon: <Zap className="w-8 h-8 text-emerald-500" />,
       color: 'border-emerald-400',
       bg: 'bg-emerald-50',
@@ -55,7 +55,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
     {
       type: 'TEAM_RACE',
       title: '4. Học Theo Nhóm / Đua Đội',
-      description: 'Chia lớp thành các đội đua (Mặt Trời, Ngôi Sao,...). Mỗi câu đúng đẩy xe đội tiến lên.',
+      description: 'Chia lớp thành các đội đua (Mặt Trời, Ngôi Sao,...). Tiến độ tính theo tỷ lệ đúng để đội ít hoặc nhiều thành viên được so sánh công bằng.',
       icon: <Flag className="w-8 h-8 text-rose-500" />,
       color: 'border-rose-400',
       bg: 'bg-rose-50',
@@ -63,7 +63,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
     {
       type: 'KNOWLEDGE_BOX',
       title: '5. Hộp Quà Kiến Thức',
-      description: 'Mở hộp quà bất ngờ nhận câu hỏi, điểm may mắn hoặc quyền ưu tiên phát biểu.',
+      description: 'Mở hộp quà bất ngờ nhận câu hỏi, lời khen hoặc hoạt động cùng bạn; không cộng điểm may mắn.',
       icon: <Gift className="w-8 h-8 text-purple-500" />,
       color: 'border-purple-400',
       bg: 'bg-purple-50',
@@ -86,17 +86,18 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="CENTRAL GAME HUB - TRÒ CHƠI LỚP HỌC">
+    <Modal isOpen={isOpen} onClose={onClose} title="TRÒ CHƠI LỚP HỌC">
       <div className="space-y-6">
         {/* Game List Selector */}
         <div className="grid grid-cols-1 gap-3">
           {gamesList.map((g) => {
             const isSelected = selectedGame === g.type;
             return (
-              <div
+              <button
+                type="button" aria-pressed={isSelected}
                 key={g.type}
                 onClick={() => setSelectedGame(g.type)}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center space-x-4 ${
+                className={`w-full text-left p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center space-x-4 ${
                   isSelected
                     ? `${g.color} ${g.bg} ring-2 ring-sky-400 shadow-md scale-[1.01]`
                     : 'bg-white border-slate-200 hover:border-slate-300'
@@ -107,7 +108,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
                   <h4 className="font-black text-slate-900 text-base">{g.title}</h4>
                   <p className="text-xs font-medium text-slate-600">{g.description}</p>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -127,7 +128,7 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
                 soundEnabled ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-slate-200 text-slate-600 border-slate-300'
               }`}
             >
-              {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4" />}
+
               <span>{soundEnabled ? 'Âm thanh: BẬT' : 'Âm thanh: TẮT'}</span>
             </button>
           </div>
@@ -136,17 +137,17 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
             {/* Timer setting */}
             {selectedGame === 'QUICK_ANSWER' && (
               <div>
-                <label className="block mb-1 font-bold text-slate-800 flex items-center gap-1">
+                <label htmlFor="game-time" className="block mb-1 font-bold text-slate-800 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-sky-600" /> Thời gian đếm ngược:
                 </label>
                 <select
-                  value={timerSeconds}
+                  id="game-time" value={timerSeconds}
                   onChange={(e) => setTimerSeconds(Number(e.target.value))}
                   className="w-full p-2 rounded-xl border border-slate-300 font-bold text-slate-900 bg-white"
                 >
                   <option value={0}>Không giới hạn</option>
-                  <option value={5}>5 giây</option>
-                  <option value={10}>10 giây</option>
+
+
                   <option value={15}>15 giây</option>
                   <option value={20}>20 giây</option>
                   <option value={30}>30 giây</option>
@@ -204,13 +205,14 @@ export const GameHubModal: React.FC<GameHubModalProps> = ({ isOpen, onClose, onS
                   <option value={4}>4 Đội (+ Sấm Chớp)</option>
                 </select>
                 <label className="block mt-3 font-bold text-slate-800">Tên nhóm (mỗi dòng một tên, có thể bỏ trống)</label>
-                <textarea value={teamNames} onChange={(e) => setTeamNames(e.target.value)} rows={4} className="w-full p-3 border rounded-xl text-slate-900 bg-white" placeholder="Nhóm 1\nNhóm 2" />
-                <p className="text-xs text-slate-600 mt-2">Học sinh đã vào phòng được chia đều theo thứ tự tham gia. Hãy chờ đủ học sinh trước khi bắt đầu. Mỗi thành viên nộp riêng; mỗi câu đúng được 1 điểm nhóm.</p>
+                <textarea maxLength={240} aria-label="Tên các đội" value={teamNames} onChange={(e) => setTeamNames(e.target.value)} rows={4} className="w-full p-3 border rounded-xl text-slate-900 bg-white" placeholder="Nhóm 1\nNhóm 2" />
+                <p className="text-xs text-slate-600 mt-2">Học sinh đã vào phòng được chia đều theo thứ tự tham gia. Hãy chờ đủ học sinh trước khi bắt đầu. Mỗi thành viên nộp riêng; tiến độ đội tính bằng tỷ lệ đúng, không cộng điểm ngẫu nhiên. Các em vào sau cần giáo viên tạo lại đội.</p>
               </div>
             )}
           </div>
         </div>
 
+        <p className="rounded-xl bg-sky-50 p-3 text-sm text-sky-950">Chơi để hiểu bài và cùng tiến bộ. Ô cửa/hộp câu hỏi được giới hạn theo số câu chưa làm, không lặp lại câu đã nộp trong phòng. Muốn luyện lại cả bộ, thầy/cô tạo phòng học mới. Điểm câu hỏi theo bộ đề; quà may mắn không cộng điểm.</p>
         {/* Start Game Action */}
         <Button variant="student" size="xl" fullWidth onClick={handleStart}>
           🚀 BẮT ĐẦU TRÒ CHƠI

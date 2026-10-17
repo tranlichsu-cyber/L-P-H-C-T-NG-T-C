@@ -1,8 +1,10 @@
+import {useWorksheetState} from '../../hooks/useWorksheet';
+import {setSoundMuted} from '../../utils/audio';
 import {LessonDashboard,type LessonTab} from '../../components/teacher/LessonDashboard';
 import {TeacherLearningSignals} from '../../components/activities/LearningSignals';
 import {WorksheetTeacherPanel} from '../../components/worksheets/WorksheetTeacherPanel';
 import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -62,6 +64,9 @@ export const RoomControllerPage: React.FC = () => {
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [isManualScoreModalOpen, setIsManualScoreModalOpen] = useState(false);
   const [isGameHubOpen, setIsGameHubOpen] = useState(false);
+
+  const gameActionLock=useRef(false);
+  const [gameActionBusy,setGameActionBusy]=useState(false);
 
   // Calling student state
   const [isSpinning, setIsSpinning] = useState(false);
@@ -133,6 +138,8 @@ export const RoomControllerPage: React.FC = () => {
   }, [paramRoomId, quizzes, classes, currentUser?.uid, showToast]);
 
   const room = useRoomRealtime(activeRoomId);
+  const {state:gameWorksheetState}=useWorksheetState(room?.id||null);
+  useEffect(()=>{setSoundMuted(room?.activeGame?.settings.soundEnabled===false);return()=>setSoundMuted(false);},[room?.activeGame?.settings.soundEnabled]);
 
   if (!room) {
     return (
@@ -162,11 +169,12 @@ export const RoomControllerPage: React.FC = () => {
   const isRoomFinished = room.status === 'FINISHED';
   const qStatus = liveQ ? liveQ.status : 'READY';
 
+  const gamePaused=room.activeGame?.status==='PAUSED';
   const canStartSession = room.status === 'WAITING';
-  const canOpenQuestion = !isRoomFinished && (qStatus === 'READY' || qStatus === 'CLOSED');
-  const canCloseQuestion = !isRoomFinished && qStatus === 'OPEN';
-  const canShowResult = !isRoomFinished && qStatus === 'CLOSED';
-  const canNextQuestion = !isRoomFinished && qStatus === 'RESULT';
+  const canOpenQuestion = !isRoomFinished && !gamePaused && (qStatus === 'READY' || qStatus === 'CLOSED');
+  const canCloseQuestion = !isRoomFinished && !gamePaused && qStatus === 'OPEN';
+  const canShowResult = !isRoomFinished && !gamePaused && qStatus === 'CLOSED';
+  const canNextQuestion = !isRoomFinished && !gamePaused && qStatus === 'RESULT' && (!room.activeGame?.questionIds||room.activeGame.questionIds.indexOf(currentQuestionId)<room.activeGame.questionIds.length-1);
 
   const joinUrl = `${window.location.origin}/student/join?room=${room.roomCode}`;
 
@@ -215,8 +223,10 @@ export const RoomControllerPage: React.FC = () => {
   };
 
   const handleNextQuestion = async () => {
-    if (currentIndex < questionIds.length - 1) {
-      const nextId = questionIds[currentIndex + 1];
+    const sequence=room.activeGame?.questionIds||questionIds;
+    const index=sequence.indexOf(currentQuestionId);
+    if (index>=0&&index < sequence.length - 1) {
+      const nextId = sequence[index + 1];
       try {
         const ok = await Promise.resolve(activeRealtimeService.openQuestion(room.id, nextId));
         if (!ok) throw new Error('Không thể chuyển câu hỏi.');
@@ -366,10 +376,20 @@ export const RoomControllerPage: React.FC = () => {
     }
   };
 
+  const gameQuestionResult=async(id:string)=>{try{const ok=await Promise.resolve(activeRealtimeService.showQuestionResult(room.id,id));if(!ok)throw Error('Chưa công bố được đáp án.');}catch(e){showToast((e as Error).message,'error');}};
+  const gameQuestionClose=async(id:string)=>{try{const ok=await Promise.resolve(activeRealtimeService.closeQuestion(room.id,id));if(!ok)throw Error('Chưa đóng được nhận bài.');}catch(e){showToast((e as Error).message,'error');}};
+  const openGameItem=async(kind:'doors'|'boxes',id:number)=>{if(gameActionLock.current)return;gameActionLock.current=true;setGameActionBusy(true);try{
+    const game=room.activeGame;if(!game||game.status==='PAUSED'||room.status==='FINISHED')return;
+    const item=game[kind]?.find(x=>x.id===id);if(!item||item.isOpened)return;
+    if(item.questionId){const ok=await Promise.resolve(activeRealtimeService.openQuestion(room.id,item.questionId));if(!ok)throw Error('Chưa mở được câu hỏi.');}
+    const ok=await Promise.resolve(activeRealtimeService.updateGamePayload(room.id,g=>({...g,[kind]:g[kind]?.map(x=>x.id===id?{...x,isOpened:true}:x)})));if(!ok)throw Error('Chưa mở được ô chơi.');
+  }catch(e){showToast((e as Error).message,'error');}finally{gameActionLock.current=false;setGameActionBusy(false);}};
   // --- GAME HANDLERS ---
   const handleStartGame = async (type: GameType, settings: GameSessionData['settings']) => {
     try {
-      const game = await Promise.resolve(activeRealtimeService.createGameSession(room.id, type, settings, questionIds));
+      if(room.status==='FINISHED')throw Error('Tiết học đã kết thúc.');
+      if(gameWorksheetState.worksheetId)throw Error('Thầy/cô thu phiếu hoặc hoạt động đang phát trước khi mở trò chơi.');
+      const game = await Promise.resolve(activeRealtimeService.createGameSession(room.id, type, settings, questionIds.filter(id=>['READY','OPEN'].includes(room.liveQuestions[id]?.status)&&!allSubmissionsList.some(w=>w.questionId===id))));
       if (!game) throw new Error('Không thể tạo trò chơi.');
       const started = await Promise.resolve(activeRealtimeService.startGameSession(room.id));
       if (!started) throw new Error('Không thể bắt đầu trò chơi.');
@@ -448,7 +468,7 @@ export const RoomControllerPage: React.FC = () => {
               {room.status === 'FINISHED' ? 'Đã kết thúc' : room.status === 'ACTIVE' ? 'Đang Live' : 'Đang phòng chờ'}
             </Badge>
 
-            <Button variant="warning" size="sm" onClick={() => setIsGameHubOpen(true)} className="font-bold text-slate-950">
+            <Button disabled={isRoomFinished||!!room.activeGame} variant="warning" size="sm" onClick={() => setIsGameHubOpen(true)} className="font-bold text-slate-950">
               <Gamepad2 className="w-4 h-4 mr-1" /> GAME HUB TRÒ CHƠI
             </Button>
 
@@ -484,7 +504,7 @@ export const RoomControllerPage: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-3">
-              <Button variant="secondary" size="sm" onClick={handlePauseGame} className="font-bold">
+              <Button disabled={isRoomFinished} variant="secondary" size="sm" onClick={handlePauseGame} className="font-bold">
                 <Pause className="w-4 h-4 mr-1" /> {activeGame.status === 'PAUSED' ? 'TIẾP TỤC' : 'TẠM DỪNG'}
               </Button>
               <Button variant="danger" size="sm" onClick={handleFinishGame} className="font-bold">
@@ -493,17 +513,20 @@ export const RoomControllerPage: React.FC = () => {
             </div>
           </div>
 
+          {activeGame.status==='PAUSED'&&<p role="status" className="rounded-xl bg-amber-100 p-4 font-bold">Trò chơi tạm dừng. Bấm Tiếp tục để chơi và nhận bài trở lại.</p>}
+          <fieldset disabled={activeGame.status==='PAUSED'||isRoomFinished||gameActionBusy} className="min-w-0">
           {activeGame.type === 'RANDOM_WHEEL' && (
             <RandomWheelGame
+              paused={activeGame.status==='PAUSED'||isRoomFinished}
               participants={participantsList}
               calledStudentIds={activeGame.calledStudentIds || []}
               onSpinFinish={(selected) => {
-                activeRealtimeService.updateGamePayload(room.id, (g) => ({
+                void Promise.resolve(activeRealtimeService.updateGamePayload(room.id, (g) => ({
                   ...g,
-                  calledStudentIds: [...(g.calledStudentIds || []), selected.studentId],
-                }));
+                  calledStudentIds: [...new Set([...(g.calledStudentIds || []), selected.studentId])],
+                }))).catch(()=>showToast('Chưa lưu được lượt gọi.','error'));
               }}
-              onAwardOralScore={handleAddManualPoint}
+              onAwardOralScore={async(id,name,points,reason,key)=>{const ok=await Promise.resolve(activeRealtimeService.addManualScore(room.id,id,name,points,reason,key));if(!ok)throw Error('Chưa ghi nhận được điểm.');showToast('Đã ghi nhận điểm lượt phát biểu.','success');}}
               onCloseGame={handleFinishGame}
             />
           )}
@@ -512,17 +535,8 @@ export const RoomControllerPage: React.FC = () => {
             <MysteryDoorGame
               doors={activeGame.doors || []}
               liveQuestions={room.liveQuestions}
-              onOpenDoor={(doorId) => {
-                const targetDoor = activeGame.doors?.find((d) => d.id === doorId);
-                if (targetDoor) {
-                  activeRealtimeService.openQuestion(room.id, targetDoor.questionId);
-                  activeRealtimeService.updateGamePayload(room.id, (g) => ({
-                    ...g,
-                    doors: g.doors?.map((d) => (d.id === doorId ? { ...d, isOpened: true } : d)),
-                  }));
-                }
-              }}
-              onShowResult={handleShowResult}
+              onOpenDoor={(id)=>void openGameItem('doors',id)}
+              onShowResult={gameQuestionResult} onCloseQuestion={gameQuestionClose}
               onCloseGame={handleFinishGame}
             />
           )}
@@ -531,10 +545,11 @@ export const RoomControllerPage: React.FC = () => {
             <QuickAnswerGame
               question={liveQ}
               submissions={submissionsList}
-              timerDuration={activeGame.settings.timerSeconds || 15}
+              game={isRoomFinished?{...activeGame,status:'PAUSED'}:activeGame}
               onOpenQuestion={handleOpenQuestion}
-              onCloseQuestion={handleCloseQuestion}
+              onCloseQuestion={(id)=>void gameQuestionClose(id||currentQuestionId)}
               onShowResult={handleShowResult}
+              onNextQuestion={handleNextQuestion} canNext={canNextQuestion&&currentIndex<questionIds.length-1}
               onCloseGame={handleFinishGame}
             />
           )}
@@ -544,10 +559,11 @@ export const RoomControllerPage: React.FC = () => {
               teams={activeGame.teams || {}}
               participants={room.participants || {}}
               question={liveQ}
-              submissions={allSubmissionsList.filter((s) => (typeof s.submittedAt === 'string' ? Date.parse(s.submittedAt) : (s.submittedAt as unknown as { toMillis?: () => number })?.toMillis?.() || 0) >= Date.parse(activeGame.createdAt))}
+              submissions={allSubmissionsList.filter((s) => activeGame.questionIds?activeGame.questionIds.includes(s.questionId):(typeof s.submittedAt === 'string' ? Date.parse(s.submittedAt) : (s.submittedAt as unknown as { toMillis?: () => number })?.toMillis?.() || 0) >= Date.parse(activeGame.createdAt))}
               onOpenQuestion={handleOpenQuestion}
               onCloseQuestion={handleCloseQuestion}
               onShowResult={handleShowResult}
+              onNextQuestion={handleNextQuestion} canNext={canNextQuestion&&currentIndex<questionIds.length-1}
               onCloseGame={handleFinishGame}
             />
           )}
@@ -556,22 +572,12 @@ export const RoomControllerPage: React.FC = () => {
             <KnowledgeBoxGame
               boxes={activeGame.boxes || []}
               liveQuestions={room.liveQuestions}
-              onOpenBox={(boxId) => {
-                const targetBox = activeGame.boxes?.find((b) => b.id === boxId);
-                if (targetBox) {
-                  if (targetBox.type === 'QUESTION' && targetBox.questionId) {
-                    activeRealtimeService.openQuestion(room.id, targetBox.questionId);
-                  }
-                  activeRealtimeService.updateGamePayload(room.id, (g) => ({
-                    ...g,
-                    boxes: g.boxes?.map((b) => (b.id === boxId ? { ...b, isOpened: true } : b)),
-                  }));
-                }
-              }}
-              onShowResult={handleShowResult}
+              onOpenBox={(id)=>void openGameItem('boxes',id)}
+              onShowResult={gameQuestionResult} onCloseQuestion={gameQuestionClose}
               onCloseGame={handleFinishGame}
             />
           )}
+          </fieldset>
         </div>
       )}
 

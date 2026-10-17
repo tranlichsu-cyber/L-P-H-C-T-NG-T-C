@@ -152,6 +152,23 @@ try{
  await assertSucceeds(updateDoc(doc(teacher,'rooms','collab'),{status:'FINISHED'}));
  await assertFails(setDoc(doc(pupil,'rooms','collab','learningSignals','s1'),{...signal,requestId:'late'}));
  await assertFails(setDoc(doc(teacher,'rooms','collab','worksheets','late-group'),{...grouped,id:'late-group'}));
+ // Game pause and absolute deadlines must also be enforced against direct SDK writes.
+ await assertSucceeds(setDoc(doc(teacher,'rooms','games'),{teacherId:'teacher',status:'ACTIVE'}));
+ await assertSucceeds(setDoc(doc(teacher,'rooms','games','participants','s1'),{name:'Minh Anh',mockAuthUid:'pupil'}));
+ for(const qid of ['q1','q2'])await assertSucceeds(setDoc(doc(teacher,'rooms','games','liveQuestions',qid),{status:'OPEN'}));
+ const gameSubmission={studentId:'s1',studentName:'Minh Anh',authUid:'pupil',questionId:'q1',answer:'A'};
+ const gameRef=doc(teacher,'rooms','games'),answerRef=doc(pupil,'rooms','games','submissions','q1_s1');
+ await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'QUICK_ANSWER',status:'RUNNING',roundQuestionId:'q1',roundDeadlineAt:0}}));
+ await assertFails(setDoc(answerRef,{...gameSubmission,isCorrect:true}));
+ await assertFails(setDoc(doc(pupil,'rooms','games','submissions','extra-copy'),gameSubmission));
+ await assertSucceeds(setDoc(answerRef,gameSubmission));await assertSucceeds(deleteDoc(doc(teacher,'rooms','games','submissions','q1_s1')));
+ await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'QUICK_ANSWER',status:'PAUSED',roundQuestionId:'q1',roundDeadlineAt:0}}));await assertFails(setDoc(answerRef,gameSubmission));
+ await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'QUICK_ANSWER',status:'RUNNING',roundQuestionId:'q1',roundDeadlineAt:Date.now()-1000}}));await assertFails(setDoc(answerRef,gameSubmission));
+ await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'QUICK_ANSWER',status:'RUNNING',roundQuestionId:'q2',roundDeadlineAt:Date.now()+60000}}));await assertFails(setDoc(answerRef,gameSubmission));
+ await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'QUICK_ANSWER',status:'RUNNING',roundQuestionId:'q1',roundDeadlineAt:Date.now()+60000}}));await assertSucceeds(setDoc(answerRef,gameSubmission));await assertSucceeds(deleteDoc(doc(teacher,'rooms','games','submissions','q1_s1')));
+ await assertSucceeds(updateDoc(gameRef,{activeGame:{type:'TEAM_RACE',status:'PAUSED'}}));await assertFails(setDoc(answerRef,gameSubmission));
+ await assertSucceeds(updateDoc(gameRef,{activeGame:null,status:'FINISHED'}));await assertFails(setDoc(answerRef,gameSubmission));
+ console.log('PASS: game pause, exact current timed question, unlimited rounds, future deadline acceptance, expired deadline and finished-room rejection.');
  console.log('PASS: private help signals, teacher acknowledgment, representative-only group submission, same-group response/feedback access, no other-group/list/draft access, immutable membership, revoked session binding and closed/finished gates.');
  console.log('PASS: private drafts, teacher-only release, bounded reviews, own returned feedback and archived sheet access after finished room, private inbox and preserved published feedback.');
  console.log('PASS: Word worksheet room ownership, individual response privacy, immutable submission, teacher-only projection, closed/finished gates, atomic publishing, and archived work projection.');

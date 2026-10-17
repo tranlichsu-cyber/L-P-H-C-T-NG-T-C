@@ -75,6 +75,10 @@ export interface GameSessionData {
   };
   currentRound: number;
   roundStartedAt?: string;
+  questionIds?: string[];
+  roundQuestionId?: string;
+  roundDeadlineAt?: number;
+  roundPausedRemainingMs?: number;
   roundDurationSeconds?: number;
   roundStatus?: 'READY' | 'OPEN' | 'CLOSED' | 'RESULT';
   activeQuestionId?: string | null;

@@ -1,3 +1,4 @@
+import {openGameRound,toggleGamePause,gameAcceptsAnswer} from './gamePolicy';
 import type {
   MockRoomData,
   CreateRoomParams,
@@ -169,6 +170,10 @@ export class MockRealtimeService {
     const liveQ = room.liveQuestions[questionId];
     if (!liveQ) return false;
 
+    if(room.activeGame?.status==='PAUSED')return false;
+    if(room.activeQuestionId===questionId&&liveQ.status==='OPEN')return true;
+    if(room.activeQuestionId&&room.activeQuestionId!==questionId&&room.liveQuestions[room.activeQuestionId]?.status==='OPEN')room.liveQuestions[room.activeQuestionId].status='CLOSED';
+    if(room.activeGame)room.activeGame=openGameRound(room.activeGame,questionId);
     // Enforce Privacy: Omit correctAnswer & explanation
     liveQ.status = 'OPEN';
     liveQ.startedAt = new Date().toISOString();
@@ -287,7 +292,8 @@ export class MockRealtimeService {
     studentId: string,
     studentName: string,
     points: number,
-    reason?: string
+    reason?: string,
+    awardKey?: string
   ): boolean {
     const db = loadMockDatabase();
     const room = db.rooms[roomId];
@@ -296,8 +302,9 @@ export class MockRealtimeService {
     if (!room.scores) room.scores = {};
     if (!room.scoreEvents) room.scoreEvents = {};
 
+    if(awardKey&&room.scoreEvents?.[awardKey])return true;
     const now = new Date().toISOString();
-    const eventId = `manual_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const eventId = awardKey || `manual_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     room.scoreEvents[eventId] = {
       id: eventId,
@@ -400,6 +407,7 @@ export class MockRealtimeService {
     const db = loadMockDatabase();
     const room = db.rooms[params.roomId];
     if (!room) return { success: false, error: 'Phòng không tồn tại.' };
+    if(room.status==='FINISHED'||!gameAcceptsAnswer(room.activeGame,params.questionId))return {success:false,error:'Trò chơi đang tạm dừng hoặc đã hết giờ nhận bài.'};
 
     const liveQ = room.liveQuestions[params.questionId];
     if (!liveQ) return { success: false, error: 'Câu hỏi không tồn tại.' };
@@ -492,11 +500,12 @@ export class MockRealtimeService {
   ): GameSessionData | null {
     const db = loadMockDatabase();
     const room = db.rooms[roomId];
-    if (!room) return null;
+    if (!room||room.status==='FINISHED') return null;
 
     const participants = Object.values(room.participants || {});
     const game = buildInitialGameSession(roomId, type, settings, questionIds, participants);
 
+    if(type!=='RANDOM_WHEEL'&&game.activeQuestionId)room.activeQuestionId=game.activeQuestionId;
     room.activeGameId = game.id;
     room.activeGame = game;
 
@@ -515,9 +524,9 @@ export class MockRealtimeService {
   public startGameSession(roomId: string): boolean {
     const db = loadMockDatabase();
     const room = db.rooms[roomId];
-    if (!room || !room.activeGame) return false;
+    if (!room || !room.activeGame||room.status==='FINISHED') return false;
 
-    room.activeGame.status = 'RUNNING';
+    room.activeGame = {...openGameRound(room.activeGame,room.activeQuestionId||room.activeGame.activeQuestionId||''),status:'RUNNING'};
     room.activeGame.startedAt = new Date().toISOString();
     room.activeGame.roundStartedAt = new Date().toISOString();
 
@@ -536,10 +545,9 @@ export class MockRealtimeService {
   public pauseGameSession(roomId: string): boolean {
     const db = loadMockDatabase();
     const room = db.rooms[roomId];
-    if (!room || !room.activeGame) return false;
+    if (!room || !room.activeGame||room.status==='FINISHED') return false;
 
-    const currentStatus = room.activeGame.status;
-    room.activeGame.status = currentStatus === 'PAUSED' ? 'RUNNING' : 'PAUSED';
+    room.activeGame = toggleGamePause(room.activeGame);
 
     saveMockDatabase(db);
 
@@ -558,6 +566,7 @@ export class MockRealtimeService {
     const room = db.rooms[roomId];
     if (!room) return false;
 
+    if(room.activeGame&&room.activeQuestionId&&room.liveQuestions[room.activeQuestionId]?.status==='OPEN')room.liveQuestions[room.activeQuestionId].status='CLOSED';
     if (room.activeGame) {
       room.activeGame.status = 'FINISHED';
       room.activeGame.endedAt = new Date().toISOString();
@@ -581,7 +590,7 @@ export class MockRealtimeService {
   public updateGamePayload(roomId: string, updateFn: (game: GameSessionData) => GameSessionData): boolean {
     const db = loadMockDatabase();
     const room = db.rooms[roomId];
-    if (!room || !room.activeGame) return false;
+    if (!room || !room.activeGame||room.status==='FINISHED') return false;
 
     room.activeGame = updateFn({ ...room.activeGame });
     saveMockDatabase(db);

@@ -49,7 +49,7 @@ jobs:
 
       - name: Check student practice and Word worksheets
         run: |
-          for check in check-worksheet-report check-activities check-gk1-exams check-self-practice-scores check-catalogue check-student-self-practice check-read-efficiency check-writing-practice check-curriculum check-curriculum-corrections check-tradition-quizzes check-history-articles check-heritage-catalog check-tradition-map check-worksheets; do
+          for check in check-games check-worksheet-report check-activities check-gk1-exams check-self-practice-scores check-catalogue check-student-self-practice check-read-efficiency check-writing-practice check-curriculum check-curriculum-corrections check-tradition-quizzes check-history-articles check-heritage-catalog check-tradition-map check-worksheets; do
             if ! node "scripts/$check.mjs" > "$RUNNER_TEMP/$check.log" 2>&1; then
               cat "$RUNNER_TEMP/$check.log"
               node -e 'const fs=require("fs");const log=fs.readFileSync(process.argv[1],"utf8").slice(-6000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A");console.log("::error::"+log)' "$RUNNER_TEMP/$check.log"

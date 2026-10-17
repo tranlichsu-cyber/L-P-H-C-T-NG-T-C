@@ -1,3 +1,4 @@
+import {useGameClock} from '../../components/games/useGameClock';
 import { OrderingAnswer } from '../../components/student/OrderingAnswer';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
@@ -17,6 +18,8 @@ export const QuizPage: React.FC = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  const gameSeconds=useGameClock(room?.activeGame,session.liveQuestion?.id);
+  const gameBlocked=room?.status==='FINISHED'||room?.activeGame?.status==='PAUSED'||gameSeconds===0;
   // Automatic transition to Result Page when status becomes RESULT
   useEffect(() => {
     if (session.liveQuestion?.status === 'RESULT') {
@@ -36,7 +39,7 @@ export const QuizPage: React.FC = () => {
   }
 
   const q = session.liveQuestion;
-  const isClosed = q.status === 'CLOSED';
+  const isClosed = q.status !== 'OPEN'||gameBlocked;
   const isSubmitted = session.hasSubmitted;
 
   // Handle Short Answer input change
@@ -53,7 +56,7 @@ export const QuizPage: React.FC = () => {
 
   // Confirm Final Submission -> Send to Realtime Service!
   const handleConfirmSubmit = async () => {
-    if (!session.roomId || !session.studentId || !session.selectedAnswer) return;
+    if (!session.roomId || !session.studentId || !session.selectedAnswer||isClosed||isSubmitted) return;
 
     const mockAuthUid = `mock-user-${session.studentId}`;
 
@@ -80,6 +83,7 @@ export const QuizPage: React.FC = () => {
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-6 animate-fade-in">
+      {room?.activeGame?.status==='PAUSED'&&<p role="status" className="rounded-xl bg-amber-100 p-4 font-bold">Thầy/cô đang tạm dừng trò chơi. Câu trả lời em chọn vẫn được giữ.</p>}{gameSeconds!==null&&<p role="timer" className="rounded-xl bg-sky-50 p-3 font-bold">{gameSeconds===0?'Đã hết giờ nhận bài.':'Thời gian còn lại: '+gameSeconds+' giây'}</p>}
       {/* Top Header Badge */}
       <div className="flex items-center justify-between bg-white px-4 py-3 rounded-2xl border border-sky-200 shadow-sm">
         <span className="text-xs font-bold text-sky-800 uppercase">
@@ -234,7 +238,7 @@ export const QuizPage: React.FC = () => {
           >
             {isClosed ? (
               <>
-                <Lock className="w-6 h-6 mr-2 inline" /> ĐÃ HẾT GIỜ
+                <Lock className="w-6 h-6 mr-2 inline" /> {room?.activeGame?.status==='PAUSED'?'ĐANG TẠM DỪNG':room?.status==='FINISHED'?'TIẾT HỌC ĐÃ KẾT THÚC':'ĐÃ KHÓA NHẬN BÀI'}
               </>
             ) : (
               <>
@@ -253,7 +257,7 @@ export const QuizPage: React.FC = () => {
         footer={
           <>
             <Button variant="secondary" onClick={() => setIsConfirmOpen(false)}>Chọn lại</Button>
-            <Button variant="primary" onClick={handleConfirmSubmit}>Gửi câu trả lời</Button>
+            <Button disabled={isClosed||isSubmitted} variant="primary" onClick={handleConfirmSubmit}>Gửi câu trả lời</Button>
           </>
         }
       >

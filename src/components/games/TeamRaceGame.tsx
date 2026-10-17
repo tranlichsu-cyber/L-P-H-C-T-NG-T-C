@@ -1,3 +1,4 @@
+import {teamResults} from '../../services/realtime/gamePolicy';
 import React from 'react';
 import { Button } from '../common/Button';
 import type { TeamData, LiveQuestionPublic, MockSubmission, MockParticipant } from '../../services/realtime/types';
@@ -5,6 +6,8 @@ import { playCorrectSound } from '../../utils/audio';
 // TeamRaceGame Component
 
 interface TeamRaceGameProps {
+  onNextQuestion:()=>void;
+  canNext:boolean;
   teams: Record<string, TeamData>;
   participants?: Record<string, MockParticipant>;
   question: LiveQuestionPublic | null;
@@ -17,6 +20,7 @@ interface TeamRaceGameProps {
 
 export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
   teams,
+  onNextQuestion,canNext,
   participants = {},
   question,
   submissions,
@@ -25,19 +29,18 @@ export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
   onShowResult,
   onCloseGame,
 }) => {
-  const teamsList = Object.values(teams || {}).map((team) => ({ ...team, score: submissions.filter((sub) => team.memberIds.includes(sub.studentId) && sub.isCorrect === true).length })).sort((a, b) => a.displayOrder - b.displayOrder);
-  const maxScore = Math.max(10, ...teamsList.map((t) => t.score));
+  const teamsList = teamResults(teams,submissions);
 
   const qStatus = question?.status || 'READY';
 
   return (
     <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 space-y-6 animate-fade-in border-2 border-slate-800">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+      <div className="flex flex-wrap gap-3 items-center justify-between border-b border-slate-800 pb-4">
         <div>
           <h3 className="text-2xl font-black text-rose-400 flex items-center gap-2">
             🏎️ HỌC THEO NHÓM
           </h3>
-          <p className="text-xs text-slate-400">Mỗi câu trả lời đúng của các thành viên sẽ đẩy xe đội tiến lên phía trước!</p>
+          <p className="text-xs text-slate-400">Cùng suy nghĩ và giải thích. Tiến độ đội là tỷ lệ câu đúng trên tổng lượt của thành viên ở các câu đã chấm; chưa trả lời tính là chưa đúng.</p>
         </div>
 
         <Button variant="primary" size="sm" onClick={onCloseGame}>
@@ -49,13 +52,13 @@ export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
       {/* Race Tracks Container */}
       <div className="space-y-4 my-6 bg-slate-950 p-6 rounded-3xl border border-slate-800">
         {teamsList.map((team) => {
-          const progressPct = Math.min(100, Math.max(5, (team.score / maxScore) * 100));
+          const progressPct = Math.min(100, Math.max(5, team.score));
 
           return (
             <div key={team.id} className="space-y-1.5">
               <div className="flex justify-between items-center text-xs font-extrabold">
                 <span style={{ color: team.color }}>{team.name} ({team.memberIds.length} thành viên)</span>
-                <span className="font-mono text-amber-400 text-sm">{team.score} Điểm</span>
+                <span className="font-mono text-amber-400 text-sm">{team.score}% • {team.correct}/{team.possible} lượt đúng</span>
               </div>
 
               {/* Race Track */}
@@ -92,9 +95,10 @@ export const TeamRaceGame: React.FC<TeamRaceGameProps> = ({
         </div>
       )}
 
+      {qStatus==='RESULT'&&<Button onClick={onNextQuestion} disabled={!canNext}>Câu tiếp theo</Button>}
       {/* Control Buttons */}
       <div className="flex flex-wrap items-center justify-center gap-3">
-        {qStatus === 'READY' && (
+        {question && qStatus === 'READY' && (
           <Button variant="success" size="lg" onClick={onOpenQuestion} className="font-bold">
             🏎️ BẮT ĐẦU VÒNG ĐUA
           </Button>
