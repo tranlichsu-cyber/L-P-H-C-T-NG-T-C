@@ -71,7 +71,7 @@ jobs:
           export NODE_PATH="$RUNNER_TEMP/self-practice-rule-tools/node_modules"
           if ! "$RUNNER_TEMP/self-practice-rule-tools/node_modules/.bin/firebase" emulators:exec --only firestore --project demo-self-practice 'node scripts/check-self-practice-rules.cjs' > "$RUNNER_TEMP/self-practice-rules.log" 2>&1; then
             cat "$RUNNER_TEMP/self-practice-rules.log"
-            node -e 'const fs=require("fs");const log=fs.readFileSync(process.argv[1],"utf8").slice(-10000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A");console.log("::error::"+log)' "$RUNNER_TEMP/self-practice-rules.log"
+            node -e 'const fs=require("fs");const log=fs.readFileSync(process.argv[1],"utf8").slice(-3000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A");console.log("::error::"+log)' "$RUNNER_TEMP/self-practice-rules.log"
             exit 1
           fi
           cat "$RUNNER_TEMP/self-practice-rules.log"

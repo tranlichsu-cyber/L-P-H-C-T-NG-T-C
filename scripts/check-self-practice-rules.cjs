@@ -154,7 +154,8 @@ try{
  await assertFails(setDoc(doc(teacher,'rooms','collab','worksheets','late-group'),{...grouped,id:'late-group'}));
  // Game pause and absolute deadlines must also be enforced against direct SDK writes.
  await assertSucceeds(setDoc(doc(teacher,'rooms','games'),{teacherId:'teacher',status:'ACTIVE'}));
- await assertSucceeds(setDoc(doc(teacher,'rooms','games','participants','s1'),{name:'Minh Anh',mockAuthUid:'pupil'}));
+ await assertSucceeds(setDoc(doc(teacher,'rooms','games','roster','s1'),{studentId:'s1',name:'Minh Anh'}));
+ await assertSucceeds(setDoc(doc(pupil,'rooms','games','participants','s1'),{studentId:'s1',name:'Minh Anh',mockAuthUid:'pupil'}));
  for(const qid of ['q1','q2'])await assertSucceeds(setDoc(doc(teacher,'rooms','games','liveQuestions',qid),{status:'OPEN'}));
  const gameSubmission={studentId:'s1',studentName:'Minh Anh',authUid:'pupil',questionId:'q1',answer:'A'};
  const gameRef=doc(teacher,'rooms','games'),answerRef=doc(pupil,'rooms','games','submissions','q1_s1');
