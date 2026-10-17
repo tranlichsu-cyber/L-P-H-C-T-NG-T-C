@@ -1,3 +1,5 @@
+import {TeacherRewardPanel} from '../../components/rewards/TeacherRewardPanel';
+import {useAuth} from '../../context/AuthContext';
 import {useSelfPracticeScores} from '../../hooks/useSelfPracticeScores';
 import {selfPracticePoints} from '../../services/selfPractice/scores';
 import {roundPoints} from '../../services/practice/grading';
@@ -23,6 +25,7 @@ export const StudentHistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const practiceScores=useSelfPracticeScores(classId);
   const { classes } = useTeacherData();
+  const {currentUser}=useAuth();
   const { showToast } = useToast();
 
   const currentClass = classes.find((c) => c.id === classId);
@@ -34,21 +37,26 @@ export const StudentHistoryPage: React.FC = () => {
   const [averageAccuracy, setAverageAccuracy] = useState<number>(0);
   const [historyError,setHistoryError]=useState('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const historyKey=[currentUser?.uid,classId,studentId,subjectFilter].join(':');
+  const [loadedHistoryKey,setLoadedHistoryKey]=useState('');
 
   useEffect(() => {
     if (!classId || !studentId) return;
+    let active=true;
     setIsLoading(true);
     setHistoryError('');
 
     HistoryService.getStudentLongitudinalHistory(classId, studentId, subjectFilter)
       .then((res) => {
+        if(!active)return;setLoadedHistoryKey(historyKey);
         setStudentName(res.studentName || currentStudent?.name || 'Học sinh');
         setRecords(res.records);
         setAverageAccuracy(res.averageAccuracy);
       })
-      .catch(() => {setHistoryError('Chưa tải được điểm các buổi học.');showToast('Lỗi khi tải lịch sử học sinh.', 'error');})
-      .finally(() => setIsLoading(false));
-  }, [classId, studentId, subjectFilter]);
+      .catch(() => {if(active){setHistoryError('Chưa tải được điểm các buổi học.');showToast('Lỗi khi tải lịch sử học sinh.', 'error');}})
+      .finally(() => {if(active)setIsLoading(false);});
+    return()=>{active=false;};
+  }, [classId, studentId, subjectFilter,historyKey]);
 
   return (
     <div className="space-y-6">
@@ -80,6 +88,7 @@ export const StudentHistoryPage: React.FC = () => {
           <p className="mt-2 text-sm text-slate-600">Tự luyện cộng nguyên điểm trên thang 10; mỗi bài chỉ lấy điểm cao nhất, làm lại không cộng trùng. Bài tự luận chưa chấm chưa được cộng. Điểm buổi học theo phạm vi lịch sử đã tải (tối đa 100 buổi, không gồm buổi lưu trữ).</p>
         </>}
       </Card>
+      {classId&&studentId&&currentClass&&<TeacherRewardPanel key={classId+studentId+(currentUser?.uid||'')} classId={classId} studentId={studentId} studentName={currentStudent?.name||studentName} teacherId={currentClass.teacherId||currentUser?.uid||'mock-teacher'} totalPoints={subjectFilter!=='ALL'||isLoading||historyError||loadedHistoryKey!==historyKey||practiceScores.loading||practiceScores.error?undefined:roundPoints(records.reduce((n,r)=>n+r.score,0)+selfPracticePoints(practiceScores.works,classId,studentId))}/>}
       {/* OVERVIEW CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-4 border-2 border-slate-200 bg-white">

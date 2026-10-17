@@ -1,3 +1,4 @@
+import {RewardShop,EquippedAvatar} from '../components/rewards/RewardShop';
 import {StudentEncouragementPanel} from '../components/activities/EncouragementPanel';
 import {StudentLearningSignal} from '../components/activities/LearningSignals';
 import {SCHOOL_LOGO_SRC} from '../assets/schoolLogo';
@@ -42,7 +43,7 @@ const StudentLayoutInner: React.FC = () => {
 
             {session.studentName ? (
               <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-950 border border-emerald-300 font-black text-xs sm:text-sm shadow-xs">
-                <UserCheck className="w-4 h-4 text-emerald-700" />
+                {room?.classId&&session.studentId&&session.roomId?<EquippedAvatar identity={{classId:room.classId,studentId:session.studentId,roomId:session.roomId}}/>:<UserCheck className="w-4 h-4 text-emerald-700"/>}
                 <span>{session.studentName}</span>
               </div>
             ) : (
@@ -63,6 +64,7 @@ const StudentLayoutInner: React.FC = () => {
         {session.studentId&&<Link to="/student/worksheet" className="mb-4 rounded-xl bg-emerald-700 text-white font-bold p-3 text-center">Phiếu / Hoạt động và bài đã trả</Link>}
         {session.studentId&&session.roomId&&<StudentLearningSignal key={session.roomId+session.studentId} roomId={session.roomId} studentId={session.studentId} finished={room?.status==='FINISHED'}/>}
         {session.studentId&&session.roomId&&<StudentEncouragementPanel key={session.roomId+session.studentId} roomId={session.roomId} studentId={session.studentId}/>}
+        {room?.classId&&session.studentId&&session.roomId&&<RewardShop key={session.roomId+session.studentId} identity={{classId:room.classId,studentId:session.studentId,roomId:session.roomId}}/>}
         <Outlet />
       </main>
 

@@ -101,12 +101,65 @@ service cloud.firestore {
       allow update, delete: if false; // Audit logs are immutable
     }
 
+    function validRewardBinding(d) {
+      return isAuthenticated() && d.keys().hasOnly(['classId','studentId','roomId','accessCode'])
+        && d.classId is string && d.studentId is string && d.roomId is string && d.accessCode is string
+        && ((d.roomId != '' && get(/databases/$(database)/documents/rooms/$(d.roomId)).data.classId == d.classId
+          && get(/databases/$(database)/documents/rooms/$(d.roomId)/participants/$(d.studentId)).data.mockAuthUid == request.auth.uid)
+          || (d.accessCode != '' && get(/databases/$(database)/documents/selfPracticeAccess/$(d.accessCode)).data.classId == d.classId
+          && get(/databases/$(database)/documents/selfPracticeAccess/$(d.accessCode)).data.studentId == d.studentId));
+    }
+    function ownsRewardWallet(classId, studentId) {
+      let binding = get(/databases/$(database)/documents/rewardAccess/$(request.auth.uid)).data;
+      return isAuthenticated() && binding.classId == classId && binding.studentId == studentId && validRewardBinding(binding);
+    }
+    match /rewardAccess/{uid} {
+      allow get: if isAuthenticated() && request.auth.uid == uid;
+      allow list, delete: if false;
+      allow create, update: if isAuthenticated() && request.auth.uid == uid && validRewardBinding(request.resource.data);
+    }
     // 6. Classes (classes/{classId})
     match /classes/{classId} {
       allow read: if isTeacher();
       allow create: if isTeacher();
       allow update, delete: if canManageClass(classId);
 
+      match /rewardWallets/{studentId} {
+        function avatarPrice(id) {
+          return id == 'cat' ? 3 : id == 'bunny' ? 4 : id == 'panda' ? 5 : id == 'robot' ? 6 : id == 'fox' ? 7 : id == 'astro' ? 8 : 0;
+        }
+        function validWallet(d) {
+          return d.keys().hasOnly(['classId','studentId','studentName','teacherId','totalPoints','earnedBadges','spentBadges','ownedAvatars','equippedAvatar','updatedAt'])
+            && d.classId == classId && d.studentId == studentId && d.studentName is string && d.teacherId is string
+            && d.totalPoints is number && d.totalPoints >= 0 && d.totalPoints <= 1000000000
+            && d.earnedBadges is int && d.earnedBadges >= 0 && d.earnedBadges * 20 <= d.totalPoints && d.totalPoints < (d.earnedBadges + 1) * 20
+            && d.spentBadges is int && d.spentBadges >= 0 && d.spentBadges <= d.earnedBadges
+            && d.ownedAvatars is list && d.ownedAvatars.size() == d.ownedAvatars.toSet().size() && d.ownedAvatars.hasAll(['starter'])
+            && d.ownedAvatars.hasOnly(['starter','cat','bunny','panda','robot','fox','astro']) && d.equippedAvatar in d.ownedAvatars
+            && d.updatedAt is string && d.updatedAt.size() <= 40;
+        }
+        function teacherCredit() {
+          let d = request.resource.data;
+          return canManageClass(classId) && validWallet(d)
+            && d.teacherId == get(/databases/$(database)/documents/classes/$(classId)).data.teacherId
+            && d.studentName == get(/databases/$(database)/documents/classes/$(classId)/students/$(studentId)).data.name;
+        }
+        function studentChoice() {
+          let d = request.resource.data;
+          let old = resource.data;
+          return ownsRewardWallet(classId,studentId) && validWallet(d)
+            && d.diff(old).affectedKeys().hasOnly(['spentBadges','ownedAvatars','equippedAvatar','updatedAt'])
+            && ((d.ownedAvatars == old.ownedAvatars && d.spentBadges == old.spentBadges && d.equippedAvatar in old.ownedAvatars)
+              || (d.ownedAvatars.size() == old.ownedAvatars.size() + 1 && d.ownedAvatars.hasAll(old.ownedAvatars)
+                && !(d.equippedAvatar in old.ownedAvatars) && d.ownedAvatars.toSet().difference(old.ownedAvatars.toSet()) == [d.equippedAvatar].toSet()
+                && d.spentBadges == old.spentBadges + avatarPrice(d.equippedAvatar)));
+        }
+        allow get: if canManageClass(classId) || ownsRewardWallet(classId,studentId);
+        allow list: if canManageClass(classId);
+        allow create: if teacherCredit() && request.resource.data.spentBadges == 0 && request.resource.data.ownedAvatars == ['starter'] && request.resource.data.equippedAvatar == 'starter';
+        allow update: if (teacherCredit() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentName','teacherId','totalPoints','earnedBadges','updatedAt']) && request.resource.data.totalPoints >= resource.data.totalPoints) || studentChoice();
+        allow delete: if false;
+      }
       match /students/{studentId} {
         allow read: if isTeacher();
         allow write: if canManageClass(classId);

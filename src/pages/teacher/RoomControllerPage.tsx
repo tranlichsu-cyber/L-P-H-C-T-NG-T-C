@@ -634,7 +634,7 @@ export const RoomControllerPage: React.FC = () => {
           >
             📊 TỔNG QUAN
           </button>
-          <button onClick={()=>setActiveTab('encouragement')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='encouragement'?'bg-amber-700 text-white':'bg-amber-50 text-amber-950'}`}>HUY HIỆU CỐ GẮNG</button>
+          <button onClick={()=>setActiveTab('encouragement')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='encouragement'?'bg-amber-700 text-white':'bg-amber-50 text-amber-950'}`}>LỜI KHEN</button>
           <button onClick={()=>setActiveTab('activities')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='activities'?'bg-violet-700 text-white':'bg-violet-50 text-violet-900'}`}>HOẠT ĐỘNG LỚP HỌC</button>
           <button onClick={()=>setActiveTab('worksheets')} className={`px-4 py-2 rounded-xl text-sm font-bold ${activeTab==='worksheets'?'bg-sky-600 text-white':'bg-slate-100 text-slate-700'}`}>PHIẾU WORD</button>
           <button
@@ -842,6 +842,7 @@ export const RoomControllerPage: React.FC = () => {
                     <Badge variant="primary" className="font-bold">{currentScore} điểm</Badge>
                   </div>
 
+                  {room.classId&&<button type="button" onClick={()=>navigate(`/teacher/classes/${room.classId}/students/${p.studentId}/history`)} className="min-h-11 w-full rounded-xl border border-violet-200 bg-violet-50 p-3 font-bold text-violet-900">Huy hiệu & avatar của {p.name}</button>}
                   {/* Manual point quick actions */}
                   <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200">
                     <button
