@@ -54,7 +54,5 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
         run: |
           export NODE_PATH="$RUNNER_TEMP/history-point-tools/node_modules"
-          mode="--dry-run"
-          if test "$APPLY_INPUT" = "true"; then mode="--apply"; fi
-          if test "$EVENT_NAME" = "push" && rg -q '^APPLY=YES$' HISTORY_POINTS_BACKFILL_TRIGGER.txt; then mode="--apply"; fi
+          mode=$(node -e 'const fs=require("fs");const apply=process.env.EVENT_NAME==="workflow_dispatch"?process.env.APPLY_INPUT==="true":/^APPLY=YES$/m.test(fs.readFileSync("HISTORY_POINTS_BACKFILL_TRIGGER.txt","utf8"));console.log(apply?"--apply":"--dry-run")')
           node scripts/backfill-history-points.cjs "$mode"

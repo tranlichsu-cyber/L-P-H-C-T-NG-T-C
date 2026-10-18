@@ -2,3 +2,5 @@
 APPLY=YES
 
 2026-10-18: Apply the verified plan after emulator integration tests. Read-only production check: 35 students, 6 completed rooms, 6 practice attempts, 53 missing points, no unresolved or inconsistent records.
+
+2026-10-18: Select apply mode using Node rather than an optional runner executable; require the completed production update report.
