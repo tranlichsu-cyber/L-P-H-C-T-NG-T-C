@@ -1,0 +1,24 @@
+const assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
+if(!/^(127\.0\.0\.1|localhost):[0-9]+$/.test(process.env.FIRESTORE_EMULATOR_HOST||''))throw Error('EMULATOR_REQUIRED');
+const {initializeApp}=require('firebase-admin/app'),{getFirestore}=require('firebase-admin/firestore');
+initializeApp({projectId:'demo-history-points'});const db=getFirestore();
+const run=mode=>execFileSync(process.execPath,['scripts/backfill-history-points.cjs',mode,'--emulator'],{env:process.env,encoding:'utf8',maxBuffer:2e6});
+(async()=>{
+ await db.doc('classes/c').set({teacherId:'t'});for(const id of ['s1','s2','s3'])await db.doc('classes/c/students/'+id).set({name:'Test student'});
+ const wallet={totalPoints:160,earnedBadges:8,spentBadges:3,ownedAvatars:['starter','cat'],equippedAvatar:'cat'};await db.doc('classes/c/rewardWallets/s1').set(wallet);
+ const batch=db.batch();for(let i=0;i<150;i++){batch.set(db.doc('rooms/r'+i),{classId:'c',status:'FINISHED',archived:true});batch.set(db.doc('rooms/r'+i+'/scores/s1'),{score:1});}await batch.commit();
+ const questions=[{id:'q',type:'SHORT_ANSWER',content:'2+2',correctAnswer:'4',points:10}];
+ await db.doc('selfPracticeQuizzes/test').set({published:true,questions,updatedAt:'2026-10-01'});
+ const work=answer=>({classId:'c',studentId:'s1',teacherId:'t',kind:'QUIZ',quizId:'test',submittedAt:'2026-10-18',result:{earnedPoints:99999,breakdown:[{questionId:'q',answer}]}});
+ for(const [id,data]of [['correct',work('4')],['retry',work('4')],['wrong',work('wrong')],['missing',{...work('4'),quizId:'missing'}]])await db.doc('selfPracticeWork/'+id).set(data);
+ await db.doc('classes/c/rewardPoints/s2').set({currentPoints:5,livePoints:5,practicePoints:0,legacyImported:false,updatedAt:'old',sourceId:'old'});
+ await db.doc('classes/c/rewardPoints/s2/roomCredits/old').set({points:5});
+ await db.doc('classes/c/rewardPoints/s3').set({currentPoints:999,livePoints:999,practicePoints:0,legacyImported:false});
+ const preview=run('--dry-run');assert(preview.includes('HISTORY_POINTS_PLAN'));assert.equal((await db.doc('classes/c/rewardPoints/s1').get()).exists,false);
+ run('--apply');let p=(await db.doc('classes/c/rewardPoints/s1').get()).data();assert.equal(p.currentPoints,160);assert.equal(p.livePoints,150);assert.equal(p.practicePoints,10);assert.equal(p.legacyImported,false);
+ assert.deepEqual((await db.doc('classes/c/rewardWallets/s1').get()).data(),wallet);
+ assert.equal((await db.doc('classes/c/rewardPoints/s2').get()).data().currentPoints,5);assert.equal((await db.doc('classes/c/rewardPoints/s3').get()).data().currentPoints,999);
+ assert.equal((await db.doc('selfPracticeWork/correct').get()).data().result.earnedPoints,99999);assert.equal((await db.doc('rooms/r0/scores/s1').get()).data().score,1);
+ const repeat=run('--apply');assert(repeat.includes('"addedPoints":0'));assert.equal((await db.doc('classes/c/rewardPoints/s1').get()).data().currentPoints,160);
+ console.log('PASS actual historical updater: read-only preview, 150 archived sessions, best attempt/canonical grade, no double credit, missing-bank/inconsistent-ledger hold, unchanged grades/badges/spend/avatars and safe repeat.');
+})().catch(error=>{console.error(error.message);process.exit(1)});

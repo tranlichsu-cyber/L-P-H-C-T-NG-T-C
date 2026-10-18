@@ -2,7 +2,9 @@
 const {initializeApp,applicationDefault}=require('firebase-admin/app');
 const {getFirestore}=require('firebase-admin/firestore');
 const fs=require('node:fs/promises'),ts=require('typescript');
-const PROJECT='lop-hoc-tuong-tac-a62a5',VERSION='history-points-20261018-v1';
+const EMULATOR=process.argv.includes('--emulator');
+if(EMULATOR&&!/^(127\.0\.0\.1|localhost):[0-9]+$/.test(process.env.FIRESTORE_EMULATOR_HOST||''))throw Error('EMULATOR_REQUIRED');
+const PROJECT=EMULATOR?'demo-history-points':'lop-hoc-tuong-tac-a62a5',VERSION='history-points-20261018-v1';
 const APPLY=process.argv.includes('--apply');
 const moduleUrl=source=>'data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64');
 (async()=>{
