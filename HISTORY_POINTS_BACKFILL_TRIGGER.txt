@@ -1,0 +1,2 @@
+2026-10-18: Calculate all completed classroom sources including archives and all eligible self-practice attempts. Preserve grades, avatars and badge spending. First inspect aggregate dry-run results without writing pupil records.
+APPLY=NO

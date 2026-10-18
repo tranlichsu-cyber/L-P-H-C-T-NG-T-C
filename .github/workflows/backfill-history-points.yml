@@ -1,0 +1,45 @@
+name: Update historical student reward points
+on:
+  push:
+    branches: [main]
+    paths: [HISTORY_POINTS_BACKFILL_TRIGGER.txt]
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply the verified source-based update
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: historical-student-points
+  cancel-in-progress: false
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Verify historical score policy
+        run: node scripts/check-history-points-policy.mjs
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Install administrative Firestore SDK
+        run: npm install --prefix "$RUNNER_TEMP/history-point-tools" --no-audit --no-fund firebase-admin@14.5.0
+      - name: Calculate or apply historical sources
+        env:
+          APPLY_INPUT: ${{ inputs.apply }}
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/history-point-tools/node_modules"
+          mode="--dry-run"
+          if test "$APPLY_INPUT" = "true" || rg -q '^APPLY=YES$' HISTORY_POINTS_BACKFILL_TRIGGER.txt; then mode="--apply"; fi
+          node scripts/backfill-history-points.cjs "$mode"

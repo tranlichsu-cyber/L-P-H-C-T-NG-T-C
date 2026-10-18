@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';import fs from 'node:fs/promises';import ts from 'typescript';
+import {historicalSources,validLedger,round} from './history-points-policy.mjs';
+const source=ts.transpileModule(await fs.readFile('src/services/practice/grading.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const {gradePractice}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const questions=[{id:'q',type:'SHORT_ANSWER',content:'2+2',correctAnswer:'4',points:10}],banks=new Map([['test',{questions,version:'2026-10-01'}]]);
+const work=answer=>({classId:'c',studentId:'s',teacherId:'t',kind:'QUIZ',quizId:'test',submittedAt:'2026-10-17',result:{earnedPoints:99999,breakdown:[{questionId:'q',answer}]}});
+const rooms=Array.from({length:150},(_,i)=>({id:'r'+i,classId:'c',status:'FINISHED',archived:true,scores:new Map([['s',{score:1}]]),events:new Map()}));
+const plan=works=>historicalSources({classId:'c',studentId:'s',teacherId:'t',rooms,works,banks,gradePractice});
+assert.equal(plan([work('wrong')]).sources.filter(s=>s.kind==='quiz').length,0);
+assert.equal(plan([work('4'),work('4')]).sources.length,151);assert.equal(plan([work('4')]).sources.reduce((n,s)=>n+s.points,0),160);
+assert.equal(plan([{...work('4'),studentId:'other'}]).sources.length,150);
+assert.equal(plan([{...work('4'),rewardQuizVersion:'old'}]).unavailable,1);
+assert.equal(plan([{...work('4'),quizId:'missing'}]).unavailable,1);
+assert.equal(plan([{...work('4'),submittedAt:'2026-09-01'}]).unavailable,1);
+assert(validLedger(undefined,[]));assert(!validLedger(undefined,[{kind:'room',points:1}]));assert(!validLedger({currentPoints:20,livePoints:20,practicePoints:0},[]));
+assert(validLedger({currentPoints:20,livePoints:0,practicePoints:20},[6.1,9.95,3.95].map(points=>({kind:'quiz',points}))));assert.equal(round(6.1+9.95+3.95),20);
+console.log('PASS full historical points: over 100 archived rooms, canonical regrading, best-only attempts, identity/version/missing safeguards, decimal totals and source/ledger consistency.');
