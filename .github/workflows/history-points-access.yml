@@ -1,0 +1,26 @@
+name: Check access for historical student point update
+on:
+  push:
+    branches: [main]
+    paths: [HISTORY_POINTS_ACCESS_TRIGGER.txt]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+          create_credentials_file: true
+          export_environment_variables: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Read access check only
+        run: |
+          npm install --prefix "$RUNNER_TEMP/point-access" --no-audit --no-fund firebase-admin@14.5.0
+          export NODE_PATH="$RUNNER_TEMP/point-access/node_modules"
+          node scripts/check-history-points-access.cjs

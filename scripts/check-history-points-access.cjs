@@ -1,0 +1,6 @@
+const {initializeApp,applicationDefault}=require('firebase-admin/app');
+const {getFirestore}=require('firebase-admin/firestore');
+(async()=>{const credential=applicationDefault();initializeApp({projectId:'lop-hoc-tuong-tac-a62a5',credential});
+ try{await getFirestore().collection('classes').limit(1).get();console.log('::notice::HISTORY_POINTS_DATA_READ=ALLOWED');}catch(error){console.log('::warning::HISTORY_POINTS_DATA_READ=DENIED; code='+error.code);return;}
+ try{const {access_token}=await credential.getAccessToken();const response=await fetch('https://cloudresourcemanager.googleapis.com/v1/projects/lop-hoc-tuong-tac-a62a5:testIamPermissions',{method:'POST',headers:{Authorization:'Bearer '+access_token,'Content-Type':'application/json'},body:JSON.stringify({permissions:['datastore.entities.get','datastore.entities.list','datastore.entities.create','datastore.entities.update']})});if(!response.ok){console.log('::warning::HISTORY_POINTS_WRITE_PERMISSION=UNKNOWN; status='+response.status);return;}const result=await response.json();console.log('::notice::HISTORY_POINTS_PERMISSION_NAMES='+JSON.stringify(result.permissions||[]));}catch{console.log('::warning::HISTORY_POINTS_WRITE_PERMISSION=UNKNOWN');}
+})().catch(error=>{console.log('::error::History points access check failed; code='+(error.code||'UNKNOWN'));process.exit(1)});

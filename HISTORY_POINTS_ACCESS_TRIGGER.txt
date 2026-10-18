@@ -1,0 +1,1 @@
+2026-10-18: Read-only check of existing deployment identity before the requested all-history student point update; no student data or credentials printed and no writes.
