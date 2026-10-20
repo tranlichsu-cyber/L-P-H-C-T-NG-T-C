@@ -114,3 +114,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-17: Remove obsolete composite indexes from retired function queries and bootstrap curated banks by exact document ID, using only existing deployment permissions.
 
 2026-10-17: Round cumulative point sources to cents so decimal results such as 6.10 + 9.95 + 3.95 reliably reach the 20-point badge threshold.
+
+2026-10-20: Publish textbook-reviewed grade-four lesson 5 nature-use diagram with current textbook place names, river/plant pairs, accessible responsive text branches, self-review answers and print support. Link from homepage and self-practice; static content requires no Firestore reads.
