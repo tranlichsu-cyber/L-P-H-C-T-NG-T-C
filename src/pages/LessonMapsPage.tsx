@@ -1,22 +1,9 @@
-import {useEffect,useState} from 'react';
+import {useEffect} from 'react';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
-import {ArrowLeft,ArrowRight,BookOpen,ChevronRight,Eye,EyeOff,Printer,Search} from 'lucide-react';
-import {filterLessonMaps,languageSections,lessonMaps,mapBookTitle,mapSubjects,type LessonMap} from '../services/curriculum/mindmaps';
-import './lessonMaps.css';
+import {ArrowLeft,ArrowRight,ChevronRight,Printer,Search} from 'lucide-react';
+import {filterLessonMaps,languageSections,lessonMaps,mapBookTitle,mapSubjects} from '../services/curriculum/mindmaps';
+import {IllustratedMindMap} from '../components/learning/IllustratedMindMap';
 const path='/hoc-lieu/so-do-tu-duy';
-const colors=['#047857','#0369a1','#b45309','#7e22ce'];
-function MindMap({map}:{map:LessonMap}){
- const [recall,setRecall]=useState(false),[revealed,setRevealed]=useState<number[]>([]);
- return <>
- <div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><p className="text-slate-600">Đọc từ ý trung tâm rồi lần lượt theo các nhánh màu.</p><button type="button" aria-pressed={recall} onClick={()=>{setRecall(!recall);setRevealed([]);}} className="flex min-h-12 items-center gap-2 rounded-xl border-2 border-violet-200 bg-white px-4 font-bold text-violet-900">{recall?<Eye size={20}/>:<EyeOff size={20}/>} {recall?'Hiện tất cả kiến thức':'Che nhánh để tự nhớ'}</button></div>
- {recall&&<p role="status" className="rounded-xl bg-violet-50 p-4 print:hidden">Em nhìn tên nhánh, thử nói hoặc viết lại điều mình nhớ, rồi bấm “Mở nhánh” để đối chiếu.</p>}
- <section className="lesson-map" aria-label={'Sơ đồ tư duy: '+map.title}>
- <div className="lesson-map-hub"><BookOpen aria-hidden="true"/><p className="text-sm font-bold">{map.number?`Bài ${map.number}`:`Tuần ${map.week}`} • {map.section==='Bài học'?map.subject:map.section}</p><h2 className="mt-2 text-xl font-black sm:text-2xl">{map.title}</h2></div>
- <div className={`lesson-map-branches ${map.branches.length===4?'lesson-map-four':''}`}>{map.branches.map((branch,i)=>{const shown=!recall||revealed.includes(i);return <article key={branch.title} className="lesson-map-branch" style={{'--branch-color':colors[i%colors.length]} as React.CSSProperties}><h3 className="text-lg font-black"><span className="lesson-map-number">{i+1}</span>{branch.title}</h3><ul className={`mt-4 list-disc space-y-3 pl-5 leading-relaxed ${shown?'':'hidden print:block'}`}>{branch.items.map(text=><li key={text}>{text}</li>)}</ul>{recall&&<button type="button" aria-expanded={shown} onClick={()=>setRevealed(old=>shown?old.filter(n=>n!==i):[...old,i])} className="mt-4 min-h-11 rounded-xl border px-4 py-2 font-bold print:hidden">{shown?'Che nhánh':'Mở nhánh'}</button>}</article>})}</div>
- </section>
- <aside className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 leading-relaxed"><strong>Mẹo ghi nhớ:</strong> Đọc một nhánh → nhắm mắt nhắc lại → lấy một ví dụ → tự vẽ lại sơ đồ bằng từ khóa của em. Không cần học thuộc từng câu.</aside>
- </>;
-}
 export function LessonMapsPage(){
  const {lessonId}=useParams(),[params,setParams]=useSearchParams();
  const subject=params.get('mon')||'',section=params.get('phan')||'',book=params.get('sach')||'',search=params.get('tim')||'';
@@ -29,12 +16,12 @@ export function LessonMapsPage(){
  const filtered=filterLessonMaps(subject,section,book,search);
  const activeBooks=[...new Set(lessonMaps.filter(m=>m.subject===subject&&(!section||m.section===section)).map(m=>m.book))];
  const detail=current||lessonId;
- return <div className="min-h-screen bg-sky-50 text-slate-900"><header className="border-b bg-white p-4 print:hidden"><nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 font-bold" aria-label="Điều hướng học liệu"><Link className="rounded-lg p-2 text-sky-800 underline" to="/">Trang chủ</Link><Link className="rounded-lg p-2 text-sky-800 underline" to="/tu-luyen">Tự luyện</Link>{detail&&<Link className="rounded-lg p-2 text-sky-800 underline" to={back}>Danh sách bài</Link>}{current&&<button type="button" onClick={()=>window.print()} className="ml-auto flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2"><Printer size={18}/>In / Lưu PDF</button>}</nav></header>
- <main className="mx-auto max-w-6xl space-y-6 p-4 sm:p-8">
+ return <div className={`min-h-screen bg-sky-50 text-slate-900 ${current?'mindmap-page':''}`}><header className="border-b bg-white p-4 print:hidden"><nav className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-3 font-bold" aria-label="Điều hướng học liệu"><Link className="rounded-lg p-2 text-sky-800 underline" to="/">Trang chủ</Link><Link className="rounded-lg p-2 text-sky-800 underline" to="/tu-luyen">Tự luyện</Link>{detail&&<Link className="rounded-lg p-2 text-sky-800 underline" to={back}>Danh sách bài</Link>}{current&&<button type="button" onClick={()=>window.print()} className="ml-auto flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2"><Printer size={18}/>In / Lưu PDF</button>}</nav></header>
+ <main className="mx-auto max-w-[1440px] space-y-6 p-4 sm:p-8">
  {current?<>
  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-sky-900 print:hidden"><Link to={path}>Môn học</Link><ChevronRight size={16}/><Link to={back}>{current.subject}{current.subject==='Tiếng Việt'?' / '+current.section:''}</Link><ChevronRight size={16}/><span>{mapBookTitle(current.book)}</span></div>
  <header><p className="font-bold text-sky-800">LỚP 4 • {current.subject} • {mapBookTitle(current.book)}</p><h1 className="mt-2 text-2xl font-black sm:text-3xl">{current.number?`Bài ${current.number}`:`Tuần ${current.week}`}: {current.title}</h1>{current.subject==='Tiếng Việt'&&current.number&&<p className="mt-2 text-slate-600">Đọc hiểu • Tuần {current.week}</p>}</header>
- <MindMap key={current.id} map={current}/>
+ <IllustratedMindMap key={current.id} map={current} source={`${mapBookTitle(current.book)} — ${current.sourceLabel}`}/>
  {current.id==='historygeo-5'&&<Link className="block rounded-xl border bg-white p-4 font-bold text-sky-800 underline print:hidden" to="/hoc-lieu/khai-thac-tu-nhien-phia-bac">Xem thêm: sơ đồ chi tiết về ruộng bậc thang, thủy điện và khoáng sản</Link>}
  {current.subject==='Tiếng Việt'&&<aside className="rounded-2xl border bg-white p-5 print:hidden"><h2 className="font-black">Cùng tuần {current.week}, em học thêm</h2><div className="mt-3 flex flex-wrap gap-3">{lessonMaps.filter(m=>m.week===current.week&&m.id!==current.id).map(m=><Link key={m.id} to={`${path}/${m.id}`} className="rounded-xl bg-sky-50 p-3 text-sm font-semibold text-sky-900 underline">{m.section}: {m.number?`Bài ${m.number} — `:''}{m.title}</Link>)}</div></aside>}
  <footer className="rounded-2xl border bg-white p-5 text-sm leading-relaxed text-slate-600"><p className="font-bold">Nguồn đối chiếu</p><p>{mapBookTitle(current.book)} — Kết nối tri thức với cuộc sống, bản PDF thầy/cô cung cấp. {current.sourceLabel}.</p><p className="mt-2">Sơ đồ do website biên soạn để ôn tập, không thay thế bài học và hoạt động trong sách.{current.subject==='Tiếng Việt'?' Tuần theo lịch Tiếng Việt 35 tuần.':' Bài sắp theo thứ tự sách; tuần học thực hiện theo kế hoạch của lớp.'}</p></footer>
