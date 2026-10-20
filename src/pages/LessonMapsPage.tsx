@@ -1,0 +1,57 @@
+import {useEffect,useState} from 'react';
+import {Link,useParams,useSearchParams} from 'react-router-dom';
+import {ArrowLeft,ArrowRight,BookOpen,ChevronRight,Eye,EyeOff,Printer,Search} from 'lucide-react';
+import {filterLessonMaps,languageSections,lessonMaps,mapBookTitle,mapSubjects,type LessonMap} from '../services/curriculum/mindmaps';
+import './lessonMaps.css';
+const path='/hoc-lieu/so-do-tu-duy';
+const colors=['#047857','#0369a1','#b45309','#7e22ce'];
+function MindMap({map}:{map:LessonMap}){
+ const [recall,setRecall]=useState(false),[revealed,setRevealed]=useState<number[]>([]);
+ return <>
+ <div className="flex flex-wrap items-center justify-between gap-3 print:hidden"><p className="text-slate-600">Đọc từ ý trung tâm rồi lần lượt theo các nhánh màu.</p><button type="button" aria-pressed={recall} onClick={()=>{setRecall(!recall);setRevealed([]);}} className="flex min-h-12 items-center gap-2 rounded-xl border-2 border-violet-200 bg-white px-4 font-bold text-violet-900">{recall?<Eye size={20}/>:<EyeOff size={20}/>} {recall?'Hiện tất cả kiến thức':'Che nhánh để tự nhớ'}</button></div>
+ {recall&&<p role="status" className="rounded-xl bg-violet-50 p-4 print:hidden">Em nhìn tên nhánh, thử nói hoặc viết lại điều mình nhớ, rồi bấm “Mở nhánh” để đối chiếu.</p>}
+ <section className="lesson-map" aria-label={'Sơ đồ tư duy: '+map.title}>
+ <div className="lesson-map-hub"><BookOpen aria-hidden="true"/><p className="text-sm font-bold">{map.number?`Bài ${map.number}`:`Tuần ${map.week}`} • {map.section==='Bài học'?map.subject:map.section}</p><h2 className="mt-2 text-xl font-black sm:text-2xl">{map.title}</h2></div>
+ <div className={`lesson-map-branches ${map.branches.length===4?'lesson-map-four':''}`}>{map.branches.map((branch,i)=>{const shown=!recall||revealed.includes(i);return <article key={branch.title} className="lesson-map-branch" style={{'--branch-color':colors[i%colors.length]} as React.CSSProperties}><h3 className="text-lg font-black"><span className="lesson-map-number">{i+1}</span>{branch.title}</h3><ul className={`mt-4 list-disc space-y-3 pl-5 leading-relaxed ${shown?'':'hidden print:block'}`}>{branch.items.map(text=><li key={text}>{text}</li>)}</ul>{recall&&<button type="button" aria-expanded={shown} onClick={()=>setRevealed(old=>shown?old.filter(n=>n!==i):[...old,i])} className="mt-4 min-h-11 rounded-xl border px-4 py-2 font-bold print:hidden">{shown?'Che nhánh':'Mở nhánh'}</button>}</article>})}</div>
+ </section>
+ <aside className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 leading-relaxed"><strong>Mẹo ghi nhớ:</strong> Đọc một nhánh → nhắm mắt nhắc lại → lấy một ví dụ → tự vẽ lại sơ đồ bằng từ khóa của em. Không cần học thuộc từng câu.</aside>
+ </>;
+}
+export function LessonMapsPage(){
+ const {lessonId}=useParams(),[params,setParams]=useSearchParams();
+ const subject=params.get('mon')||'',section=params.get('phan')||'',book=params.get('sach')||'',search=params.get('tim')||'';
+ const current=lessonMaps.find(m=>m.id===lessonId);
+ useEffect(()=>{window.scrollTo(0,0);const old=document.title;document.title=(current?current.title:'Sơ đồ tư duy theo môn học')+' | Tiểu học Sông Công';return()=>{document.title=old;};},[lessonId,current]);
+ const choose=(nextSubject:string,nextSection='',nextBook='')=>{setParams({mon:nextSubject,...(nextSection?{phan:nextSection}:{}),...(nextBook?{sach:nextBook}:{})});};
+ const group=current?lessonMaps.filter(m=>m.subject===current.subject&&m.section===current.section&&m.book===current.book):[];
+ const index=current?group.findIndex(m=>m.id===current.id):-1;
+ const back=current?`${path}?${new URLSearchParams({mon:current.subject,...(current.subject==='Tiếng Việt'?{phan:current.section}:{}),sach:current.book})}`:path;
+ const filtered=filterLessonMaps(subject,section,book,search);
+ const activeBooks=[...new Set(lessonMaps.filter(m=>m.subject===subject&&(!section||m.section===section)).map(m=>m.book))];
+ const detail=current||lessonId;
+ return <div className="min-h-screen bg-sky-50 text-slate-900"><header className="border-b bg-white p-4 print:hidden"><nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 font-bold" aria-label="Điều hướng học liệu"><Link className="rounded-lg p-2 text-sky-800 underline" to="/">Trang chủ</Link><Link className="rounded-lg p-2 text-sky-800 underline" to="/tu-luyen">Tự luyện</Link>{detail&&<Link className="rounded-lg p-2 text-sky-800 underline" to={back}>Danh sách bài</Link>}{current&&<button type="button" onClick={()=>window.print()} className="ml-auto flex min-h-11 items-center gap-2 rounded-xl border px-4 py-2"><Printer size={18}/>In / Lưu PDF</button>}</nav></header>
+ <main className="mx-auto max-w-6xl space-y-6 p-4 sm:p-8">
+ {current?<>
+ <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-sky-900 print:hidden"><Link to={path}>Môn học</Link><ChevronRight size={16}/><Link to={back}>{current.subject}{current.subject==='Tiếng Việt'?' / '+current.section:''}</Link><ChevronRight size={16}/><span>{mapBookTitle(current.book)}</span></div>
+ <header><p className="font-bold text-sky-800">LỚP 4 • {current.subject} • {mapBookTitle(current.book)}</p><h1 className="mt-2 text-2xl font-black sm:text-3xl">{current.number?`Bài ${current.number}`:`Tuần ${current.week}`}: {current.title}</h1>{current.subject==='Tiếng Việt'&&current.number&&<p className="mt-2 text-slate-600">Đọc hiểu • Tuần {current.week}</p>}</header>
+ <MindMap key={current.id} map={current}/>
+ {current.id==='historygeo-5'&&<Link className="block rounded-xl border bg-white p-4 font-bold text-sky-800 underline print:hidden" to="/hoc-lieu/khai-thac-tu-nhien-phia-bac">Xem thêm: sơ đồ chi tiết về ruộng bậc thang, thủy điện và khoáng sản</Link>}
+ {current.subject==='Tiếng Việt'&&<aside className="rounded-2xl border bg-white p-5 print:hidden"><h2 className="font-black">Cùng tuần {current.week}, em học thêm</h2><div className="mt-3 flex flex-wrap gap-3">{lessonMaps.filter(m=>m.week===current.week&&m.id!==current.id).map(m=><Link key={m.id} to={`${path}/${m.id}`} className="rounded-xl bg-sky-50 p-3 text-sm font-semibold text-sky-900 underline">{m.section}: {m.number?`Bài ${m.number} — `:''}{m.title}</Link>)}</div></aside>}
+ <footer className="rounded-2xl border bg-white p-5 text-sm leading-relaxed text-slate-600"><p className="font-bold">Nguồn đối chiếu</p><p>{mapBookTitle(current.book)} — Kết nối tri thức với cuộc sống, bản PDF thầy/cô cung cấp. {current.sourceLabel}.</p><p className="mt-2">Sơ đồ do website biên soạn để ôn tập, không thay thế bài học và hoạt động trong sách.{current.subject==='Tiếng Việt'?' Tuần theo lịch Tiếng Việt 35 tuần.':' Bài sắp theo thứ tự sách; tuần học thực hiện theo kế hoạch của lớp.'}</p></footer>
+ <nav aria-label="Chuyển bài học" className="flex flex-wrap justify-between gap-3 print:hidden">{index>0?<Link to={`${path}/${group[index-1].id}`} className="flex min-h-12 items-center gap-2 rounded-xl border bg-white px-4 font-bold text-sky-900"><ArrowLeft size={18}/>Bài trước</Link>:<span/>}{index<group.length-1&&<Link to={`${path}/${group[index+1].id}`} className="flex min-h-12 items-center gap-2 rounded-xl bg-sky-800 px-4 font-bold text-white">Bài tiếp<ArrowRight size={18}/></Link>}</nav>
+ </>:lessonId?<section className="rounded-2xl bg-white p-6"><h1 className="text-2xl font-black">Chưa tìm thấy sơ đồ này</h1><Link to={path} className="mt-4 inline-block p-3 font-bold text-sky-800 underline">Về danh sách môn học</Link></section>:<>
+ <section className="rounded-3xl bg-sky-900 p-6 text-white sm:p-8"><p className="font-bold">THƯ VIỆN HỌC LIỆU • LỚP 4</p><h1 className="mt-3 text-3xl font-black">Sơ đồ tư duy theo môn học</h1><p className="mt-3 text-lg">Chọn môn → chọn phần hoặc tập sách → chọn bài. Mỗi bài một sơ đồ để em hiểu và nhớ kiến thức.</p><p className="mt-3 text-sm text-sky-100">193 bài trong 6 sách • Tiếng Việt có thêm 35 tuần Luyện từ và câu và 35 tuần Tập làm văn.</p></section>
+ <nav aria-label="Chọn môn học" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{mapSubjects.map((s,i)=><button key={s} type="button" aria-pressed={subject===s} onClick={()=>choose(s)} className={`min-h-28 rounded-2xl border-2 p-4 text-left ${subject===s?'border-sky-800 bg-sky-800 text-white':'border-sky-200 bg-white text-sky-950 hover:bg-sky-100'}`}><span aria-hidden="true" className="text-2xl">{['🔢','📚','🔬','🌏'][i]}</span><strong className="mt-2 block text-lg">{s}</strong><span className="text-sm">{lessonMaps.filter(m=>m.subject===s).length} sơ đồ</span></button>)}</nav>
+ {subject&&<>
+ <div className="flex flex-wrap items-center gap-2 font-semibold text-sky-900"><button type="button" onClick={()=>setParams({})} className="min-h-11 underline">Môn học</button><ChevronRight size={16}/><span>{subject}</span>{section&&<><ChevronRight size={16}/><span>{section}</span></>}</div>
+ {subject==='Tiếng Việt'&&<nav aria-label="Chọn phần Tiếng Việt" className="grid gap-3 sm:grid-cols-3">{languageSections.map(s=><button key={s} type="button" aria-pressed={section===s} onClick={()=>choose(subject,s)} className={`min-h-16 rounded-2xl border-2 px-4 py-3 text-lg font-black ${section===s?'border-violet-700 bg-violet-700 text-white':'border-violet-200 bg-white text-violet-950'}`}>{s}</button>)}</nav>}
+ {(subject!=='Tiếng Việt'||section)&&<>
+ {activeBooks.length>1&&<nav aria-label="Chọn tập sách" className="flex flex-wrap gap-3">{activeBooks.map(b=><button key={b} type="button" aria-pressed={book===b} onClick={()=>choose(subject,section,b)} className={`min-h-12 rounded-xl border-2 px-4 py-3 font-bold ${book===b?'border-emerald-700 bg-emerald-700 text-white':'border-emerald-200 bg-white text-emerald-900'}`}>{mapBookTitle(b)}</button>)}</nav>}
+ {(activeBooks.length<=1||book)&&<section className="space-y-4" aria-label="Danh sách bài học"><label className="block rounded-2xl border bg-white p-4 font-bold"><span className="flex items-center gap-2"><Search size={18}/>Tìm bài trong {section||subject}</span><input type="search" value={search} onChange={e=>{const next=new URLSearchParams(params);if(e.target.value)next.set('tim',e.target.value);else next.delete('tim');setParams(next,{replace:true});}} placeholder="Tên bài, số bài hoặc tuần…" className="mt-3 w-full rounded-xl border p-3 font-normal"/></label><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-xl font-black">{section||subject}{book?' • '+mapBookTitle(book):''}</h2><p role="status">{filtered.length} bài phù hợp</p></div>{!filtered.length&&<p className="rounded-xl bg-white p-5">Chưa có bài khớp. Em thử tìm tên ngắn hơn hoặc xóa từ đang tìm.</p>}<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{filtered.map(m=><Link key={m.id} to={`${path}/${m.id}`} className="rounded-2xl border-2 border-sky-100 bg-white p-5 hover:border-sky-400 focus-visible:outline-4 focus-visible:outline-sky-700"><p className="text-sm font-bold text-sky-800">{m.number?`Bài ${m.number}`:`Tuần ${m.week}`} • {m.section==='Bài học'?m.subject:m.section}</p><h3 className="mt-2 text-lg font-black">{m.title}</h3><p className="mt-3 font-bold text-emerald-800">Mở sơ đồ →</p></Link>)}</div></section>}
+ </>}
+ </>}
+ {!subject&&<p className="rounded-2xl border bg-white p-5 text-lg">Em chọn một môn ở trên để thấy các bài học theo đúng thứ tự sách.</p>}
+ <p className="text-sm text-slate-600">Học liệu hiện có cho bốn môn lớp 4 theo sáu sách thầy/cô đã cung cấp. Em có thể đọc ngay, không cần đăng nhập.</p>
+ </>}
+ </main></div>;
+}

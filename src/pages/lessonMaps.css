@@ -1,0 +1,22 @@
+.lesson-map { padding: 1.25rem 0; }
+.lesson-map-hub { position: relative; max-width: 44rem; margin: 0 auto 2rem; border: 3px solid #075985; border-radius: 2rem; padding: 1.5rem; text-align: center; background: #e0f2fe; color: #0c4a6e; }
+.lesson-map-hub > svg { margin: 0 auto .75rem; width: 2rem; height: 2rem; }
+.lesson-map-hub::after { content: ''; position: absolute; height: 2rem; width: 3px; background: #7dd3fc; left: calc(50% - 1px); top: 100%; }
+.lesson-map-branches { display: grid; gap: 1.5rem; }
+.lesson-map-branch { position: relative; min-width: 0; border: 2px solid var(--branch-color); border-top: 7px solid var(--branch-color); border-radius: 1.5rem; background: white; padding: 1.25rem; overflow-wrap: anywhere; break-inside: avoid; }
+.lesson-map-branch::before { content: ''; position: absolute; height: 1.5rem; width: 3px; background: var(--branch-color); bottom: 100%; left: calc(50% - 1px); }
+.lesson-map-branch h3 { color: var(--branch-color); display: flex; align-items: center; gap: .6rem; }
+.lesson-map-number { display: inline-flex; flex: 0 0 2rem; width: 2rem; height: 2rem; align-items: center; justify-content: center; border-radius: 50%; color: white; background: var(--branch-color); }
+@media (min-width: 900px) {
+ .lesson-map-branches { grid-template-columns: repeat(3,minmax(0,1fr)); border-top: 3px solid #7dd3fc; padding-top: 1.5rem; }
+ .lesson-map-branch:only-child { grid-column: 2; }
+}
+@media print {
+ @page { margin: 12mm; }
+ .lesson-map { padding: 0; }
+ .lesson-map-hub { break-inside: avoid; }
+ .lesson-map-branches { display: block; }
+ .lesson-map-branch { margin-bottom: 1rem; }
+ .lesson-map-hub::after,.lesson-map-branch::before { display: none; }
+}
+@media (min-width: 900px) { .lesson-map-four { grid-template-columns: repeat(2,minmax(0,1fr)); } }

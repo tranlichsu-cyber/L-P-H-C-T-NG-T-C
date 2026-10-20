@@ -146,7 +146,7 @@ export const RoleSelectionPage: React.FC = () => {
               <span><strong className="block text-base font-black">Góc truyền thống số</strong><span className="block text-xs font-semibold text-emerald-800">Khám phá quê hương Thái Nguyên</span></span>
             </button>
           </nav>
-          <button type="button" onClick={()=>navigate('/hoc-lieu/khai-thac-tu-nhien-phia-bac')} className="mt-3 w-full rounded-2xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-left font-bold text-amber-950 hover:bg-amber-100">📖 Sơ đồ bài học • Lịch sử và Địa lí 4<br/><span className="text-sm font-medium">Khám phá cách khai thác tự nhiên ở miền núi phía Bắc →</span></button>
+          <button type="button" onClick={()=>navigate('/hoc-lieu/so-do-tu-duy')} className="mt-3 w-full rounded-2xl border-2 border-amber-200 bg-amber-50 px-4 py-3 text-left font-bold text-amber-950 hover:bg-amber-100">📖 Sơ đồ tư duy • Các môn lớp 4<br/><span className="text-sm font-medium">Chọn môn → chọn bài → cùng ghi nhớ kiến thức</span></button>
 
           </section><section className="portal-entry" aria-label="Cổng lớp học"><p className="portal-eyebrow">LỚP HỌC CỦA CHÚNG MÌNH</p><h2 className="text-2xl font-black text-slate-950 mt-2">Sẵn sàng học nhé!</h2><p className="mt-2 text-sm leading-6 text-slate-600">Chọn cổng của em hoặc thầy cô để bắt đầu.</p>
           <div className="mt-5 rounded-2xl bg-slate-100 p-1.5">

@@ -116,3 +116,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-17: Round cumulative point sources to cents so decimal results such as 6.10 + 9.95 + 3.95 reliably reach the 20-point badge threshold.
 
 2026-10-20: Publish textbook-reviewed grade-four lesson 5 nature-use diagram with current textbook place names, river/plant pairs, accessible responsive text branches, self-review answers and print support. Link from homepage and self-practice; static content requires no Firestore reads.
+
+2026-10-20: Publish 263 source-referenced grade-four mind maps: 193 numbered textbook lessons and separate 35-week Vietnamese language/writing sections. Organize by subject, Vietnamese section, volume and lesson, with search, recall, complete print output, previous/next navigation and same-week links. Keep existing nature diagram and add public/student/teacher entry links. Static lazy-loaded content; no data migration or added Firestore reads.
