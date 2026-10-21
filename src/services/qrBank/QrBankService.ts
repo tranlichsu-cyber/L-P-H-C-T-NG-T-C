@@ -8,7 +8,7 @@ export class QrBankService{
  static async list(uid:string,refresh=false):Promise<QrBank[]>{
   if(!uid)return [];
   if(isFirebaseConfigured&&auth?.currentUser?.uid!==uid)throw new Error('Cần đăng nhập đúng tài khoản giáo viên.');
-  return cache.read(uid,async()=>{if(isFirebaseConfigured&&db){if(auth?.currentUser?.uid!==uid)throw new Error('Cần đăng nhập đúng tài khoản giáo viên.');const snap=await getDocs(query(collection(db,'qrQuestionSets'),where('teacherId','==',uid)));return snap.docs.map(d=>({...d.data(),id:d.id} as QrBank)).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));}return JSON.parse(localStorage.getItem(storage(uid))||'[]') as QrBank[];},refresh);
+  return cache.read(uid,async()=>{if(isFirebaseConfigured&&db){if(auth?.currentUser?.uid!==uid)throw new Error('Cần đăng nhập đúng tài khoản giáo viên.');const snap=await getDocs(query(collection(db,'qrQuestionSets'),where('teacherId','==',uid)));return snap.docs.map(d=>({...d.data(),id:d.id} as QrBank)).sort((a,b)=>(typeof b.updatedAt==='string'?b.updatedAt:'').localeCompare(typeof a.updatedAt==='string'?a.updatedAt:''));}return JSON.parse(localStorage.getItem(storage(uid))||'[]') as QrBank[];},refresh);
  }
  static async get(uid:string,id:string):Promise<QrBank|null>{
   if(isFirebaseConfigured&&db){if(auth?.currentUser?.uid!==uid)throw new Error('Cần đăng nhập tài khoản giáo viên.');const snap=await getDoc(doc(db,'qrQuestionSets',id));if(!snap.exists())return null;const bank={...snap.data(),id:snap.id} as QrBank;if(bank.teacherId!==uid)throw new Error('Thầy/cô không có quyền sửa bộ câu hỏi này.');return bank;}return (await this.list(uid)).find(b=>b.id===id)||null;

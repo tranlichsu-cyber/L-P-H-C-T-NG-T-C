@@ -8,14 +8,16 @@ export const useRoomRealtime = (roomId: string | null) => {
   useEffect(() => {
     if (!roomId) return;
 
+    let active = true;
     const unsubscribe = activeRealtimeService.subscribeRoom(roomId, (updatedRoom) => {
-      setRoom({ ...updatedRoom });
+      if (active) setRoom({ ...updatedRoom });
     });
 
     return () => {
+      active = false;
       unsubscribe();
     };
   }, [roomId]);
 
-  return room;
+  return room?.id === roomId ? room : null;
 };

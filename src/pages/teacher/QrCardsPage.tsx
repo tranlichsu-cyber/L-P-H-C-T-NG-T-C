@@ -25,6 +25,7 @@ export function QrCardsPage() {
   const [error, setError] = useState('');
   const [available, setAvailable] = useState<QrBank[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reload, setReload] = useState(0);
   const lock = useRef(false);
   const key = `qr-last-room-${currentUser?.uid || 'teacher'}`;
   const cls = classes.find(c => c.id === classId) || classes[0];
@@ -39,12 +40,13 @@ export function QrCardsPage() {
     let cancelled = false;
     setAvailable([]);
     setLoading(true);
-    QrBankService.list(currentUser?.uid || '')
+    setError('');
+    QrBankService.list(currentUser?.uid || '', reload > 0)
       .then(items => { if (!cancelled) setAvailable(items); })
-      .catch(() => { if (!cancelled) setError('Chưa tải được kho câu hỏi thẻ QR. Hãy tải lại trang.'); })
+      .catch(() => { if (!cancelled) setError('Chưa tải được kho câu hỏi thẻ QR. Hãy thử lại.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, reload]);
 
   let last = '';
   try { last = localStorage.getItem(key) || ''; } catch { /* Storage is optional. */ }
@@ -93,7 +95,7 @@ export function QrCardsPage() {
         <div><h2 className="font-extrabold">Kho câu hỏi của thầy cô</h2><p className="mt-1 text-sm text-slate-600">Soạn câu có ảnh, video hoặc tải mẫu Word để nhập bộ đề.</p></div>
         <Link className={button} to="/teacher/qr-cards/bank">Mở kho câu hỏi QR <ArrowRight className="h-4 w-4" /></Link>
       </div>
-      {error && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-900">{error}</p>}
+      {error && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-900">{error}{!available.length && <button type="button" className="ml-2 font-bold underline" disabled={loading} onClick={() => setReload(v => v + 1)}>Thử tải lại kho câu hỏi</button>}</p>}
 
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-5">

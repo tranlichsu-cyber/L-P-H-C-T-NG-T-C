@@ -1,3 +1,4 @@
+import {readQrDraft,writeQrDraft,clearQrDraft} from '../../services/qrBank/editorDraft';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Check, Copy, Eye, FileText, ImagePlus, Pencil, Plus, Save, Trash2, Video } from 'lucide-react';
@@ -23,12 +24,16 @@ export function QrBankEditor() {
   const [activeId, setActiveId] = useState('');
   const [loading, setLoading] = useState(bankId !== 'new');
   const [busy, setBusy] = useState(false);
-  const [dirty, setDirty] = useState(bankId === 'new');
+  const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [preview, setPreview] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState('');
+  const [draft, setDraft] = useState(() => readQrDraft(uid, bankId || 'new'));
+  const [draftError, setDraftError] = useState(false);
+  const draftWritable = useRef(true);
+  const saveLock = useRef(false);
   const imageJob = useRef(0);
   const contentInput = useRef<HTMLTextAreaElement>(null);
   const question = bank.questions.find(q => q.id === activeId) || bank.questions[0];
@@ -40,6 +45,7 @@ export function QrBankEditor() {
     QrBankService.get(uid, bankId).then(value => {
       if (cancelled) return;
       if (!value) throw new Error('Không tìm thấy bộ câu hỏi.');
+      if (!Array.isArray(value.questions)) throw new Error('Dữ liệu bộ câu hỏi chưa hợp lệ. Hãy kiểm tra trước khi chỉnh sửa.');
       setBank(value);
       setDirty(false);
     }).catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Chưa tải được bộ câu hỏi.'); })
@@ -54,7 +60,22 @@ export function QrBankEditor() {
     return () => window.removeEventListener('beforeunload', warn);
   }, [dirty]);
 
-  function change(fn: (value: QrBank) => QrBank) { setBank(fn); setDirty(true); setNotice(''); setError(''); }
+  useEffect(() => {
+    if (!dirty) return;
+    const persist = () => {
+      if (draftWritable.current) setDraftError(!writeQrDraft(uid, bankId || 'new', bank));
+    };
+    const timer = window.setTimeout(persist, 250);
+    return () => { window.clearTimeout(timer); persist(); };
+  }, [dirty, bank, uid, bankId]);
+  function restoreDraft() {
+    if (!draft) return;
+    draftWritable.current = true;
+    setBank(draft); setDirty(true); setDraft(null); setError(''); setActiveId(draft.questions[0]?.id || '');
+  }
+  const recovery = draft && <div className="space-y-3 rounded-xl bg-amber-50 p-4" role="status"><p>Có bản nháp chưa lưu trên máy này. Thầy/cô muốn khôi phục để tiếp tục soạn?</p><button type="button" className={button} disabled={busy} onClick={restoreDraft}>Khôi phục bản nháp</button> <button type="button" className={secondary} disabled={busy} onClick={() => { clearQrDraft(uid, bankId || 'new'); setDraft(null); }}>Bỏ bản nháp cũ</button></div>;
+
+  function change(fn: (value: QrBank) => QrBank) { draftWritable.current = true; setBank(fn); setDirty(true); setNotice(''); setError(''); }
   function edit(fn: (value: QrQuestion) => QrQuestion) {
     change(value => ({ ...value, questions: value.questions.map(q => q.id === question.id ? fn(q) : q) }));
   }
@@ -97,6 +118,8 @@ export function QrBankEditor() {
     finally { if (token === imageJob.current) setBusy(false); }
   }
   async function save() {
+    if (saveLock.current) return;
+    saveLock.current = true;
     setBusy(true); setError('');
     try {
       // Bring the first incomplete question into view instead of leaving the error off-screen.
@@ -105,10 +128,11 @@ export function QrBankEditor() {
         catch { select(q.id); setPreview(false); break; }
       }
       const saved = await QrBankService.save(uid, bank);
+      draftWritable.current = false; clearQrDraft(uid, bankId || 'new'); setDraft(null); setDraftError(false);
       setBank(saved); setDirty(false); setNotice('Đã lưu bộ câu hỏi vào kho thẻ QR.');
       if (bankId === 'new') navigate(`/teacher/qr-cards/bank/${saved.id}`, { replace: true });
     } catch (e) { setError(e instanceof Error ? e.message : 'Chưa lưu được. Nội dung đang soạn vẫn được giữ trên trang.'); }
-    finally { setBusy(false); }
+    finally { saveLock.current = false; setBusy(false); }
   }
   function leave(event: React.MouseEvent<HTMLAnchorElement>) {
     if (busy) { event.preventDefault(); return; }
@@ -116,14 +140,16 @@ export function QrBankEditor() {
   }
 
   if (loading) return <p>Đang tải bộ câu hỏi…</p>;
-  if (bankId !== 'new' && bank.id !== bankId) return <section><p role="alert">{error || 'Không tìm thấy bộ câu hỏi.'}</p><Link to="/teacher/qr-cards/bank">Về kho câu hỏi QR</Link></section>;
+  if (bankId !== 'new' && bank.id !== bankId) return <section>{recovery}<p role="alert">{error || 'Không tìm thấy bộ câu hỏi.'}</p><Link to="/teacher/qr-cards/bank">Về kho câu hỏi QR</Link></section>;
   if (!question) return <section className="space-y-3 rounded-2xl bg-white p-6"><p>Bộ này chưa có câu hỏi.</p><button className={button} onClick={() => change(value => ({ ...value, questions: [newQrQuestion()] }))}>Thêm câu hỏi đầu tiên</button></section>;
 
   return <section className="space-y-5 text-slate-900">
     <header className="flex flex-wrap items-center justify-between gap-4">
-      <div><Link to="/teacher/qr-cards/bank" onClick={leave} className="text-sm font-bold text-indigo-700">← Kho câu hỏi thẻ QR</Link><h1 className="mt-2 text-2xl font-black">Soạn bộ câu hỏi thẻ QR</h1><p className="mt-1 text-sm text-slate-500">{bank.questions.length} câu • {dirty ? 'Có thay đổi chưa lưu.' : 'Đã lưu.'}</p></div>
+      <div><Link to="/teacher/qr-cards/bank" onClick={leave} className="text-sm font-bold text-indigo-700">← Kho câu hỏi thẻ QR</Link><h1 className="mt-2 text-2xl font-black">Soạn bộ câu hỏi thẻ QR</h1><p className="mt-1 text-sm text-slate-500">{bank.questions.length} câu • {dirty ? 'Có thay đổi chưa lưu.' : bankId === 'new' ? 'Bản nháp mới.' : 'Đã lưu.'}</p></div>
       <button className={button} disabled={busy} onClick={() => void save()}><Save className="h-4 w-4" />{busy ? 'Đang xử lý…' : 'Lưu bộ câu hỏi QR'}</button>
     </header>
+    {recovery}
+    {draftError && dirty && <p role="status" className="rounded-xl bg-amber-50 p-3 text-amber-900">Trình duyệt chưa lưu được bản nháp trên máy. Thầy/cô nên lưu bộ câu hỏi trước khi rời trang.</p>}
     {notice && <p role="status" className="rounded-xl bg-emerald-50 p-3 text-emerald-900">{notice}</p>}
     {error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-rose-900">{error}</p>}
     <fieldset disabled={busy} className="grid min-w-0 gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_140px]">

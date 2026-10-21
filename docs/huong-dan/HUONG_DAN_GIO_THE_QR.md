@@ -60,3 +60,9 @@ Vào **Kho câu hỏi thẻ QR → Tạo bộ câu hỏi QR** hoặc sửa một
 Các nút mũi tên đổi vị trí câu; **Nhân đôi** tạo câu mới có mã riêng và giữ nội dung/ảnh/video của bản gốc. **Xóa câu hỏi** có bước xác nhận và giữ ít nhất một câu. Tối đa 80 câu/bộ. **Ảnh / Video** mở phần chèn ảnh hoặc liên kết; **Điểm số và giải thích** mở cấu hình từng câu. **Xem trước câu hỏi** hiển thị nội dung học sinh sẽ thấy, chưa đánh dấu đáp án đúng.
 
 Bấm **Lưu bộ câu hỏi QR** để lưu. Soạn, đổi câu và xem trước chỉ thay đổi dữ liệu trên trang, không tự ghi Firestore. Nếu một câu chưa hợp lệ, trình soạn đưa về câu đó để sửa; nếu lưu lỗi, nội dung trên trang được giữ lại. Các liên kết quay về kho/chọn lớp sẽ nhắc khi còn thay đổi chưa lưu; đóng/tải lại trang cũng có nhắc của trình duyệt.
+
+## Khôi phục bản nháp và thử lại khi lỗi
+
+Thay đổi chưa lưu trong trình soạn được giữ thành bản nháp trên trình duyệt của máy đang dùng, theo tài khoản giáo viên và từng bộ câu hỏi. Khi mở lại, chọn **Khôi phục bản nháp** hoặc **Bỏ bản nháp cũ**; bản nháp không tự ghi đè bộ đã lưu trên hệ thống. Lưu thành công sẽ xóa bản nháp tương ứng. Nếu trình duyệt không cho lưu hoặc hết chỗ, trang hiển thị thông báo để thầy/cô lưu bộ câu hỏi trước khi rời trang. Bản nháp trên máy không đồng bộ sang thiết bị khác.
+
+Khi kho QR chưa tải được, dùng **Thử tải lại kho câu hỏi**. Lúc chờ cấp quyền camera, nút mở chuyển thành **Đang mở camera…**; vẫn có thể bấm **Dừng camera** để hủy. Chuyển phòng học không tiếp tục hiển thị dữ liệu của phòng trước.
