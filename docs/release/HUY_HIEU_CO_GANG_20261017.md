@@ -1,4 +1,4 @@
-> Cập nhật theo yêu cầu mới: phần này được đổi tên thành **Lời khen**. Không phải huy hiệu dùng đổi avatar. Cơ chế huy hiệu theo tổng điểm được hướng dẫn trong HUY_HIEU_DOI_AVATAR_20261017.md.
+> Cập nhật theo yêu cầu mới: phần này được đổi tên thành **Lời khen**. Không phải huy hiệu dùng đổi avatar. Cơ chế huy hiệu theo tổng điểm được hướng dẫn trong [HUY_HIEU_DOI_AVATAR_20261017.md](HUY_HIEU_DOI_AVATAR_20261017.md).
 
 # Huy hiệu ghi nhận sự cố gắng
 

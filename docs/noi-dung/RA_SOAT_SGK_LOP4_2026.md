@@ -35,7 +35,7 @@ Bằng chứng:
 - [Kiểm tra trước ghi, lượt 38746888181](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/actions/runs/38746888181)
 - [Áp dụng và đọc kiểm chứng, lượt 38747283165](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/actions/runs/38747283165)
 - [Kết quả và dữ liệu hoàn nguyên](https://github.com/tranlichsu-cyber/L-P-H-C-T-NG-T-C/tree/audit/curriculum-corrections-38747283165/audit-snapshots)
-- [Kế hoạch sửa có dữ liệu trước và thay đổi từng câu](data-migrations/curriculum-20261015.json)
+- [Kế hoạch sửa có dữ liệu trước và thay đổi từng câu](../../data-migrations/curriculum-20261015.json)
 
 ## Bài và tuần trong sách
 

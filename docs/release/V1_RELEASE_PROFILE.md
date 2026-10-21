@@ -28,4 +28,4 @@
 ## 2. FEATURE FREEZE POLICY FOR VERSION 1.0.0
 - **Scope Lock**: Không bổ sung bất kỳ tính năng mới nào ngoài danh mục STABLE ở trên.
 - **Exception Rule**: Chỉ cho phép sửa lỗi thuộc các nhóm: *Blocker*, *Security Critical*, *Data-Loss*, *Device Compatibility*.
-- **New Feature Requests**: Tất cả các yêu cầu tính năng bổ sung từ người dùng được ghi nhận vào `PRODUCT_BACKLOG.md`.
+- **New Feature Requests**: Tất cả các yêu cầu tính năng bổ sung từ người dùng được ghi nhận vào [PRODUCT_BACKLOG.md](../ke-hoach/PRODUCT_BACKLOG.md).
