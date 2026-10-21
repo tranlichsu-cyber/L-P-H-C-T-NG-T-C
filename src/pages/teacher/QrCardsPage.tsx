@@ -1,31 +1,138 @@
-import {useEffect,useRef,useState} from 'react';
-import {Link,useNavigate} from 'react-router-dom';
-import {useTeacherData} from '../../context/TeacherDataContext';
-import {useAuth} from '../../context/AuthContext';
-import {activeRealtimeService} from '../../services/realtime/realtimeServiceSwitch';
-import {QrCardsPrintButton} from '../../components/qr/QrCardsPrintButton';
-import {QrBankService} from '../../services/qrBank/QrBankService';
-import type {QrBank} from '../../services/qrBank/content';
-const button='inline-block rounded-xl bg-indigo-700 px-5 py-3 font-bold text-white disabled:opacity-40';
-export function QrCardsPage(){
- const {classes}=useTeacherData(),{currentUser}=useAuth(),navigate=useNavigate();
- const [classId,setClassId]=useState(''),[quizId,setQuizId]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
- const lock=useRef(false),key=`qr-last-room-${currentUser?.uid||'teacher'}`;
- const cls=classes.find(c=>c.id===(classId||classes[0]?.id));
- const [available,setAvailable]=useState<QrBank[]>([]),[loading,setLoading]=useState(true);
- useEffect(()=>{let cancelled=false;setAvailable([]);setLoading(true);QrBankService.list(currentUser?.uid||'').then(items=>{if(!cancelled)setAvailable(items);}).catch(()=>{if(!cancelled)setError('Chưa tải được kho câu hỏi thẻ QR. Hãy tải lại trang.');}).finally(()=>{if(!cancelled)setLoading(false);});return()=>{cancelled=true;};},[currentUser?.uid]);
- const quiz=available.find(q=>q.id===(quizId||available[0]?.id)),questions=quiz?.questions||[];
- let last='';try{last=localStorage.getItem(key)||'';}catch{/* Storage can be unavailable in private browsing. */}
- async function start(){if(lock.current||!cls||!quiz||!questions.length||!cls.students.length)return;lock.current=true;setBusy(true);setError('');try{
-  const room=await activeRealtimeService.createRoom({teacherId:currentUser?.uid||'teacher',classId:cls.id,className:cls.name,subject:quiz.subject,quizId:quiz.id,quizTitle:quiz.title,responseMode:'QR_CARD',questionSource:'QR_BANK',questions,roster:cls.students.map(s=>({id:s.id,name:s.name}))});
-  try{localStorage.setItem(key,room.id);}catch{/* Starting a lesson does not depend on browser storage. */}
-  navigate(`/teacher/qr-cards/${encodeURIComponent(room.id)}`);
- }catch(e){setError(e instanceof Error?e.message:'Chưa tạo được tiết học. Hãy thử lại.');}finally{lock.current=false;setBusy(false);}}
- return <section className="mx-auto max-w-4xl space-y-6"><header className="rounded-3xl bg-gradient-to-br from-indigo-700 to-violet-600 p-6 text-white"><p className="font-bold">📷 HỌC SINH GIƠ THẺ • GIÁO VIÊN QUÉT</p><h1 className="mt-2 text-3xl font-black">Trả lời bằng thẻ QR</h1><p className="mt-3">Chỉ cần thẻ giấy của học sinh và điện thoại của giáo viên. In thẻ một lần, dùng lại cho các tiết của cùng lớp.</p></header>
- <Link className={button} to="/teacher/qr-cards/bank">Kho câu hỏi QR riêng • Soạn câu / Chèn ảnh / Video →</Link>
- <div className="grid gap-4 md:grid-cols-2"><section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-black">1. Chọn lớp và in thẻ</h2><label className="block font-bold">Lớp học<select className="mt-2 block w-full rounded-xl border p-3" value={cls?.id||''} onChange={e=>setClassId(e.target.value)} disabled={busy}>{classes.map(c=><option key={c.id} value={c.id}>{c.name} • {c.students.length} học sinh</option>)}</select></label>{cls&&<QrCardsPrintButton key={cls.id} classId={cls.id} className={cls.name} roster={cls.students.map(s=>({studentId:s.id,name:s.name}))}/>}<p>Phát đúng thẻ có tên từng em. Khi trả lời, xoay cạnh A, B, C hoặc D lên trên.</p>{!classes.length&&<Link className="underline" to="/teacher/classes">Tạo lớp và thêm danh sách học sinh →</Link>}{cls&&!cls.students.length&&<Link className="underline" to={`/teacher/classes/${cls.id}`}>Thêm học sinh cho lớp →</Link>}</section>
- <section className="space-y-4 rounded-2xl border bg-white p-5"><h2 className="text-xl font-black">2. Chọn câu hỏi và bắt đầu</h2><label className="block font-bold">Bộ câu hỏi QR riêng<select className="mt-2 block w-full rounded-xl border p-3" value={quiz?.id||''} onChange={e=>setQuizId(e.target.value)} disabled={busy||loading}>{available.map(q=><option key={q.id} value={q.id}>{q.title} • {q.subject} • {q.grade}</option>)}</select></label><p>{quiz?`${questions.length} câu trắc nghiệm có 2–4 lựa chọn sẽ được dùng trong tiết này.`:loading?'Đang tải kho câu hỏi QR…':'Chưa có bộ câu hỏi thẻ QR. Hãy tạo bộ riêng để bắt đầu.'}</p><button className={button} disabled={busy||!cls?.students.length||!questions.length} onClick={()=>void start()}>{busy?'Đang tạo tiết học…':'Bắt đầu tiết học bằng thẻ QR'}</button>{!loading&&!available.length&&<Link className="block underline" to="/teacher/qr-cards/bank/new">+ Tạo bộ câu hỏi QR có ảnh, video →</Link>}</section></div>
- {error&&<p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-900">{error}</p>}
- {last&&<Link className={button} to={`/teacher/qr-cards/${encodeURIComponent(last)}`}>Tiếp tục tiết dùng thẻ gần nhất trên máy này →</Link>}
- <section className="rounded-2xl bg-sky-50 p-5"><h2 className="font-black">3. Chiếu trên máy tính, quét bằng điện thoại</h2><p className="mt-2">Trong tiết học, chọn “Mở màn chiếu” trên máy tính. Dùng điện thoại mở mã dẫn đến màn quét và đăng nhập cùng tài khoản giáo viên. Phát câu hỏi, quét từng nhóm nhỏ rồi kiểm tra và gửi đáp án.</p></section></section>;
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, BookOpen, Camera, CheckCircle2, Monitor, QrCode, Users } from 'lucide-react';
+import { useTeacherData } from '../../context/TeacherDataContext';
+import { useAuth } from '../../context/AuthContext';
+import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
+import { QrCardsPrintButton } from '../../components/qr/QrCardsPrintButton';
+import { QrBankService } from '../../services/qrBank/QrBankService';
+import type { QrBank } from '../../services/qrBank/content';
+
+const button = 'inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-indigo-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-40';
+const input = 'mt-2 block w-full min-w-0 rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:outline-indigo-500';
+const card = 'min-w-0 space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6';
+
+export function QrCardsPage() {
+  const { classes } = useTeacherData();
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const [classId, setClassId] = useState('');
+  const [quizId, setQuizId] = useState('');
+  const [subject, setSubject] = useState('');
+  const [selection, setSelection] = useState<{ bankId: string; ids: string[] } | null>(null);
+  const [shuffle, setShuffle] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [available, setAvailable] = useState<QrBank[]>([]);
+  const [loading, setLoading] = useState(true);
+  const lock = useRef(false);
+  const key = `qr-last-room-${currentUser?.uid || 'teacher'}`;
+  const cls = classes.find(c => c.id === classId) || classes[0];
+  const filtered = available.filter(q => !subject || q.subject === subject);
+  const quiz = filtered.find(q => q.id === quizId) || filtered[0];
+  const questions = quiz?.questions || [];
+  const selectedIds = selection && quiz && selection.bankId === quiz.id ? selection.ids : questions.map(q => q.id);
+  const selected = questions.filter(q => selectedIds.includes(q.id));
+  const totalPoints = selected.reduce((sum, q) => sum + (q.correctPoints ?? 10), 0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAvailable([]);
+    setLoading(true);
+    QrBankService.list(currentUser?.uid || '')
+      .then(items => { if (!cancelled) setAvailable(items); })
+      .catch(() => { if (!cancelled) setError('Chưa tải được kho câu hỏi thẻ QR. Hãy tải lại trang.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [currentUser?.uid]);
+
+  let last = '';
+  try { last = localStorage.getItem(key) || ''; } catch { /* Storage is optional. */ }
+
+  async function start() {
+    if (lock.current || !currentUser || !cls || !quiz || !selected.length || !cls.students.length) return;
+    lock.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const lessonQuestions = [...selected];
+      if (shuffle) {
+        for (let i = lessonQuestions.length - 1; i > 0; i--) {
+          const j = Math.floor((crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32) * (i + 1));
+          [lessonQuestions[i], lessonQuestions[j]] = [lessonQuestions[j], lessonQuestions[i]];
+        }
+      }
+      const room = await activeRealtimeService.createRoom({
+        teacherId: currentUser.uid, classId: cls.id, className: cls.name,
+        subject: quiz.subject, quizId: quiz.id, quizTitle: quiz.title,
+        responseMode: 'QR_CARD', questionSource: 'QR_BANK', questions: lessonQuestions,
+        roster: cls.students.map(s => ({ id: s.id, name: s.name })),
+      });
+      try { localStorage.setItem(key, room.id); } catch { /* Starting does not depend on storage. */ }
+      navigate(`/teacher/qr-cards/${encodeURIComponent(room.id)}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Chưa tạo được tiết học. Hãy thử lại.');
+    } finally { lock.current = false; setBusy(false); }
+  }
+
+  return (
+    <section className="mx-auto max-w-6xl space-y-6 text-slate-900">
+      <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-800 via-indigo-700 to-violet-600 p-6 text-white sm:p-8">
+        <QrCode className="pointer-events-none absolute -right-6 -top-6 h-48 w-48 rotate-12 text-white/5" aria-hidden="true" />
+        <div className="relative max-w-2xl">
+          <p className="text-xs font-extrabold uppercase tracking-widest text-indigo-100">Lớp học tương tác • Thẻ giấy thông minh</p>
+          <h1 className="mt-3 text-3xl font-black sm:text-4xl">Trả lời bằng thẻ QR</h1>
+          <p className="mt-3 leading-relaxed text-indigo-100">Cả lớp cùng trả lời, thầy cô quét bằng điện thoại và xem đáp án của từng em. Học sinh không cần thiết bị.</p>
+        </div>
+        <ol className="relative mt-6 grid gap-3 text-sm font-bold sm:grid-cols-3">
+          {[{ icon: Users, text: 'Chọn lớp & in thẻ' }, { icon: BookOpen, text: 'Chọn câu hỏi' }, { icon: Camera, text: 'Chiếu & quét đáp án' }].map(({ icon: Icon, text }, i) => <li key={text} className="flex items-center gap-3 rounded-xl bg-white/10 p-3"><Icon className="h-5 w-5 shrink-0 text-amber-200" />{i + 1}. {text}</li>)}
+        </ol>
+      </header>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
+        <div><h2 className="font-extrabold">Kho câu hỏi của thầy cô</h2><p className="mt-1 text-sm text-slate-600">Soạn câu có ảnh, video hoặc tải mẫu Word để nhập bộ đề.</p></div>
+        <Link className={button} to="/teacher/qr-cards/bank">Mở kho câu hỏi QR <ArrowRight className="h-4 w-4" /></Link>
+      </div>
+      {error && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-rose-900">{error}</p>}
+
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
+          <section className={card}>
+            <h2 className="flex items-center gap-3 text-lg font-black"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700">1</span>Lớp học & thẻ học sinh</h2>
+            <label className="block font-bold">Lớp học<select className={input} value={cls?.id || ''} onChange={e => setClassId(e.target.value)} disabled={busy || !classes.length}>{!classes.length && <option value="">Chưa có lớp học</option>}{classes.map(c => <option key={c.id} value={c.id}>{c.name} • {c.students.length} học sinh</option>)}</select></label>
+            {cls && <QrCardsPrintButton key={cls.id} classId={cls.id} className={cls.name} roster={cls.students.map(s => ({ studentId: s.id, name: s.name }))} />}
+            <p className="text-sm leading-relaxed text-slate-600">In thẻ một lần, dùng lại cho các tiết của cùng lớp. Phát đúng tên; học sinh xoay chữ A, B, C hoặc D lên trên để chọn đáp án.</p>
+            {!classes.length && <Link className="font-bold text-indigo-700 underline" to="/teacher/classes">Tạo lớp và thêm học sinh →</Link>}
+            {cls && !cls.students.length && <Link className="font-bold text-indigo-700 underline" to={`/teacher/classes/${cls.id}`}>Thêm học sinh cho lớp →</Link>}
+          </section>
+
+          <section className={card}>
+            <h2 className="flex items-center gap-3 text-lg font-black"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700">2</span>Cấu hình câu hỏi cho tiết học</h2>
+            <fieldset disabled={busy || loading} className="min-w-0 space-y-4 disabled:opacity-60">
+              <label className="block font-bold">Lọc theo môn<select className={input} value={subject} onChange={e => { setSubject(e.target.value); setQuizId(''); setSelection(null); }}><option value="">Tất cả môn học</option>{[...new Set(available.map(q => q.subject))].sort((a, b) => a.localeCompare(b, 'vi')).map(s => <option key={s}>{s}</option>)}</select></label>
+              <label className="block font-bold">Bộ câu hỏi QR riêng<select className={input} value={quiz?.id || ''} onChange={e => { setQuizId(e.target.value); setSelection(null); }}>{!filtered.length && <option value="">{loading ? 'Đang tải kho câu hỏi…' : 'Chưa có bộ câu hỏi'}</option>}{filtered.map(q => <option key={q.id} value={q.id}>{q.title} • {q.subject} • {q.grade}</option>)}</select></label>
+              {quiz && <>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><p className="font-bold" aria-live="polite">Đã chọn {selected.length}/{questions.length} câu</p><div className="flex gap-4"><button type="button" className="font-bold text-indigo-700 underline" onClick={() => setSelection({ bankId: quiz.id, ids: questions.map(q => q.id) })}>Chọn tất cả</button><button type="button" className="font-bold text-slate-600 underline" onClick={() => setSelection({ bankId: quiz.id, ids: [] })}>Bỏ chọn</button></div></div>
+                <div className="max-h-80 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100">{questions.map((q, i) => <label key={q.id} className="flex cursor-pointer items-start gap-3 p-3 hover:bg-indigo-50"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-indigo-700" checked={selectedIds.includes(q.id)} onChange={e => setSelection({ bankId: quiz.id, ids: e.target.checked ? [...selectedIds, q.id] : selectedIds.filter(id => id !== q.id) })} /><span className="min-w-0"><span className="block break-words text-sm font-semibold">{i + 1}. {q.content}</span><span className="mt-1 block text-xs text-slate-500">{q.options.length} lựa chọn • Đúng +{q.correctPoints ?? 10} điểm • Sai {(q.wrongPenalty ?? 0) ? `−${q.wrongPenalty}` : '0'} điểm{q.media?.imageUrl ? ' • Có ảnh' : ''}{q.media?.videoUrl ? ' • Có video' : ''}</span></span></label>)}</div>
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-3"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-indigo-700" checked={shuffle} onChange={e => setShuffle(e.target.checked)} /><span><strong className="block text-sm">Trộn thứ tự câu hỏi</strong><span className="text-xs text-slate-600">Chỉ trộn khi tạo tiết học; giữ nguyên thứ tự các đáp án A–D.</span></span></label>
+              </>}
+            </fieldset>
+            {!loading && !available.length && <Link className="block font-bold text-indigo-700 underline" to="/teacher/qr-cards/bank/new">+ Tạo bộ câu hỏi QR có ảnh, video →</Link>}
+          </section>
+        </div>
+
+        <aside className="min-w-0 space-y-5 lg:sticky lg:top-36">
+          <section className={card}>
+            <h2 className="flex items-center gap-2 text-lg font-black"><CheckCircle2 className="h-5 w-5 text-emerald-600" />Sẵn sàng lên lớp</h2>
+            <dl className="space-y-3 text-sm"><div><dt className="text-slate-500">Lớp học</dt><dd className="mt-1 break-words font-bold">{cls ? `${cls.name} • ${cls.students.length} học sinh` : 'Chưa có lớp'}</dd></div><div><dt className="text-slate-500">Bộ câu hỏi</dt><dd className="mt-1 break-words font-bold">{quiz?.title || 'Chưa có bộ câu hỏi'}</dd></div><div><dt className="text-slate-500">Nội dung tiết học</dt><dd className="mt-1 font-bold">{selected.length} câu • Tối đa {totalPoints} điểm</dd></div><div><dt className="text-slate-500">Thứ tự</dt><dd className="mt-1 font-bold">{shuffle ? 'Trộn câu hỏi' : 'Theo bộ câu hỏi'}</dd></div></dl>
+            <p className="text-xs leading-relaxed text-slate-500">Điểm đúng và điểm trừ theo từng câu trong kho. Mỗi em được ghi nhận đáp án đầu tiên cho mỗi câu.</p>
+            <button className={`${button} w-full`} disabled={busy || loading || !currentUser || !cls?.students.length || !selected.length} onClick={() => void start()}>{busy ? 'Đang tạo tiết học…' : 'Bắt đầu tiết học bằng thẻ QR'}</button>
+            {!selected.length && quiz && <p className="text-sm text-amber-800" role="status">Chọn ít nhất một câu hỏi để bắt đầu.</p>}
+          </section>
+          {last && <Link className="flex items-center gap-3 rounded-2xl border border-indigo-200 bg-white p-4 text-sm font-bold text-indigo-700 hover:bg-indigo-50" to={`/teacher/qr-cards/${encodeURIComponent(last)}`}><Monitor className="h-5 w-5 shrink-0" />Tiếp tục tiết dùng thẻ gần nhất trên máy này <ArrowRight className="h-4 w-4 shrink-0" /></Link>}
+        </aside>
+      </div>
+      <details className="rounded-2xl border border-sky-200 bg-sky-50 p-5"><summary className="cursor-pointer font-bold text-sky-900">Cách chiếu trên máy tính và quét bằng điện thoại</summary><ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700"><li>Bắt đầu tiết học, mở màn chiếu trên máy tính.</li><li>Dùng điện thoại quét mã mở màn quét và đăng nhập cùng tài khoản giáo viên.</li><li>Phát câu hỏi, yêu cầu học sinh giơ thẻ; quét từng nhóm nhỏ.</li><li>Kiểm tra tên và đáp án trước khi gửi. Đóng trả lời, công bố đáp án rồi chuyển câu.</li></ol></details>
+    </section>
+  );
 }
