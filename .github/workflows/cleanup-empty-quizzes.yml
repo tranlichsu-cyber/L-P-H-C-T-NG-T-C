@@ -24,7 +24,11 @@ jobs:
           distribution: temurin
           java-version: '21'
       - name: Install isolated administrative test tools
-        run: npm install --prefix "$RUNNER_TEMP/empty-quiz-tools" --no-audit --no-fund firebase-admin@14.5.0 firebase-tools@15.32.1
+        run: |
+          if ! npm install --prefix "$RUNNER_TEMP/empty-quiz-tools" --no-audit --no-fund firebase-admin@14.5.0 firebase-tools@15.32.1 > "$RUNNER_TEMP/empty-quiz-install.log" 2>&1; then
+            node -e 'const fs=require("fs");console.log("::error::"+fs.readFileSync(process.argv[1],"utf8").slice(-5000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A"))' "$RUNNER_TEMP/empty-quiz-install.log"
+            exit 1
+          fi
       - name: Verify deletion safeguards against actual Firestore emulator
         run: |
           export NODE_PATH="$RUNNER_TEMP/empty-quiz-tools/node_modules"
