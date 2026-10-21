@@ -47,11 +47,11 @@ Chọn ít nhất một câu và lớp có học sinh để bắt đầu. Điể
 
 ## Hiển thị câu hỏi khi phát câu
 
-Trang điều khiển hiển thị trực tiếp nội dung câu hỏi, ảnh/video và các lựa chọn A–D ngay phía trên các nút điều khiển. Bấm **Phát câu hỏi**, **Câu tiếp theo** hoặc chọn phát một câu sẽ đưa trang về phần câu hỏi. Đây là cùng nội dung với **Mở màn chiếu** / **Chiếu riêng cho học sinh**. Nếu dùng màn hình thứ hai, mở màn chiếu và đưa cửa sổ đó sang máy chiếu; dùng điện thoại hoặc trang điều khiển để phát/đóng câu. Trước khi công bố kết quả, các lựa chọn không đánh dấu đáp án đúng. Sau **Hiện đáp án / Chấm điểm**, đáp án đúng và giải thích mới xuất hiện.
+Trang điều khiển hiển thị trực tiếp nội dung câu hỏi, ảnh/video và các lựa chọn A–D ngay phía trên các nút điều khiển. Bấm **Phát câu hỏi**, **Câu tiếp theo** hoặc chọn phát một câu sẽ đưa trang về phần câu hỏi. Đây là cùng nội dung với **Mở màn chiếu**. Nếu dùng màn hình thứ hai, mở màn chiếu và đưa cửa sổ đó sang máy chiếu; dùng điện thoại hoặc trang điều khiển để phát/đóng câu. Trước khi công bố kết quả, các lựa chọn không đánh dấu đáp án đúng. Sau **Hiện đáp án / Chấm điểm**, đáp án đúng và giải thích mới xuất hiện.
 
 ## Màn chiếu toàn màn hình
 
-**Chiếu riêng cho học sinh** và **Mở màn chiếu** mở cùng trang chiếu tràn vùng hiển thị, không có menu, logo hay khung điều khiển giáo viên. Cỡ chữ và các ô đáp án điều chỉnh theo kích thước màn hình; nội dung dài vẫn có thể cuộn để đọc đủ. Bấm **Toàn màn hình** một lần trên cửa sổ chiếu để ẩn thanh địa chỉ/tab của trình duyệt; trình duyệt yêu cầu thao tác trực tiếp này. Bấm **Thoát toàn màn hình** hoặc Esc để trở lại. Màn chiếu vẫn tự cập nhật câu hỏi, số bài đã nhận và kết quả. Dùng **Về điều khiển tiết học** để trở lại trang giáo viên.
+**Mở màn chiếu** mở cùng trang chiếu tràn vùng hiển thị, không có menu, logo hay khung điều khiển giáo viên. Cỡ chữ và các ô đáp án điều chỉnh theo kích thước màn hình; nội dung dài vẫn có thể cuộn để đọc đủ. Bấm **Toàn màn hình** một lần trên cửa sổ chiếu để ẩn thanh địa chỉ/tab của trình duyệt; trình duyệt yêu cầu thao tác trực tiếp này. Bấm **Thoát toàn màn hình** hoặc Esc để trở lại. Màn chiếu vẫn tự cập nhật câu hỏi, số bài đã nhận và kết quả. Dùng **Về điều khiển tiết học** để trở lại trang giáo viên.
 
 ## Trình soạn câu hỏi dạng slide
 

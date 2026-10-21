@@ -146,3 +146,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-22: Replace the QR bank long form with a slide-style single-question editor: responsive question navigator, direct A–D correct-answer selection, keyboard support, duplicate/reorder/confirmed delete, image/video tools, point/explanation settings and pupil-view preview. Keep explicit saves, existing bank format and Word imports; surface invalid questions and protect local exit with unsaved edits. Verify authoring, media, round-trip persistence and responsive 320–1920px.
 
 2026-10-22: Audit QR workflows and fix unsaved-editor navigation with isolated recoverable local drafts, repeat-save guard, pending-camera start/cancel/late-result handling, stale-room display on ID changes, scoped bank retry and legacy bank list resilience. Verify editor, Word round-trip, lesson phases/finish, projection/fullscreen, camera rotations and pending permissions, printing, login return and menu navigation; retain scoring/access rules.
+
+2026-10-22: Bỏ nút Chiếu riêng cho học sinh trùng trong khung câu hỏi QR.
