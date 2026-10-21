@@ -40,5 +40,31 @@ const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpil
  const publicQ=await getDoc(doc(pupil,'rooms',created.id,'liveQuestions','media'));assert.equal(publicQ.data().correctAnswer,undefined);assert.equal(publicQ.data().media.imageUrl,bank.questions[0].media.imageUrl);await assertFails(getDoc(doc(pupil,'rooms',created.id,'privateQrQuestions','media')));await assertFails(getDoc(doc(other,'rooms',created.id,'privateQrQuestions','media')));
  await updateDoc(doc(teacher,'qrQuestionSets','b'),{questions:[{...bank.questions[0],correctAnswer:'A'}]});await deleteDoc(doc(teacher,'qrQuestionSets','b'));
  assert(await service.openQuestion(created.id,'media'));assert((await service.submitQrAnswer(created.id,'media','s','B')).success);assert(await service.closeQuestion(created.id,'media'));assert(await service.showQuestionResult(created.id,'media'));assert.equal((await getDoc(doc(teacher,'rooms',created.id,'scores','s'))).data().score,10);assert(await service.showQuestionResult(created.id,'media'));assert.equal((await getDoc(doc(teacher,'rooms',created.id,'scores','s'))).data().score,10);
+ // Exercise the four QR controls against the real emulator, including two devices.
+ const controls=await service.createRoom({teacherId:'t',classId:'c',className:'4A',subject:'Toán',quizId:'controls',quizTitle:'Controls',responseMode:'QR_CARD',questionSource:'QR_BANK',questions:[{id:'first',type:'MULTIPLE_CHOICE',content:'Một',options:['Một','Hai'],correctAnswer:'A',correctPoints:7,wrongPenalty:2},{id:'second',type:'MULTIPLE_CHOICE',content:'Hai',options:['Một','Hai'],correctAnswer:'B'}],roster:[{id:'s',name:'An'},{id:'s2',name:'Bình'}]});
+ assert.equal(await service.closeQuestion(controls.id,'first'),false);
+ assert.equal(await service.showQuestionResult(controls.id,'first'),false);
+ assert(await service.openQuestion(controls.id,'first'));
+ assert.equal(await service.openQuestion(controls.id,'second'),false);
+ assert.equal(await service.showQuestionResult(controls.id,'first'),false);
+ assert((await service.submitQrAnswer(controls.id,'first','s','A')).success);
+ assert((await service.submitQrAnswer(controls.id,'first','s2','B')).success);
+ assert(await service.closeQuestion(controls.id,'first'));
+ assert.equal(await service.openQuestion(controls.id,'second'),false);
+ assert.equal((await service.submitQrAnswer(controls.id,'first','s','B')).success,false);
+ // A failed grading transaction must retain CLOSED, without any partial points.
+ await deleteDoc(doc(teacher,'rooms',controls.id,'privateQrQuestions','first'));
+ await assert.rejects(service.showQuestionResult(controls.id,'first'));
+ assert.equal((await getDoc(doc(teacher,'rooms',controls.id,'liveQuestions','first'))).data().status,'CLOSED');
+ assert.equal((await getDoc(doc(teacher,'rooms',controls.id,'scores','s'))).exists(),false);
+ await setDoc(doc(teacher,'rooms',controls.id,'privateQrQuestions','first'),{correctAnswer:'A',correctPoints:7,wrongPenalty:2});
+ assert.deepEqual(await Promise.all([service.showQuestionResult(controls.id,'first'),service.showQuestionResult(controls.id,'first')]),[true,true]);
+ assert.equal((await getDoc(doc(teacher,'rooms',controls.id,'scores','s'))).data().score,7);
+ assert.equal((await getDoc(doc(teacher,'rooms',controls.id,'scores','s2'))).data().score,-2);
+ assert.equal(await service.openQuestion(controls.id,'first'),false);
+ assert.equal(await service.closeQuestion(controls.id,'first'),false);
+ assert(await service.openQuestion(controls.id,'second'));
+ assert.equal(await service.closeQuestion(controls.id,'first'),false);
+ console.log('PASS QR controls: state guards, no premature results, late answers rejected, atomic failure/retry, simultaneous grading once, correct/wrong points, graded questions locked.');
  console.log('PASS QR Firestore rules: teacher-only recording, roster identity, server time, atomic attendance, normal device join, active question, closure, paused/expired games, type and option bounds.');
  }finally{await env.cleanup();}})().catch(e=>{console.error(e);process.exit(1)});

@@ -150,3 +150,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-22: Bỏ nút Chiếu riêng cho học sinh trùng trong khung câu hỏi QR.
 
 2026-10-22: Xóa nút Mở màn chiếu khỏi trang điều khiển thẻ QR.
+
+2026-10-22: Rà soát bốn nút QR; chuyển câu chưa làm, khóa trạng thái và ghi điểm/công bố kết quả trong một giao dịch.

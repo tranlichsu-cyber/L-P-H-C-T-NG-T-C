@@ -415,8 +415,9 @@ export class FirestoreRealtimeService {
       if(room.status==='FINISHED'||room.activeGame?.status==='PAUSED')return false;
       const question=await tx.get(questionRef);if(!question.exists())return false;
       if(room.activeQuestionId===questionId&&question.data().status==='OPEN')return true;
+      if(room.responseMode==='QR_CARD'&&!['READY','CLOSED'].includes(question.data().status))return false;
       let previousRef=null,previousOpen=false;
-      if(room.activeQuestionId&&room.activeQuestionId!==questionId){previousRef=doc(firestore,'rooms',roomId,'liveQuestions',room.activeQuestionId);previousOpen=(await tx.get(previousRef)).data()?.status==='OPEN';}
+      if(room.activeQuestionId&&room.activeQuestionId!==questionId){previousRef=doc(firestore,'rooms',roomId,'liveQuestions',room.activeQuestionId);const previousStatus=(await tx.get(previousRef)).data()?.status;if(room.responseMode==='QR_CARD'&&['OPEN','CLOSED'].includes(previousStatus))return false;previousOpen=previousStatus==='OPEN';}
       if(previousRef&&previousOpen)tx.update(previousRef,{status:'CLOSED'});
       tx.update(questionRef,{status:'OPEN',startedAt:serverTimestamp()});
       tx.update(roomRef,{activeQuestionId:questionId,status:'ACTIVE',...(room.activeGame?{activeGame:openGameRound(room.activeGame,questionId)}:{})});
@@ -428,9 +429,16 @@ export class FirestoreRealtimeService {
   // 6. Close Question (Teacher)
   public async closeQuestion(roomId: string, questionId: string): Promise<boolean> {
     if (!db) return false;
-    const qRef = doc(db!, 'rooms', roomId, 'liveQuestions', questionId);
-    await updateDoc(qRef, { status: 'CLOSED' });
-    return true;
+    const firestore = db;
+    return runTransaction(firestore, async tx => {
+      const roomSnap = await tx.get(doc(firestore, 'rooms', roomId));
+      if (!roomSnap.exists() || roomSnap.data().status === 'FINISHED' || roomSnap.data().activeQuestionId !== questionId) return false;
+      const qRef = doc(firestore, 'rooms', roomId, 'liveQuestions', questionId);
+      const question = await tx.get(qRef);
+      if (!question.exists() || question.data().status !== 'OPEN') return false;
+      tx.update(qRef, { status: 'CLOSED' });
+      return true;
+    });
   }
 
   // 7. Show Question Result (Teacher: Attaches private answer at RESULT moment + Idempotent Auto-Scoring)
@@ -441,6 +449,7 @@ export class FirestoreRealtimeService {
     if (!roomSnap.exists()) return false;
 
     const roomData = roomSnap.data();
+    if (roomData.responseMode === 'QR_CARD') return this.showQrQuestionResult(roomId, questionId);
     const quizId = roomData.quizId;
 
     // Fetch private answer from quizzes/{quizId}/questions/{questionId}.
@@ -595,6 +604,51 @@ export class FirestoreRealtimeService {
     }
 
     return true;
+  }
+
+  // QR: publish the answer and all points in the same transaction. A failed
+  // write leaves CLOSED so the teacher can retry; concurrent clicks cannot add twice.
+  private async showQrQuestionResult(roomId: string, questionId: string): Promise<boolean> {
+    if (!db) return false;
+    const firestore = db, qRef = doc(firestore, 'rooms', roomId, 'liveQuestions', questionId);
+    const before = await getDoc(qRef);
+    if (!before.exists() || !['CLOSED', 'RESULT'].includes(before.data().status)) return false;
+    const revision = (value: any) => value?.toMillis?.() ?? String(value ?? '');
+    const startedAt = revision(before.data().startedAt);
+    const submissions = await getDocs(query(collection(firestore, 'rooms', roomId, 'submissions'), where('questionId', '==', questionId)));
+    if (submissions.size > 160) throw new Error('Câu hỏi có quá nhiều bài làm để chấm trong một lần. Vui lòng liên hệ hỗ trợ.');
+    return runTransaction(firestore, async tx => {
+      const room = await tx.get(doc(firestore, 'rooms', roomId));
+      const question = await tx.get(qRef);
+      if (!room.exists() || !question.exists() || room.data().status === 'FINISHED' || room.data().activeQuestionId !== questionId) return false;
+      if (question.data().status === 'RESULT') return true;
+      if (question.data().status !== 'CLOSED' || revision(question.data().startedAt) !== startedAt) return false;
+      const data = room.data();
+      const answer = await tx.get(data.questionSource === 'QR_BANK'
+        ? doc(firestore, 'rooms', roomId, 'privateQrQuestions', questionId)
+        : doc(firestore, 'quizzes', data.quizId, 'questions', questionId));
+      if (!answer.exists()) throw new Error('Không tìm thấy đáp án gốc. Chưa công bố kết quả hoặc ghi điểm.');
+      const privateData = answer.data(), rawAnswer = String(privateData.correctAnswer || '').trim();
+      const answerIndex = (question.data().options as string[] || []).findIndex(option => option.trim().toLocaleLowerCase('vi-VN') === rawAnswer.toLocaleLowerCase('vi-VN'));
+      const correctAnswer = /^[A-D]$/i.test(rawAnswer) ? rawAnswer.toUpperCase() : answerIndex >= 0 ? String.fromCharCode(65 + answerIndex) : '';
+      if (!/^[A-D]$/.test(correctAnswer) || correctAnswer.charCodeAt(0) - 65 >= (question.data().options?.length || 0)) throw new Error('Đáp án gốc không hợp lệ. Chưa công bố kết quả hoặc ghi điểm.');
+      const correctPoints = Number.isFinite(Number(privateData.correctPoints)) ? Math.max(0, Number(privateData.correctPoints)) : 10;
+      const wrongPenalty = Number.isFinite(Number(privateData.wrongPenalty)) ? Math.max(0, Number(privateData.wrongPenalty)) : 5;
+      const records = await Promise.all(submissions.docs.map(async submission => {
+        const sub = submission.data();
+        const eventRef = doc(firestore, 'rooms', roomId, 'scoreEvents', `question_${questionId}_student_${sub.studentId}`);
+        return { submission, sub, eventRef, existing: await tx.get(eventRef) };
+      }));
+      for (const {submission, sub, eventRef, existing} of records) {
+        if (existing.exists() || typeof sub.answer !== 'string') continue;
+        const isCorrect = sub.answer.trim().toUpperCase() === correctAnswer, points = isCorrect ? correctPoints : -wrongPenalty;
+        tx.set(eventRef, {id: eventRef.id, studentId: sub.studentId, type: isCorrect ? 'QUESTION_CORRECT' : 'QUESTION_WRONG', points, questionId, createdAt: serverTimestamp()});
+        tx.set(submission.ref, {isCorrect}, {merge: true});
+        if (points !== 0) tx.set(doc(firestore, 'rooms', roomId, 'scores', sub.studentId), {studentId: sub.studentId, studentName: sub.studentName, score: increment(points), updatedAt: serverTimestamp()}, {merge: true});
+      }
+      tx.update(qRef, {status: 'RESULT', correctAnswer, correctPoints, wrongPenalty, ...(privateData.explanation ? {explanation: String(privateData.explanation)} : {})});
+      return true;
+    });
   }
 
   // 7b. Add Manual Score (Teacher)

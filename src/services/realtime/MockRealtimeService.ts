@@ -178,6 +178,7 @@ export class MockRealtimeService {
 
     if(room.activeGame?.status==='PAUSED')return false;
     if(room.activeQuestionId===questionId&&liveQ.status==='OPEN')return true;
+    if(room.responseMode==='QR_CARD'&&(!['READY','CLOSED'].includes(liveQ.status)||(room.activeQuestionId!==questionId&&['OPEN','CLOSED'].includes(room.liveQuestions[room.activeQuestionId||'']?.status))))return false;
     if(room.activeQuestionId&&room.activeQuestionId!==questionId&&room.liveQuestions[room.activeQuestionId]?.status==='OPEN')room.liveQuestions[room.activeQuestionId].status='CLOSED';
     if(room.activeGame)room.activeGame=openGameRound(room.activeGame,questionId);
     // Enforce Privacy: Omit correctAnswer & explanation
@@ -204,7 +205,7 @@ export class MockRealtimeService {
   public closeQuestion(roomId: string, questionId: string): boolean {
     const db = loadMockDatabase();
     const room = db.rooms[roomId];
-    if (!room) return false;
+    if (!room || room.status === 'FINISHED' || room.activeQuestionId !== questionId) return false;
 
     const liveQ = room.liveQuestions[questionId];
     if (!liveQ || liveQ.status !== 'OPEN') return false; // Enforce State Machine
@@ -226,7 +227,7 @@ export class MockRealtimeService {
   public showQuestionResult(roomId: string, questionId: string): boolean {
     const db = loadMockDatabase();
     const room = db.rooms[roomId];
-    if (!room) return false;
+    if (!room || room.status === 'FINISHED' || room.activeQuestionId !== questionId) return false;
 
     const liveQ = room.liveQuestions[questionId];
     if (!liveQ || liveQ.status !== 'CLOSED') return false; // Enforce State Machine (CLOSED -> RESULT)

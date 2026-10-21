@@ -62,3 +62,12 @@ Bấm **Lưu bộ câu hỏi QR** để lưu. Soạn, đổi câu và xem trư�
 Thay đổi chưa lưu trong trình soạn được giữ thành bản nháp trên trình duyệt của máy đang dùng, theo tài khoản giáo viên và từng bộ câu hỏi. Khi mở lại, chọn **Khôi phục bản nháp** hoặc **Bỏ bản nháp cũ**; bản nháp không tự ghi đè bộ đã lưu trên hệ thống. Lưu thành công sẽ xóa bản nháp tương ứng. Nếu trình duyệt không cho lưu hoặc hết chỗ, trang hiển thị thông báo để thầy/cô lưu bộ câu hỏi trước khi rời trang. Bản nháp trên máy không đồng bộ sang thiết bị khác.
 
 Khi kho QR chưa tải được, dùng **Thử tải lại kho câu hỏi**. Lúc chờ cấp quyền camera, nút mở chuyển thành **Đang mở camera…**; vẫn có thể bấm **Dừng camera** để hủy. Chuyển phòng học không tiếp tục hiển thị dữ liệu của phòng trước.
+
+## Bốn nút điều khiển câu hỏi
+
+1. **Phát câu hỏi**: mở nhận đáp án cho câu đang chọn. Có thể mở lại câu đã đóng nhưng chưa chấm; đáp án đã ghi nhận vẫn được giữ, mỗi học sinh chỉ gửi một lần.
+2. **Đóng trả lời**: ngừng nhận đáp án mới, giữ nguyên câu hỏi và lựa chọn trên máy tính. Hãy gửi các thẻ đã quét và kiểm tra số bài đã nhận trước khi đóng.
+3. **Hiện đáp án / Chấm điểm**: chỉ bật sau khi đóng trả lời. Đáp án đúng, giải thích và điểm được lưu cùng nhau; nếu lưu lỗi, câu vẫn ở trạng thái chờ chấm để thử lại. Bấm đồng thời từ hai thiết bị không cộng điểm hai lần.
+4. **Câu tiếp theo**: chỉ bật sau khi chấm; phát câu chưa làm tiếp theo, bỏ qua các câu đã chấm. Nếu đã nhảy qua một số câu, hệ thống quay lại các câu chưa làm theo thứ tự bộ đề. Hết câu chưa làm thì nút bị khóa.
+
+Khi đang xử lý, bốn nút tạm khóa và có thông báo chờ. Nếu có lỗi, thông báo hiện ngay trong khung điều khiển. Không chuyển sang câu khác khi câu hiện tại đang nhận đáp án hoặc đang chờ chấm.
