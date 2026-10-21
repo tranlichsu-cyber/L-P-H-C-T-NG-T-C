@@ -1,16 +1,87 @@
-# Dọn bộ câu hỏi trống ngày 21/10/2026
-
-Thực hiện theo yêu cầu xóa bộ đề không có câu hỏi. Thao tác dữ liệu một lần, không cần phát hành Hosting.
-
-- Phạm vi: `quizzes`, `qrQuestionSets`, `selfPracticeQuizzes`, `traditionQuizzes`.
-- `quizzes`: kiểm tra câu hỏi con thực tế, không tin riêng `questionCount`; giữ nội dung câu hỏi nhúng cũ nếu có.
-- Ba kho dạng mảng: chỉ chọn mảng `questions: []` rõ ràng; giữ định dạng chưa nhận biết. Kiểm tra thêm câu hỏi con để bảo vệ dữ liệu cũ.
-- Bỏ qua bài có đề bài viết trực tiếp. Không đọc/xóa `practiceSets`, phiếu Word, bài nộp, điểm hoặc phòng học.
-- Tạo bản sao đầy đủ trước khi xóa; lưu kiểu Timestamp, bytes, reference và dữ liệu lồng nhau. Bản sao trong artifact `empty-quiz-recovery-<run-id>` giữ 90 ngày. Hàm `decode` trong script phục hồi kiểu Firestore; khi cần khôi phục, kiểm tra tài liệu chưa tồn tại rồi dùng `db.doc(saved.path).create(decode(saved.data, db))` với quyền quản trị để không ghi đè tài liệu mới.
-- Mỗi tài liệu được kiểm tra lại trong giao dịch, kể cả câu hỏi con. Bỏ qua tài liệu có thay đổi từ lúc sao lưu. Giới hạn 2.000 tài liệu/kho và tối đa 300 ứng viên mỗi lượt; vượt giới hạn sẽ dừng trước khi xóa.
-- Kiểm thử trên Firestore Emulator phải đạt trước khi workflow được cấp thông tin đăng nhập production. Bản sao phải được lưu artifact thành công trước bước xóa.
-- `systemMigrations/empty-quizzes-20261021-v1` ghi kết quả để chạy lại không xóa thêm các bản nháp mới. Báo cáo chỉ có số lượng, không có nội dung giảng dạy hay dữ liệu học sinh; lưu trên nhánh `audit/empty-quiz-cleanup-<run-id>`.
-
-Workflow: `.github/workflows/cleanup-empty-quizzes.yml`. Chỉ đổi cấu hình `.github/operations/empty-quiz-cleanup.json` trên main hoặc chạy workflow thủ công mới kích hoạt; thay đổi mã khác không tự dọn dữ liệu.
-
-Sau khi dọn, tải lại trang để xóa cache danh sách trong phiên trình duyệt (cache ứng dụng tối đa khoảng 2 phút).
+name: Clean up verified empty question banks
+on:
+  push:
+    branches: [main]
+    paths: [.github/operations/empty-quiz-cleanup.json]
+  workflow_dispatch:
+  schedule:
+    - cron: '15 7 22 10 *'
+permissions:
+  contents: write
+concurrency:
+  group: cleanup-empty-quizzes
+  cancel-in-progress: false
+jobs:
+  scheduled-date:
+    runs-on: ubuntu-latest
+    outputs:
+      allowed: ${{ steps.gate.outputs.allowed }}
+    steps:
+      - id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" != schedule ] || [ "$(date -u +%F)" = 2026-10-22 ]; then
+            echo 'allowed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'allowed=false' >> "$GITHUB_OUTPUT"
+          fi
+  cleanup:
+    needs: scheduled-date
+    if: needs.scheduled-date.outputs.allowed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install isolated administrative test tools
+        run: |
+          if ! npm install --prefix "$RUNNER_TEMP/empty-quiz-tools" --no-audit --no-fund firebase-admin@14.5.0 firebase-tools@15.32.1 > "$RUNNER_TEMP/empty-quiz-install.log" 2>&1; then
+            node -e 'const fs=require("fs");console.log("::error::"+fs.readFileSync(process.argv[1],"utf8").slice(-5000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A"))' "$RUNNER_TEMP/empty-quiz-install.log"
+            exit 1
+          fi
+      - name: Verify deletion safeguards against actual Firestore emulator
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/empty-quiz-tools/node_modules"
+          if ! "$RUNNER_TEMP/empty-quiz-tools/node_modules/.bin/firebase" emulators:exec --only firestore --project demo-empty-quizzes 'node scripts/check-empty-quiz-cleanup.cjs' > "$RUNNER_TEMP/empty-quiz-test.log" 2>&1; then
+            node -e 'const fs=require("fs");console.log("::error::"+fs.readFileSync(process.argv[1],"utf8").slice(-5000).replace(/%/g,"%25").replace(/\r/g,"%0D").replace(/\n/g,"%0A"))' "$RUNNER_TEMP/empty-quiz-test.log"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/empty-quiz-test.log"
+          echo '::notice::EMPTY_QUIZ_EMULATOR_VERIFIED'
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+          create_credentials_file: true
+          export_environment_variables: true
+      - name: Read actual question counts and back up exact empty documents
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/empty-quiz-tools/node_modules"
+          node scripts/cleanup-empty-quizzes.cjs prepare "$RUNNER_TEMP/empty-quiz-backup.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: empty-quiz-recovery-${{ github.run_id }}
+          path: ${{ runner.temp }}/empty-quiz-backup.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Delete only unchanged, still-empty documents and verify
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/empty-quiz-tools/node_modules"
+          node scripts/cleanup-empty-quizzes.cjs apply "$RUNNER_TEMP/empty-quiz-backup.json"
+      - name: Save aggregate result without question content or student data
+        run: |
+          mkdir -p audit-snapshots
+          cp "$RUNNER_TEMP/empty-quiz-backup.json.result.json" audit-snapshots/empty-quiz-cleanup-result.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout -b "audit/empty-quiz-cleanup-${{ github.run_id }}"
+          git add audit-snapshots/empty-quiz-cleanup-result.json
+          git commit -m 'Record verified empty question bank cleanup'
+          git push origin "HEAD:refs/heads/audit/empty-quiz-cleanup-${{ github.run_id }}"

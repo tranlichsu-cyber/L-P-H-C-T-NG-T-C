@@ -4,13 +4,31 @@ on:
     branches: [main]
     paths: [.github/operations/empty-quiz-cleanup.json]
   workflow_dispatch:
+  schedule:
+    - cron: '15 7 22 10 *'
 permissions:
   contents: write
 concurrency:
   group: cleanup-empty-quizzes
   cancel-in-progress: false
 jobs:
+  scheduled-date:
+    runs-on: ubuntu-latest
+    outputs:
+      allowed: ${{ steps.gate.outputs.allowed }}
+    steps:
+      - id: gate
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" != schedule ] || [ "$(date -u +%F)" = 2026-10-22 ]; then
+            echo 'allowed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'allowed=false' >> "$GITHUB_OUTPUT"
+          fi
   cleanup:
+    needs: scheduled-date
+    if: needs.scheduled-date.outputs.allowed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: production
