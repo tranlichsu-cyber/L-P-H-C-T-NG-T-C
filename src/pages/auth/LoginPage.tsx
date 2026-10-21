@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { GraduationCap, ArrowLeft } from 'lucide-react';
@@ -9,6 +9,7 @@ import { auth } from '../../services/firebase/firebase';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location=useLocation();
   const { signInTeacher, signInTeacherWithGoogle, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,6 +18,9 @@ export const LoginPage: React.FC = () => {
   const navigateAfterLogin = async () => {
     const uid = auth?.currentUser?.uid;
     const profile = uid ? await SchoolService.getUser(uid) : null;
+
+    const returnTo=location.state?.returnTo;
+    if(profile?.status==='ACTIVE'&&typeof returnTo==='string'&&/^\/teacher\/room\/[^/?#]+\?qr=1$/.test(returnTo)){navigate(returnTo,{replace:true});return;}
 
     if (profile?.role === 'SCHOOL_ADMIN') {
       navigate('/admin');

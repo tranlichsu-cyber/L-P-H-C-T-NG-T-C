@@ -46,6 +46,8 @@ import {
   Pause,
 } from 'lucide-react';
 
+const QrCardsPanel = React.lazy(()=>import('../../components/qr/QrCardsPanel'));
+
 export const RoomControllerPage: React.FC = () => {
   const { roomId: paramRoomId } = useParams<{ roomId?: string }>();
   const navigate = useNavigate();
@@ -65,6 +67,7 @@ export const RoomControllerPage: React.FC = () => {
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [isManualScoreModalOpen, setIsManualScoreModalOpen] = useState(false);
   const [isGameHubOpen, setIsGameHubOpen] = useState(false);
+  const [qrCardsOpen,setQrCardsOpen]=useState(()=>new URLSearchParams(window.location.search).get('qr')==='1');
 
   const gameActionLock=useRef(false);
   const [gameActionBusy,setGameActionBusy]=useState(false);
@@ -457,6 +460,8 @@ export const RoomControllerPage: React.FC = () => {
 
   const activeGame = room.activeGame;
 
+  if(qrCardsOpen)return <React.Suspense fallback={<p>Đang mở màn quét thẻ…</p>}><QrCardsPanel room={room} onClose={()=>{setQrCardsOpen(false);window.history.replaceState(null,'',window.location.pathname);}}/></React.Suspense>;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -622,6 +627,7 @@ export const RoomControllerPage: React.FC = () => {
         </div>
       )}
 
+      <button className="rounded-xl bg-indigo-700 px-5 py-3 font-bold text-white" onClick={()=>setQrCardsOpen(true)}>📷 GIƠ THẺ QR • IN THẺ / QUÉT ĐÁP ÁN</button>
       {/* Quick Actions Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">

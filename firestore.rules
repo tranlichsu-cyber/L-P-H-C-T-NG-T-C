@@ -495,10 +495,16 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/rooms/$(roomId)/roster/$(studentId))
           && request.resource.data.studentId == studentId
           && request.resource.data.mockAuthUid == request.auth.uid;
+        allow create: if canManageRoom(roomId)
+          && request.resource.data.keys().hasOnly(['studentId','name','mockAuthUid','sessionToken','responseMode','joinedAt','lastSeenAt'])
+          && request.resource.data.studentId == studentId
+          && request.resource.data.name == get(/databases/$(database)/documents/rooms/$(roomId)/roster/$(studentId)).data.name
+          && request.resource.data.responseMode == 'QR_CARD'
+          && request.resource.data.mockAuthUid == '' && request.resource.data.sessionToken == '';
         allow update: if canManageRoom(roomId) || (
           isAuthenticated()
           && exists(/databases/$(database)/documents/rooms/$(roomId)/roster/$(studentId))
-          && resource.data.mockAuthUid == request.auth.uid
+          && (resource.data.mockAuthUid == request.auth.uid || (resource.data.get('responseMode','') == 'QR_CARD' && resource.data.mockAuthUid == ''))
           && request.resource.data.studentId == studentId
           && request.resource.data.mockAuthUid == request.auth.uid
         );
@@ -541,6 +547,25 @@ service cloud.firestore {
           && get(
             /databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)
           ).data.status == 'OPEN';
+        // Only the room's teacher/admin may record an optical card answer.
+        allow create: if canManageRoom(roomId)
+          && request.resource.data.keys().hasOnly(['questionId','studentId','studentName','authUid','answer','source','submittedAt'])
+          && request.resource.data.source == 'QR_CARD' && request.resource.data.authUid == request.auth.uid
+          && request.resource.data.submittedAt == request.time
+          && request.resource.data.questionId is string && request.resource.data.studentId is string
+          && submissionId == request.resource.data.questionId + '_' + request.resource.data.studentId
+          && request.resource.data.studentName == get(/databases/$(database)/documents/rooms/$(roomId)/roster/$(request.resource.data.studentId)).data.name
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.status == 'ACTIVE'
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.activeQuestionId == request.resource.data.questionId
+          && gameAllowsSubmission(request.resource.data.questionId)
+          && get(/databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)).data.status == 'OPEN'
+          && get(/databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)).data.type == 'MULTIPLE_CHOICE'
+          && get(/databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)).data.options.size() >= 2
+          && get(/databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)).data.options.size() <= 4
+          && request.resource.data.answer in ['A','B','C','D']
+          && ((request.resource.data.answer in ['A','B'])
+            || (request.resource.data.answer == 'C' && get(/databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)).data.options.size() >= 3)
+            || (request.resource.data.answer == 'D' && get(/databases/$(database)/documents/rooms/$(roomId)/liveQuestions/$(request.resource.data.questionId)).data.options.size() == 4));
         allow update, delete: if canManageRoom(roomId);
       }
 

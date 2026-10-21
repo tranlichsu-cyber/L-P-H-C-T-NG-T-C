@@ -1,3 +1,4 @@
+import {canScanQuestion,qrAnswer,type CardChoice} from '../qr/cards';
 import {FreeRewardService} from '../rewards/FreeRewardService';
 import {openGameRound,toggleGamePause} from '../realtime/gamePolicy';
 import {createSharedSubscriptions} from '../data/readEfficiency';
@@ -653,6 +654,27 @@ export class FirestoreRealtimeService {
     if (!db) return false;
     await updateDoc(doc(db!, 'rooms', roomId), { callHistory: [] });
     return true;
+  }
+
+  // Teacher-scanned paper cards use the same immutable answer IDs and scoring pipeline.
+  public async submitQrAnswer(roomId:string,questionId:string,studentId:string,choice:CardChoice):Promise<{success:boolean;error?:string}>{
+    if(!db||!auth?.currentUser||auth.currentUser.isAnonymous)return {success:false,error:'Hãy đăng nhập tài khoản giáo viên.'};
+    const firestore=db,uid=auth.currentUser.uid;
+    return runTransaction(firestore,async tx=>{
+      const roomRef=doc(firestore,'rooms',roomId),qRef=doc(firestore,'rooms',roomId,'liveQuestions',questionId),rosterRef=doc(firestore,'rooms',roomId,'roster',studentId),subRef=doc(firestore,'rooms',roomId,'submissions',`${questionId}_${studentId}`),pRef=doc(firestore,'rooms',roomId,'participants',studentId);
+      const [rs,qs,roster,sub,participant]=await Promise.all([tx.get(roomRef),tx.get(qRef),tx.get(rosterRef),tx.get(subRef),tx.get(pRef)]);
+      if(!rs.exists()||!qs.exists()||!roster.exists())return {success:false,error:'Không tìm thấy câu hỏi hoặc học sinh trong lớp.'};
+      const room=rs.data() as MockRoomData,q={...qs.data(),id:questionId} as LiveQuestionPublic;
+      if(!canScanQuestion(room,q))return {success:false,error:'Câu hỏi đã đổi, đóng hoặc hết thời gian nhận bài.'};
+      if(sub.exists())return {success:false,error:'Học sinh đã trả lời câu này; giữ nguyên đáp án đầu tiên.'};
+      const name=String(roster.data().name),answer=qrAnswer(q,choice);
+      if(!participant.exists()){
+        tx.set(pRef,{studentId,name,mockAuthUid:'',sessionToken:'',responseMode:'QR_CARD',joinedAt:serverTimestamp(),lastSeenAt:serverTimestamp()});
+        tx.update(roomRef,{participantCount:increment(1)});
+      }
+      tx.set(subRef,{questionId,studentId,studentName:name,authUid:uid,answer,source:'QR_CARD',submittedAt:serverTimestamp()});
+      return {success:true};
+    });
   }
 
   // 8. Submit Answer (Student)

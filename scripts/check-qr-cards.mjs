@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import ts from 'typescript';
+const compile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const load=s=>import('data:text/javascript;base64,'+Buffer.from(s).toString('base64'));
+const policy=await load(compile(fs.readFileSync('src/services/realtime/gamePolicy.ts','utf8')));
+const qr=await load('const gameAcceptsAnswer='+policy.gameAcceptsAnswer.toString()+';\n'+compile(fs.readFileSync('src/services/qr/cards.ts','utf8')).replace(/^import .*;\n/gm,''));
+assert.deepEqual(qr.parseCard(qr.cardPayload('c','s')),{classId:'c',studentId:'s'});
+for(const raw of ['https://example.org','["SCQR1","c","../s"]','["SCQR1","c",null]','["SCQR2","c","s"]','{}'])assert.equal(qr.parseCard(raw),null);
+for(const [angle,choice] of [[0,'A'],[-90,'B'],[180,'C'],[90,'D'],[12,'A'],[-103,'B']]){const radians=angle*Math.PI/180;assert.equal(qr.cardChoice({x:200,y:200},{x:200+100*Math.cos(radians),y:200+100*Math.sin(radians)}),choice);}
+assert.equal(qr.cardChoice({x:0,y:0},{x:100,y:100}),null);
+const q={id:'q',status:'OPEN',type:'MULTIPLE_CHOICE',options:['Một','Hai','Ba','Bốn']},room={id:'r',classId:'c',activeQuestionId:'q',status:'ACTIVE',liveQuestions:{q},roster:[{studentId:'s',name:'An'}],participants:{},submissions:{},scores:{},scoreEvents:{}};
+assert(qr.canScanQuestion(room,q));for(const change of [{status:'FINISHED'},{activeQuestionId:'other'},{activeGame:{status:'PAUSED'}}])assert(!qr.canScanQuestion({...room,...change},q));
+assert(!qr.canScanQuestion(room,{...q,status:'CLOSED'}));assert(!qr.qrQuestionSupported({...q,type:'SHORT_ANSWER'}));assert(!qr.qrQuestionSupported({...q,options:['1','2','3','4','5']}));assert.throws(()=>qr.qrAnswer({...q,options:['1','2']},'D'));
+let database={rooms:{r:structuredClone(room)},privateQuestions:{}};
+globalThis.__qrFixture={...policy,...qr,loadMockDatabase:()=>structuredClone(database),saveMockDatabase:v=>{database=structuredClone(v)},eventBus:{publish:()=>{}},getRoomById:()=>{},getRoomByCode:()=>{}};
+const {MockRealtimeService}=await load('const {openGameRound,toggleGamePause,gameAcceptsAnswer,canScanQuestion,qrAnswer,loadMockDatabase,saveMockDatabase,eventBus,getRoomById,getRoomByCode}=globalThis.__qrFixture;\n'+compile(fs.readFileSync('src/services/realtime/MockRealtimeService.ts','utf8')).replace(/^import .*;\n/gm,''));
+const service=new MockRealtimeService();assert(!service.submitQrAnswer('r','q','unknown','A').success);assert(service.submitQrAnswer('r','q','s','B').success);assert.equal(database.rooms.r.submissions.q_s.answer,'B');assert.equal(database.rooms.r.participants.s.name,'An');assert(!service.submitQrAnswer('r','q','s','C').success);assert.equal(database.rooms.r.submissions.q_s.answer,'B');database.rooms.r.liveQuestions.q.status='CLOSED';assert(!service.submitQrAnswer('r','q','s','A').success);
+database.privateQuestions.r={q:{correctAnswer:'B',correctPoints:10,wrongPenalty:5}};assert(service.showQuestionResult('r','q'));assert.equal(database.rooms.r.scores.s.score,10);assert.equal(Object.keys(database.rooms.r.scoreEvents).length,1);assert(!service.showQuestionResult('r','q'));assert.equal(database.rooms.r.scores.s.score,10);
+console.log('PASS QR cards: class/student identity, all rotations, tilted rejection, question/game gates, valid options, offline pupil attendance, first-answer preservation and existing mock answer pipeline.');

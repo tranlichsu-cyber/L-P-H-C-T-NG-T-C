@@ -1,3 +1,4 @@
+import {canScanQuestion,qrAnswer,type CardChoice} from '../qr/cards';
 import {openGameRound,toggleGamePause,gameAcceptsAnswer} from './gamePolicy';
 import type {
   MockRoomData,
@@ -400,6 +401,15 @@ export class MockRealtimeService {
     room.callHistory = [];
     saveMockDatabase(db);
     return true;
+  }
+
+  public submitQrAnswer(roomId:string,questionId:string,studentId:string,choice:CardChoice):{success:boolean;error?:string}{
+    const db=loadMockDatabase(),room=db.rooms[roomId],q=room?.liveQuestions[questionId],p=room?.roster.find(p=>p.studentId===studentId);
+    if(!room||!p||!canScanQuestion(room,q))return {success:false,error:'Câu hỏi không mở hoặc học sinh không thuộc lớp.'};
+    if(room.submissions[`${questionId}_${studentId}`])return {success:false,error:'Học sinh đã trả lời câu này.'};
+    const now=new Date().toISOString();
+    if(!room.participants[studentId]){room.participants[studentId]={studentId,name:p.name,sessionToken:'',joinedAt:now,lastSeenAt:now};saveMockDatabase(db);}
+    return this.submitAnswer({roomId,questionId,studentId,studentName:p.name,answer:qrAnswer(q,choice),mockAuthUid:'teacher-qr'});
   }
 
   // 8. Submit Answer (Student)
