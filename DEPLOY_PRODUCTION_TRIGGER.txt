@@ -132,3 +132,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-21: Publish editable Word templates in the QR bank and add DOCX upload/review/create. Support metadata, 2–4 options, answer keys, points, explanations, one embedded image or image URL and video links. Reject invalid/oversized/encrypted/unsupported documents before writes, preserve existing sets, and verify actual downloaded template round-trip and embedded image import.
 
 2026-10-21: Make the requested 18-question Science 4 lesson 8 Word bank available as a direct website download and in the QR bank, replacing the inaccessible chat download.
+
+2026-10-21: Give teacher navigation its own horizontally scrollable row with equal-height single-line links, scroll controls and active-route reveal; prevent long school/account names from overflowing. Remove duplicate teacher/team management buttons from the school dashboard banner and retain the navigation cards below. Verify responsive widths 320–1920px and keyboard navigation.

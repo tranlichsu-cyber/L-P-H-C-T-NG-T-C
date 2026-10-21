@@ -177,25 +177,6 @@ export const SchoolDashboardPage: React.FC = () => {
             </p>
           </div>
         </div>
-
-        <div className="flex items-center gap-3 flex-wrap">
-          <Button
-            variant="warning"
-            size="md"
-            onClick={() => navigate('/admin/teachers')}
-            className="font-bold text-slate-950 shadow-lg shadow-amber-500/20"
-          >
-            <Users className="w-4 h-4 mr-1" /> QUẢN LÝ GIÁO VIÊN
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => navigate('/admin/teams')}
-            className="font-black bg-gradient-to-r from-violet-500 to-fuchsia-500 border-violet-400 shadow-lg shadow-violet-500/20"
-          >
-            <Building2 className="w-4 h-4 mr-1" /> TỔ CHUYÊN MÔN
-          </Button>
-        </div>
       </div>
 
       {/* School branding controls */}

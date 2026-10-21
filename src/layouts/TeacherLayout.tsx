@@ -1,5 +1,6 @@
+import { TeacherNavigation } from '../components/navigation/TeacherNavigation';
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { QrCode, LayoutDashboard, Users, BookOpen, Radio, LogOut, Building2, Crown, GraduationCap, UserCircle, KeyRound, Link2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSchool } from '../context/SchoolContext';
@@ -11,7 +12,6 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 
 export const TeacherLayout: React.FC = () => {
-  const location = useLocation();
   const {
     currentUser,
     signOutTeacher,
@@ -118,8 +118,8 @@ export const TeacherLayout: React.FC = () => {
       {/* Top Header */}
       <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/teacher" className="flex items-center gap-3 group">
+          <div className="flex min-w-0 flex-1 items-center">
+            <Link to="/teacher" className="group flex min-w-0 items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-sky-600/30 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
                 {currentLogoSrc ? (
                   <img src={currentLogoSrc} alt="Logo trường" className="w-full h-full object-cover" />
@@ -127,46 +127,24 @@ export const TeacherLayout: React.FC = () => {
                   <GraduationCap className="w-6 h-6" />
                 )}
               </div>
-              <div>
-                <span className="font-black text-lg text-slate-900 leading-tight block tracking-tight">
+              <div className="min-w-0">
+                <span title={settings.displayName || settings.schoolName || 'Lớp Học Tương Tác'} className="block truncate text-sm font-black leading-tight tracking-tight text-slate-900 sm:text-lg">
                   {settings.displayName || settings.schoolName || 'Lớp Học Tương Tác'}
                 </span>
               </div>
             </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path || (item.path !== '/teacher' && item.path !== '/admin' && location.pathname.startsWith(item.path + '/'));
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs sm:text-sm transition-all duration-150 border ${
-                      isActive
-                        ? `${item.active} font-extrabold shadow-md`
-                        : `${item.idle} font-bold hover:-translate-y-0.5 hover:shadow-sm`
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-3 flex shrink-0 items-center gap-2">
             <button
               type="button"
               onClick={() => setIsAccountModalOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-900 text-xs font-bold border border-emerald-200/80 shadow-xs hover:border-emerald-400 transition-colors"
+              className="hidden sm:flex shrink-0 items-center gap-2 whitespace-nowrap px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-900 text-xs font-bold border border-emerald-200/80 shadow-xs hover:border-emerald-400 transition-colors"
               title="Tài khoản, đổi mật khẩu và liên kết Google"
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              {accountLabel}
-              <UserCircle className="w-4 h-4" />
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500"></span>
+              <span className="max-w-36 truncate lg:max-w-52" title={accountLabel}>{accountLabel}</span>
+              <UserCircle className="h-4 w-4 shrink-0" />
             </button>
 
             <button
@@ -189,25 +167,7 @@ export const TeacherLayout: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation Bar */}
-        <nav className="lg:hidden flex border-t border-slate-100 bg-white px-2 py-1.5 overflow-x-auto justify-around gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-all border ${
-                  isActive ? `${item.active} font-bold shadow-sm` : `${item.idle} font-semibold`
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <TeacherNavigation items={navItems} />
       </header>
 
       {/* Main Content Area */}
