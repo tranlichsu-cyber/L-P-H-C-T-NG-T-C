@@ -1,0 +1,9 @@
+import {useState} from 'react';
+import type {QrMedia} from '../../services/qrBank/content';
+import {safeImage,videoSource} from '../../services/qrBank/content';
+export function QrQuestionMedia({media}:{media?:QrMedia}){
+ const [failed,setFailed]=useState(false),image=media?.imageUrl&&safeImage(media.imageUrl)?media.imageUrl:null,video=media?.videoUrl?videoSource(media.videoUrl):null;
+ return <div className="space-y-3">{image&&<figure>{!failed?<img key={image} src={image} alt={media?.imageAlt||'Hình minh họa câu hỏi'} referrerPolicy="no-referrer" onError={()=>setFailed(true)} className="mx-auto max-h-[45vh] max-w-full rounded-xl object-contain"/>:<p role="status">Không tải được ảnh. Hãy kiểm tra liên kết ảnh hoặc kết nối.</p>}{media?.imageAlt&&<figcaption className="mt-2 text-center text-sm">{media.imageAlt}</figcaption>}</figure>}{video?.kind==='youtube'&&<iframe title="Video của câu hỏi" src={video.url} className="mx-auto aspect-video w-full max-w-3xl rounded-xl border-0" allow="fullscreen; picture-in-picture" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"/>}{video?.kind==='file'&&<video src={video.url} controls playsInline preload="metadata" className="mx-auto max-h-[50vh] w-full max-w-3xl rounded-xl">Trình duyệt chưa phát được video. <a href={video.url} target="_blank" rel="noreferrer">Mở video</a></video>}{video&&<a className="block text-sm underline" href={media!.videoUrl} target="_blank" rel="noreferrer">Mở video trong thẻ mới nếu không phát được ↗</a>}</div>;
+}
+
+export function QrMediaDetails({media}:{media?:QrMedia}){const [open,setOpen]=useState(false);return <details className="my-3" onToggle={e=>setOpen(e.currentTarget.open)}><summary className="font-bold">Ảnh / Video của câu hỏi</summary>{open&&<QrQuestionMedia media={media}/>}</details>;}

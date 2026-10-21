@@ -243,6 +243,10 @@ export class HistoryService {
             getDocs(collection(db, 'rooms', roomId, 'roster')),
           ]);
 
+          if(r.questionSource==='QR_BANK'){
+            const snapshot=await getDocs(collection(db,'rooms',roomId,'privateQrQuestions'));
+            privateQuestions=Object.fromEntries(snapshot.docs.map(d=>[d.id,{correctAnswer:d.data().correctAnswer,explanation:d.data().explanation||''}]));
+          }
           const participants: any = {};
           pSnap.docs.forEach((d) => (participants[d.id] = d.data()));
 
@@ -295,7 +299,7 @@ export class HistoryService {
       if (profile?.status !== 'ACTIVE' || (room.teacherId !== uid && profile?.role !== 'SCHOOL_ADMIN')) throw new Error('Thầy/cô không có quyền xóa buổi học này.');
       if (room.status !== 'FINISHED') throw new Error('Chỉ xóa được buổi học đã kết thúc.');
       // Keep the parent until children are removed so ownership rules remain valid.
-      const snapshots = await Promise.all(['roster','participants','liveQuestions','submissions','scores','scoreEvents','summary','games'].map(name=>getDocs(collection(firestore,'rooms',roomId,name))));
+      const snapshots = await Promise.all(['roster','participants','liveQuestions','submissions','scores','scoreEvents','summary','games',...(room.questionSource==='QR_BANK'?['privateQrQuestions']:[])].map(name=>getDocs(collection(firestore,'rooms',roomId,name))));
       const refs = snapshots.flatMap(snapshot=>snapshot.docs.map(item=>item.ref));
       for(let offset=0;offset<refs.length;offset+=450){
         const batch=writeBatch(firestore);refs.slice(offset,offset+450).forEach(ref=>batch.delete(ref));await batch.commit();

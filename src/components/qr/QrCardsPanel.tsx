@@ -1,3 +1,4 @@
+import {QrMediaDetails} from './QrQuestionMedia';
 import {useEffect,useRef,useState} from 'react';
 import {QrCardsPrintButton} from './QrCardsPrintButton';
 import {QRCodeSVG} from 'qrcode.react';
@@ -16,7 +17,7 @@ export default function QrCardsPanel({room,onClose}:{room:MockRoomData;onClose:(
  <p>Mỗi em giữ đúng thẻ mang tên mình, xoay cạnh có đáp án A, B, C hoặc D lên trên. Giữ thẻ thẳng, không che mã. Giáo viên quét từng nhóm nhỏ, kiểm tra rồi gửi kết quả.</p>
  <QrCardsPrintButton classId={room.classId} className={room.className} roster={room.roster}/>
  <details className="rounded-xl bg-indigo-50 p-3"><summary className="cursor-pointer font-bold">Mở màn quét trên điện thoại</summary><p className="my-3">Dùng camera điện thoại mở mã này, đăng nhập cùng tài khoản giáo viên. Giữ máy tính ở màn chiếu. Đây là đường dẫn điều khiển, không đưa cho học sinh.</p><QRCodeSVG value={scannerUrl} size={160} marginSize={4}/><a className="mt-3 block break-all underline" href={scannerUrl}>{scannerUrl}</a></details>
- <div className="rounded-xl bg-sky-50 p-4"><strong>Câu đang chiếu: {q?.content||'Chưa chọn câu hỏi'}</strong><ol className="mt-2 space-y-1">{q?.options?.map((o,i)=><li key={i}>{String.fromCharCode(65+i)}. {o}</li>)}</ol><p className="mt-3 font-bold">{!qrQuestionSupported(q)?'Thẻ QR dùng cho câu trắc nghiệm có 2–4 lựa chọn.':canScanQuestion(room,q)?'Đang nhận đáp án':'Chưa mở nhận đáp án, đang tạm dừng hoặc đã hết giờ.'}</p></div>
+ <div className="rounded-xl bg-sky-50 p-4"><strong>Câu đang chiếu: {q?.content||'Chưa chọn câu hỏi'}</strong>{q?.media&&<QrMediaDetails key={q.id} media={q.media}/>}<ol className="mt-2 space-y-1">{q?.options?.map((o,i)=><li key={i}>{String.fromCharCode(65+i)}. {o}</li>)}</ol><p className="mt-3 font-bold">{!qrQuestionSupported(q)?'Thẻ QR dùng cho câu trắc nghiệm có 2–4 lựa chọn.':canScanQuestion(room,q)?'Đang nhận đáp án':'Chưa mở nhận đáp án, đang tạm dừng hoặc đã hết giờ.'}</p></div>
  <Scanner key={q?.id||'none'} room={room}/>
 
  </section>;

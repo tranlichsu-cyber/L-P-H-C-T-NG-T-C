@@ -101,6 +101,7 @@ const TestJoinPage = lazy(() => import('./pages/student/TestJoinPage').then(m=>(
 const StudentPracticeHubPage = lazy(() =>
   import('./pages/student/StudentPracticeHubPage').then((m) => ({ default: m.StudentPracticeHubPage }))
 );
+const QrBankPage=lazy(()=>import('./pages/teacher/QrBankPage').then(m=>({default:m.QrBankPage})));
 const QrCardsPage=lazy(()=>import('./pages/teacher/QrCardsPage').then(m=>({default:m.QrCardsPage})));
 const QrRoomPage=lazy(()=>import('./pages/teacher/QrRoomPage').then(m=>({default:m.QrRoomPage})));
 const NotFoundPage = lazy(() =>
@@ -163,6 +164,8 @@ export const App: React.FC = () => {
                     <Route path="history" element={<HistoryPage />} />
                     <Route path="history/:roomId" element={<SessionDetailPage />} />
                     <Route path="qr-cards" element={<QrCardsPage />} />
+                    <Route path="qr-cards/bank" element={<QrBankPage />} />
+                    <Route path="qr-cards/bank/:bankId" element={<QrBankPage />} />
                     <Route path="qr-cards/:roomId" element={<QrRoomPage />} />
                     <Route path="qr-cards/:roomId/scan" element={<QrRoomPage screen="scan" />} />
                     <Route path="qr-cards/:roomId/present" element={<QrRoomPage screen="present" />} />

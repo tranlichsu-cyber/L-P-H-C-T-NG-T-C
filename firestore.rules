@@ -47,6 +47,12 @@ service cloud.firestore {
       return isSchoolAdmin() || (isTeacher() && request.auth.uid == roomData.teacherId);
     }
 
+    function canCreateRoomChild(roomId) {
+      return isSchoolAdmin() || (isTeacher()
+        && existsAfter(/databases/$(database)/documents/rooms/$(roomId))
+        && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.teacherId == request.auth.uid);
+    }
+
     function isSameTeam(teamIds) {
       return isTeacher() && getUserData().teamIds.hasAny(teamIds);
     }
@@ -285,6 +291,17 @@ service cloud.firestore {
       }
     }
 
+    // Separate QR question bank; never exposed to students or mixed with ordinary quizzes.
+    match /qrQuestionSets/{bankId} {
+      function validQrSet(){let d=request.resource.data;return d.keys().hasOnly(['id','teacherId','title','subject','grade','questions','createdAt','updatedAt'])
+        && d.id==bankId && d.teacherId==request.auth.uid && d.title is string && d.title.size()>0 && d.title.size()<=200
+        && d.subject is string && d.subject.size()>0 && d.subject.size()<=100 && d.grade is string && d.grade.size()>0 && d.grade.size()<=30
+        && d.questions is list && d.questions.size()>0 && d.questions.size()<=80 && d.createdAt is string && d.updatedAt is string;}
+      allow read, delete: if isTeacher() && resource.data.teacherId==request.auth.uid;
+      allow create: if isTeacher() && validQrSet();
+      allow update: if isTeacher() && resource.data.teacherId==request.auth.uid && validQrSet() && request.resource.data.createdAt==resource.data.createdAt;
+    }
+
     // Personal reusable questions: teacher-only, scoped to the owner.
     match /questionBank/{questionId} {
       allow read, delete: if isTeacher() && resource.data.teacherId == request.auth.uid;
@@ -486,7 +503,8 @@ service cloud.firestore {
 
       match /roster/{studentId} {
         allow read: if isAuthenticated();
-        allow write: if canManageRoom(roomId);
+        allow create: if canCreateRoomChild(roomId);
+        allow update, delete: if canManageRoom(roomId);
       }
 
       match /participants/{studentId} {
@@ -513,9 +531,15 @@ service cloud.firestore {
         allow delete: if canManageRoom(roomId);
       }
 
+      match /privateQrQuestions/{questionId} {
+        allow read, update, delete: if canManageRoom(roomId);
+        allow create: if canCreateRoomChild(roomId);
+      }
+
       match /liveQuestions/{questionId} {
         allow read: if isAuthenticated();
-        allow write: if canManageRoom(roomId);
+        allow create: if canCreateRoomChild(roomId);
+        allow update, delete: if canManageRoom(roomId);
       }
 
       function gameAllowsSubmission(questionId) {

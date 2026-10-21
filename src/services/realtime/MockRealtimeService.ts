@@ -48,6 +48,7 @@ export class MockRealtimeService {
         type: q.type,
         content: q.content,
         options: q.options ? [...q.options] : undefined,
+        ...(q.media?{media:structuredClone(q.media)}:{}),
         status: 'READY',
       };
     });
@@ -67,6 +68,7 @@ export class MockRealtimeService {
       subject: params.subject,
       quizId: params.quizId,
       quizTitle: params.quizTitle,
+      ...(params.questionSource?{questionSource:params.questionSource}:{}),
       ...(params.responseMode?{responseMode:params.responseMode,questionOrder:params.questions.map(q=>q.id)}:{}),
       status: 'WAITING',
       activeQuestionId: params.questions[0]?.id || null,

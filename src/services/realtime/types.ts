@@ -114,6 +114,7 @@ export interface MockParticipant {
 }
 
 export interface LiveQuestionPublic {
+  media?: import('../qrBank/content').QrMedia;
   id: string;
   type: QuestionType;
   content: string;
@@ -166,6 +167,7 @@ export interface CalledStudentInfo {
 
 export interface MockRoomData {
   responseMode?: 'QR_CARD';
+  questionSource?: 'QR_BANK';
   questionOrder?: string[];
   id: string;
   roomCode: string;
@@ -200,6 +202,7 @@ export interface MockRoomData {
 
 export interface CreateRoomParams {
   responseMode?: 'QR_CARD';
+  questionSource?: 'QR_BANK';
   teacherId: string;
   classId: string;
   className: string;
@@ -211,6 +214,7 @@ export interface CreateRoomParams {
     type: QuestionType;
     content: string;
     options?: string[];
+    media?: import('../qrBank/content').QrMedia;
     correctAnswer: string;
     explanation?: string;
     correctPoints?: number;

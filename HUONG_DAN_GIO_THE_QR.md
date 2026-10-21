@@ -17,3 +17,14 @@ Mỗi câu giữ đáp án đầu tiên đã gửi, dù nộp từ thiết bị 
 ## Mục riêng từ ngày 21/10/2026
 
 Các tiết tạo ở mục này chỉ nhận câu trả lời bằng thẻ qua tài khoản giáo viên phụ trách phòng, không dùng mã phòng cho học sinh vào làm trên thiết bị. Màn chiếu không hiển thị mã tham gia. Trang điều khiển có các nút phát câu hỏi, đóng trả lời, chấm điểm, chuyển câu và kết thúc tiết; chấm câu đang mở trước khi kết thúc để lưu đủ điểm. Báo cáo vẫn nằm trong Lịch sử dạy học. Có lối tiếp tục tiết gần nhất trên máy đang dùng, theo tài khoản giáo viên. Các liên kết quét cũ vẫn được chuyển sang màn riêng; phòng Live cũ vẫn hoạt động như trước.
+
+## Kho câu hỏi riêng có ảnh và video
+
+Vào **Trả lời bằng thẻ QR → Kho câu hỏi QR riêng → Tạo bộ câu hỏi QR**. Kho này tách khỏi bộ đề Live và tự luyện; chọn lớp rồi chỉ chọn các bộ của kho QR.
+
+- Nhập tên bộ, môn, khối lớp. Mỗi câu có 2–4 lựa chọn, một đáp án đúng, điểm đúng/điểm trừ và giải thích. Có nút thêm, xóa, đổi thứ tự câu và xem trước. Bấm **Lưu bộ câu hỏi QR** trước khi rời trang.
+- Ảnh: chọn JPG/PNG/WebP tối đa 6 MB hoặc dán liên kết HTTPS. Ảnh từ máy được thu gọn và lưu cùng câu hỏi, dùng lại được trên điện thoại/máy tính sau đăng nhập. Nên chọn ảnh rõ chữ và cắt gọn nội dung cần học.
+- Video: dán liên kết YouTube (kể cả youtu.be/Shorts) hoặc video HTTPS có đuôi MP4/WebM. Video phát khi giáo viên bấm; có đường dẫn mở ngoài nếu nguồn không cho nhúng. Cần Internet và quyền xem video. Chức năng này dùng liên kết video, không tải tệp video lên Firebase.
+- Bấm **Xem trước câu hỏi** để kiểm tra hình/video rồi bắt đầu tiết. Màn chiếu hiển thị nội dung đa phương tiện; màn quét chỉ tải hình/video khi mở phần “Ảnh / Video của câu hỏi”.
+
+Mỗi bộ tối đa 80 câu và có giới hạn tổng dung lượng; nếu bộ chứa quá nhiều ảnh, dùng liên kết ảnh hoặc chia nhỏ bộ. Mỗi tiết mới lấy một bản riêng của nội dung và đáp án; sửa/xóa bộ trong kho không đổi câu hỏi, điểm và báo cáo của tiết đã tạo. Kho và đáp án riêng của tiết chỉ dành cho giáo viên có quyền. Tiếp tục dùng gói miễn phí, không thêm Cloud Functions hay yêu cầu Firebase Storage.

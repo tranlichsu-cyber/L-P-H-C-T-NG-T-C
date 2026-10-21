@@ -95,6 +95,7 @@ export class FirestoreRealtimeService {
       subject: params.subject,
       quizId: params.quizId,
       quizTitle: params.quizTitle,
+      ...(params.questionSource?{questionSource:params.questionSource}:{}),
       ...(params.responseMode?{responseMode:params.responseMode,questionOrder:params.questions.map(q=>q.id)}:{}),
       status: 'WAITING',
       activeQuestionId: params.questions[0]?.id || null,
@@ -142,9 +143,11 @@ export class FirestoreRealtimeService {
         type: q.type,
         content: q.content,
         ...(q.options ? { options: [...q.options] } : {}),
+        ...(q.media?{media:q.media}:{}),
         status: 'READY',
       };
       batch.set(qRef, sanitizeFirestoreData(publicQ));
+      if(params.questionSource==='QR_BANK')batch.set(doc(db!, 'rooms',roomId,'privateQrQuestions',q.id),sanitizeFirestoreData({type:q.type,options:q.options,correctAnswer:q.correctAnswer,explanation:q.explanation||'',correctPoints:q.correctPoints??10,wrongPenalty:q.wrongPenalty??0}));
     });
 
     await batch.commit();
@@ -442,7 +445,7 @@ export class FirestoreRealtimeService {
 
     // Fetch private answer from quizzes/{quizId}/questions/{questionId}.
     // Never invent a fallback answer because that would score students incorrectly.
-    const privateSnap = await getDoc(doc(db!, 'quizzes', quizId, 'questions', questionId));
+    const privateSnap = await getDoc(roomData.questionSource==='QR_BANK'?doc(db!,'rooms',roomId,'privateQrQuestions',questionId):doc(db!, 'quizzes', quizId, 'questions', questionId));
     if (!privateSnap.exists() || !privateSnap.data()?.correctAnswer) {
       throw new Error('Không tìm thấy đáp án gốc của câu hỏi. Không thể công bố kết quả.');
     }
@@ -778,7 +781,7 @@ export class FirestoreRealtimeService {
 
     const privateQuestions: Record<string, { correctAnswer: string; explanation?: string }> = {};
     if (rawRoomData.quizId) {
-      const privateSnap = await getDocs(collection(firestore, 'quizzes', rawRoomData.quizId, 'questions'));
+      const privateSnap = await getDocs(rawRoomData.questionSource==='QR_BANK'?collection(firestore,'rooms',roomId,'privateQrQuestions'):collection(firestore, 'quizzes', rawRoomData.quizId, 'questions'));
       privateSnap.docs.forEach((d) => {
         const data = d.data() as { correctAnswer?: string; explanation?: string };
         if (data.correctAnswer) {

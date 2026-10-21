@@ -1,6 +1,6 @@
 const {initializeTestEnvironment,assertSucceeds,assertFails}=require('@firebase/rules-unit-testing');
 const req=require('node:module').createRequire(require.resolve('@firebase/rules-unit-testing'));
-const {doc,setDoc,updateDoc,getDoc,runTransaction,serverTimestamp,increment}=req('firebase/firestore');
+const {doc,setDoc,updateDoc,getDoc,runTransaction,serverTimestamp,increment,collection,getDocs,query,where,writeBatch,deleteDoc}=req('firebase/firestore');
 const fs=require('node:fs'),assert=require('node:assert/strict'),ts=require('typescript');
 const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
 (async()=>{const env=await initializeTestEnvironment({projectId:'demo-self-practice',firestore:{rules:fs.readFileSync('firestore.rules','utf8')}});await env.clearFirestore();try{
@@ -19,9 +19,9 @@ const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpil
  await updateDoc(doc(teacher,'rooms','r','liveQuestions','q'),{type:'MULTIPLE_CHOICE',status:'OPEN',options:['1','2','3','4']});
  const policy=await load(fs.readFileSync('src/services/realtime/gamePolicy.ts','utf8'));
  const qr=await load('const gameAcceptsAnswer='+policy.gameAcceptsAnswer.toString()+';\n'+fs.readFileSync('src/services/qr/cards.ts','utf8').replace(/^import .*;\n/gm,''));
- globalThis.__qrRuleFixture={doc,runTransaction,serverTimestamp,increment,auth:{currentUser:{uid:'t',isAnonymous:false}},db:teacher,...qr,createSharedSubscriptions:()=>()=>{}};
+ globalThis.__qrRuleFixture={doc,runTransaction,serverTimestamp,increment,collection,getDocs,query,where,writeBatch,updateDoc,setDoc,getDoc,auth:{currentUser:{uid:'t',isAnonymous:false}},db:teacher,...qr,...policy,createSharedSubscriptions:()=>()=>{}};
  const source=ts.transpileModule(fs.readFileSync('src/services/firebase/FirestoreRealtimeService.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace(/^import .*;\n/gm,'');
- const module=await load('const {doc,runTransaction,serverTimestamp,increment,auth,db,canScanQuestion,qrAnswer,createSharedSubscriptions}=globalThis.__qrRuleFixture;\n'+source);
+ const module=await load('const {doc,runTransaction,serverTimestamp,increment,collection,getDocs,query,where,writeBatch,updateDoc,setDoc,getDoc,auth,db,canScanQuestion,qrAnswer,createSharedSubscriptions,openGameRound}=globalThis.__qrRuleFixture;\n'+source);
  const service=new module.FirestoreRealtimeService();
  const outcomes=await Promise.all([service.submitQrAnswer('r','q','s3','B'),service.submitQrAnswer('r','q','s3','D')]);
  assert.equal(outcomes.filter(o=>o.success).length,1);assert(['B','D'].includes((await getDoc(ref(teacher,'s3'))).data().answer));assert.equal((await getDoc(doc(teacher,'rooms','r'))).data().participantCount,2);
@@ -32,5 +32,13 @@ const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpil
  await assertFails(setDoc(ref(pupil,'s2'),{questionId:'q',studentId:'s2',studentName:'Em s2',authUid:'u',answer:'A',submittedAt:serverTimestamp()}));
  assert((await service.submitQrAnswer('r','q','s2','A')).success);
  await updateDoc(doc(teacher,'rooms','r'),{activeQuestionId:'different'});assert.equal((await service.submitQrAnswer('r','q','s2','A')).success,false);
+ // A separate teacher bank and per-room private snapshots survive later bank edits/deletion.
+ const bank={id:'b',teacherId:'t',title:'Riêng QR',subject:'Toán',grade:'4',createdAt:'now',updatedAt:'now',questions:[{id:'media',type:'MULTIPLE_CHOICE',content:'Xem ảnh',options:['Một','Hai'],correctAnswer:'B',media:{imageUrl:'https://example.org/photo.png',videoUrl:'https://youtu.be/abcdefghijk'}}]};
+ await assertSucceeds(setDoc(doc(teacher,'qrQuestionSets','b'),bank));await assertFails(getDoc(doc(pupil,'qrQuestionSets','b')));await assertFails(getDoc(doc(other,'qrQuestionSets','b')));await assertFails(updateDoc(doc(other,'qrQuestionSets','b'),{title:'Giả sửa'}));await assertFails(setDoc(doc(teacher,'qrQuestionSets','forged'),{...bank,id:'forged',teacherId:'other'}));
+ const created=await service.createRoom({teacherId:'t',classId:'c',className:'4A',subject:bank.subject,quizId:bank.id,quizTitle:bank.title,responseMode:'QR_CARD',questionSource:'QR_BANK',questions:bank.questions,roster:[{id:'s',name:'An'}]});
+ await assertFails(setDoc(doc(other,'rooms',created.id,'privateQrQuestions','forged'),{correctAnswer:'A'}));
+ const publicQ=await getDoc(doc(pupil,'rooms',created.id,'liveQuestions','media'));assert.equal(publicQ.data().correctAnswer,undefined);assert.equal(publicQ.data().media.imageUrl,bank.questions[0].media.imageUrl);await assertFails(getDoc(doc(pupil,'rooms',created.id,'privateQrQuestions','media')));await assertFails(getDoc(doc(other,'rooms',created.id,'privateQrQuestions','media')));
+ await updateDoc(doc(teacher,'qrQuestionSets','b'),{questions:[{...bank.questions[0],correctAnswer:'A'}]});await deleteDoc(doc(teacher,'qrQuestionSets','b'));
+ assert(await service.openQuestion(created.id,'media'));assert((await service.submitQrAnswer(created.id,'media','s','B')).success);assert(await service.closeQuestion(created.id,'media'));assert(await service.showQuestionResult(created.id,'media'));assert.equal((await getDoc(doc(teacher,'rooms',created.id,'scores','s'))).data().score,10);assert(await service.showQuestionResult(created.id,'media'));assert.equal((await getDoc(doc(teacher,'rooms',created.id,'scores','s'))).data().score,10);
  console.log('PASS QR Firestore rules: teacher-only recording, roster identity, server time, atomic attendance, normal device join, active question, closure, paused/expired games, type and option bounds.');
  }finally{await env.cleanup();}})().catch(e=>{console.error(e);process.exit(1)});
