@@ -135,6 +135,12 @@ export const App: React.FC = () => {
                   {/* Teacher Auth */}
                   <Route path="/login" element={<LoginPage />} />
 
+                  <Route path="/teacher/qr-cards/:roomId/present" element={
+                    <AccountRoleGuard allowedRoles={['SCHOOL_ADMIN', 'TEAM_LEADER', 'TEACHER']}>
+                      <QrRoomPage screen="present" />
+                    </AccountRoleGuard>
+                  } />
+
                   {/* Teacher Section */}
                   <Route
                     path="/teacher"
@@ -168,7 +174,6 @@ export const App: React.FC = () => {
                     <Route path="qr-cards/bank/:bankId" element={<QrBankPage />} />
                     <Route path="qr-cards/:roomId" element={<QrRoomPage />} />
                     <Route path="qr-cards/:roomId/scan" element={<QrRoomPage screen="scan" />} />
-                    <Route path="qr-cards/:roomId/present" element={<QrRoomPage screen="present" />} />
                     <Route path="room" element={<RoomControllerPage />} />
                     <Route path="room/:roomId" element={<RoomControllerPage />} />
                     <Route path="room/present" element={<PresentationPage />} />
