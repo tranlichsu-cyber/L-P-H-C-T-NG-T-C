@@ -148,3 +148,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-22: Audit QR workflows and fix unsaved-editor navigation with isolated recoverable local drafts, repeat-save guard, pending-camera start/cancel/late-result handling, stale-room display on ID changes, scoped bank retry and legacy bank list resilience. Verify editor, Word round-trip, lesson phases/finish, projection/fullscreen, camera rotations and pending permissions, printing, login return and menu navigation; retain scoring/access rules.
 
 2026-10-22: Bỏ nút Chiếu riêng cho học sinh trùng trong khung câu hỏi QR.
+
+2026-10-22: Xóa nút Mở màn chiếu khỏi trang điều khiển thẻ QR.

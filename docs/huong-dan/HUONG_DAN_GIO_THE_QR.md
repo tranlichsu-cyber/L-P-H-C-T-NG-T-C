@@ -3,7 +3,7 @@
 Trong cổng giáo viên, chọn mục riêng **Trả lời bằng thẻ QR** trên thanh menu hoặc trang Dạy học. Không cần đi qua Phòng học Live.
 
 1. Chọn lớp rồi chọn **Xem và in thẻ của lớp**, in A4 ở tỉ lệ 100%, đen trắng và cắt theo khung. Mỗi em nhận đúng thẻ mang tên mình; giữ thẻ để dùng lại trong các tiết của cùng lớp. Thẻ không phải mã đăng nhập.
-2. Trong **Cấu hình câu hỏi cho tiết học**, lọc theo môn rồi chọn bộ câu hỏi QR. Mặc định chọn tất cả; có thể bỏ chọn từng câu, chọn lại tất cả và bật **Trộn thứ tự câu hỏi**. Trộn chỉ thay đổi thứ tự câu, giữ nguyên đáp án A–D. Kiểm tra số câu và điểm tối đa trong **Sẵn sàng lên lớp**, rồi bấm **Bắt đầu tiết học bằng thẻ QR**. Chỉ những câu được chọn được sao chép vào tiết; không sửa bộ gốc. Bấm **Mở màn chiếu** trên máy tính và **Phát câu hỏi**. Mỗi em xoay cạnh mang chữ đáp án mình chọn lên trên: A, B, C hoặc D.
+2. Trong **Cấu hình câu hỏi cho tiết học**, lọc theo môn rồi chọn bộ câu hỏi QR. Mặc định chọn tất cả; có thể bỏ chọn từng câu, chọn lại tất cả và bật **Trộn thứ tự câu hỏi**. Trộn chỉ thay đổi thứ tự câu, giữ nguyên đáp án A–D. Kiểm tra số câu và điểm tối đa trong **Sẵn sàng lên lớp**, rồi bấm **Bắt đầu tiết học bằng thẻ QR**. Chỉ những câu được chọn được sao chép vào tiết; không sửa bộ gốc. Bấm **Phát câu hỏi** trên máy tính để hiện câu hỏi ngay trên trang điều khiển. Mỗi em xoay cạnh mang chữ đáp án mình chọn lên trên: A, B, C hoặc D.
 3. Trong phần **Kết nối điện thoại để quét thẻ**, dùng camera điện thoại mở mã dẫn đến màn quét; đăng nhập cùng tài khoản giáo viên nếu được yêu cầu. Sau đăng nhập, màn quét được mở lại đúng phòng.
 4. Bấm **Mở camera sau**, cấp quyền camera và giữ điện thoại thẳng đứng. Quét gần từng em hoặc nhóm nhỏ 2–4 em; không cần học sinh có điện thoại. Giữ thẻ thẳng, đủ sáng, không che mã; nếu chưa nhận thì đưa camera gần hơn. Cạnh đáp án được chọn phải nằm ngang ở trên.
 5. Màn hình hiển thị tên và đáp án đã nhận sau hai lần đọc ổn định. Có thể dừng camera để kiểm tra, bỏ kết quả sai và quét lại. Chọn **Gửi các đáp án đã kiểm tra** để ghi nhận. Máy tính tự cập nhật bảng trả lời; khi giáo viên công bố kết quả, điểm và báo cáo dùng luồng chấm hiện có.
@@ -41,17 +41,13 @@ Vào **Trả lời bằng thẻ QR → Mở kho câu hỏi QR**. Trong phần �
 
 ## Bố cục điều khiển tiết học
 
-Màn điều khiển có các ô tiến độ, trạng thái và số học sinh đã trả lời câu hiện tại. Bảng **Đáp án từng học sinh** hiển thị tên, lựa chọn đã gửi hoặc trạng thái chưa trả lời, không cần mở camera trên máy tính. Dùng **Mở màn chiếu** để chiếu cho lớp; mã kết nối điện thoại luôn có sẵn bên dưới cụm điều khiển. Muốn quét bằng camera của chính máy đang dùng, chọn **Quét ngay trên máy này**. Đóng hoặc ẩn phần quét sẽ dừng camera và vẫn giữ trang điều khiển; các kết quả chưa gửi trong phần quét sẽ bị bỏ, vì vậy cần kiểm tra và gửi trước khi đóng.
+Màn điều khiển có các ô tiến độ, trạng thái và số học sinh đã trả lời câu hiện tại. Bảng **Đáp án từng học sinh** hiển thị tên, lựa chọn đã gửi hoặc trạng thái chưa trả lời, không cần mở camera trên máy tính. Câu hỏi hiển thị trực tiếp phía trên; mã kết nối điện thoại luôn có sẵn bên dưới cụm điều khiển. Muốn quét bằng camera của chính máy đang dùng, chọn **Quét ngay trên máy này**. Đóng hoặc ẩn phần quét sẽ dừng camera và vẫn giữ trang điều khiển; các kết quả chưa gửi trong phần quét sẽ bị bỏ, vì vậy cần kiểm tra và gửi trước khi đóng.
 
 Chọn ít nhất một câu và lớp có học sinh để bắt đầu. Điểm đúng/điểm trừ lấy từ từng câu đã soạn; muốn đổi điểm, sửa bộ câu hỏi trong kho trước khi tạo tiết. Màn chuẩn bị dùng dữ liệu kho đã tải, lọc môn và chọn câu không tạo thêm lượt đọc Firestore.
 
 ## Hiển thị câu hỏi khi phát câu
 
-Trang điều khiển hiển thị trực tiếp nội dung câu hỏi, ảnh/video và các lựa chọn A–D ngay phía trên các nút điều khiển. Bấm **Phát câu hỏi**, **Câu tiếp theo** hoặc chọn phát một câu sẽ đưa trang về phần câu hỏi. Đây là cùng nội dung với **Mở màn chiếu**. Nếu dùng màn hình thứ hai, mở màn chiếu và đưa cửa sổ đó sang máy chiếu; dùng điện thoại hoặc trang điều khiển để phát/đóng câu. Trước khi công bố kết quả, các lựa chọn không đánh dấu đáp án đúng. Sau **Hiện đáp án / Chấm điểm**, đáp án đúng và giải thích mới xuất hiện.
-
-## Màn chiếu toàn màn hình
-
-**Mở màn chiếu** mở cùng trang chiếu tràn vùng hiển thị, không có menu, logo hay khung điều khiển giáo viên. Cỡ chữ và các ô đáp án điều chỉnh theo kích thước màn hình; nội dung dài vẫn có thể cuộn để đọc đủ. Bấm **Toàn màn hình** một lần trên cửa sổ chiếu để ẩn thanh địa chỉ/tab của trình duyệt; trình duyệt yêu cầu thao tác trực tiếp này. Bấm **Thoát toàn màn hình** hoặc Esc để trở lại. Màn chiếu vẫn tự cập nhật câu hỏi, số bài đã nhận và kết quả. Dùng **Về điều khiển tiết học** để trở lại trang giáo viên.
+Trang điều khiển hiển thị trực tiếp nội dung câu hỏi, ảnh/video và các lựa chọn A–D ngay phía trên các nút điều khiển. Bấm **Phát câu hỏi**, **Câu tiếp theo** hoặc chọn phát một câu sẽ đưa trang về phần câu hỏi. Trước khi công bố kết quả, các lựa chọn không đánh dấu đáp án đúng. Sau **Hiện đáp án / Chấm điểm**, đáp án đúng và giải thích mới xuất hiện.
 
 ## Trình soạn câu hỏi dạng slide
 
