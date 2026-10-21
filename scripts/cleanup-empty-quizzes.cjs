@@ -103,4 +103,4 @@ async function main() {
   }
 }
 module.exports = { emptyMetadata, encode, decode, prepare, apply };
-if (require.main === module) main().catch(error => { console.error(error.message); process.exit(1); });
+if (require.main === module) main().catch(error => { console.error('::error::'+String(error.message).replace(/%/g,'%25').replace(/\r/g,'%0D').replace(/\n/g,'%0A')); process.exit(1); });

@@ -37,6 +37,7 @@ jobs:
             exit 1
           fi
           cat "$RUNNER_TEMP/empty-quiz-test.log"
+          echo '::notice::EMPTY_QUIZ_EMULATOR_VERIFIED'
       - uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
