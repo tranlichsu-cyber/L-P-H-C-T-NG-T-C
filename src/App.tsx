@@ -93,8 +93,6 @@ const AuditLogsPage = lazy(() =>
 const TeamDashboardPage = lazy(() =>
   import('./pages/team/TeamDashboardPage').then((m) => ({ default: m.TeamDashboardPage }))
 );
-const LessonMapsPage = lazy(()=>import('./pages/LessonMapsPage').then(m=>({default:m.LessonMapsPage})));
-const NorthernNaturePage = lazy(()=>import('./pages/NorthernNaturePage').then(m=>({default:m.NorthernNaturePage})));
 const TraditionPage = lazy(()=>import('./pages/TraditionPage').then(m=>({default:m.TraditionPage})));
 const SelfPracticePage = lazy(()=>import('./pages/SelfPracticePage').then(m=>({default:m.SelfPracticePage})));
 const SelfPracticeManagerPage = lazy(()=>import('./pages/teacher/SelfPracticeManagerPage').then(m=>({default:m.SelfPracticeManagerPage})));
@@ -128,9 +126,6 @@ export const App: React.FC = () => {
                 <Routes>
                   {/* Role Selection Landing */}
                   <Route path="/" element={<RoleSelectionPage />} />
-                  <Route path="/hoc-lieu/so-do-tu-duy" element={<LessonMapsPage />} />
-                  <Route path="/hoc-lieu/so-do-tu-duy/:lessonId" element={<LessonMapsPage />} />
-                  <Route path="/hoc-lieu/khai-thac-tu-nhien-phia-bac" element={<NorthernNaturePage />} />
                   <Route path="/tu-luyen" element={<SelfPracticePage />} />
                   <Route path="/goc-truyen-thong" element={<TraditionPage />} />
 

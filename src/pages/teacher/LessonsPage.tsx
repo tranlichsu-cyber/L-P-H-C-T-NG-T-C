@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import {Link} from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -26,7 +25,6 @@ export function LessonsPage() {
   </div>;
   return <div>
     <PageHeader title="KHO BÀI GIẢNG PPT / PDF" description="Lưu trên trình duyệt của máy đang dùng, theo tài khoản giáo viên." action={<Button variant="primary" onClick={()=>{setReplacing(null);setTitle('');setPpt(null);setPdf(null);setOpen(true);}}>Tải bài giảng lên</Button>}/>
-    <Link to="/hoc-lieu/so-do-tu-duy" className="mb-4 block rounded-xl border-2 border-sky-200 bg-sky-50 p-4 font-bold text-sky-900">Sơ đồ tư duy lớp 4 theo môn và bài • Mở để học cùng học sinh hoặc in học liệu →</Link>
     <div className="rounded-xl bg-amber-50 text-amber-900 border border-amber-200 p-4 mb-4 text-sm space-y-2">
       <p><strong>PPT gốc để tải về chỉnh sửa; PDF để trình chiếu trong ứng dụng.</strong> Trong PowerPoint: Tệp → Xuất hoặc Lưu dưới dạng → PDF, rồi chọn cả PPT và PDF khi tải lên.</p>
       <p>Tệp lưu trên máy này, chưa đồng bộ lên Firebase hoặc sang máy khác. Xoá dữ liệu trình duyệt có thể làm mất kho; hãy giữ bản gốc. Bản PDF không có hiệu ứng, âm thanh hoặc video của PPT.</p>
