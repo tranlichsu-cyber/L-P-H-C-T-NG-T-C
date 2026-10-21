@@ -28,3 +28,13 @@ Vào **Trả lời bằng thẻ QR → Kho câu hỏi QR riêng → Tạo bộ c
 - Bấm **Xem trước câu hỏi** để kiểm tra hình/video rồi bắt đầu tiết. Màn chiếu hiển thị nội dung đa phương tiện; màn quét chỉ tải hình/video khi mở phần “Ảnh / Video của câu hỏi”.
 
 Mỗi bộ tối đa 80 câu và có giới hạn tổng dung lượng; nếu bộ chứa quá nhiều ảnh, dùng liên kết ảnh hoặc chia nhỏ bộ. Mỗi tiết mới lấy một bản riêng của nội dung và đáp án; sửa/xóa bộ trong kho không đổi câu hỏi, điểm và báo cáo của tiết đã tạo. Kho và đáp án riêng của tiết chỉ dành cho giáo viên có quyền. Tiếp tục dùng gói miễn phí, không thêm Cloud Functions hay yêu cầu Firebase Storage.
+
+## Tải mẫu và nhập bộ câu hỏi từ Word
+
+Vào **Trả lời bằng thẻ QR → Kho câu hỏi QR riêng**. Trong phần “Soạn câu hỏi bằng file Word” có **Tải mẫu Word trống**, **Tải bộ mẫu 10 câu Toán 4** và **Nhập từ file Word**. Dùng mẫu mới trên website để nhập tự động; file hướng dẫn văn bản thông thường không thay cho mẫu hai cột này.
+
+1. Điền cột bên phải trong Word; giữ nguyên tên trường ở cột trái. Điền một bảng thông tin bộ và một bảng cho mỗi câu; sao chép/xóa cả bảng câu để thêm/bớt.
+2. Điền nội dung, A/B và đáp án đúng A/B/C/D. C/D có thể để trống ở cuối nếu chỉ dùng 2–3 lựa chọn. Không bỏ trống lựa chọn ở giữa. Điểm đúng mặc định 10, điểm trừ mặc định 0 nếu để trống.
+3. Trong ô **Ảnh**, có thể chèn một ảnh JPG/PNG/WebP bằng Insert → Pictures hoặc điền một liên kết HTTPS. Không đặt ảnh ngoài bảng hoặc trong đáp án. Trong ô **Video**, dán liên kết YouTube / MP4 / WebM; không nhúng tệp video vào Word.
+4. Lưu .docx rồi chọn **Nhập từ file Word**. Giới hạn 8 MB, 80 câu; ảnh được thu gọn, bộ sau xử lý vẫn cần nằm trong giới hạn dung lượng của kho. File đặt mật khẩu, công thức/đối tượng Word chưa hỗ trợ hoặc thiếu dữ liệu sẽ báo lỗi và chưa tạo bộ.
+5. Xem lại các câu và đáp án rồi bấm **Tạo bộ câu hỏi từ file**. Website tạo một bộ mới và mở trang chỉnh sửa; không ghi đè hoặc nối vào bộ hiện có. Sau đó về chọn lớp để bắt đầu dạy.
