@@ -124,3 +124,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-21: Remove the mind-map section, public routes, homepage/student/teacher links and exclusive content/artwork at user request. Preserve curriculum, self-practice and teaching materials.
 
 2026-10-21: Add teacher optical QR answer cards to Live rooms: reusable per-pupil/class A4 cards, phone scanner with rotation-based A/B/C/D, local multi-code recognition, review-before-submit, camera lifecycle/privacy, login return and transactional attendance/first answers in existing scoring. Add policy and Firestore emulator gates; allow same-origin camera. No Functions or paid plan required.
+
+2026-10-21: Separate paper QR teaching into its own teacher menu and dashboard entry: class-first printing without a room, eligible quiz selection, QR-only sessions, focused question controls and projection, standalone phone scanner, exact source question order, login return and recent-session resume. Preserve existing Live lessons and reports; enforce QR-only answers in Firestore rules.

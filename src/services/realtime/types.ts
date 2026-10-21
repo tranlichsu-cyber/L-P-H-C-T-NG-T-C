@@ -165,6 +165,8 @@ export interface CalledStudentInfo {
 }
 
 export interface MockRoomData {
+  responseMode?: 'QR_CARD';
+  questionOrder?: string[];
   id: string;
   roomCode: string;
   teacherId: string;
@@ -197,6 +199,7 @@ export interface MockRoomData {
 }
 
 export interface CreateRoomParams {
+  responseMode?: 'QR_CARD';
   teacherId: string;
   classId: string;
   className: string;

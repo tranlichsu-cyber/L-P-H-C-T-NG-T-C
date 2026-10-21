@@ -25,6 +25,12 @@ const load=source=>import('data:text/javascript;base64,'+Buffer.from(ts.transpil
  const service=new module.FirestoreRealtimeService();
  const outcomes=await Promise.all([service.submitQrAnswer('r','q','s3','B'),service.submitQrAnswer('r','q','s3','D')]);
  assert.equal(outcomes.filter(o=>o.success).length,1);assert(['B','D'].includes((await getDoc(ref(teacher,'s3'))).data().answer));assert.equal((await getDoc(doc(teacher,'rooms','r'))).data().participantCount,2);
+ await updateDoc(doc(teacher,'rooms','r'),{responseMode:'QR_CARD'});
+ await assertFails(setDoc(doc(pupil,'rooms','r','participants','s2'),{studentId:'s2',name:'Em s2',mockAuthUid:'u'}));
+ await assertFails(updateDoc(doc(pupil,'rooms','r','participants','s3'),{mockAuthUid:'u',sessionToken:'claim'}));
+ await env.withSecurityRulesDisabled(async c=>{await setDoc(doc(c.firestore(),'rooms','r','participants','s2'),{studentId:'s2',name:'Em s2',mockAuthUid:'u'});});
+ await assertFails(setDoc(ref(pupil,'s2'),{questionId:'q',studentId:'s2',studentName:'Em s2',authUid:'u',answer:'A',submittedAt:serverTimestamp()}));
+ assert((await service.submitQrAnswer('r','q','s2','A')).success);
  await updateDoc(doc(teacher,'rooms','r'),{activeQuestionId:'different'});assert.equal((await service.submitQrAnswer('r','q','s2','A')).success,false);
  console.log('PASS QR Firestore rules: teacher-only recording, roster identity, server time, atomic attendance, normal device join, active question, closure, paused/expired games, type and option bounds.');
  }finally{await env.cleanup();}})().catch(e=>{console.error(e);process.exit(1)});

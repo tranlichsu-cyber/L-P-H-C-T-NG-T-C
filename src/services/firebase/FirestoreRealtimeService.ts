@@ -95,6 +95,7 @@ export class FirestoreRealtimeService {
       subject: params.subject,
       quizId: params.quizId,
       quizTitle: params.quizTitle,
+      ...(params.responseMode?{responseMode:params.responseMode,questionOrder:params.questions.map(q=>q.id)}:{}),
       status: 'WAITING',
       activeQuestionId: params.questions[0]?.id || null,
       createdAt: serverTimestamp(),
@@ -105,6 +106,7 @@ export class FirestoreRealtimeService {
     batch.set(roomRef, roomData);
 
     batch.set(doc(db!, 'roomCodes', roomCode), {
+      ...(params.responseMode?{responseMode:params.responseMode}:{}),
       roomId,
       roomCode,
       teacherId: params.teacherId,
@@ -172,6 +174,7 @@ export class FirestoreRealtimeService {
 
     if (codeSnap.exists()) {
       const access = codeSnap.data() as {
+        responseMode?: 'QR_CARD';
         roomId: string;
         roomCode: string;
         classId: string;
@@ -183,6 +186,7 @@ export class FirestoreRealtimeService {
         rosterPreview?: MockRoomData['roster'];
       };
 
+      if(access.responseMode==='QR_CARD')return {room:null,error:'Tiết học này trả lời bằng thẻ QR, không cần học sinh đăng nhập.'};
       if (access.status !== 'WAITING' && access.status !== 'ACTIVE') {
         return {
           room: null,
@@ -323,6 +327,8 @@ export class FirestoreRealtimeService {
       if (!roomSnap.exists()) {
         throw new Error('Phòng học không còn tồn tại.');
       }
+
+      if(roomSnap.data()?.responseMode==='QR_CARD')throw new Error('Tiết học này chỉ nhận đáp án bằng thẻ QR.');
 
       if (
         participantSnap.exists() &&

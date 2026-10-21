@@ -67,6 +67,7 @@ export class MockRealtimeService {
       subject: params.subject,
       quizId: params.quizId,
       quizTitle: params.quizTitle,
+      ...(params.responseMode?{responseMode:params.responseMode,questionOrder:params.questions.map(q=>q.id)}:{}),
       status: 'WAITING',
       activeQuestionId: params.questions[0]?.id || null,
       createdAt: now,
@@ -102,6 +103,7 @@ export class MockRealtimeService {
       return { room: null, error: 'Không tìm thấy phòng học hoặc phòng đã kết thúc.' };
     }
 
+    if(room.responseMode==='QR_CARD')return {room:null,error:'Tiết học này trả lời bằng thẻ QR.'};
     if (new Date().toISOString() > room.expiresAt) {
       return { room: null, error: 'Phòng học đã hết hạn.' };
     }
@@ -120,6 +122,7 @@ export class MockRealtimeService {
     const room = db.rooms[roomId];
     if (!room) return { participant: null, error: 'Phòng không tồn tại.' };
 
+    if(room.responseMode==='QR_CARD')return {participant:null,error:'Tiết học này chỉ nhận đáp án bằng thẻ QR.'};
     const now = new Date().toISOString();
     const participant: MockParticipant = {
       studentId,
@@ -417,6 +420,7 @@ export class MockRealtimeService {
     const db = loadMockDatabase();
     const room = db.rooms[params.roomId];
     if (!room) return { success: false, error: 'Phòng không tồn tại.' };
+    if(room.responseMode==='QR_CARD'&&params.mockAuthUid!=='teacher-qr')return {success:false,error:'Tiết học này chỉ nhận đáp án bằng thẻ QR.'};
     if(room.status==='FINISHED'||!gameAcceptsAnswer(room.activeGame,params.questionId))return {success:false,error:'Trò chơi đang tạm dừng hoặc đã hết giờ nhận bài.'};
 
     const liveQ = room.liveQuestions[params.questionId];

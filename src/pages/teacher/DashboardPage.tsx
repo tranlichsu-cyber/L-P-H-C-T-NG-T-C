@@ -99,6 +99,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <button className="w-full rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-5 text-left text-indigo-950" onClick={()=>navigate('/teacher/qr-cards')}><strong className="text-xl">📷 Trả lời bằng thẻ QR</strong><span className="mt-2 block">Chọn lớp → In thẻ → Chiếu câu hỏi → Quét đáp án bằng điện thoại</span></button>
       <PageHeader
         title=""
         description={`Xin chào, ${teacherName} 👋`}

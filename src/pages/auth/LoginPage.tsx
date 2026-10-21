@@ -20,7 +20,7 @@ export const LoginPage: React.FC = () => {
     const profile = uid ? await SchoolService.getUser(uid) : null;
 
     const returnTo=location.state?.returnTo;
-    if(profile?.status==='ACTIVE'&&typeof returnTo==='string'&&/^\/teacher\/room\/[^/?#]+\?qr=1$/.test(returnTo)){navigate(returnTo,{replace:true});return;}
+    if(profile?.status==='ACTIVE'&&typeof returnTo==='string'&&(/^\/teacher\/room\/[^/?#]+\?qr=1$/.test(returnTo)||/^\/teacher\/qr-cards(?:\/[^/?#]+(?:\/(?:scan|present))?)?$/.test(returnTo))){navigate(returnTo,{replace:true});return;}
 
     if (profile?.role === 'SCHOOL_ADMIN') {
       navigate('/admin');

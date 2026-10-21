@@ -492,6 +492,7 @@ service cloud.firestore {
       match /participants/{studentId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated()
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.get('responseMode','') != 'QR_CARD'
           && exists(/databases/$(database)/documents/rooms/$(roomId)/roster/$(studentId))
           && request.resource.data.studentId == studentId
           && request.resource.data.mockAuthUid == request.auth.uid;
@@ -503,6 +504,7 @@ service cloud.firestore {
           && request.resource.data.mockAuthUid == '' && request.resource.data.sessionToken == '';
         allow update: if canManageRoom(roomId) || (
           isAuthenticated()
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.get('responseMode','') != 'QR_CARD'
           && exists(/databases/$(database)/documents/rooms/$(roomId)/roster/$(studentId))
           && (resource.data.mockAuthUid == request.auth.uid || (resource.data.get('responseMode','') == 'QR_CARD' && resource.data.mockAuthUid == ''))
           && request.resource.data.studentId == studentId
@@ -531,6 +533,7 @@ service cloud.firestore {
           && resource.data.authUid == request.auth.uid
         );
         allow create: if isAuthenticated()
+          && get(/databases/$(database)/documents/rooms/$(roomId)).data.get('responseMode','') != 'QR_CARD'
           && request.resource.data.keys().hasOnly(['questionId','studentId','studentName','authUid','answer','submittedAt'])
           && request.resource.data.answer is string && request.resource.data.answer.size() > 0 && request.resource.data.answer.size() <= 10000
           && submissionId == request.resource.data.questionId + '_' + request.resource.data.studentId

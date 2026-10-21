@@ -1,25 +1,24 @@
 import {useEffect,useRef,useState} from 'react';
-import {createPortal} from 'react-dom';
+import {QrCardsPrintButton} from './QrCardsPrintButton';
 import {QRCodeSVG} from 'qrcode.react';
 import jsQR from 'jsqr';
 import type {MockRoomData} from '../../services/realtime/types';
-import {cardPayload,parseCard,cardChoice,canScanQuestion,qrQuestionSupported,type CardChoice} from '../../services/qr/cards';
+import {parseCard,cardChoice,canScanQuestion,qrQuestionSupported,type CardChoice} from '../../services/qr/cards';
 import {activeRealtimeService} from '../../services/realtime/realtimeServiceSwitch';
 import './qrCards.css';
 const button='rounded-xl bg-indigo-700 px-4 py-3 font-bold text-white disabled:opacity-40';
 type Detected={studentId:string;name:string;choice:CardChoice};
 export default function QrCardsPanel({room,onClose}:{room:MockRoomData;onClose:()=>void}){
- const [print,setPrint]=useState(false);
- const scannerUrl=`${location.origin}/teacher/room/${encodeURIComponent(room.id)}?qr=1`;
+ const scannerUrl=`${location.origin}/teacher/qr-cards/${encodeURIComponent(room.id)}/scan`;
  const q=room.activeQuestionId?room.liveQuestions[room.activeQuestionId]:undefined;
  return <section className="space-y-4 rounded-2xl border-2 border-indigo-200 bg-white p-4 text-slate-900">
  <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">Giơ thẻ QR • {room.className}</h2><button className={button} onClick={onClose}>Đóng màn quét</button></div>
  <p>Mỗi em giữ đúng thẻ mang tên mình, xoay cạnh có đáp án A, B, C hoặc D lên trên. Giữ thẻ thẳng, không che mã. Giáo viên quét từng nhóm nhỏ, kiểm tra rồi gửi kết quả.</p>
- <div className="flex flex-wrap gap-3"><button className={button} disabled={!room.roster.length} onClick={()=>setPrint(true)}>Xem và in thẻ của lớp ({room.roster.length})</button></div>
+ <QrCardsPrintButton classId={room.classId} className={room.className} roster={room.roster}/>
  <details className="rounded-xl bg-indigo-50 p-3"><summary className="cursor-pointer font-bold">Mở màn quét trên điện thoại</summary><p className="my-3">Dùng camera điện thoại mở mã này, đăng nhập cùng tài khoản giáo viên. Giữ máy tính ở màn chiếu. Đây là đường dẫn điều khiển, không đưa cho học sinh.</p><QRCodeSVG value={scannerUrl} size={160} marginSize={4}/><a className="mt-3 block break-all underline" href={scannerUrl}>{scannerUrl}</a></details>
  <div className="rounded-xl bg-sky-50 p-4"><strong>Câu đang chiếu: {q?.content||'Chưa chọn câu hỏi'}</strong><ol className="mt-2 space-y-1">{q?.options?.map((o,i)=><li key={i}>{String.fromCharCode(65+i)}. {o}</li>)}</ol><p className="mt-3 font-bold">{!qrQuestionSupported(q)?'Thẻ QR dùng cho câu trắc nghiệm có 2–4 lựa chọn.':canScanQuestion(room,q)?'Đang nhận đáp án':'Chưa mở nhận đáp án, đang tạm dừng hoặc đã hết giờ.'}</p></div>
  <Scanner key={q?.id||'none'} room={room}/>
- {print&&createPortal(<div className="qr-print-root"><div className="qr-print-toolbar"><button className={button} onClick={()=>window.print()}>In thẻ / Lưu PDF</button><button className={button} onClick={()=>setPrint(false)}>Đóng bản in</button><p>In khổ A4, tỉ lệ 100%, đen trắng; cắt theo khung. Dùng lại cho cùng học sinh của cùng lớp. Không dùng mã thẻ để đăng nhập.</p></div><div className="qr-sheets">{Array.from({length:Math.ceil(room.roster.length/2)},(_,page)=><div className="qr-sheet" key={page}>{room.roster.slice(page*2,page*2+2).map((p,i)=><article className="qr-paper-card" key={p.studentId}><header><strong>{page*2+i+1}. {p.name}</strong><span>{room.className}</span></header><div className="qr-card-code"><b className="qr-letter qr-a">A</b><b className="qr-letter qr-b">B</b><b className="qr-letter qr-c">C</b><b className="qr-letter qr-d">D</b><QRCodeSVG value={cardPayload(room.classId,p.studentId)} size={320} marginSize={4} level="M"/></div><p>Đưa chữ em chọn lên trên ↑ • Hướng mã về phía giáo viên</p></article>)}</div>)}</div></div>,document.body)}
+
  </section>;
 }
 function Scanner({room}:{room:MockRoomData}){

@@ -6,7 +6,7 @@ import {TeacherLearningSignals} from '../../components/activities/LearningSignal
 import {WorksheetTeacherPanel} from '../../components/worksheets/WorksheetTeacherPanel';
 import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
@@ -46,7 +46,6 @@ import {
   Pause,
 } from 'lucide-react';
 
-const QrCardsPanel = React.lazy(()=>import('../../components/qr/QrCardsPanel'));
 
 export const RoomControllerPage: React.FC = () => {
   const { roomId: paramRoomId } = useParams<{ roomId?: string }>();
@@ -67,7 +66,7 @@ export const RoomControllerPage: React.FC = () => {
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [isManualScoreModalOpen, setIsManualScoreModalOpen] = useState(false);
   const [isGameHubOpen, setIsGameHubOpen] = useState(false);
-  const [qrCardsOpen,setQrCardsOpen]=useState(()=>new URLSearchParams(window.location.search).get('qr')==='1');
+
 
   const gameActionLock=useRef(false);
   const [gameActionBusy,setGameActionBusy]=useState(false);
@@ -460,7 +459,8 @@ export const RoomControllerPage: React.FC = () => {
 
   const activeGame = room.activeGame;
 
-  if(qrCardsOpen)return <React.Suspense fallback={<p>Đang mở màn quét thẻ…</p>}><QrCardsPanel room={room} onClose={()=>{setQrCardsOpen(false);window.history.replaceState(null,'',window.location.pathname);}}/></React.Suspense>;
+  if(room.responseMode==='QR_CARD')return <Navigate to={`/teacher/qr-cards/${room.id}`} replace />;
+  if(new URLSearchParams(window.location.search).get('qr')==='1')return <Navigate to={`/teacher/qr-cards/${room.id}/scan`} replace />;
 
   return (
     <div className="space-y-6">
@@ -627,7 +627,7 @@ export const RoomControllerPage: React.FC = () => {
         </div>
       )}
 
-      <button className="rounded-xl bg-indigo-700 px-5 py-3 font-bold text-white" onClick={()=>setQrCardsOpen(true)}>📷 GIƠ THẺ QR • IN THẺ / QUÉT ĐÁP ÁN</button>
+      <button className="rounded-xl bg-indigo-700 px-5 py-3 font-bold text-white" onClick={()=>navigate('/teacher/qr-cards')}>📷 TRẢ LỜI BẰNG THẺ QR • MỤC RIÊNG</button>
       {/* Quick Actions Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">
