@@ -44,3 +44,7 @@ Vào **Trả lời bằng thẻ QR → Mở kho câu hỏi QR**. Trong phần �
 Màn điều khiển có các ô tiến độ, trạng thái và số học sinh đã trả lời câu hiện tại. Bảng **Đáp án từng học sinh** hiển thị tên, lựa chọn đã gửi hoặc trạng thái chưa trả lời, không cần mở camera trên máy tính. Dùng **Mở màn chiếu** để chiếu cho lớp; mã kết nối điện thoại luôn có sẵn bên dưới cụm điều khiển. Muốn quét bằng camera của chính máy đang dùng, chọn **Quét ngay trên máy này**. Đóng hoặc ẩn phần quét sẽ dừng camera và vẫn giữ trang điều khiển; các kết quả chưa gửi trong phần quét sẽ bị bỏ, vì vậy cần kiểm tra và gửi trước khi đóng.
 
 Chọn ít nhất một câu và lớp có học sinh để bắt đầu. Điểm đúng/điểm trừ lấy từ từng câu đã soạn; muốn đổi điểm, sửa bộ câu hỏi trong kho trước khi tạo tiết. Màn chuẩn bị dùng dữ liệu kho đã tải, lọc môn và chọn câu không tạo thêm lượt đọc Firestore.
+
+## Hiển thị câu hỏi khi phát câu
+
+Trang điều khiển hiển thị trực tiếp nội dung câu hỏi, ảnh/video và các lựa chọn A–D ngay phía trên các nút điều khiển. Bấm **Phát câu hỏi**, **Câu tiếp theo** hoặc chọn phát một câu sẽ đưa trang về phần câu hỏi. Đây là cùng nội dung với **Mở màn chiếu** / **Chiếu riêng cho học sinh**. Nếu dùng màn hình thứ hai, mở màn chiếu và đưa cửa sổ đó sang máy chiếu; dùng điện thoại hoặc trang điều khiển để phát/đóng câu. Trước khi công bố kết quả, các lựa chọn không đánh dấu đáp án đúng. Sau **Hiện đáp án / Chấm điểm**, đáp án đúng và giải thích mới xuất hiện.
