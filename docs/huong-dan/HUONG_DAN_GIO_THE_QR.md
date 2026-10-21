@@ -52,3 +52,11 @@ Trang điều khiển hiển thị trực tiếp nội dung câu hỏi, ảnh/vi
 ## Màn chiếu toàn màn hình
 
 **Chiếu riêng cho học sinh** và **Mở màn chiếu** mở cùng trang chiếu tràn vùng hiển thị, không có menu, logo hay khung điều khiển giáo viên. Cỡ chữ và các ô đáp án điều chỉnh theo kích thước màn hình; nội dung dài vẫn có thể cuộn để đọc đủ. Bấm **Toàn màn hình** một lần trên cửa sổ chiếu để ẩn thanh địa chỉ/tab của trình duyệt; trình duyệt yêu cầu thao tác trực tiếp này. Bấm **Thoát toàn màn hình** hoặc Esc để trở lại. Màn chiếu vẫn tự cập nhật câu hỏi, số bài đã nhận và kết quả. Dùng **Về điều khiển tiết học** để trở lại trang giáo viên.
+
+## Trình soạn câu hỏi dạng slide
+
+Vào **Kho câu hỏi thẻ QR → Tạo bộ câu hỏi QR** hoặc sửa một bộ đã có. Danh sách bên trái dùng để chọn từng câu; trên điện thoại có thể vuốt ngang danh sách. Vùng giữa chỉ soạn một câu tại một thời điểm. Nhập câu hỏi, điền 2–4 lựa chọn rồi bấm chữ A/B/C/D để chọn đáp án đúng (ô xanh). Có thể dùng phím mũi tên khi đang chọn đáp án. Giảm số lựa chọn sẽ đưa đáp án đúng về A nếu đáp án cũ bị bỏ.
+
+Các nút mũi tên đổi vị trí câu; **Nhân đôi** tạo câu mới có mã riêng và giữ nội dung/ảnh/video của bản gốc. **Xóa câu hỏi** có bước xác nhận và giữ ít nhất một câu. Tối đa 80 câu/bộ. **Ảnh / Video** mở phần chèn ảnh hoặc liên kết; **Điểm số và giải thích** mở cấu hình từng câu. **Xem trước câu hỏi** hiển thị nội dung học sinh sẽ thấy, chưa đánh dấu đáp án đúng.
+
+Bấm **Lưu bộ câu hỏi QR** để lưu. Soạn, đổi câu và xem trước chỉ thay đổi dữ liệu trên trang, không tự ghi Firestore. Nếu một câu chưa hợp lệ, trình soạn đưa về câu đó để sửa; nếu lưu lỗi, nội dung trên trang được giữ lại. Các liên kết quay về kho/chọn lớp sẽ nhắc khi còn thay đổi chưa lưu; đóng/tải lại trang cũng có nhắc của trình duyệt.
