@@ -1,0 +1,26 @@
+{
+  "version": "empty-quizzes-20261021-v1",
+  "scanned": {
+    "quizzes": 163,
+    "qrQuestionSets": 1,
+    "selfPracticeQuizzes": 164,
+    "traditionQuizzes": 0
+  },
+  "candidates": {
+    "quizzes": 3,
+    "qrQuestionSets": 0,
+    "selfPracticeQuizzes": 0,
+    "traditionQuizzes": 0
+  },
+  "deleted": {
+    "quizzes": 3,
+    "qrQuestionSets": 0,
+    "selfPracticeQuizzes": 0,
+    "traditionQuizzes": 0
+  },
+  "skippedChanged": 0,
+  "alreadyCompleted": false,
+  "verified": true,
+  "remainingCandidates": 0,
+  "completedAt": "2026-10-22T13:00:17.195Z"
+}
