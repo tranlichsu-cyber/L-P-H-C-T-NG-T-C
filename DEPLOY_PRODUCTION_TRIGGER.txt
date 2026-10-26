@@ -154,3 +154,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-22: Rà soát bốn nút QR; chuyển câu chưa làm, khóa trạng thái và ghi điểm/công bố kết quả trong một giao dịch.
 
 2026-10-22: Sắp xếp lại ca kiểm thử nút QR để tránh trùng mã phòng mẫu theo mili giây.
+
+2026-10-26: Xóa dòng "THÁI NGUYÊN 195 NĂM • 1831–2026" trong mục Góc truyền thống số theo yêu cầu.
