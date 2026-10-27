@@ -5,12 +5,13 @@ import {TraditionStoryMap} from '../components/tradition/TraditionStoryMap';
 import {HeritageCatalog} from '../components/tradition/HeritageCatalog';
 import {traditionMapPlaces} from '../data/traditionMap';
 import {curatedTraditionQuizzes} from '../data/traditionQuizzes';
-import { BookOpen, Images, Clapperboard, Flower2, Gamepad2, Sparkles, MapPinned, X, Link as LinkIcon, Copy, Check, ExternalLink } from 'lucide-react';
+import { BookOpen, Images, Clapperboard, Flower2, Gamepad2, Sparkles, MapPinned, X, Link as LinkIcon, Check, ExternalLink, Home } from 'lucide-react';
 import { MaterialCard } from '../components/tradition/MaterialCard';
 import { TraditionMaterials,materialKinds,type TraditionMaterial } from '../services/tradition/TraditionMaterials';
 import React,{useState,useEffect} from 'react';
 import {TraditionService,type TraditionQuizContent} from '../services/tradition/TraditionService';
 import {TraditionQuizRunner} from '../components/tradition/TraditionQuizRunner';
+import { SCHOOL_LOGO_SRC } from '../assets/schoolLogo';
 
 // Curated reading order: historical periods, then related cultural themes.
 const materialReadingOrder:Record<string,string[]>={
@@ -41,7 +42,6 @@ export const TraditionPage:React.FC=()=>{
  const [materials,setMaterials]=useState<TraditionMaterial[]>([]);
  const [selectedMapPlace,setSelectedMapPlace]=useState('');
  const [selectedImageModal,setSelectedImageModal]=useState<TraditionMaterial|null>(null);
- const [modalCopied,setModalCopied]=useState(false);
  const [focusedImageId,setFocusedImageId]=useState<string>(()=>{
   if(typeof window==='undefined')return '';
   const raw=window.location.hash.slice(1);
@@ -119,16 +119,16 @@ export const TraditionPage:React.FC=()=>{
   switchSection('tradition-questions');
  };
  const navColors:Record<string,string>={
-  'history-library':'bg-amber-50 border-amber-200 hover:bg-amber-100 hover:border-amber-400',
-  'tradition-map':'bg-sky-50 border-sky-200 hover:bg-sky-100 hover:border-sky-400',
-  'heritage-catalog':'bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-400',
-  'material-HISTORY':'bg-amber-50 border-amber-200 hover:bg-amber-100 hover:border-amber-400',
-  'material-CULTURE':'bg-rose-50 border-rose-200 hover:bg-rose-100 hover:border-rose-400',
-  'material-IMAGE':'bg-violet-50 border-violet-200 hover:bg-violet-100 hover:border-violet-400',
-  'material-VIDEO':'bg-orange-50 border-orange-200 hover:bg-orange-100 hover:border-orange-400',
-  'tradition-questions':'bg-lime-50 border-lime-200 hover:bg-lime-100 hover:border-lime-400',
+  'history-library':'bg-white/90 border-amber-200 hover:bg-amber-50 hover:border-amber-400',
+  'tradition-map':'bg-white/90 border-sky-200 hover:bg-sky-50 hover:border-sky-400',
+  'heritage-catalog':'bg-white/90 border-emerald-200 hover:bg-emerald-50 hover:border-emerald-400',
+  'material-HISTORY':'bg-white/90 border-amber-200 hover:bg-amber-50 hover:border-amber-400',
+  'material-CULTURE':'bg-white/90 border-rose-200 hover:bg-rose-50 hover:border-rose-400',
+  'material-IMAGE':'bg-white/90 border-violet-200 hover:bg-violet-50 hover:border-violet-400',
+  'material-VIDEO':'bg-white/90 border-orange-200 hover:bg-orange-50 hover:border-orange-400',
+  'tradition-questions':'bg-white/90 border-lime-200 hover:bg-lime-50 hover:border-lime-400',
  };
- const navClass=(section:string)=>`min-h-16 flex items-center gap-3 border-2 rounded-2xl px-4 py-3 text-base font-extrabold shadow-sm transition-all focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${activeSection===section?'bg-sky-700 border-sky-700 text-white shadow-md':`text-slate-800 ${navColors[section]||navColors['tradition-map']}`}`;
+ const navClass=(section:string)=>`min-h-15 flex items-center gap-3 border-2 rounded-2xl px-4 py-3 text-base font-extrabold backdrop-blur-xs transition-all focus-visible:outline-4 focus-visible:outline-offset-2 focus-visible:outline-sky-700 ${activeSection===section?'bg-gradient-to-r from-sky-700 to-teal-700 border-sky-700 text-white shadow-md shadow-sky-900/15 -translate-y-0.5':`text-slate-800 shadow-2xs ${navColors[section]||navColors['tradition-map']}`}`;
  const sectionIcons:Record<string,React.ReactNode>={HISTORY:<BookOpen size={23}/>,CULTURE:<Flower2 size={23}/>,IMAGE:<Images size={23}/>,VIDEO:<Clapperboard size={23}/>};
  const load=async()=>{
   setLoading(true);setError('');
@@ -139,10 +139,37 @@ export const TraditionPage:React.FC=()=>{
   setLoading(false);
  };
  useEffect(()=>{void load();},[]);
- return <div className="learning-shell min-h-screen text-slate-900"><header className="bg-sky-900 text-white px-5 py-4"><div className="max-w-6xl mx-auto flex flex-wrap justify-between gap-3"><p className="font-bold">TRƯỜNG TIỂU HỌC SÔNG CÔNG<br/><span className="font-normal text-emerald-100">Phân hiệu Lý Tự Trọng</span></p><a href="/" className="underline text-emerald-100">Về cổng lớp học</a></div></header>
- <main className="max-w-6xl mx-auto px-5 py-5 space-y-6"><section className="rounded-3xl bg-gradient-to-r from-sky-800 via-blue-700 to-emerald-700 text-white p-4 sm:p-5 border-b-4 border-amber-400 shadow-xl"><h1 className="text-2xl sm:text-3xl font-black my-2 leading-tight">GÓC TRUYỀN THỐNG SỐ</h1><p className="text-base text-amber-100"><Sparkles className="inline-block mr-2" aria-hidden="true"/>Em yêu quê hương Thái Nguyên</p><p className="mt-2 max-w-3xl text-base text-sky-50">Em chọn một mục bên dưới để đọc, xem ảnh hoặc thử sức với câu hỏi về quê hương.</p></section>
+ return <div className="learning-shell min-h-screen text-slate-900">
+  <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-sky-200/80 px-5 py-3 shadow-2xs">
+   <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+    <div className="flex items-center gap-3">
+     <img src={SCHOOL_LOGO_SRC} alt="Logo Trường Tiểu học Sông Công" className="w-10 h-10 object-contain rounded-xl bg-white p-0.5 ring-1 ring-sky-100 shrink-0"/>
+     <div>
+      <p className="font-black text-sky-950 text-sm sm:text-base leading-tight">TRƯỜNG TIỂU HỌC SÔNG CÔNG</p>
+      <span className="font-bold text-xs text-emerald-700">Phân hiệu Lý Tự Trọng</span>
+     </div>
+    </div>
+    <a href="/" className="inline-flex items-center gap-1.5 rounded-xl bg-sky-50 hover:bg-sky-100 border border-sky-200 px-3.5 py-2 text-xs sm:text-sm font-black text-sky-900 transition-colors shadow-2xs">
+     <Home size={16} className="text-sky-700"/>
+     <span>Về cổng lớp học</span>
+    </a>
+   </div>
+  </header>
+
+  <main className="max-w-6xl mx-auto px-5 py-5 space-y-6">
+   <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-800 via-teal-800 to-emerald-800 text-white p-5 sm:p-7 border-b-4 border-amber-400 shadow-lg shadow-sky-900/15">
+    <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-amber-300/15 blur-2xl"/>
+    <div className="pointer-events-none absolute right-24 -bottom-16 h-44 w-44 rounded-full bg-sky-300/15 blur-2xl"/>
+    <div className="relative">
+     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-xs border border-white/25 px-3 py-1 text-xs font-extrabold text-amber-200">
+      <Sparkles size={14} aria-hidden="true"/> Em yêu quê hương Thái Nguyên
+     </span>
+     <h1 className="text-2xl sm:text-3xl font-black mt-2.5 leading-tight tracking-tight text-white">GÓC TRUYỀN THỐNG SỐ</h1>
+     <p className="mt-1.5 max-w-3xl text-sm sm:text-base font-medium text-sky-50/95">Em chọn một mục bên dưới để đọc, xem ảnh hoặc thử sức với câu hỏi về quê hương.</p>
+    </div>
+   </section>
  <div className={selected ? '' : 'grid gap-6 md:grid-cols-[240px_minmax(0,1fr)] items-start'}>
- {!selected && <nav aria-label="Mục tư liệu" className="grid grid-cols-2 md:flex md:flex-col gap-3 md:sticky md:top-5"><a href="#history-library" onClick={(e)=>{e.preventDefault();switchSection('history-library');}} aria-current={activeSection==='history-library'?'location':undefined} className={navClass('history-library')}><BookOpen size={23}/><span>Bài giới thiệu lịch sử</span></a><a href="#tradition-map" onClick={(e)=>{e.preventDefault();switchSection('tradition-map');}} aria-current={activeSection==='tradition-map'?'location':undefined} className={navClass('tradition-map')}><MapPinned size={23}/><span>Bản đồ khám phá</span></a><a href="#heritage-catalog" onClick={(e)=>{e.preventDefault();switchSection('heritage-catalog');}} aria-current={activeSection==='heritage-catalog'?'location':undefined} className={navClass('heritage-catalog')}><BookOpen size={23}/><span>Tra cứu di tích</span></a>{Object.entries(materialKinds).map(([kind,label])=><a key={kind} href={'#material-'+kind} onClick={(e)=>{e.preventDefault();switchSection('material-'+kind);}} aria-current={activeSection==='material-'+kind?'location':undefined} className={navClass('material-'+kind)}>{sectionIcons[kind]}<span className="whitespace-normal">{label}</span></a>)}<a href="#tradition-questions" onClick={(e)=>{e.preventDefault();switchSection('tradition-questions');}} aria-current={activeSection==='tradition-questions'?'location':undefined} className={navClass('tradition-questions')}><Gamepad2 size={23}/><span className="whitespace-normal">Câu hỏi tương tác</span></a></nav>}
+ {!selected && <nav aria-label="Mục tư liệu" className="grid grid-cols-2 md:flex md:flex-col gap-3 md:sticky md:top-20"><a href="#history-library" onClick={(e)=>{e.preventDefault();switchSection('history-library');}} aria-current={activeSection==='history-library'?'location':undefined} className={navClass('history-library')}><BookOpen size={23}/><span>Bài giới thiệu lịch sử</span></a><a href="#tradition-map" onClick={(e)=>{e.preventDefault();switchSection('tradition-map');}} aria-current={activeSection==='tradition-map'?'location':undefined} className={navClass('tradition-map')}><MapPinned size={23}/><span>Bản đồ khám phá</span></a><a href="#heritage-catalog" onClick={(e)=>{e.preventDefault();switchSection('heritage-catalog');}} aria-current={activeSection==='heritage-catalog'?'location':undefined} className={navClass('heritage-catalog')}><BookOpen size={23}/><span>Tra cứu di tích</span></a>{Object.entries(materialKinds).map(([kind,label])=><a key={kind} href={'#material-'+kind} onClick={(e)=>{e.preventDefault();switchSection('material-'+kind);}} aria-current={activeSection==='material-'+kind?'location':undefined} className={navClass('material-'+kind)}>{sectionIcons[kind]}<span className="whitespace-normal">{label}</span></a>)}<a href="#tradition-questions" onClick={(e)=>{e.preventDefault();switchSection('tradition-questions');}} aria-current={activeSection==='tradition-questions'?'location':undefined} className={navClass('tradition-questions')}><Gamepad2 size={23}/><span className="whitespace-normal">Câu hỏi tương tác</span></a></nav>}
  <div id="tradition-content" className="min-w-0 space-y-6">
  {!selected ? <>
   {activeSection==='history-library' && <HistoryLibrary materials={materials}/>}
@@ -296,21 +323,6 @@ export const TraditionPage:React.FC=()=>{
          </div>
         )}
 
-        {/* Hộp đường dẫn riêng */}
-        <div className="rounded-2xl bg-sky-50 border border-sky-200 p-3.5 space-y-2">
-         <div className="flex items-center justify-between text-xs font-extrabold text-sky-950">
-          <span className="flex items-center gap-1.5"><LinkIcon size={14}/> Đường dẫn riêng của bức ảnh này:</span>
-          <span className="font-mono text-sky-700 bg-sky-100 px-2 py-0.5 rounded text-[11px]">#image-{currentImage.id}</span>
-         </div>
-         <input 
-          type="text" 
-          readOnly 
-          value={typeof window!=='undefined'?`${window.location.origin}${window.location.pathname}#image-${currentImage.id}`:''}
-          onClick={e=>(e.target as HTMLInputElement).select()}
-          className="w-full text-xs font-mono bg-white border border-sky-300 rounded-lg px-3 py-2 text-slate-800 select-all focus:outline-none focus:ring-2 focus:ring-sky-500"
-         />
-        </div>
-
         {/* Nguồn & liên kết gốc */}
         {(currentImage.source || currentImage.sourceUrl) && (
          <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-slate-600 pt-3 border-t border-slate-100">
@@ -420,30 +432,6 @@ export const TraditionPage:React.FC=()=>{
      <div className="w-full max-h-[55vh] rounded-2xl bg-slate-950 overflow-hidden flex items-center justify-center">
       <img src={selectedImageModal.mediaUrl} alt={selectedImageModal.title} className="max-w-full max-h-[55vh] object-contain"/>
      </div>
-     <div className="rounded-2xl bg-sky-50 border border-sky-200 p-3.5 space-y-2">
-      <div className="flex items-center justify-between gap-2">
-       <span className="text-xs font-extrabold text-sky-900 flex items-center gap-1.5"><LinkIcon size={14}/> Đường dẫn riêng của bức ảnh này:</span>
-       <button type="button" onClick={async()=>{
-        const link=`${window.location.origin}${window.location.pathname}#image-${selectedImageModal.id}`;
-        try{
-         await navigator.clipboard.writeText(link);
-        }catch{
-         const input=document.createElement('textarea');
-         input.value=link;
-         document.body.appendChild(input);
-         input.select();
-         document.execCommand('copy');
-         document.body.removeChild(input);
-        }
-        setModalCopied(true);
-        setTimeout(()=>setModalCopied(false),2500);
-       }} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white px-3 py-1 text-xs font-bold transition-colors">
-        {modalCopied ? <Check size={14}/> : <Copy size={14}/>}
-        <span>{modalCopied ? 'Đã sao chép liên kết!' : 'Sao chép liên kết'}</span>
-       </button>
-      </div>
-      <input type="text" readOnly value={typeof window!=='undefined'?`${window.location.origin}${window.location.pathname}#image-${selectedImageModal.id}`:''} onClick={e=>(e.target as HTMLInputElement).select()} className="w-full text-xs font-mono bg-white border border-sky-300 rounded-lg px-3 py-2 text-slate-800 select-all focus:outline-none focus:ring-2 focus:ring-sky-500"/>
-     </div>
      {selectedImageModal.text && <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2">
       <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Chú thích tư liệu</h4>
       <p className="text-sm sm:text-base leading-relaxed text-slate-800 whitespace-pre-line">{selectedImageModal.text}</p>
@@ -460,6 +448,6 @@ export const TraditionPage:React.FC=()=>{
   </div>
  )}
 
- <footer className="border-t border-emerald-200 pt-5 text-sm text-slate-600">Học liệu phục vụ giáo dục truyền thống tại Phân hiệu Lý Tự Trọng • Trường Tiểu học Sông Công</footer>
+ <footer className="border-t border-sky-200/70 pt-5 text-sm font-medium text-slate-600 text-center sm:text-left">Học liệu phục vụ giáo dục truyền thống tại Phân hiệu Lý Tự Trọng • Trường Tiểu học Sông Công</footer>
  </main></div>;
 };

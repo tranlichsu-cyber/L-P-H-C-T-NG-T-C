@@ -114,9 +114,9 @@ export const TeacherLayout: React.FC = () => {
   const currentLogoSrc = logoUrl || SCHOOL_LOGO_SRC;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="teacher-shell min-h-screen flex flex-col">
       {/* Top Header */}
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex min-w-0 flex-1 items-center">
             <Link to="/teacher" className="group flex min-w-0 items-center gap-3">
@@ -302,7 +302,7 @@ export const TeacherLayout: React.FC = () => {
       </Modal>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+      <footer className="bg-white/80 backdrop-blur-sm border-t border-slate-200/80 py-4 text-center text-xs font-medium text-slate-500">
         Lớp Học Tương Tác © 2026 - Dành cho Giáo viên Tiểu học Việt Nam
       </footer>
     </div>
