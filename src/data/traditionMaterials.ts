@@ -288,6 +288,18 @@ export const curatedTraditionMaterials:TraditionMaterial[] = [
     "updatedAt": "2026-10-27"
   },
   {
+    "id": "curated-image-cuu-quoc-quan-ii-khuon-manh",
+    "kind": "IMAGE",
+    "title": "Lễ thành lập Đội Cứu quốc quân II tại rừng Khuôn Mánh, Võ Nhai (Ngày 15/9/1941)",
+    "text": "Bức ảnh lịch sử ghi lại buổi lễ thành lập Trung đội Cứu quốc quân II vào ngày 15/9/1941 tại rừng Khuôn Mánh (xã Tràng Xá, huyện Võ Nhai – nay thuộc xã Võ Nhai / xã Tràng Xá, tỉnh Thái Nguyên). Trước lá cờ đỏ sao vàng năm cánh, đồng chí Hoàng Quốc Việt thay mặt Trung ương Đảng đã trao cờ và giao nhiệm vụ cho 36 cán bộ, chiến sĩ (do đồng chí Chu Văn Tấn làm Chỉ huy trưởng). Đây là một trong những đội vũ trang tiền thân của Quân đội nhân dân Việt Nam, mở đầu cho việc xây dựng căn cứ địa vũ trang Bắc Sơn – Võ Nhai.",
+    "mediaUrl": "https://thlytutrong.com.vn/images/cuu-quoc-quan-ii-khuon-manh.jpg",
+    "source": "Cổng thông tin điện tử tỉnh Thái Nguyên / Di tích lịch sử Rừng Khuôn Mánh",
+    "sourceUrl": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/di-tich-lich-su-rung-khuon-manh-292475",
+    "published": true,
+    "teacherId": "curated-tradition",
+    "updatedAt": "2026-10-27"
+  },
+  {
     "id": "curated-image-doi-can-luong-ngoc-quyen",
     "kind": "IMAGE",
     "title": "Hai vị thủ lĩnh cuộc Khởi nghĩa Thái Nguyên năm 1917: Đội Cấn và Lương Ngọc Quyến",
