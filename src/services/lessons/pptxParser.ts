@@ -342,6 +342,29 @@ function resolveColorNode(
   return undefined;
 }
 
+function getBlipEmbedId(blip: Element | null | undefined): string | null {
+  if (!blip) return null;
+  const direct =
+    blip.getAttribute('r:embed') ||
+    blip.getAttribute('r:link') ||
+    blip.getAttribute('embed') ||
+    blip.getAttribute('link') ||
+    blip.getAttributeNS(
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+      'embed'
+    ) ||
+    blip.getAttributeNS(
+      'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+      'link'
+    );
+  if (direct) return direct;
+  for (let i = 0; i < blip.attributes.length; i++) {
+    const a = blip.attributes[i];
+    if (a.localName === 'embed' || a.localName === 'link') return a.value;
+  }
+  return null;
+}
+
 function getMimeType(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() || '';
   switch (ext) {
@@ -349,6 +372,8 @@ function getMimeType(path: string): string {
       return 'image/png';
     case 'jpg':
     case 'jpeg':
+    case 'jpe':
+    case 'jfif':
       return 'image/jpeg';
     case 'gif':
       return 'image/gif';
@@ -356,6 +381,14 @@ function getMimeType(path: string): string {
       return 'image/webp';
     case 'svg':
       return 'image/svg+xml';
+    case 'bmp':
+    case 'dib':
+      return 'image/bmp';
+    case 'ico':
+      return 'image/x-icon';
+    case 'tif':
+    case 'tiff':
+      return 'image/tiff';
     case 'mp4':
     case 'm4v':
       return 'video/mp4';
@@ -368,7 +401,7 @@ function getMimeType(path: string): string {
     case 'm4a':
       return 'audio/mp4';
     default:
-      return 'application/octet-stream';
+      return 'image/png';
   }
 }
 
@@ -425,17 +458,39 @@ export async function countPptxSlides(blob: Blob): Promise<number> {
 export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPresentation> {
   const archiveBytes = new Uint8Array(await blob.arrayBuffer());
   const entries = readZipCentralDirectory(archiveBytes);
+  const lowerEntries = new Map<string, ZipEntry>();
+  for (const [k, v] of entries) {
+    lowerEntries.set(k.toLowerCase(), v);
+  }
+
   const createdUrls: string[] = [];
   const mediaUrlCache = new Map<string, string>();
 
   const getMediaBlobUrl = async (mediaPath: string): Promise<string | null> => {
     const clean = mediaPath.replace(/^\/+/, '');
     if (mediaUrlCache.has(clean)) return mediaUrlCache.get(clean)!;
-    const entry = entries.get(clean);
+
+    let entry = entries.get(clean) || lowerEntries.get(clean.toLowerCase());
+    if (!entry) {
+      const filename = clean.split('/').pop()?.toLowerCase();
+      if (filename) {
+        entry =
+          lowerEntries.get(`ppt/media/${filename}`) ||
+          [...lowerEntries.entries()].find(([k]) => k.endsWith(`/${filename}`))?.[1];
+      }
+    }
     if (!entry) return null;
+
     try {
       const raw = await extractZipEntryBytes(archiveBytes, entry);
-      const url = URL.createObjectURL(new Blob([raw.buffer as ArrayBuffer], { type: getMimeType(clean) }));
+      const safeBytes =
+        raw.byteOffset === 0 && raw.byteLength === raw.buffer.byteLength
+          ? raw
+          : raw.slice();
+      const mime = getMimeType(clean);
+      const url = URL.createObjectURL(
+        new Blob([safeBytes as unknown as BlobPart], { type: mime })
+      );
       createdUrls.push(url);
       mediaUrlCache.set(clean, url);
       return url;
@@ -581,12 +636,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
       const blipFill = findFirstDescendant(bg, 'blipFill');
       if (blipFill && !backgroundImageUrl) {
         const blip = findFirstDescendant(blipFill, 'blip');
-        const embedId =
-          blip?.getAttribute('r:embed') ||
-          blip?.getAttributeNS(
-            'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-            'embed'
-          );
+        const embedId = getBlipEmbedId(blip);
         if (embedId && relsToUse.has(embedId)) {
           const url = await getMediaBlobUrl(relsToUse.get(embedId)!);
           if (url) backgroundImageUrl = url;
@@ -730,37 +780,34 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
           continue;
         }
 
+        if (tag === 'AlternateContent') {
+          const choice = findFirstDescendant(node, 'Choice');
+          const fallback = findFirstDescendant(node, 'Fallback');
+          const targetNode = choice || fallback;
+          if (targetNode) {
+            await processShapeTree(targetNode, groupMapping);
+          }
+          continue;
+        }
+
         if (tag === 'pic') {
-          const spPr = getLocalTagChildren(node, 'spPr')[0];
-          const xfrm = spPr ? findFirstDescendant(spPr, 'xfrm') : null;
+          const xfrm = findFirstDescendant(node, 'xfrm');
           const box = resolveBoxToPct(xfrm, null, null, groupMapping);
 
           // Check if picture has attached video/audio media
-          const nvPicPr = getLocalTagChildren(node, 'nvPicPr')[0];
+          const nvPicPr = findFirstDescendant(node, 'nvPicPr');
           const videoFile = nvPicPr ? findFirstDescendant(nvPicPr, 'videoFile') : null;
           const audioFile = nvPicPr ? findFirstDescendant(nvPicPr, 'audioFile') : null;
-          const mediaRelId =
-            (videoFile || audioFile)?.getAttribute('r:link') ||
-            (videoFile || audioFile)?.getAttribute('r:embed') ||
-            (videoFile || audioFile)?.getAttributeNS(
-              'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-              'link'
-            );
+          const mediaRelId = getBlipEmbedId(videoFile || audioFile);
 
-          const blipFill = getLocalTagChildren(node, 'blipFill')[0];
-          const blip = blipFill ? findFirstDescendant(blipFill, 'blip') : null;
-          const embedId =
-            blip?.getAttribute('r:embed') ||
-            blip?.getAttributeNS(
-              'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-              'embed'
-            );
-          const imageTarget = embedId ? slideRels.get(embedId) : undefined;
+          const blip = findFirstDescendant(node, 'blip');
+          const embedId = getBlipEmbedId(blip);
+          const imageTarget = embedId ? (slideRels.get(embedId) || layoutRels.get(embedId)) : undefined;
           const imgUrl = imageTarget ? await getMediaBlobUrl(imageTarget) : null;
 
-          if (mediaRelId && slideRels.has(mediaRelId)) {
-            const mediaTarget = slideRels.get(mediaRelId)!;
-            const mediaUrl = await getMediaBlobUrl(mediaTarget);
+          if (mediaRelId) {
+            const mediaTarget = slideRels.get(mediaRelId) || layoutRels.get(mediaRelId);
+            const mediaUrl = mediaTarget ? await getMediaBlobUrl(mediaTarget) : null;
             if (mediaUrl) {
               elements.push({
                 kind: videoFile ? 'video' : 'audio',
@@ -785,8 +832,25 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
         }
 
         if (tag === 'graphicFrame') {
-          const xfrm = getLocalTagChildren(node, 'xfrm')[0] || findFirstDescendant(node, 'xfrm');
+          const xfrm = findFirstDescendant(node, 'xfrm');
           const box = resolveBoxToPct(xfrm, null, null, groupMapping);
+
+          const blip = findFirstDescendant(node, 'blip');
+          const blipEmbedId = getBlipEmbedId(blip);
+          if (blipEmbedId) {
+            const imgTarget = slideRels.get(blipEmbedId) || layoutRels.get(blipEmbedId);
+            const imgUrl = imgTarget ? await getMediaBlobUrl(imgTarget) : null;
+            if (imgUrl) {
+              elements.push({
+                kind: 'image',
+                id: `img_gf_${idx}_${elements.length}`,
+                ...box,
+                url: imgUrl,
+              });
+              continue;
+            }
+          }
+
           const tbl = findFirstDescendant(node, 'tbl');
           if (tbl) {
             const trs = getLocalTagChildren(tbl, 'tr');
@@ -842,8 +906,24 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
           if (phType === 'sldNum' || phType === 'dt' || phType === 'ftr') continue;
 
           const spPr = getLocalTagChildren(node, 'spPr')[0];
-          const xfrm = spPr ? findFirstDescendant(spPr, 'xfrm') : null;
+          const xfrm = findFirstDescendant(node, 'xfrm');
           const box = resolveBoxToPct(xfrm, phType, phIdx, groupMapping);
+
+          // Check if shape has picture fill
+          const shapeBlip = findFirstDescendant(node, 'blip');
+          const shapeBlipEmbedId = getBlipEmbedId(shapeBlip);
+          if (shapeBlipEmbedId) {
+            const imgTarget = slideRels.get(shapeBlipEmbedId) || layoutRels.get(shapeBlipEmbedId);
+            const imgUrl = imgTarget ? await getMediaBlobUrl(imgTarget) : null;
+            if (imgUrl) {
+              elements.push({
+                kind: 'image',
+                id: `img_sp_${idx}_${elements.length}`,
+                ...box,
+                url: imgUrl,
+              });
+            }
+          }
 
           let fillColor: string | undefined;
           let borderColor: string | undefined;

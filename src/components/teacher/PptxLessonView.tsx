@@ -174,6 +174,7 @@ export function PptxLessonView({
                   src={el.url}
                   alt=""
                   draggable={false}
+                  loading="eager"
                   style={{
                     position: 'absolute',
                     left: `${el.xPct}%`,
@@ -181,6 +182,7 @@ export function PptxLessonView({
                     width: `${el.wPct}%`,
                     height: `${el.hPct}%`,
                     objectFit: 'contain',
+                    zIndex: 2,
                   }}
                 />
               );

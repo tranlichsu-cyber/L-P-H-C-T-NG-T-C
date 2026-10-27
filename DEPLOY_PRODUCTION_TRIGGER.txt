@@ -212,3 +212,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Keep firestore.indexes.json empty so production Hosting and Firestore Rules deploy cleanly with existing service account permissions.
 
 2026-10-27: Add Google Drive lesson repository integration (resumable upload, cross-device Drive sync, Drive/Slides link support) and remove the 50 MB upload file size limit.
+
+2026-10-27: Fix PPTX slide images extraction (resolve subarray slice blob buffer bug, support AlternateContent, shape blipFill, case-insensitive media lookup).
