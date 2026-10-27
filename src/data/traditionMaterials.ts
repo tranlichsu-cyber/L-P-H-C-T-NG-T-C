@@ -312,6 +312,18 @@ export const curatedTraditionMaterials:TraditionMaterial[] = [
     "updatedAt": "2026-10-27"
   },
   {
+    "id": "curated-image-bac-ho-tham-gang-thep-1964",
+    "kind": "IMAGE",
+    "title": "Bác Hồ về thăm Khu Gang thép Thái Nguyên (Ngày 01/01/1964)",
+    "text": "Ngày 01/01/1964, Chủ tịch Hồ Chí Minh về thăm tỉnh Thái Nguyên lần cuối và trực tiếp đến thăm cán bộ, công nhân, chuyên gia tại Khu Gang thép Thái Nguyên (ngay sau khi Lò cao số 1 vừa cho ra mẻ gang đầu tiên vào cuối năm 1963). Trong ảnh, Bác Hồ giản dị trong bộ quần áo kaki và chiếc mũ cối trắng đang bước đi dưới chân hệ thống Lò cao luyện gang đồ sộ. Tại đây, Bác đã căn dặn câu nói nổi tiếng: \"Để làm ra gang thép tốt thì người công nhân và cán bộ phải tôi luyện tinh thần cách mạng, lập trường giai cấp và ý thức làm chủ cho cứng rắn như thép, như gang\".",
+    "mediaUrl": "https://thlytutrong.com.vn/images/bac-ho-tham-gang-thep-thai-nguyen-1964.jpg",
+    "source": "Cổng thông tin điện tử tỉnh Thái Nguyên / Di tích lịch sử Quốc gia địa điểm lưu niệm Bác Hồ về thăm Khu Gang thép",
+    "sourceUrl": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/khu-di-tich-quoc-gia-dia-diem-luu-niem-chu-tich-ho-chi-minh-ve-tham-khu-gang-thep-thai-nguyen-291410",
+    "published": true,
+    "teacherId": "curated-tradition",
+    "updatedAt": "2026-10-27"
+  },
+  {
     "id": "curated-image-bac-ho-vo-nguyen-giap-atk",
     "kind": "IMAGE",
     "title": "Chủ tịch Hồ Chí Minh cùng Đại tướng Võ Nguyên Giáp tại Chiến khu Việt Bắc – ATK Định Hóa",
