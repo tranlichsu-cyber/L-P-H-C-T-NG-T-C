@@ -191,3 +191,4 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Them anh tu lieu Chu tich Ho Chi Minh cung Dai tuong Vo Nguyen Giap tai ATK Dinh Hoa vao muc Hinh anh.
 2026-10-27: Them anh tu lieu Bac Ho ve tham Khu Gang thep Thai Nguyen (01/01/1964) vao muc Hinh anh.
 2026-10-27: Them anh tu lieu Luc luong TNXP Thai Nguyen san lap ho bom khoi phuc duong sat vao muc Hinh anh.
+2026-10-27: Ho tro duong dan rieng permalink, sao chep lien ket va modal phong to khi chon/chi vao tung buc anh.

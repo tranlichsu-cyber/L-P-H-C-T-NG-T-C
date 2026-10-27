@@ -5,7 +5,7 @@ import {TraditionStoryMap} from '../components/tradition/TraditionStoryMap';
 import {HeritageCatalog} from '../components/tradition/HeritageCatalog';
 import {traditionMapPlaces} from '../data/traditionMap';
 import {curatedTraditionQuizzes} from '../data/traditionQuizzes';
-import { BookOpen, Images, Clapperboard, Flower2, Gamepad2, Sparkles, MapPinned } from 'lucide-react';
+import { BookOpen, Images, Clapperboard, Flower2, Gamepad2, Sparkles, MapPinned, X, Link as LinkIcon, Copy, Check, ExternalLink } from 'lucide-react';
 import { MaterialCard } from '../components/tradition/MaterialCard';
 import { TraditionMaterials,materialKinds,type TraditionMaterial } from '../services/tradition/TraditionMaterials';
 import React,{useState,useEffect} from 'react';
@@ -40,22 +40,63 @@ export const TraditionPage:React.FC=()=>{
  const [items,setItems]=useState<TraditionQuizContent[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[selected,setSelected]=useState<TraditionQuizContent|null>(null);
  const [materials,setMaterials]=useState<TraditionMaterial[]>([]);
  const [selectedMapPlace,setSelectedMapPlace]=useState('');
+ const [selectedImageModal,setSelectedImageModal]=useState<TraditionMaterial|null>(null);
+ const [modalCopied,setModalCopied]=useState(false);
+
  const curatedMaterials=[...bookCultureArticles,...curatedTraditionMaterials];
  const readingMaterials=[...curatedMaterials,...materials.filter(item=>!curatedMaterials.some(curated=>curated.id===item.id || curated.title===item.title))];
  const [activeSection,setActiveSection]=useState(()=>{
   const raw=typeof window!=='undefined'?window.location.hash.slice(1):'';
+  if(raw.startsWith('image-')||raw.startsWith('card-curated-image-'))return 'material-IMAGE';
+  if(raw.startsWith('video-')||raw.startsWith('card-curated-video-'))return 'material-VIDEO';
   return raw.startsWith('history-')?'history-library':/^heritage-.*-section-\d+$/.test(raw)?'heritage-catalog':raw||'history-library';
  });
+
  useEffect(()=>{
   const syncSection=()=>{
    const raw=window.location.hash.slice(1);
+   if(raw.startsWith('image-')){
+    setActiveSection('material-IMAGE');
+    const imageId=raw.replace('image-','');
+    const found=readingMaterials.find(m=>m.id===imageId || m.id==='curated-image-'+imageId || 'image-'+m.id===raw);
+    if(found)setSelectedImageModal(found);
+    requestAnimationFrame(()=>{
+     const card=document.getElementById('card-'+imageId)||document.getElementById('card-curated-image-'+imageId);
+     if(card){
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+      card.classList.add('ring-4','ring-violet-500','ring-offset-2');
+      setTimeout(()=>card.classList.remove('ring-4','ring-violet-500','ring-offset-2'),3500);
+     }
+    });
+    return;
+   }
+   if(raw.startsWith('card-')){
+    const cardId=raw.replace('card-','');
+    const found=readingMaterials.find(m=>m.id===cardId);
+    if(found){
+     if(found.kind==='IMAGE')setActiveSection('material-IMAGE');
+     else if(found.kind==='VIDEO')setActiveSection('material-VIDEO');
+     else if(found.kind==='CULTURE')setActiveSection('material-CULTURE');
+     else if(found.kind==='HISTORY')setActiveSection('material-HISTORY');
+    }
+    requestAnimationFrame(()=>{
+     const card=document.getElementById(raw);
+     if(card){
+      card.scrollIntoView({behavior:'smooth',block:'center'});
+      card.classList.add('ring-4','ring-sky-500','ring-offset-2');
+      setTimeout(()=>card.classList.remove('ring-4','ring-sky-500','ring-offset-2'),3500);
+     }
+    });
+    return;
+   }
    const section=raw.startsWith('history-')?'history-library':/^heritage-.*-section-\d+$/.test(raw)?'heritage-catalog':raw;
    setActiveSection(section==='history-library' || section==='heritage-catalog' || section==='tradition-map' || section==='tradition-questions' || Object.keys(materialKinds).some(kind=>section==='material-'+kind) ? section : 'history-library');
   };
   syncSection();
   window.addEventListener('hashchange',syncSection);
   return ()=>window.removeEventListener('hashchange',syncSection);
- },[]);
+ },[readingMaterials.length]);
+
  const switchSection=(section:string)=>{
   setActiveSection(section);
   window.location.hash=section;
@@ -112,7 +153,7 @@ export const TraditionPage:React.FC=()=>{
      </div>
      <p className="mt-2 leading-7 text-slate-700">{materialGuides[kind]}</p>
     </div>
-    {list.length?<div className="grid sm:grid-cols-2 gap-4 items-stretch">{list.map(item=><MaterialCard key={item.id} item={item} compact={kind!=='HISTORY'&&kind!=='CULTURE'}/>)}</div>:loading?<p>Đang tải tư liệu…</p>:<p className="bg-white border rounded-xl p-4 text-slate-600">{error || 'Tư liệu đang được giáo viên chuẩn bị và kiểm tra trước khi đưa lên.'}</p>}
+    {list.length?<div className="grid sm:grid-cols-2 gap-4 items-stretch">{list.map(item=><MaterialCard key={item.id} item={item} compact={kind!=='HISTORY'&&kind!=='CULTURE'} onOpenImage={img=>setSelectedImageModal(img)}/>)}</div>:loading?<p>Đang tải tư liệu…</p>:<p className="bg-white border rounded-xl p-4 text-slate-600">{error || 'Tư liệu đang được giáo viên chuẩn bị và kiểm tra trước khi đưa lên.'}</p>}
    </section>;
   })()}
   {activeSection==='tradition-questions' && <section className="space-y-4">
@@ -127,6 +168,62 @@ export const TraditionPage:React.FC=()=>{
   </section>}
  </> : <TraditionQuizRunner key={selected.id} quiz={selected} onBack={backToQuizzes}/>}
  </div></div>
+
+ {/* Lightbox Modal for Selected Image */}
+ {selectedImageModal && (
+  <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6" onClick={()=>{setSelectedImageModal(null);if(window.location.hash.startsWith('#image-')){window.history.replaceState(null,'','#material-IMAGE');}}} role="dialog" aria-modal="true">
+   <div className="relative max-w-4xl w-full max-h-[92vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col" onClick={e=>e.stopPropagation()}>
+    <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-200 bg-slate-50">
+     <div className="flex items-center gap-2 min-w-0">
+      <span className="shrink-0 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-extrabold bg-violet-50 border-violet-200 text-violet-900">Hình ảnh tư liệu</span>
+      <h3 className="font-black text-slate-900 text-base sm:text-lg truncate" title={selectedImageModal.title}>{selectedImageModal.title}</h3>
+     </div>
+     <button type="button" onClick={()=>{setSelectedImageModal(null);if(window.location.hash.startsWith('#image-')){window.history.replaceState(null,'','#material-IMAGE');}}} className="shrink-0 rounded-xl p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-200 transition-colors" aria-label="Đóng"><X size={22}/></button>
+    </div>
+    <div className="overflow-y-auto p-5 sm:p-6 space-y-4">
+     <div className="w-full max-h-[55vh] rounded-2xl bg-slate-950 overflow-hidden flex items-center justify-center">
+      <img src={selectedImageModal.mediaUrl} alt={selectedImageModal.title} className="max-w-full max-h-[55vh] object-contain"/>
+     </div>
+     <div className="rounded-2xl bg-sky-50 border border-sky-200 p-3.5 space-y-2">
+      <div className="flex items-center justify-between gap-2">
+       <span className="text-xs font-extrabold text-sky-900 flex items-center gap-1.5"><LinkIcon size={14}/> Đường dẫn riêng của bức ảnh này:</span>
+       <button type="button" onClick={async()=>{
+        const link=`${window.location.origin}${window.location.pathname}#image-${selectedImageModal.id}`;
+        try{
+         await navigator.clipboard.writeText(link);
+        }catch{
+         const input=document.createElement('textarea');
+         input.value=link;
+         document.body.appendChild(input);
+         input.select();
+         document.execCommand('copy');
+         document.body.removeChild(input);
+        }
+        setModalCopied(true);
+        setTimeout(()=>setModalCopied(false),2500);
+       }} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white px-3 py-1 text-xs font-bold transition-colors">
+        {modalCopied ? <Check size={14}/> : <Copy size={14}/>}
+        <span>{modalCopied ? 'Đã sao chép liên kết!' : 'Sao chép liên kết'}</span>
+       </button>
+      </div>
+      <input type="text" readOnly value={typeof window!=='undefined'?`${window.location.origin}${window.location.pathname}#image-${selectedImageModal.id}`:''} onClick={e=>(e.target as HTMLInputElement).select()} className="w-full text-xs font-mono bg-white border border-sky-300 rounded-lg px-3 py-2 text-slate-800 select-all focus:outline-none focus:ring-2 focus:ring-sky-500"/>
+     </div>
+     {selectedImageModal.text && <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2">
+      <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Chú thích tư liệu</h4>
+      <p className="text-sm sm:text-base leading-relaxed text-slate-800 whitespace-pre-line">{selectedImageModal.text}</p>
+     </div>}
+     <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-slate-600 pt-2 border-t border-slate-100">
+      <span>Nguồn: <strong className="font-semibold text-slate-800">{selectedImageModal.source || 'Tư liệu lịch sử'}</strong></span>
+      <div className="flex items-center gap-3">
+       {selectedImageModal.mediaUrl && <a href={selectedImageModal.mediaUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-sky-700 hover:text-sky-900 underline"><ExternalLink size={14}/> Mở tệp ảnh gốc ↗</a>}
+       {selectedImageModal.sourceUrl && <a href={selectedImageModal.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-emerald-800 hover:text-emerald-950 underline">Xem nguồn tư liệu ↗</a>}
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+ )}
+
  <footer className="border-t border-emerald-200 pt-5 text-sm text-slate-600">Học liệu phục vụ giáo dục truyền thống tại Phân hiệu Lý Tự Trọng • Trường Tiểu học Sông Công</footer>
  </main></div>;
 };
