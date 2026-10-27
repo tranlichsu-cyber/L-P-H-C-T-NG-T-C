@@ -26,6 +26,11 @@ export interface PptxShapeElement {
   yPct: number;
   wPct: number;
   hPct: number;
+  rotationDeg?: number;
+  flipH?: boolean;
+  flipV?: boolean;
+  svgPath?: string;
+  svgViewBox?: string;
   fillColor?: string;
   borderColor?: string;
   borderRadiusPct?: number;
@@ -44,6 +49,9 @@ export interface PptxImageElement {
   yPct: number;
   wPct: number;
   hPct: number;
+  rotationDeg?: number;
+  flipH?: boolean;
+  flipV?: boolean;
   url: string;
 }
 
@@ -334,6 +342,51 @@ function parseThemeColors(themeXml: string | null): Record<string, string> {
   return colors;
 }
 
+function applyColorModifiers(baseHex: string, clrNode: Element): string {
+  let r = parseInt(baseHex.slice(1, 3), 16);
+  let g = parseInt(baseHex.slice(3, 5), 16);
+  let b = parseInt(baseHex.slice(5, 7), 16);
+  let a = 1.0;
+
+  const alpha = findFirstDescendant(clrNode, 'alpha')?.getAttribute('val');
+  if (alpha) {
+    a = Number(alpha) / 100000;
+    if (a <= 0.02) return 'transparent';
+  }
+
+  const tint = findFirstDescendant(clrNode, 'tint')?.getAttribute('val');
+  if (tint) {
+    const t = Number(tint) / 100000;
+    r = Math.round(r * t + 255 * (1 - t));
+    g = Math.round(g * t + 255 * (1 - t));
+    b = Math.round(b * t + 255 * (1 - t));
+  }
+
+  const shade = findFirstDescendant(clrNode, 'shade')?.getAttribute('val');
+  if (shade) {
+    const s = Number(shade) / 100000;
+    r = Math.round(r * s);
+    g = Math.round(g * s);
+    b = Math.round(b * s);
+  }
+
+  const lumMod = findFirstDescendant(clrNode, 'lumMod')?.getAttribute('val');
+  const lumOff = findFirstDescendant(clrNode, 'lumOff')?.getAttribute('val');
+  if (lumMod || lumOff) {
+    const mod = lumMod ? Number(lumMod) / 100000 : 1;
+    const off = lumOff ? Number(lumOff) / 100000 : 0;
+    r = Math.min(255, Math.max(0, Math.round(r * mod + 255 * off)));
+    g = Math.min(255, Math.max(0, Math.round(g * mod + 255 * off)));
+    b = Math.min(255, Math.max(0, Math.round(b * mod + 255 * off)));
+  }
+
+  if (a < 1.0) {
+    return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
+  }
+  const toHex = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 function resolveColorNode(
   container: Element | null | undefined,
   themeColors: Record<string, string>
@@ -342,12 +395,16 @@ function resolveColorNode(
   const srgb = findFirstDescendant(container, 'srgbClr');
   if (srgb) {
     const val = srgb.getAttribute('val');
-    if (val && /^[0-9a-fA-F]{6}$/.test(val)) return `#${val}`;
+    if (val && /^[0-9a-fA-F]{6}$/.test(val)) {
+      return applyColorModifiers(`#${val}`, srgb);
+    }
   }
   const scheme = findFirstDescendant(container, 'schemeClr');
   if (scheme) {
     const val = scheme.getAttribute('val') || '';
-    if (themeColors[val]) return themeColors[val];
+    if (themeColors[val]) {
+      return applyColorModifiers(themeColors[val], scheme);
+    }
   }
   const prst = findFirstDescendant(container, 'prstClr');
   if (prst) {
@@ -356,6 +413,169 @@ function resolveColorNode(
     if (val === 'black') return '#0f172a';
   }
   return undefined;
+}
+
+interface ShapeSvgGeometry {
+  pathData: string;
+  viewBox: string;
+}
+
+function parseCustGeom(
+  custGeom: Element,
+  defaultW: number,
+  defaultH: number
+): ShapeSvgGeometry | null {
+  const pathLst = findFirstDescendant(custGeom, 'pathLst');
+  if (!pathLst) return null;
+  const paths = findAllDescendants(pathLst, 'path');
+  if (paths.length === 0) return null;
+
+  let maxW = defaultW > 0 ? defaultW : 100;
+  let maxH = defaultH > 0 ? defaultH : 100;
+  const dParts: string[] = [];
+
+  for (const pathEl of paths) {
+    const pw = Number(pathEl.getAttribute('w')) || defaultW || 100;
+    const ph = Number(pathEl.getAttribute('h')) || defaultH || 100;
+    if (pw > maxW) maxW = pw;
+    if (ph > maxH) maxH = ph;
+
+    let curX = 0;
+    let curY = 0;
+
+    const children = pathEl.children;
+    for (let i = 0; i < children.length; i++) {
+      const cmdEl = children[i];
+      const tag = cmdEl.localName;
+
+      if (tag === 'moveTo') {
+        const pt = findFirstDescendant(cmdEl, 'pt');
+        if (pt) {
+          curX = Number(pt.getAttribute('x')) || 0;
+          curY = Number(pt.getAttribute('y')) || 0;
+          dParts.push(`M ${curX} ${curY}`);
+        }
+      } else if (tag === 'lnTo') {
+        const pt = findFirstDescendant(cmdEl, 'pt');
+        if (pt) {
+          curX = Number(pt.getAttribute('x')) || 0;
+          curY = Number(pt.getAttribute('y')) || 0;
+          dParts.push(`L ${curX} ${curY}`);
+        }
+      } else if (tag === 'cubicBezTo') {
+        const pts = findAllDescendants(cmdEl, 'pt');
+        if (pts.length >= 3) {
+          const x1 = Number(pts[0].getAttribute('x')) || 0;
+          const y1 = Number(pts[0].getAttribute('y')) || 0;
+          const x2 = Number(pts[1].getAttribute('x')) || 0;
+          const y2 = Number(pts[1].getAttribute('y')) || 0;
+          const x3 = Number(pts[2].getAttribute('x')) || 0;
+          const y3 = Number(pts[2].getAttribute('y')) || 0;
+          curX = x3;
+          curY = y3;
+          dParts.push(`C ${x1} ${y1}, ${x2} ${y2}, ${x3} ${y3}`);
+        }
+      } else if (tag === 'quadBezTo') {
+        const pts = findAllDescendants(cmdEl, 'pt');
+        if (pts.length >= 2) {
+          const x1 = Number(pts[0].getAttribute('x')) || 0;
+          const y1 = Number(pts[0].getAttribute('y')) || 0;
+          const x2 = Number(pts[1].getAttribute('x')) || 0;
+          const y2 = Number(pts[1].getAttribute('y')) || 0;
+          curX = x2;
+          curY = y2;
+          dParts.push(`Q ${x1} ${y1}, ${x2} ${y2}`);
+        }
+      } else if (tag === 'arcTo') {
+        const rx = Number(cmdEl.getAttribute('wR')) || 0;
+        const ry = Number(cmdEl.getAttribute('hR')) || 0;
+        const stAng = Number(cmdEl.getAttribute('stAng')) || 0;
+        const swAng = Number(cmdEl.getAttribute('swAng')) || 0;
+        if (rx > 0 && ry > 0) {
+          const stRad = (stAng / 60000) * (Math.PI / 180);
+          const endRad = ((stAng + swAng) / 60000) * (Math.PI / 180);
+          const cx = curX - rx * Math.cos(stRad);
+          const cy = curY - ry * Math.sin(stRad);
+          const endX = cx + rx * Math.cos(endRad);
+          const endY = cy + ry * Math.sin(endRad);
+          const largeArc = Math.abs(swAng / 60000) >= 180 ? 1 : 0;
+          const sweep = swAng >= 0 ? 1 : 0;
+          curX = endX;
+          curY = endY;
+          dParts.push(`A ${rx} ${ry} 0 ${largeArc} ${sweep} ${endX.toFixed(2)} ${endY.toFixed(2)}`);
+        }
+      } else if (tag === 'close') {
+        dParts.push('Z');
+      }
+    }
+  }
+
+  if (dParts.length === 0) return null;
+  return {
+    pathData: dParts.join(' '),
+    viewBox: `0 0 ${maxW} ${maxH}`,
+  };
+}
+
+function parsePrstGeom(prst: string): ShapeSvgGeometry | null {
+  switch (prst) {
+    case 'ellipse':
+      return {
+        pathData: 'M 50,0 A 50,50 0 1,0 50,100 A 50,50 0 1,0 50,0 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'triangle':
+    case 'isoscelesTriangle':
+      return {
+        pathData: 'M 50 0 L 100 100 L 0 100 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'rtTriangle':
+      return {
+        pathData: 'M 0 0 L 100 100 L 0 100 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'diamond':
+      return {
+        pathData: 'M 50 0 L 100 50 L 50 100 L 0 50 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'parallelogram':
+      return {
+        pathData: 'M 25 0 L 100 0 L 75 100 L 0 100 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'trapezoid':
+      return {
+        pathData: 'M 20 0 L 80 0 L 100 100 L 0 100 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'hexagon':
+      return {
+        pathData: 'M 25 0 L 75 0 L 100 50 L 75 100 L 25 100 L 0 50 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'cloud':
+      return {
+        pathData:
+          'M 20 60 A 20 20 0 0 1 35 25 A 25 25 0 0 1 70 20 A 20 20 0 0 1 85 45 A 20 20 0 0 1 80 75 A 15 15 0 0 1 65 80 L 30 80 A 15 15 0 0 1 20 60 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'star5':
+      return {
+        pathData:
+          'M 50 0 L 63 38 L 100 38 L 69 59 L 81 95 L 50 72 L 19 95 L 31 59 L 0 38 L 37 38 Z',
+        viewBox: '0 0 100 100',
+      };
+    case 'heart':
+      return {
+        pathData:
+          'M 50 30 C 50 15, 30 0, 15 15 C 0 30, 15 50, 50 85 C 85 50, 100 30, 85 15 C 70 0, 50 15, 50 30 Z',
+        viewBox: '0 0 100 100',
+      };
+    default:
+      return null;
+  }
 }
 
 function getBlipEmbedId(blip: Element | null | undefined): string | null {
@@ -680,26 +900,33 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
     const timingNode = findFirstDescendant(slideDoc, 'timing');
     let maxAnimSteps = 0;
     if (timingNode) {
-      const spTgts = findAllDescendants(timingNode, 'spTgt');
-      let currentStep = 1;
-      for (const spTgt of spTgts) {
-        const spid = spTgt.getAttribute('spid');
-        if (!spid) continue;
-        if (!animMap.has(spid)) {
-          const parent = spTgt.parentElement?.parentElement;
-          const effectNode = parent
-            ? findFirstDescendant(parent, 'animEffect') ||
-              findFirstDescendant(parent, 'anim')
-            : null;
-          const filter = effectNode?.getAttribute('filter');
-          let effect: PptxAnimEffect = 'flyIn';
-          if (filter?.includes('fade')) effect = 'fade';
-          else if (filter?.includes('wipe')) effect = 'wipe';
-          else if (filter?.includes('wheel') || filter?.includes('zoom')) effect = 'zoom';
+      const cTns = findAllDescendants(timingNode, 'cTn');
+      let currentClickStep = 0;
+      for (const cTn of cTns) {
+        const nodeType = cTn.getAttribute('nodeType');
+        const isClick = nodeType === 'clickEffect' || nodeType === 'interactiveSeq';
+        if (isClick) {
+          currentClickStep++;
+        }
+        const spTgts = findAllDescendants(cTn, 'spTgt');
+        for (const spTgt of spTgts) {
+          const spid = spTgt.getAttribute('spid');
+          if (!spid) continue;
+          if (!animMap.has(spid)) {
+            const effectNode =
+              findFirstDescendant(cTn, 'animEffect') || findFirstDescendant(cTn, 'anim');
+            const filter = effectNode?.getAttribute('filter');
+            let effect: PptxAnimEffect = 'flyIn';
+            if (filter?.includes('fade')) effect = 'fade';
+            else if (filter?.includes('wipe')) effect = 'wipe';
+            else if (filter?.includes('wheel') || filter?.includes('zoom')) effect = 'zoom';
 
-          animMap.set(spid, { step: currentStep, effect });
-          maxAnimSteps = Math.max(maxAnimSteps, currentStep);
-          currentStep++;
+            const step = isClick ? currentClickStep : 0;
+            animMap.set(spid, { step, effect });
+            if (isClick) {
+              maxAnimSteps = Math.max(maxAnimSteps, currentClickStep);
+            }
+          }
         }
       }
     }
@@ -723,13 +950,29 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
         chcx: number;
         chcy: number;
       }
-    ): { xPct: number; yPct: number; wPct: number; hPct: number } => {
+    ): {
+      xPct: number;
+      yPct: number;
+      wPct: number;
+      hPct: number;
+      rawW: number;
+      rawH: number;
+      rotationDeg?: number;
+      flipH?: boolean;
+      flipV?: boolean;
+    } => {
       let x = NaN;
       let y = NaN;
       let cx = NaN;
       let cy = NaN;
+      let rot: string | null = null;
+      let flipHAttr: string | null = null;
+      let flipVAttr: string | null = null;
 
       if (xfrmNode) {
+        rot = xfrmNode.getAttribute('rot');
+        flipHAttr = xfrmNode.getAttribute('flipH');
+        flipVAttr = xfrmNode.getAttribute('flipV');
         const off = findFirstDescendant(xfrmNode, 'off');
         const ext = findFirstDescendant(xfrmNode, 'ext');
         if (off && ext) {
@@ -752,17 +995,54 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
         }
       }
 
+      const rotationDeg = rot ? Number(rot) / 60000 : undefined;
+      const flipH = Boolean(flipHAttr === '1' || flipHAttr === 'true');
+      const flipV = Boolean(flipVAttr === '1' || flipVAttr === 'true');
+
       if (!Number.isFinite(x) || !cx || !cy) {
         if (phType === 'title' || phType === 'ctrTitle') {
-          return { xPct: 6, yPct: phType === 'ctrTitle' ? 24 : 7, wPct: 88, hPct: 20 };
+          return {
+            xPct: 6,
+            yPct: phType === 'ctrTitle' ? 24 : 7,
+            wPct: 88,
+            hPct: 20,
+            rawW: 100,
+            rawH: 100,
+            rotationDeg,
+            flipH,
+            flipV,
+          };
         }
         if (phType === 'subTitle') {
-          return { xPct: 10, yPct: 48, wPct: 80, hPct: 22 };
+          return {
+            xPct: 10,
+            yPct: 48,
+            wPct: 80,
+            hPct: 22,
+            rawW: 100,
+            rawH: 100,
+            rotationDeg,
+            flipH,
+            flipV,
+          };
         }
         const topPct = Math.min(75, 26 + autoBodyIndex * 18);
         autoBodyIndex++;
-        return { xPct: 7, yPct: topPct, wPct: 86, hPct: 62 };
+        return {
+          xPct: 7,
+          yPct: topPct,
+          wPct: 86,
+          hPct: 62,
+          rawW: 100,
+          rawH: 100,
+          rotationDeg,
+          flipH,
+          flipV,
+        };
       }
+
+      const rawW = cx;
+      const rawH = cy;
 
       if (groupMapping && groupMapping.chcx > 0 && groupMapping.chcy > 0) {
         x = groupMapping.gx + ((x - groupMapping.chx) / groupMapping.chcx) * groupMapping.gcx;
@@ -771,11 +1051,11 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
         cy = (cy / groupMapping.chcy) * groupMapping.gcy;
       }
 
-      const xPct = Math.max(0, Math.min(98, (x / slideWidth) * 100));
-      const yPct = Math.max(0, Math.min(98, (y / slideHeight) * 100));
-      const wPct = Math.max(2, Math.min(100 - xPct, (cx / slideWidth) * 100));
-      const hPct = Math.max(2, Math.min(100 - yPct, (cy / slideHeight) * 100));
-      return { xPct, yPct, wPct, hPct };
+      const xPct = Math.max(0, Math.min(99.5, (x / slideWidth) * 100));
+      const yPct = Math.max(0, Math.min(99.5, (y / slideHeight) * 100));
+      const wPct = Math.max(0.05, Math.min(100 - xPct, (cx / slideWidth) * 100));
+      const hPct = Math.max(0.05, Math.min(100 - yPct, (cy / slideHeight) * 100));
+      return { xPct, yPct, wPct, hPct, rawW, rawH, rotationDeg, flipH, flipV };
     };
 
     const processShapeTree = async (
@@ -889,7 +1169,13 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
               spId,
               animStep: animInfo?.step || 0,
               animEffect: animInfo?.effect || 'flyIn',
-              ...box,
+              xPct: box.xPct,
+              yPct: box.yPct,
+              wPct: box.wPct,
+              hPct: box.hPct,
+              rotationDeg: box.rotationDeg,
+              flipH: box.flipH,
+              flipV: box.flipV,
               url: imgUrl,
             });
           }
@@ -916,7 +1202,13 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
                 spId,
                 animStep: animInfo?.step || 0,
                 animEffect: animInfo?.effect || 'flyIn',
-                ...box,
+                xPct: box.xPct,
+                yPct: box.yPct,
+                wPct: box.wPct,
+                hPct: box.hPct,
+                rotationDeg: box.rotationDeg,
+                flipH: box.flipH,
+                flipV: box.flipV,
                 url: imgUrl,
               });
               continue;
@@ -965,7 +1257,10 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
                 spId,
                 animStep: animInfo?.step || 0,
                 animEffect: animInfo?.effect || 'fade',
-                ...box,
+                xPct: box.xPct,
+                yPct: box.yPct,
+                wPct: box.wPct,
+                hPct: box.hPct,
                 rows,
               });
             }
@@ -1001,16 +1296,40 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
                 spId,
                 animStep: animInfo?.step || 0,
                 animEffect: animInfo?.effect || 'flyIn',
-                ...box,
+                xPct: box.xPct,
+                yPct: box.yPct,
+                wPct: box.wPct,
+                hPct: box.hPct,
+                rotationDeg: box.rotationDeg,
+                flipH: box.flipH,
+                flipV: box.flipV,
                 url: imgUrl,
               });
+              continue;
             }
           }
 
           let fillColor: string | undefined;
           let borderColor: string | undefined;
           let borderRadiusPct: number | undefined;
+          let svgGeometry: ShapeSvgGeometry | null = null;
+
           if (spPr) {
+            const custGeom =
+              getLocalTagChildren(spPr, 'custGeom')[0] || findFirstDescendant(spPr, 'custGeom');
+            if (custGeom) {
+              svgGeometry = parseCustGeom(custGeom, box.rawW, box.rawH);
+            } else {
+              const prstGeom =
+                getLocalTagChildren(spPr, 'prstGeom')[0] || findFirstDescendant(spPr, 'prstGeom');
+              const geom = prstGeom?.getAttribute('prst');
+              if (geom) {
+                if (geom === 'roundRect') borderRadiusPct = 16;
+                else if (geom === 'ellipse') borderRadiusPct = 999;
+                svgGeometry = parsePrstGeom(geom);
+              }
+            }
+
             const noFill = getLocalTagChildren(spPr, 'noFill')[0];
             if (!noFill) {
               const solidFill = getLocalTagChildren(spPr, 'solidFill')[0];
@@ -1020,10 +1339,6 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
             if (ln && !getLocalTagChildren(ln, 'noFill')[0]) {
               borderColor = resolveColorNode(ln, themeColors);
             }
-            const prstGeom = getLocalTagChildren(spPr, 'prstGeom')[0];
-            const geom = prstGeom?.getAttribute('prst');
-            if (geom === 'roundRect') borderRadiusPct = 16;
-            else if (geom === 'ellipse') borderRadiusPct = 999;
           }
 
           const txBody = getLocalTagChildren(node, 'txBody')[0];
@@ -1118,14 +1433,22 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
             }
           }
 
-          if (paragraphs.length > 0 || fillColor || borderColor) {
+          if (paragraphs.length > 0 || fillColor || borderColor || svgGeometry) {
             elements.push({
               kind: 'shape',
               id: `sp_${idx}_${elements.length}`,
               spId,
               animStep: animInfo?.step || 0,
               animEffect: animInfo?.effect || (isTitle ? 'fade' : 'flyIn'),
-              ...box,
+              xPct: box.xPct,
+              yPct: box.yPct,
+              wPct: box.wPct,
+              hPct: box.hPct,
+              rotationDeg: box.rotationDeg,
+              flipH: box.flipH,
+              flipV: box.flipV,
+              svgPath: svgGeometry?.pathData,
+              svgViewBox: svgGeometry?.viewBox,
               fillColor,
               borderColor,
               borderRadiusPct,
@@ -1142,21 +1465,6 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
     const spTree = cSld ? getLocalTagChildren(cSld, 'spTree')[0] : null;
     if (spTree) {
       await processShapeTree(spTree);
-    }
-
-    // If slide has multiple elements and no timing was configured, assign sequential build steps
-    if (maxAnimSteps === 0 && elements.length > 2) {
-      let stepCounter = 1;
-      for (const el of elements) {
-        if (el.kind === 'shape' && el.isTitle) {
-          el.animStep = 0;
-        } else {
-          el.animStep = stepCounter;
-          el.animEffect = el.animEffect || (el.kind === 'image' ? 'zoom' : 'flyIn');
-          stepCounter++;
-        }
-      }
-      maxAnimSteps = stepCounter - 1;
     }
 
     if (!slideTitle && summaryParts.length > 0) {

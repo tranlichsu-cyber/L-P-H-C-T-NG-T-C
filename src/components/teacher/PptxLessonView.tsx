@@ -220,7 +220,11 @@ export function PptxLessonView({
         >
           {currentSlide.elements.map(el => {
             const isVisible =
-              !enableAnimations || !el.animStep || el.animStep <= (animStep || 0);
+              !enableAnimations ||
+              !currentSlide.maxAnimSteps ||
+              currentSlide.maxAnimSteps === 0 ||
+              !el.animStep ||
+              el.animStep <= (animStep || 0);
 
             if (!isVisible) return null;
 
@@ -239,6 +243,14 @@ export function PptxLessonView({
                 : {};
 
             if (el.kind === 'image') {
+              const imgTransform = [
+                el.rotationDeg ? `rotate(${el.rotationDeg}deg)` : '',
+                el.flipH ? 'scaleX(-1)' : '',
+                el.flipV ? 'scaleY(-1)' : '',
+              ]
+                .filter(Boolean)
+                .join(' ') || undefined;
+
               return (
                 <img
                   key={el.id}
@@ -253,6 +265,8 @@ export function PptxLessonView({
                     width: `${el.wPct}%`,
                     height: `${el.hPct}%`,
                     objectFit: 'contain',
+                    transform: imgTransform,
+                    transformOrigin: 'center center',
                     zIndex: 2,
                     ...animStyle,
                   }}
@@ -349,7 +363,17 @@ export function PptxLessonView({
 
             if (el.kind !== 'shape') return null;
 
-            // Shape / TextBox element
+            const hasText = el.paragraphs.length > 0;
+            const hasSvg = Boolean(el.svgPath);
+
+            const shapeTransform = [
+              el.rotationDeg ? `rotate(${el.rotationDeg}deg)` : '',
+              el.flipH ? 'scaleX(-1)' : '',
+              el.flipV ? 'scaleY(-1)' : '',
+            ]
+              .filter(Boolean)
+              .join(' ') || undefined;
+
             const justifyContent =
               el.vAlign === 'middle'
                 ? 'center'
@@ -365,28 +389,55 @@ export function PptxLessonView({
                   left: `${el.xPct}%`,
                   top: `${el.yPct}%`,
                   width: `${el.wPct}%`,
-                  minHeight: `${el.hPct}%`,
-                  maxHeight: `${100 - el.yPct}%`,
-                  backgroundColor: el.fillColor,
-                  border: el.borderColor
-                    ? `${Math.max(1, Math.round(2 * fontScale))}px solid ${el.borderColor}`
-                    : undefined,
-                  borderRadius: el.borderRadiusPct
-                    ? `${Math.round(14 * fontScale)}px`
-                    : undefined,
-                  padding:
-                    el.fillColor || el.borderColor
-                      ? `${Math.max(4, Math.round(10 * fontScale))}px`
-                      : `${Math.max(2, Math.round(4 * fontScale))}px`,
+                  height: hasText ? undefined : `${el.hPct}%`,
+                  minHeight: hasText ? `${el.hPct}%` : undefined,
+                  maxHeight: hasText ? `${100 - el.yPct}%` : undefined,
+                  backgroundColor: hasSvg ? 'transparent' : el.fillColor,
+                  border:
+                    hasSvg || !el.borderColor
+                      ? undefined
+                      : `${Math.max(1, Math.round(2 * fontScale))}px solid ${el.borderColor}`,
+                  borderRadius: hasSvg
+                    ? undefined
+                    : el.borderRadiusPct
+                      ? `${Math.round(14 * fontScale)}px`
+                      : undefined,
+                  padding: hasText
+                    ? el.fillColor || el.borderColor
+                      ? `${Math.max(3, Math.round(8 * fontScale))}px`
+                      : `${Math.max(1, Math.round(2 * fontScale))}px`
+                    : 0,
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent,
-                  overflow: 'hidden',
+                  overflow: hasText ? 'hidden' : 'visible',
                   boxSizing: 'border-box',
-                  zIndex: el.fillColor || el.borderColor ? 1 : 2,
+                  transform: shapeTransform,
+                  transformOrigin: 'center center',
+                  zIndex: hasSvg || el.fillColor || el.borderColor ? 1 : 2,
+                  pointerEvents: hasText ? 'auto' : 'none',
                   ...animStyle,
                 }}
               >
+                {el.svgPath && (
+                  <svg
+                    viewBox={el.svgViewBox || '0 0 100 100'}
+                    preserveAspectRatio="none"
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    style={{ overflow: 'visible' }}
+                  >
+                    <path
+                      d={el.svgPath}
+                      fill={el.fillColor || 'none'}
+                      stroke={el.borderColor || 'none'}
+                      strokeWidth={
+                        el.borderColor ? Math.max(1, Math.round(1.5 * fontScale)) : 0
+                      }
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
                 {el.paragraphs.map((para, pIdx) => {
                   const defaultPt = el.isTitle ? 32 : 20;
                   const levelIndent = (para.level || 0) * Math.round(22 * fontScale);
