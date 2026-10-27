@@ -80,6 +80,37 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
     }
   }
 
+  const currentRoom = room;
+
+  async function jumpToQuestion(targetQuestionId: string) {
+    if (!targetQuestionId || targetQuestionId === q?.id) return;
+    await act(async () => {
+      if (q) {
+        if (q.status === 'OPEN') {
+          const closed = await activeRealtimeService.closeQuestion(currentRoom.id, q.id);
+          if (!closed) return false;
+          const scored = await activeRealtimeService.showQuestionResult(currentRoom.id, q.id);
+          if (!scored) return false;
+        } else if (q.status === 'CLOSED') {
+          const scored = await activeRealtimeService.showQuestionResult(currentRoom.id, q.id);
+          if (!scored) return false;
+        }
+      }
+      return await activeRealtimeService.openQuestion(currentRoom.id, targetQuestionId);
+    }, true);
+  }
+
+  async function revealCurrentAnswer() {
+    if (!q) return;
+    await act(async () => {
+      if (q.status === 'OPEN') {
+        const closed = await activeRealtimeService.closeQuestion(currentRoom.id, q.id);
+        if (!closed) return false;
+      }
+      return await activeRealtimeService.showQuestionResult(currentRoom.id, q.id);
+    });
+  }
+
   if (screen === 'present')
     return <QrProjector room={room} question={q} index={index} total={ids.length} />;
 
@@ -210,21 +241,17 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
             </button>
             <button
               className={button}
-              disabled={busy || finished || q?.status !== 'CLOSED'}
-              onClick={() =>
-                void act(() => activeRealtimeService.showQuestionResult(room.id, q.id))
-              }
+              disabled={busy || finished || !q || !['OPEN', 'CLOSED'].includes(q.status)}
+              onClick={() => void revealCurrentAnswer()}
             >
               Hiện đáp án / Chấm điểm
             </button>
             <button
               className={button}
-              disabled={busy || finished || q?.status !== 'RESULT' || !nextId}
-              onClick={() =>
-                void act(() => activeRealtimeService.openQuestion(room.id, nextId!), true)
-              }
+              disabled={busy || finished || !nextId}
+              onClick={() => void jumpToQuestion(nextId!)}
             >
-              Câu tiếp theo
+              Câu tiếp theo →
             </button>
           </div>
           <label className="block font-bold">
@@ -232,25 +259,27 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
             <select
               className="mt-2 block w-full rounded-xl border p-3 font-normal"
               value={q?.id || ''}
-              disabled={busy || finished || q?.status === 'OPEN' || q?.status === 'CLOSED'}
-              onChange={e =>
-                void act(() => activeRealtimeService.openQuestion(room.id, e.target.value), true)
-              }
+              disabled={busy || finished}
+              onChange={e => void jumpToQuestion(e.target.value)}
             >
-              {ids.map((id, i) => (
-                <option
-                  key={id}
-                  value={id}
-                  disabled={room.liveQuestions[id].status === 'RESULT' && id !== q?.id}
-                >
-                  {i + 1}. {room.liveQuestions[id].content}
-                </option>
-              ))}
+              {ids.map((id, i) => {
+                const st = room.liveQuestions[id]?.status;
+                return (
+                  <option
+                    key={id}
+                    value={id}
+                    disabled={st === 'RESULT' && id !== q?.id}
+                  >
+                    {i + 1}. {st === 'RESULT' ? '(Đã chấm) ' : ''}{room.liveQuestions[id].content}
+                  </option>
+                );
+              })}
             </select>
           </label>
           <p className="text-sm">
-            Phát câu hỏi → Đóng trả lời → Hiện đáp án / Chấm điểm → Câu tiếp theo. Thầy/cô cũng có
-            thể bấm các nút này ngay trên màn hình điện thoại khi đang đi quét thẻ quanh lớp.
+            Có thể bấm <strong>Hiện đáp án</strong> hoặc <strong>Câu tiếp theo</strong> bất cứ lúc
+            nào trên máy tính hoặc trên màn hình điện thoại (hệ thống tự động chốt & chấm điểm câu
+            đang mở trước khi chuyển câu).
           </p>
           {!finished && !confirmEnd && (
             <button

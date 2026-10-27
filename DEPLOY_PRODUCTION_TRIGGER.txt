@@ -199,3 +199,4 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Xoa nen vuong va cac nut chup man hinh o goc logo truong (chuyen sang PNG trong suot school-logo.png va SCHOOL_LOGO_SRC), bo khung vien trang quanh logo tren toan he thong.
 2026-10-27: Can chinh logo trang chu sat vao chu truong va chan logo cung hang chu Cung hoc tap.
 2026-10-27: Nang cap muc Tra loi bang the QR theo phong cach Plickers (dieu khien tu xa tren dien thoai, tu dong luu khi quet kem nhan AR tren camera, bieu do cot A-D va bang trang thai lop).
+2026-10-27: Cho phep chuyen cau hoi tiep theo / cau truoc / hien dap an truc tiep tren dien thoai o moi trang thai (tu dong dong va cham cau hien tai truoc khi chuyen sang cau tiep theo).

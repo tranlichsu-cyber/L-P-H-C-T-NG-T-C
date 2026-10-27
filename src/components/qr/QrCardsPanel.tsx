@@ -50,6 +50,10 @@ export default function QrCardsPanel({
   const nextId = [...ids.slice(index + 1), ...ids.slice(0, index)].find(
     id => room.liveQuestions[id]?.status === 'READY'
   );
+  const prevId =
+    index > 0
+      ? [...ids.slice(0, index)].reverse().find(id => room.liveQuestions[id]?.status === 'READY')
+      : undefined;
 
   const [ctrlBusy, setCtrlBusy] = useState(false);
   const [ctrlError, setCtrlError] = useState('');
@@ -71,6 +75,38 @@ export default function QrCardsPanel({
       ctrlLock.current = false;
       setCtrlBusy(false);
     }
+  }
+
+  // Smart Plickers-style transition: allows jumping to another question from ANY state
+  // (automatically closes or finalizes current question if needed before opening targetQuestionId)
+  async function jumpToQuestion(targetQuestionId: string) {
+    if (!targetQuestionId || targetQuestionId === q?.id) return;
+    await runControl(async () => {
+      if (q) {
+        if (q.status === 'OPEN') {
+          const closed = await activeRealtimeService.closeQuestion(room.id, q.id);
+          if (!closed) return false;
+          const scored = await activeRealtimeService.showQuestionResult(room.id, q.id);
+          if (!scored) return false;
+        } else if (q.status === 'CLOSED') {
+          const scored = await activeRealtimeService.showQuestionResult(room.id, q.id);
+          if (!scored) return false;
+        }
+      }
+      return await activeRealtimeService.openQuestion(room.id, targetQuestionId);
+    });
+  }
+
+  // Smart Plickers-style "Hiện đáp án": if question is still OPEN, automatically closes it then shows result
+  async function revealCurrentAnswer() {
+    if (!q) return;
+    await runControl(async () => {
+      if (q.status === 'OPEN') {
+        const closed = await activeRealtimeService.closeQuestion(room.id, q.id);
+        if (!closed) return false;
+      }
+      return await activeRealtimeService.showQuestionResult(room.id, q.id);
+    });
   }
 
   const submissions = Object.values(room.submissions).filter(s => s.questionId === q?.id);
@@ -120,6 +156,12 @@ export default function QrCardsPanel({
           </span>
         </div>
 
+        {ctrlBusy && (
+          <p role="status" className="text-xs font-bold text-indigo-700">
+            Đang chuyển trạng thái trên màn chiếu…
+          </p>
+        )}
+
         {ctrlError && (
           <p role="alert" className="rounded-xl bg-rose-50 p-2.5 text-xs font-bold text-rose-900">
             {ctrlError}
@@ -146,46 +188,53 @@ export default function QrCardsPanel({
           <button
             type="button"
             className={button}
-            disabled={ctrlBusy || finished || q?.status !== 'CLOSED'}
-            onClick={() =>
-              void runControl(() => activeRealtimeService.showQuestionResult(room.id, q.id))
-            }
+            disabled={ctrlBusy || finished || !q || !['OPEN', 'CLOSED'].includes(q.status)}
+            onClick={() => void revealCurrentAnswer()}
           >
             Hiện đáp án
           </button>
           <button
             type="button"
             className={button}
-            disabled={ctrlBusy || finished || q?.status !== 'RESULT' || !nextId}
-            onClick={() =>
-              void runControl(() => activeRealtimeService.openQuestion(room.id, nextId!))
-            }
+            disabled={ctrlBusy || finished || !nextId}
+            onClick={() => void jumpToQuestion(nextId!)}
           >
-            Câu tiếp theo
+            Câu tiếp theo →
           </button>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+          {prevId && (
+            <button
+              type="button"
+              className={secondaryButton}
+              disabled={ctrlBusy || finished}
+              onClick={() => void jumpToQuestion(prevId)}
+            >
+              ← Câu trước
+            </button>
+          )}
           <label className="flex min-w-0 flex-1 items-center gap-2 text-xs font-bold text-slate-700">
             <span className="shrink-0">Đổi câu:</span>
             <select
               aria-label="Chọn nhanh câu hỏi trên điện thoại"
               className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white p-2 text-xs font-semibold text-slate-900"
               value={q?.id || ''}
-              disabled={ctrlBusy || finished || q?.status === 'OPEN' || q?.status === 'CLOSED'}
-              onChange={e =>
-                void runControl(() => activeRealtimeService.openQuestion(room.id, e.target.value))
-              }
+              disabled={ctrlBusy || finished}
+              onChange={e => void jumpToQuestion(e.target.value)}
             >
-              {ids.map((id, i) => (
-                <option
-                  key={id}
-                  value={id}
-                  disabled={room.liveQuestions[id].status === 'RESULT' && id !== q?.id}
-                >
-                  Câu {i + 1}: {room.liveQuestions[id].content}
-                </option>
-              ))}
+              {ids.map((id, i) => {
+                const st = room.liveQuestions[id]?.status;
+                return (
+                  <option
+                    key={id}
+                    value={id}
+                    disabled={st === 'RESULT' && id !== q?.id}
+                  >
+                    Câu {i + 1} {st === 'RESULT' ? '(Đã chấm)' : ''}: {room.liveQuestions[id].content}
+                  </option>
+                );
+              })}
             </select>
           </label>
           <button
