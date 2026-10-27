@@ -122,15 +122,15 @@ export const RoleSelectionPage: React.FC = () => {
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-6 sm:px-8 sm:py-8">
         <div className="flex flex-1 flex-col justify-between">
           <header className="portal-school-header text-center">
-            <div className="flex items-center justify-center gap-3.5 sm:gap-4">
-              <div className="relative top-1 flex h-13 w-13 shrink-0 items-center justify-center sm:top-1.5 sm:h-15 sm:w-15">
+            <div className="inline-flex items-end justify-center gap-1.5 sm:gap-2">
+              <div className="flex h-12 w-12 shrink-0 items-end justify-center sm:h-14 sm:w-14">
                 <img src={currentLogo} alt="Logo trường" className="h-full w-full object-contain drop-shadow-xs" />
               </div>
-              <div className="min-w-0 text-center">
+              <div className="min-w-0 pb-0.5 text-left">
                 <h1 className="text-xl font-black leading-tight tracking-tight text-sky-950 sm:text-2xl">
                   {schoolName.toUpperCase()}
                 </h1>
-                <p className="mt-1 text-[11px] font-bold leading-snug text-emerald-700 sm:text-xs">
+                <p className="mt-1 text-[11px] font-bold leading-none text-emerald-700 sm:text-xs">
                   Cùng học tập • Cùng khám phá • Cùng trưởng thành
                 </p>
               </div>
