@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Camera, CheckCircle2, Monitor, QrCode, Radio, Smartphone, Trash2, Users, X } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Monitor, QrCode, Radio, Smartphone, Trash2, X } from 'lucide-react';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
@@ -314,9 +314,6 @@ export function QrCardsPage() {
           <h1 className="mt-3 text-3xl font-black sm:text-4xl">Trả lời bằng thẻ QR</h1>
           <p className="mt-3 leading-relaxed text-indigo-100">Cả lớp cùng trả lời, thầy cô quét bằng điện thoại và xem đáp án của từng em. Học sinh không cần thiết bị.</p>
         </div>
-        <ol className="relative mt-6 grid gap-3 text-sm font-bold sm:grid-cols-3">
-          {[{ icon: Users, text: 'Chọn lớp & in thẻ' }, { icon: BookOpen, text: 'Chọn câu hỏi' }, { icon: Camera, text: 'Chiếu & quét đáp án' }].map(({ icon: Icon, text }, i) => <li key={text} className="flex items-center gap-3 rounded-xl bg-white/10 p-3"><Icon className="h-5 w-5 shrink-0 text-amber-200" />{i + 1}. {text}</li>)}
-        </ol>
       </header>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
