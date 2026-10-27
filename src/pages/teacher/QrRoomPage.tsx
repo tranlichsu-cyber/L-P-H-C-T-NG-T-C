@@ -8,6 +8,7 @@ import { useRoomRealtime } from '../../hooks/useRoomRealtime';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { useAuth } from '../../context/AuthContext';
 import { closeTeacherRoom, saveReturnTo, subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
+import { broadcastRoomState, requestRelaySync } from '../../services/qr/cloudRoomRelay';
 import type { MockRoomData } from '../../services/realtime/types';
 
 const QrCardsPanel = lazy(() => import('../../components/qr/QrCardsPanel'));
@@ -34,16 +35,19 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
   const lock = useRef(false);
 
   useEffect(() => {
+    if (room?.id) {
+      void broadcastRoomState(room.id);
+      return;
+    }
     return subscribeActiveTeacherRooms(currentUser?.uid, setActiveRooms);
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, room?.id]);
 
   if (!room) {
     const otherActive = activeRooms.find(r => r.responseMode === 'QR_CARD') || activeRooms[0] || null;
     return (
       <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm">
         <p className="font-bold text-slate-800">
-          Đang tải tiết học dùng thẻ QR… Nếu chưa hiện bộ câu hỏi và lớp học, hãy kiểm tra tài khoản
-          giáo viên trên điện thoại có trùng với tài khoản trên máy tính không.
+          Đang đồng bộ tiết học dùng thẻ QR với máy tính… Hãy giữ màn hình chiếu mở trên máy tính hoặc bấm nút đồng bộ bên dưới.
         </p>
         {currentUser?.email && (
           <p className="rounded-xl bg-slate-100 p-3 text-xs font-bold text-slate-700">
@@ -67,8 +71,18 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          <Link className={button} to="/teacher/qr-cards">
-            Về mục thẻ QR
+          <button
+            type="button"
+            className={button}
+            onClick={() => requestRelaySync(roomId || undefined, currentUser?.uid)}
+          >
+            🔄 Đồng bộ lại ngay với máy tính
+          </button>
+          <Link
+            className="inline-flex items-center justify-center rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-900 hover:bg-indigo-100"
+            to="/teacher/qr-cards"
+          >
+            Về mục thẻ QR (Chọn lớp & bắt đầu tiết mới)
           </Link>
           <button
             type="button"

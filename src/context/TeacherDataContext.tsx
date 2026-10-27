@@ -10,6 +10,11 @@ import { collection, deleteDoc, doc, getDocs, setDoc, updateDoc, writeBatch, run
 import { auth, db, isFirebaseConfigured } from '../services/firebase/firebase';
 import { useAuth } from './AuthContext';
 import { SchoolService } from '../services/school/SchoolService';
+import {
+  isFirestoreTemporarilyExhausted,
+  isQuotaExceededError,
+  markFirestoreQuotaExceeded,
+} from '../services/qr/cloudRoomRelay';
 
 interface BulkAddResult {
   addedCount: number;
@@ -65,34 +70,101 @@ interface TeacherDataContextType {
 
 const TeacherDataContext = createContext<TeacherDataContextType | undefined>(undefined);
 
+const CLASSES_CACHE_PREFIX = 'lhtt_teacher_classes_v1_';
+const QUIZZES_CACHE_PREFIX = 'lhtt_teacher_quizzes_v1_';
+const TEACHER_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function readCachedTeacherList<T>(prefix: string, uid: string): { items: T[]; savedAt: number } | null {
+  if (!uid) return null;
+  try {
+    const raw = localStorage.getItem(prefix + uid);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { items?: T[]; savedAt?: number };
+    if (Array.isArray(parsed?.items)) {
+      return { items: parsed.items, savedAt: Number(parsed.savedAt) || 0 };
+    }
+  } catch {
+    // Ignore
+  }
+  return null;
+}
+
+function writeCachedTeacherList<T>(prefix: string, uid: string, items: T[]): void {
+  if (!uid) return;
+  try {
+    localStorage.setItem(prefix + uid, JSON.stringify({ items, savedAt: Date.now() }));
+  } catch {
+    // Ignore storage quota
+  }
+}
+
 export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, authReady, isTeacherAuthenticated } = useAuth();
   const [classes, setClasses] = useState<ClassGroup[]>(
     isFirebaseConfigured ? [] : INITIAL_CLASSES
   );
-  const {pathname}=useLocation();
-  const needsTeacherData=pathname==='/teacher'||pathname.startsWith('/teacher/');
-  const loadedUid=useRef('');
-  const loadedAt=useRef(0);
+  const { pathname } = useLocation();
+  const isLiveRoomRoute =
+    /^\/teacher\/qr-cards\/(?!bank(?:\/|$))[^/]+/.test(pathname) ||
+    /^\/teacher\/room\/[^/]+/.test(pathname);
+  const needsTeacherData =
+    (pathname === '/teacher' || pathname.startsWith('/teacher/')) && !isLiveRoomRoute;
+  const loadedUid = useRef('');
+  const loadedAt = useRef(0);
   const [quizzes, setQuizzes] = useState<Quiz[]>(
     isFirebaseConfigured ? [] : INITIAL_QUIZZES
   );
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !currentUser?.uid || loadedUid.current !== currentUser.uid) return;
+    if (classes.length > 0) writeCachedTeacherList(CLASSES_CACHE_PREFIX, currentUser.uid, classes);
+  }, [classes, currentUser?.uid]);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured || !currentUser?.uid || loadedUid.current !== currentUser.uid) return;
+    if (quizzes.length > 0) writeCachedTeacherList(QUIZZES_CACHE_PREFIX, currentUser.uid, quizzes);
+  }, [quizzes, currentUser?.uid]);
 
   useEffect(() => {
     if (!isFirebaseConfigured || !db) return;
     if (!authReady) return;
 
     if (!isTeacherAuthenticated || !currentUser?.uid) {
-      loadedUid.current='';
+      loadedUid.current = '';
       setClasses([]);
       setQuizzes([]);
       return;
     }
 
-    if(!needsTeacherData||(loadedUid.current===currentUser.uid&&Date.now()-loadedAt.current<120000))return;
-    setClasses([]);setQuizzes([]);
-    const firestore = db;
     const uid = currentUser.uid;
+    const cachedClasses = readCachedTeacherList<ClassGroup>(CLASSES_CACHE_PREFIX, uid);
+    const cachedQuizzes = readCachedTeacherList<Quiz>(QUIZZES_CACHE_PREFIX, uid);
+
+    // Hydrate immediately from localStorage cache if available
+    if (loadedUid.current !== uid && (cachedClasses?.items.length || cachedQuizzes?.items.length)) {
+      loadedUid.current = uid;
+      loadedAt.current = Math.min(cachedClasses?.savedAt || 0, cachedQuizzes?.savedAt || 0);
+      setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
+      setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
+    }
+
+    if (!needsTeacherData) return;
+
+    const cacheFresh =
+      loadedUid.current === uid &&
+      Date.now() - loadedAt.current < TEACHER_CACHE_TTL_MS &&
+      classes.length > 0;
+    if (cacheFresh) return;
+
+    if (isFirestoreTemporarilyExhausted()) {
+      loadedUid.current = uid;
+      loadedAt.current = Date.now();
+      setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
+      setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
+      return;
+    }
+
+    const firestore = db;
     let cancelled = false;
 
     const loadRealTeacherData = async () => {
@@ -100,16 +172,21 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const profile = await SchoolService.getUser(uid);
         if (!profile || profile.status !== 'ACTIVE') {
           if (!cancelled) {
-            setClasses([]);
-            setQuizzes([]);
+            setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
+            setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
           }
           return;
         }
 
-        void SelfPracticeService.ensureRewardBanks().catch(error=>console.warn('Chưa khởi tạo được đề đối chiếu huy hiệu.',error));
+        if (!sessionStorage.getItem(`lhtt_reward_banks_${uid}`)) {
+          sessionStorage.setItem(`lhtt_reward_banks_${uid}`, '1');
+          void SelfPracticeService.ensureRewardBanks().catch(error =>
+            console.warn('Chưa khởi tạo được đề đối chiếu huy hiệu.', error)
+          );
+        }
         const isAdmin = profile.role === 'SCHOOL_ADMIN';
 
-        const classSnap=await loadVisibleClasses(firestore,uid,isAdmin);
+        const classSnap = await loadVisibleClasses(firestore, uid, isAdmin);
         const legacyClassIds = new Set(['class-4a', 'class-4b', 'class-5a']);
         const visibleClassDocs = classSnap.docs.filter((classDoc) => {
           if (legacyClassIds.has(classDoc.id)) return false;
@@ -142,7 +219,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
           })
         );
 
-        const quizSnap=await loadVisibleQuizzes(firestore,uid,isAdmin,profile.teamIds||[]);
+        const quizSnap = await loadVisibleQuizzes(firestore, uid, isAdmin, profile.teamIds || []);
         const legacyQuizIds = new Set(['quiz-1', 'quiz-2', 'quiz-3']);
         const visibleQuizDocs = quizSnap.docs.filter((quizDoc) => {
           if (legacyQuizIds.has(quizDoc.id)) return false;
@@ -191,15 +268,37 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         );
 
         if (!cancelled) {
-          loadedUid.current=uid;loadedAt.current=Date.now();
-          setClasses(realClasses);
-          setQuizzes(realQuizzes);
+          loadedUid.current = uid;
+          loadedAt.current = Date.now();
+          const finalClasses = realClasses.length > 0 ? realClasses : cachedClasses?.items || [];
+          const finalQuizzes = realQuizzes.length > 0 ? realQuizzes : cachedQuizzes?.items || [];
+          setClasses(finalClasses);
+          setQuizzes(finalQuizzes);
+          if (finalClasses.length > 0) writeCachedTeacherList(CLASSES_CACHE_PREFIX, uid, finalClasses);
+          if (finalQuizzes.length > 0) writeCachedTeacherList(QUIZZES_CACHE_PREFIX, uid, finalQuizzes);
         }
       } catch (error) {
-        console.error('Không thể tải dữ liệu lớp/bộ câu hỏi từ Firestore', error);
+        if (isQuotaExceededError(error)) {
+          markFirestoreQuotaExceeded();
+        }
+        console.warn('Tạm dùng dữ liệu lớp/bộ câu hỏi đã lưu cục bộ:', error);
         if (!cancelled) {
-          setClasses([]);
-          setQuizzes([]);
+          loadedUid.current = uid;
+          loadedAt.current = Date.now();
+          setClasses((prev) =>
+            prev.length > 0
+              ? prev
+              : cachedClasses?.items?.length
+                ? cachedClasses.items
+                : INITIAL_CLASSES
+          );
+          setQuizzes((prev) =>
+            prev.length > 0
+              ? prev
+              : cachedQuizzes?.items?.length
+                ? cachedQuizzes.items
+                : INITIAL_QUIZZES
+          );
         }
       }
     };
@@ -209,7 +308,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return () => {
       cancelled = true;
     };
-  }, [authReady, isTeacherAuthenticated, currentUser?.uid,needsTeacherData]);
+  }, [authReady, isTeacherAuthenticated, currentUser?.uid, needsTeacherData]);
 
   // --- CLASS ACTIONS ---
   const addClass = async (name: string, grade: string): Promise<ClassGroup> => {

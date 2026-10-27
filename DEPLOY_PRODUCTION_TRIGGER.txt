@@ -202,3 +202,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Cho phep chuyen cau hoi tiep theo / cau truoc / hien dap an truc tiep tren dien thoai o moi trang thai (tu dong dong va cham cau hien tai truoc khi chuyen sang cau tiep theo).
 2026-10-27: Dong bo tuc thi bo cau hoi va lop dang chieu giua may tinh va dien thoai khi quet ma QR hoac mo muc Tra loi bang the QR (nhu Plickers).
 2026-10-27: Them nut Dong tung phong va Dong tat ca cac phong dang mo khac cua giao vien chi voi 1 cu nhap chuot, dong thoi tu dong dong phong QR cu khi tao tiet hoc moi.
+
+2026-10-27: Add zero-quota Cloud Room Relay fallback and Firestore read/write caching so phone-computer QR card connection and remote control never fail with Quota exceeded.

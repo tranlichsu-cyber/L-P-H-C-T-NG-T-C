@@ -1031,16 +1031,17 @@ export class FirestoreRealtimeService {
       });
     };
 
+    const ignoreErr = () => {};
     const unsubscribers = [
       onSnapshot(doc(firestore, 'rooms', roomId), (snap) => {
         if (!snap.exists()) return;
         roomMeta = { ...(snap.data() as MockRoomData), id: snap.id };
         emit();
-      }),
+      }, ignoreErr),
       onSnapshot(collection(firestore, 'rooms', roomId, 'roster'), (snap) => {
         roster = snap.docs.map((d) => d.data() as MockRoomData['roster'][number]);
         emit();
-      }),
+      }, ignoreErr),
       onSnapshot(collection(firestore, 'rooms', roomId, 'participants'), (snap) => {
         const next: MockRoomData['participants'] = {};
         snap.docs.forEach((d) => {
@@ -1048,7 +1049,7 @@ export class FirestoreRealtimeService {
         });
         participants = next;
         emit();
-      }),
+      }, ignoreErr),
       onSnapshot(collection(firestore, 'rooms', roomId, 'liveQuestions'), (snap) => {
         const next: MockRoomData['liveQuestions'] = {};
         snap.docs.forEach((d) => {
@@ -1056,7 +1057,7 @@ export class FirestoreRealtimeService {
         });
         liveQuestions = next;
         emit();
-      }),
+      }, ignoreErr),
       onSnapshot(
         auth?.currentUser?.isAnonymous
           ? query(
@@ -1071,7 +1072,8 @@ export class FirestoreRealtimeService {
           });
           submissions = next;
           emit();
-        }
+        },
+        ignoreErr
       ),
       onSnapshot(collection(firestore, 'rooms', roomId, 'scores'), (snap) => {
         const next: MockRoomData['scores'] = {};
@@ -1080,7 +1082,7 @@ export class FirestoreRealtimeService {
         });
         scores = next;
         emit();
-      }),
+      }, ignoreErr),
       ...(auth?.currentUser?.isAnonymous
         ? []
         : [
@@ -1091,7 +1093,7 @@ export class FirestoreRealtimeService {
               });
               scoreEvents = next;
               emit();
-            }),
+            }, ignoreErr),
           ]),
     ];
 

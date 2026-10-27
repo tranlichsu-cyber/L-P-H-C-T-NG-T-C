@@ -103,3 +103,4 @@ jobs:
             exit 1
           fi
           cat "$RUNNER_TEMP/production-deploy.log"
+          npx firebase-tools@15.32.1 deploy --only database --project lop-hoc-tuong-tac-a62a5 --non-interactive || true

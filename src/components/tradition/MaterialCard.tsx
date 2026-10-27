@@ -2,7 +2,7 @@ import {HistoryArticle} from './HistoryArticle';
 import React,{useState} from 'react';
 import {parseArticle} from '../../services/tradition/articleText';
 import {youtubeEmbed,safeHttps,materialKinds,type TraditionMaterial} from '../../services/tradition/TraditionMaterials';
-import {Link as LinkIcon, Check, Maximize2, X, Copy, ExternalLink} from 'lucide-react';
+import {Link as LinkIcon, Check, Maximize2, X, ExternalLink} from 'lucide-react';
 
 const kindBadgeStyles:Record<string,string>={
  HISTORY:'bg-amber-50 border-amber-200 text-amber-900',
@@ -171,16 +171,6 @@ export const MaterialCard:React.FC<{item:TraditionMaterial;compact?:boolean;onOp
      <div className="overflow-y-auto p-5 sm:p-6 space-y-4">
       <div className="w-full max-h-[55vh] rounded-2xl bg-slate-950 overflow-hidden flex items-center justify-center">
        <img src={item.mediaUrl} alt={item.title} className="max-w-full max-h-[55vh] object-contain"/>
-      </div>
-      <div className="rounded-2xl bg-sky-50 border border-sky-200 p-3.5 space-y-2">
-       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-extrabold text-sky-900 flex items-center gap-1.5"><LinkIcon size={14}/> Đường dẫn riêng của bức ảnh này:</span>
-        <button type="button" onClick={copyPermalink} className="inline-flex items-center gap-1.5 rounded-lg bg-sky-700 hover:bg-sky-800 text-white px-3 py-1 text-xs font-bold transition-colors">
-         {copied ? <Check size={14}/> : <Copy size={14}/>}
-         <span>{copied ? 'Đã sao chép liên kết!' : 'Sao chép liên kết'}</span>
-        </button>
-       </div>
-       <input type="text" readOnly value={getPermalink()} onClick={e=>(e.target as HTMLInputElement).select()} className="w-full text-xs font-mono bg-white border border-sky-300 rounded-lg px-3 py-2 text-slate-800 select-all focus:outline-none focus:ring-2 focus:ring-sky-500"/>
       </div>
       {item.text && <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2">
        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">Chú thích tư liệu</h4>

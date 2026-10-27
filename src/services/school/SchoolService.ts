@@ -19,7 +19,12 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { db, firebaseConfig, isFirebaseConfigured } from '../firebase/firebase';
+import { auth, db, firebaseConfig, isFirebaseConfigured } from '../firebase/firebase';
+import {
+  isFirestoreTemporarilyExhausted,
+  isQuotaExceededError,
+  markFirestoreQuotaExceeded,
+} from '../qr/cloudRoomRelay';
 import type {
   School,
   SchoolSettings,
@@ -377,6 +382,64 @@ export class SchoolService {
     return profile;
   }
 
+  private static userProfileMemoryCache = new Map<
+    string,
+    { profile: UserProfile; cachedAt: number }
+  >();
+
+  private static saveCachedUserProfile(profile: UserProfile): void {
+    this.userProfileMemoryCache.set(profile.uid, { profile, cachedAt: Date.now() });
+    try {
+      localStorage.setItem(`lhtt_user_profile_v1_${profile.uid}`, JSON.stringify(profile));
+    } catch {
+      // Ignore storage error
+    }
+  }
+
+  private static getFallbackUserProfile(uid: string): UserProfile | null {
+    const mem = this.userProfileMemoryCache.get(uid);
+    if (mem) return mem.profile;
+
+    try {
+      const raw = localStorage.getItem(`lhtt_user_profile_v1_${uid}`);
+      if (raw) {
+        const parsed = JSON.parse(raw) as UserProfile;
+        if (parsed?.uid === uid) return parsed;
+      }
+    } catch {
+      // Ignore
+    }
+
+    const fromLocalList = this.loadLocalStorage().users.find((u) => u.uid === uid);
+    if (fromLocalList) return fromLocalList;
+
+    if (auth?.currentUser && auth.currentUser.uid === uid && !auth.currentUser.isAnonymous) {
+      const email = (auth.currentUser.email || '').trim().toLowerCase();
+      const bootstrapAdmin = INITIAL_MEMBERS.find(
+        (m) => m.role === 'SCHOOL_ADMIN' && m.email.trim().toLowerCase() === email
+      );
+      const now = new Date().toISOString();
+      const fallback: UserProfile = {
+        uid,
+        displayName:
+          auth.currentUser.displayName?.trim() ||
+          bootstrapAdmin?.displayName ||
+          email.split('@')[0] ||
+          'Giáo viên',
+        email,
+        role: bootstrapAdmin ? 'SCHOOL_ADMIN' : 'TEACHER',
+        teamIds: [],
+        status: 'ACTIVE',
+        createdAt: now,
+        updatedAt: now,
+      };
+      this.saveCachedUserProfile(fallback);
+      return fallback;
+    }
+
+    return null;
+  }
+
   // One-time bootstrap for the school's original administrator.
   // This is only used when Firebase Auth has the correct admin email
   // but Firestore does not yet have users/{realFirebaseUid}.
@@ -394,10 +457,7 @@ export class SchoolService {
         member.email.trim().toLowerCase() === normalizedEmail
     );
 
-    if (!bootstrapAdmin) return null;
-
-    const existing = await getDoc(doc(db, 'users', uid));
-    if (existing.exists()) return existing.data() as UserProfile;
+    if (!bootstrapAdmin) return this.getFallbackUserProfile(uid);
 
     const now = new Date().toISOString();
     const profile: UserProfile = {
@@ -411,16 +471,58 @@ export class SchoolService {
       updatedAt: now,
     };
 
-    await setDoc(doc(db, 'users', uid), profile);
-    return profile;
+    if (isFirestoreTemporarilyExhausted()) {
+      this.saveCachedUserProfile(profile);
+      return profile;
+    }
+
+    try {
+      const existing = await getDoc(doc(db, 'users', uid));
+      if (existing.exists()) {
+        const data = existing.data() as UserProfile;
+        this.saveCachedUserProfile(data);
+        return data;
+      }
+      await setDoc(doc(db, 'users', uid), profile);
+      this.saveCachedUserProfile(profile);
+      return profile;
+    } catch (err) {
+      if (isQuotaExceededError(err)) {
+        markFirestoreQuotaExceeded();
+      }
+      this.saveCachedUserProfile(profile);
+      return profile;
+    }
   }
 
   // 4. Get User Profile
   public static async getUser(uid: string): Promise<UserProfile | null> {
+    if (!uid) return null;
+
+    const mem = this.userProfileMemoryCache.get(uid);
+    if (mem && Date.now() - mem.cachedAt < 180_000) {
+      return mem.profile;
+    }
+
     if (isFirebaseConfigured && db) {
-      const uRef = doc(db, 'users', uid);
-      const snap = await getDoc(uRef);
-      return snap.exists() ? (snap.data() as UserProfile) : null;
+      if (isFirestoreTemporarilyExhausted()) {
+        return this.getFallbackUserProfile(uid);
+      }
+      try {
+        const uRef = doc(db, 'users', uid);
+        const snap = await getDoc(uRef);
+        if (snap.exists()) {
+          const data = snap.data() as UserProfile;
+          this.saveCachedUserProfile(data);
+          return data;
+        }
+        return this.getFallbackUserProfile(uid);
+      } catch (err) {
+        if (isQuotaExceededError(err)) {
+          markFirestoreQuotaExceeded();
+        }
+        return this.getFallbackUserProfile(uid);
+      }
     }
     return this.loadLocalStorage().users.find((u) => u.uid === uid) || null;
   }

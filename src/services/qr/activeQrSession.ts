@@ -1,11 +1,20 @@
-import { collection, doc, getDoc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
-import { activeRealtimeService, isFirebaseActive } from '../realtime/realtimeServiceSwitch';
+import { isFirebaseActive } from '../realtime/realtimeServiceSwitch';
 import { loadMockDatabase, saveMockDatabase, getRoomByCode } from '../realtime/mockStorage';
 import { eventBus } from '../realtime/broadcastChannel';
 import type { MockRoomData } from '../realtime/types';
+import {
+  broadcastRoomAction,
+  cacheRoomLocally,
+  isFirestoreTemporarilyExhausted,
+  isQuotaExceededError,
+  markFirestoreQuotaExceeded,
+  subscribeRelayTeacherRooms,
+} from './cloudRoomRelay';
 
 const RETURN_TO_KEY = 'lhtt_return_to';
+const lastFirestoreRoomsFetchAt = new Map<string, number>();
 
 export function isAllowedTeacherReturnTo(path: unknown): path is string {
   if (typeof path !== 'string') return false;
@@ -87,16 +96,50 @@ export function subscribeActiveTeacherRooms(
     return () => {};
   }
 
-  if (isFirebaseActive && db) {
+  let relayRooms: MockRoomData[] = [];
+  let fsRooms: MockRoomData[] = [];
+
+  const emitCombined = () => {
+    const mergedMap = new Map<string, MockRoomData>();
+    for (const r of fsRooms) {
+      if (isRoomStillActive(r)) mergedMap.set(r.id, r);
+    }
+    for (const r of relayRooms) {
+      const localRecord = loadMockDatabase().rooms?.[r.id];
+      if (localRecord?.status === 'FINISHED') {
+        mergedMap.delete(r.id);
+        continue;
+      }
+      if (isRoomStillActive(r)) {
+        const existing = mergedMap.get(r.id);
+        mergedMap.set(r.id, existing ? { ...existing, ...r } : r);
+      }
+    }
+    callback(sortActiveRooms([...mergedMap.values()]));
+  };
+
+  const unsubRelay = subscribeRelayTeacherRooms(teacherId, list => {
+    relayRooms = list;
+    emitCombined();
+  });
+
+  // Perform a lightweight, throttled one-shot query on Firestore only when quota is healthy
+  const lastFetch = lastFirestoreRoomsFetchAt.get(teacherId) || 0;
+  if (
+    isFirebaseActive &&
+    db &&
+    !isFirestoreTemporarilyExhausted() &&
+    Date.now() - lastFetch > 45_000
+  ) {
+    lastFirestoreRoomsFetchAt.set(teacherId, Date.now());
     const q = query(collection(db, 'rooms'), where('teacherId', '==', teacherId));
-    return onSnapshot(
-      q,
-      snap => {
+    void getDocs(q)
+      .then(snap => {
         const list: MockRoomData[] = [];
         snap.docs.forEach(d => {
           const data = d.data() as MockRoomData;
           if (isRoomStillActive(data)) {
-            list.push({
+            const roomObj: MockRoomData = {
               ...data,
               id: d.id,
               roster: data.roster || [],
@@ -105,70 +148,92 @@ export function subscribeActiveTeacherRooms(
               submissions: data.submissions || {},
               scores: data.scores || {},
               scoreEvents: data.scoreEvents || {},
-            });
+            };
+            cacheRoomLocally(roomObj);
+            list.push(roomObj);
           }
         });
-        callback(sortActiveRooms(list));
-      },
-      err => {
-        console.warn('[activeQrSession] Không thể tải danh sách phòng đang chiếu:', err.message);
-        callback([]);
-      }
-    );
+        fsRooms = list;
+        emitCombined();
+      })
+      .catch(err => {
+        if (isQuotaExceededError(err)) {
+          markFirestoreQuotaExceeded();
+        }
+      });
   }
 
-  const emitMock = () => {
-    const mockDb = loadMockDatabase();
-    const list = Object.values(mockDb.rooms || {}).filter(
-      r => r.teacherId === teacherId && isRoomStillActive(r)
-    );
-    callback(sortActiveRooms(list));
+  return () => {
+    unsubRelay();
   };
-
-  emitMock();
-  return eventBus.subscribe(() => {
-    emitMock();
-  });
 }
 
 export async function closeTeacherRoom(roomId: string): Promise<boolean> {
   if (!roomId) return false;
-  try {
-    const ok = await Promise.resolve(activeRealtimeService.finishRoom(roomId));
-    if (ok) return true;
-  } catch {
-    // Fallback to direct status update if summary generation fails on a stale room
-  }
 
-  if (isFirebaseActive && db) {
-    try {
-      await updateDoc(doc(db, 'rooms', roomId), {
-        status: 'FINISHED',
-        finishedAt: new Date().toISOString(),
-        activeGameId: null,
-        activeGame: null,
-        calledStudent: null,
-      });
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
+  const now = new Date().toISOString();
   const mockDb = loadMockDatabase();
   if (mockDb.rooms?.[roomId]) {
     mockDb.rooms[roomId].status = 'FINISHED';
-    mockDb.rooms[roomId].finishedAt = new Date().toISOString();
+    mockDb.rooms[roomId].finishedAt = now;
     saveMockDatabase(mockDb);
     eventBus.publish({
       type: 'ROOM_UPDATED',
       roomId,
       payload: mockDb.rooms[roomId],
-      timestamp: new Date().toISOString(),
+      timestamp: now,
     });
-    return true;
+  } else {
+    // Record tombstoned room in mockStorage so Firestore cache merge knows it was closed
+    mockDb.rooms[roomId] = {
+      id: roomId,
+      roomCode: '',
+      teacherId: '',
+      classId: '',
+      className: '',
+      subject: '',
+      quizId: '',
+      quizTitle: '',
+      status: 'FINISHED',
+      finishedAt: now,
+      activeQuestionId: null,
+      createdAt: now,
+      expiresAt: now,
+      roster: [],
+      participants: {},
+      liveQuestions: {},
+      submissions: {},
+      scores: {},
+      scoreEvents: {},
+    };
+    saveMockDatabase(mockDb);
   }
-  return false;
+
+  void broadcastRoomAction(roomId, { kind: 'FINISH_ROOM' });
+
+  // Single lightweight status update on Firestore (1 write instead of reading 7 subcollections)
+  if (
+    isFirebaseActive &&
+    db &&
+    !isFirestoreTemporarilyExhausted() &&
+    !roomId.startsWith('room-')
+  ) {
+    try {
+      await updateDoc(doc(db, 'rooms', roomId), {
+        status: 'FINISHED',
+        finishedAt: now,
+        activeGameId: null,
+        activeGame: null,
+        calledStudent: null,
+      });
+    } catch (err) {
+      if (isQuotaExceededError(err)) {
+        markFirestoreQuotaExceeded();
+      }
+    }
+  }
+
+  return true;
 }
 
 export async function closeMultipleTeacherRooms(roomIds: string[]): Promise<void> {
@@ -183,7 +248,17 @@ export async function lookupRoomByCodeForTeacher(
   const clean = code.trim();
   if (clean.length !== 6) return null;
 
-  if (isFirebaseActive && db) {
+  const localRoom = getRoomByCode(clean);
+  if (localRoom && localRoom.status !== 'FINISHED') {
+    return {
+      roomId: localRoom.id,
+      className: localRoom.className || 'Lớp học',
+      subject: localRoom.subject || '',
+      responseMode: localRoom.responseMode,
+    };
+  }
+
+  if (isFirebaseActive && db && !isFirestoreTemporarilyExhausted()) {
     try {
       const snap = await getDoc(doc(db, 'roomCodes', clean));
       if (!snap.exists()) return null;
@@ -201,17 +276,13 @@ export async function lookupRoomByCodeForTeacher(
         subject: data.subject || '',
         responseMode: data.responseMode,
       };
-    } catch {
+    } catch (err) {
+      if (isQuotaExceededError(err)) {
+        markFirestoreQuotaExceeded();
+      }
       return null;
     }
   }
 
-  const room = getRoomByCode(clean);
-  if (!room || room.status === 'FINISHED') return null;
-  return {
-    roomId: room.id,
-    className: room.className || 'Lớp học',
-    subject: room.subject || '',
-    responseMode: room.responseMode,
-  };
+  return null;
 }

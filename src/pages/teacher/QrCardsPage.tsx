@@ -19,7 +19,7 @@ const input = 'mt-2 block w-full min-w-0 rounded-xl border border-slate-300 bg-w
 const card = 'min-w-0 space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6';
 
 export function QrCardsPage() {
-  const { classes } = useTeacherData();
+  const { classes, quizzes } = useTeacherData();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [classId, setClassId] = useState('');
@@ -64,15 +64,71 @@ export function QrCardsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    setAvailable([]);
     setLoading(true);
     setError('');
-    QrBankService.list(currentUser?.uid || '', reload > 0)
-      .then(items => { if (!cancelled) setAvailable(items); })
-      .catch(() => { if (!cancelled) setError('Chưa tải được kho câu hỏi thẻ QR. Hãy thử lại.'); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [currentUser?.uid, reload]);
+    const uid = currentUser?.uid || '';
+    QrBankService.list(uid, reload > 0)
+      .then(items => {
+        if (cancelled) return;
+        if (items.length > 0) {
+          setAvailable(items);
+          return;
+        }
+        // Fallback: convert multiple-choice quizzes from TeacherDataContext into QR Banks
+        const converted: QrBank[] = quizzes
+          .map(qz => {
+            const mcQuestions = (qz.questions || [])
+              .filter(
+                q =>
+                  q.type === 'MULTIPLE_CHOICE' &&
+                  Array.isArray(q.options) &&
+                  q.options.length >= 2 &&
+                  q.options.length <= 4
+              )
+              .map(q => {
+                const opts = q.options!;
+                const rawAns = String(q.correctAnswer || '').trim();
+                const idx = opts.findIndex(
+                  o => o.trim().toLocaleLowerCase('vi-VN') === rawAns.toLocaleLowerCase('vi-VN')
+                );
+                const letter = /^[A-D]$/i.test(rawAns)
+                  ? rawAns.toUpperCase()
+                  : idx >= 0
+                    ? String.fromCharCode(65 + idx)
+                    : 'A';
+                return {
+                  ...q,
+                  type: 'MULTIPLE_CHOICE' as const,
+                  options: opts,
+                  correctAnswer: letter,
+                  correctPoints: q.correctPoints ?? 10,
+                  wrongPenalty: q.wrongPenalty ?? 0,
+                };
+              });
+            return {
+              id: qz.id,
+              teacherId: uid || 'teacher',
+              title: qz.title,
+              subject: qz.subject || 'Chung',
+              grade: qz.grade || 'Khối 4',
+              questions: mcQuestions,
+              createdAt: qz.createdAt || new Date().toISOString(),
+              updatedAt: qz.createdAt || new Date().toISOString(),
+            };
+          })
+          .filter(b => b.questions.length > 0);
+        setAvailable(converted);
+      })
+      .catch(() => {
+        if (!cancelled) setError('Chưa tải được kho câu hỏi thẻ QR. Hãy thử lại.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser?.uid, reload, quizzes]);
 
   let last = '';
   try { last = localStorage.getItem(key) || ''; } catch { /* Storage is optional. */ }
