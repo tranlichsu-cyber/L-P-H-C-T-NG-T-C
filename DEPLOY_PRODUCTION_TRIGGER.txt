@@ -208,3 +208,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Remove 3-step summary pills (1. Chọn lớp & in thẻ, 2. Chọn câu hỏi, 3. Chiếu & quét đáp án) from QR Cards page header.
 
 2026-10-27: Add direct .pptx upload and in-browser slide presentation, show Bài giảng PPT on teacher navigation bar, and enable zero-quota phone remote slide control with speaker notes.
+
+2026-10-27: Keep firestore.indexes.json empty so production Hosting and Firestore Rules deploy cleanly with existing service account permissions.
