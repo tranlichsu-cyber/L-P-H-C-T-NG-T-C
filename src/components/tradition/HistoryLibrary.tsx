@@ -18,7 +18,7 @@ export function HistoryLibrary({materials}:{materials:TraditionMaterial[]}){
    <h2 id="history-library-heading" className="text-2xl font-black text-sky-950">Bài giới thiệu lịch sử</h2>
    <span className="rounded-full bg-white/90 border border-amber-300 px-3 py-1 text-xs font-extrabold text-amber-900">{articles.length} bài đọc chuyên đề</span>
   </div>
-  <p className="mt-2 leading-7 text-slate-700">Chọn di tích, nhân vật hoặc sự kiện. Mỗi bài có mục lục, nguồn tham khảo và chế độ trình bày từng phần để em tập làm hướng dẫn viên.</p>
+  <p className="mt-2 leading-7 text-slate-700">Chọn di tích, nhân vật hoặc sự kiện. Mỗi bài có nguồn tham khảo và chế độ trình bày từng phần để em tập làm hướng dẫn viên.</p>
  </div>
  {article?<article className="rounded-3xl border-2 border-amber-200 bg-white p-5 sm:p-7 space-y-5 shadow-sm">
   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">

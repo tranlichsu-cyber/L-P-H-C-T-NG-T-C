@@ -35,12 +35,6 @@ export function HistoryArticle({title,text,sources,id}:{title:string;text:string
    <button type="button" disabled={index===sections.length-1} onClick={()=>change(index+1)} className="min-h-11 bg-sky-700 hover:bg-sky-800 text-white rounded-xl px-5 py-2 font-bold disabled:opacity-40">Phần tiếp theo →</button>
   </div>
  </section>:<>
- {hasMultipleSections&&<nav aria-label={'Mục lục: '+title} className="bg-sky-50/80 border border-sky-200/80 rounded-2xl p-4 sm:p-5">
-  <p className="font-extrabold text-sky-950 mb-3 text-sm uppercase tracking-wider">Mục lục bài giới thiệu</p>
-  <ol className="grid sm:grid-cols-2 gap-2.5">
-   {sections.map((s,i)=><li key={i}><a className="flex items-center gap-3 rounded-xl bg-white/90 hover:bg-white border border-sky-100 hover:border-sky-300 px-3.5 py-2.5 text-sm sm:text-base font-bold text-sky-900 transition-all shadow-2xs" href={'#'+id+'-section-'+i}><span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-amber-100 text-amber-900 text-xs font-black shrink-0">{i+1}</span><span className="underline decoration-sky-300 underline-offset-4 line-clamp-1">{s.title}</span></a></li>)}
-  </ol>
- </nav>}
  <div className="grid grid-cols-1 gap-4 sm:gap-5">
   {sections.map((section,i)=><section key={i} id={id+'-section-'+i} className="scroll-mt-5 rounded-2xl bg-slate-50/70 border border-slate-200/90 p-5 sm:p-6 space-y-3.5">
    {!isSingleIntro&&<div className="flex items-center gap-3 border-b border-slate-200/80 pb-2.5">
