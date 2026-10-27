@@ -186,3 +186,4 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Cap nhat noi dung toan dien bai gioi thieu Den Dam Son (xa Vo Tranh) gom 5 phan chi tiet.
 2026-10-27: Cap nhat noi dung toan dien bai gioi thieu Dinh Tren (xa Vo Tranh) gom 5 phan chi tiet.
 2026-10-27: Them anh tu lieu Bac Ho lam viec tai ATK Dinh Hoa tu Bao tang Lich su Quoc gia vao muc Hinh anh.
+2026-10-27: Them anh tu lieu Chan dung hai nha yeu nuoc Luong Ngoc Quyen va Doi Can vao muc Hinh anh.

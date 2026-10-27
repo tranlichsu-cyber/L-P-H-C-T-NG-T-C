@@ -288,6 +288,18 @@ export const curatedTraditionMaterials:TraditionMaterial[] = [
     "updatedAt": "2026-10-27"
   },
   {
+    "id": "curated-image-doi-can-luong-ngoc-quyen",
+    "kind": "IMAGE",
+    "title": "Hai vị thủ lĩnh cuộc Khởi nghĩa Thái Nguyên năm 1917: Đội Cấn và Lương Ngọc Quyến",
+    "text": "Chân dung hai nhà yêu nước Lương Ngọc Quyến (bên trái) và Đội Cấn – Trịnh Văn Cấn (bên phải). Đêm 30 rạng sáng ngày 31/8/1917, dưới sự lãnh đạo của Đội Cấn và Lương Ngọc Quyến, binh lính người Việt trong trại lính Khố xanh Thái Nguyên đã phối hợp với các tù chính trị nổi dậy khởi nghĩa, giết tên Giám binh Pháp Noël, phá nhà lao, chiếm công sở và tuyên bố Thái Nguyên độc lập, đặt quốc hiệu là \"Đại Hùng\", kéo cờ Ngũ tinh trên cổng thành Thái Nguyên suốt 5 ngày đêm, làm chấn động chính quyền thực dân Pháp ở Đông Dương.",
+    "mediaUrl": "https://thlytutrong.com.vn/images/thu-linh-khoi-nghia-thai-nguyen-1917.jpg",
+    "source": "Cổng thông tin điện tử tỉnh Thái Nguyên / Di tích Đền Đội Cấn",
+    "sourceUrl": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/den-doi-can-297035",
+    "published": true,
+    "teacherId": "curated-tradition",
+    "updatedAt": "2026-10-27"
+  },
+  {
     "id": "curated-image-bac-ho-atk-dinh-hoa",
     "kind": "IMAGE",
     "title": "Bác Hồ làm việc tại ATK Định Hóa",
