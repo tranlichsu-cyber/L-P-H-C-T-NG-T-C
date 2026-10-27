@@ -219,12 +219,23 @@ export function PptxLessonView({
           }}
         >
           {currentSlide.elements.map(el => {
-            const isVisible =
-              !enableAnimations ||
-              !currentSlide.maxAnimSteps ||
-              currentSlide.maxAnimSteps === 0 ||
-              !el.animStep ||
-              el.animStep <= (animStep || 0);
+            const currentAnimStep = animStep || 0;
+            const isVisible = (() => {
+              if (el.exitStep !== undefined && currentAnimStep >= el.exitStep) {
+                return false;
+              }
+              if (!enableAnimations) {
+                if (el.exitStep !== undefined) return false;
+                return true;
+              }
+              if (!currentSlide.maxAnimSteps || currentSlide.maxAnimSteps === 0) {
+                return true;
+              }
+              if (!el.animStep || el.animStep <= currentAnimStep) {
+                return true;
+              }
+              return false;
+            })();
 
             if (!isVisible) return null;
 

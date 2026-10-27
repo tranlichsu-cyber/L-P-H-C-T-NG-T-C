@@ -220,3 +220,6 @@ Deploy PowerPoint animation & transition support for presentation and phone remo
 
 Fix PPTX vector geometry paths (custGeom/prstGeom) and prevent elements from hiding on initial load.
 2026-10-28
+
+Resolve overlapping question/answer text boxes via exitStep and automatic step sequencing.
+2026-10-28

@@ -21,6 +21,7 @@ export interface PptxShapeElement {
   id: string;
   spId?: string;
   animStep?: number;
+  exitStep?: number;
   animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
@@ -44,6 +45,7 @@ export interface PptxImageElement {
   id: string;
   spId?: string;
   animStep?: number;
+  exitStep?: number;
   animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
@@ -60,6 +62,7 @@ export interface PptxMediaElement {
   id: string;
   spId?: string;
   animStep?: number;
+  exitStep?: number;
   animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
@@ -82,6 +85,7 @@ export interface PptxTableElement {
   id: string;
   spId?: string;
   animStep?: number;
+  exitStep?: number;
   animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
@@ -897,6 +901,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
 
     // Parse element animations from <p:timing>
     const animMap = new Map<string, { step: number; effect: PptxAnimEffect }>();
+    const exitAnimMap = new Map<string, number>();
     const timingNode = findFirstDescendant(slideDoc, 'timing');
     let maxAnimSteps = 0;
     if (timingNode) {
@@ -908,11 +913,24 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
         if (isClick) {
           currentClickStep++;
         }
+
+        const presetClass =
+          cTn.getAttribute('presetClass') ||
+          findFirstDescendant(cTn, 'cTn')?.getAttribute('presetClass') ||
+          '';
+        const isExit = presetClass === 'exit';
+
         const spTgts = findAllDescendants(cTn, 'spTgt');
         for (const spTgt of spTgts) {
           const spid = spTgt.getAttribute('spid');
           if (!spid) continue;
-          if (!animMap.has(spid)) {
+
+          const step = Math.max(1, currentClickStep);
+          maxAnimSteps = Math.max(maxAnimSteps, step);
+
+          if (isExit) {
+            exitAnimMap.set(spid, step);
+          } else if (!animMap.has(spid)) {
             const effectNode =
               findFirstDescendant(cTn, 'animEffect') || findFirstDescendant(cTn, 'anim');
             const filter = effectNode?.getAttribute('filter');
@@ -921,11 +939,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
             else if (filter?.includes('wipe')) effect = 'wipe';
             else if (filter?.includes('wheel') || filter?.includes('zoom')) effect = 'zoom';
 
-            const step = isClick ? currentClickStep : 0;
             animMap.set(spid, { step, effect });
-            if (isClick) {
-              maxAnimSteps = Math.max(maxAnimSteps, currentClickStep);
-            }
           }
         }
       }
@@ -1168,6 +1182,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
               id: `img_${idx}_${elements.length}`,
               spId,
               animStep: animInfo?.step || 0,
+              exitStep: spId ? exitAnimMap.get(spId) : undefined,
               animEffect: animInfo?.effect || 'flyIn',
               xPct: box.xPct,
               yPct: box.yPct,
@@ -1201,6 +1216,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
                 id: `img_gf_${idx}_${elements.length}`,
                 spId,
                 animStep: animInfo?.step || 0,
+                exitStep: spId ? exitAnimMap.get(spId) : undefined,
                 animEffect: animInfo?.effect || 'flyIn',
                 xPct: box.xPct,
                 yPct: box.yPct,
@@ -1256,6 +1272,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
                 id: `tbl_${idx}_${elements.length}`,
                 spId,
                 animStep: animInfo?.step || 0,
+                exitStep: spId ? exitAnimMap.get(spId) : undefined,
                 animEffect: animInfo?.effect || 'fade',
                 xPct: box.xPct,
                 yPct: box.yPct,
@@ -1295,6 +1312,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
                 id: `img_sp_${idx}_${elements.length}`,
                 spId,
                 animStep: animInfo?.step || 0,
+                exitStep: spId ? exitAnimMap.get(spId) : undefined,
                 animEffect: animInfo?.effect || 'flyIn',
                 xPct: box.xPct,
                 yPct: box.yPct,
@@ -1439,6 +1457,7 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
               id: `sp_${idx}_${elements.length}`,
               spId,
               animStep: animInfo?.step || 0,
+              exitStep: spId ? exitAnimMap.get(spId) : undefined,
               animEffect: animInfo?.effect || (isTitle ? 'fade' : 'flyIn'),
               xPct: box.xPct,
               yPct: box.yPct,
@@ -1465,6 +1484,40 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
     const spTree = cSld ? getLocalTagChildren(cSld, 'spTree')[0] : null;
     if (spTree) {
       await processShapeTree(spTree);
+    }
+
+    // Resolve overlapping text elements (e.g. Question vs Answer replacement steps)
+    const textShapes = elements.filter(
+      (el): el is PptxShapeElement => el.kind === 'shape' && el.paragraphs.length > 0
+    );
+
+    for (let i = 0; i < textShapes.length; i++) {
+      const a = textShapes[i];
+      for (let j = i + 1; j < textShapes.length; j++) {
+        const b = textShapes[j];
+        const xOverlap = Math.max(
+          0,
+          Math.min(a.xPct + a.wPct, b.xPct + b.wPct) - Math.max(a.xPct, b.xPct)
+        );
+        const yOverlap = Math.max(
+          0,
+          Math.min(a.yPct + a.hPct, b.yPct + b.hPct) - Math.max(a.yPct, b.yPct)
+        );
+        const overlapArea = xOverlap * yOverlap;
+        const minArea = Math.min(a.wPct * a.hPct, b.wPct * b.hPct);
+
+        if (minArea > 0 && overlapArea / minArea > 0.45) {
+          // Heavy geometric overlap detected!
+          const stepA = a.animStep || 0;
+          let stepB = b.animStep || 0;
+          if (stepB <= stepA) {
+            stepB = stepA + 1;
+            b.animStep = stepB;
+          }
+          a.exitStep = Math.min(a.exitStep || Infinity, stepB);
+          maxAnimSteps = Math.max(maxAnimSteps, stepB);
+        }
+      }
     }
 
     if (!slideTitle && summaryParts.length > 0) {
