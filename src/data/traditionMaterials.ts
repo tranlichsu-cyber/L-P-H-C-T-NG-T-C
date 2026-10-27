@@ -324,6 +324,18 @@ export const curatedTraditionMaterials:TraditionMaterial[] = [
     "updatedAt": "2026-10-27"
   },
   {
+    "id": "curated-image-tnxp-dai-doi-915-khoi-phuc-duong-sat",
+    "kind": "IMAGE",
+    "title": "Lực lượng Thanh niên xung phong Thái Nguyên san lấp hố bom, khôi phục đường sắt trong kháng chiến chống Mỹ (1965 – 1972)",
+    "text": "Trong cuộc kháng chiến chống chiến tranh phá hoại của đế quốc Mỹ ra miền Bắc (1965 – 1972), Thái Nguyên là đầu mối giao thông đường sắt, đường bộ và trung tâm công nghiệp chiến lược nên bị máy bay Mỹ ném bom vô cùng ác liệt (đặc biệt tại ga Lưu Xá, cầu Gia Bảy, Khu Gang thép, nhà máy điện Cao Ngạn). Bức ảnh tư liệu ghi lại cảnh các đội viên Thanh niên xung phong Đại đội 915 (Đội TNXP 91 Bắc Thái) đang khẩn trương san lấp hố bom, khôi phục đường ray tàu hỏa ngay bên cạnh những toa tàu và tháp nước bị bom đạn cày xới để kịp thời giải tỏa hàng hóa chi viện cho miền Nam. Đêm Noel 24/12/1972, 60 cán bộ, đội viên TNXP Đại đội 915 đã anh dũng hy sinh tại phường Gia Sàng khi đang làm nhiệm vụ, để lại khúc tráng ca bất tử trên mảnh đất Thái Nguyên.",
+    "mediaUrl": "https://thlytutrong.com.vn/images/tnxp-dai-doi-915-khoi-phuc-duong-sat.jpg",
+    "source": "Cổng thông tin điện tử tỉnh Thái Nguyên / Di tích lịch sử quốc gia Đại đội TNXP 915",
+    "sourceUrl": "https://thainguyen.gov.vn/tin-du-lich-noi-bat/tren-50-000-luot-khach-den-tham-quan-khu-di-tich-915-258413",
+    "published": true,
+    "teacherId": "curated-tradition",
+    "updatedAt": "2026-10-27"
+  },
+  {
     "id": "curated-image-bac-ho-vo-nguyen-giap-atk",
     "kind": "IMAGE",
     "title": "Chủ tịch Hồ Chí Minh cùng Đại tướng Võ Nguyên Giáp tại Chiến khu Việt Bắc – ATK Định Hóa",
