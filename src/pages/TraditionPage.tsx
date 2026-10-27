@@ -22,7 +22,7 @@ const materialReadingOrder:Record<string,string[]>={
 const materialGuides:Record<string,string>={
  HISTORY:'Từ dấu tích tiền sử, nhân vật lịch sử đến các mốc thành lập tỉnh, cách mạng và quê hương hôm nay.',
  CULTURE:'Dân ca • Lễ hội • Nghề truyền thống và ẩm thực • Không gian văn hóa quê hương.',
- IMAGE:'Chỉ chuột hoặc chọn tên ảnh trong danh sách để xem riêng ảnh và lời giới thiệu. Em cũng có thể sao chép liên kết riêng để chia sẻ.',
+ IMAGE:'Bấm vào bất kỳ bức ảnh nào để mở xem ảnh lớn và lời giới thiệu chi tiết. Khi mở, chỉ hiển thị duy nhất ảnh đó với giao diện rộng, không hiện danh sách tên các ảnh khác.',
  VIDEO:'Tìm hiểu lịch sử qua chương trình tư liệu, sau đó khám phá các hoạt động gìn giữ truyền thống hôm nay.',
 };
 const sectionHeaderStyles:Record<string,string>={
@@ -42,7 +42,6 @@ export const TraditionPage:React.FC=()=>{
  const [selectedMapPlace,setSelectedMapPlace]=useState('');
  const [selectedImageModal,setSelectedImageModal]=useState<TraditionMaterial|null>(null);
  const [modalCopied,setModalCopied]=useState(false);
- const [imageViewMode,setImageViewMode]=useState<'single'|'all'>('single');
  const [focusedImageId,setFocusedImageId]=useState<string>(()=>{
   if(typeof window==='undefined')return '';
   const raw=window.location.hash.slice(1);
@@ -66,7 +65,11 @@ export const TraditionPage:React.FC=()=>{
     setActiveSection('material-IMAGE');
     const imageId=raw.replace('image-','');
     setFocusedImageId(imageId);
-    setImageViewMode('single');
+    return;
+   }
+   if(raw==='material-IMAGE'){
+    setActiveSection('material-IMAGE');
+    setFocusedImageId('');
     return;
    }
    if(raw.startsWith('card-')){
@@ -76,7 +79,6 @@ export const TraditionPage:React.FC=()=>{
      if(found.kind==='IMAGE'){
       setActiveSection('material-IMAGE');
       setFocusedImageId(cardId);
-      setImageViewMode('single');
      }
      else if(found.kind==='VIDEO')setActiveSection('material-VIDEO');
      else if(found.kind==='CULTURE')setActiveSection('material-CULTURE');
@@ -101,6 +103,9 @@ export const TraditionPage:React.FC=()=>{
  },[readingMaterials.length]);
 
  const switchSection=(section:string)=>{
+  if(section==='material-IMAGE'){
+   setFocusedImageId('');
+  }
   setActiveSection(section);
   window.location.hash=section;
   if(window.innerWidth<768){
@@ -150,7 +155,11 @@ export const TraditionPage:React.FC=()=>{
    const list=readingMaterials.filter(i=>i.kind===kind).sort(compareMaterials);
 
    if(kind==='IMAGE'){
-    const currentImage=list.find(item=>item.id===focusedImageId || 'image-'+item.id===focusedImageId || item.id==='curated-image-'+focusedImageId) || list[0];
+    const currentImage=focusedImageId ? (list.find(item=>item.id===focusedImageId || 'image-'+item.id===focusedImageId || item.id==='curated-image-'+focusedImageId) || null) : null;
+    const currentIndex=currentImage ? list.findIndex(item=>item.id===currentImage.id) : -1;
+    const prevImage=currentIndex > 0 ? list[currentIndex - 1] : null;
+    const nextImage=currentIndex >= 0 && currentIndex < list.length - 1 ? list[currentIndex + 1] : null;
+
     return <section id="material-IMAGE" className="space-y-4 scroll-mt-4">
      <div className={`rounded-2xl bg-gradient-to-r ${sectionHeaderStyles.IMAGE} border border-violet-200 p-5 shadow-2xs`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -160,83 +169,82 @@ export const TraditionPage:React.FC=()=>{
       <p className="mt-2 leading-7 text-slate-700">{materialGuides.IMAGE}</p>
      </div>
 
-     {/* Thanh chuyển đổi chế độ xem */}
-     <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 shadow-2xs">
-      <div className="flex flex-wrap items-center gap-2">
-       <span className="text-xs font-black uppercase text-slate-500">Chế độ xem:</span>
-       <button 
-        type="button"
-        onClick={()=>setImageViewMode('single')} 
-        className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${imageViewMode==='single' ? 'bg-violet-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-       >
-        🎯 Xem từng ảnh theo tên
-       </button>
-       <button 
-        type="button"
-        onClick={()=>setImageViewMode('all')} 
-        className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${imageViewMode==='all' ? 'bg-violet-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
-       >
-        ▦ Xem toàn bộ dạng lưới ({list.length})
-       </button>
-      </div>
-      <span className="text-xs text-violet-900 font-semibold bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200">
-       {imageViewMode==='single' ? '👉 Chỉ chuột hoặc chọn tên ảnh để xem riêng ảnh đó' : 'Hiển thị tất cả ảnh'}
-      </span>
-     </div>
-
-     {imageViewMode==='single' && currentImage ? (
-      <div className="grid lg:grid-cols-[330px_minmax(0,1fr)] gap-5 items-start">
-       {/* Cột trái: Danh sách tên bức ảnh */}
-       <div className="bg-white border-2 border-violet-200/80 rounded-3xl p-4 space-y-3 shadow-sm lg:sticky lg:top-5">
-        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-         <span className="text-xs font-black uppercase text-violet-900 tracking-wider">
-          Danh sách tên ảnh ({list.length})
+     {currentImage ? (
+      /* GIAO DIỆN KHI MỞ ẢNH RA: CHỈ 1 ẢNH ĐÓ XUẤT HIỆN, KHÔNG HIỆN TÊN CÁC ẢNH KHÁC, GIAO DIỆN RỘNG */
+      <div className="space-y-4">
+       {/* Thanh điều khiển khi xem ảnh: Quay lại danh sách và Chuyển ảnh trước/sau */}
+       <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-violet-200 rounded-2xl p-3 shadow-xs">
+        <div className="flex items-center gap-2.5">
+         <button 
+          type="button"
+          onClick={()=>{
+           setFocusedImageId('');
+           window.location.hash='material-IMAGE';
+          }} 
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-violet-700 hover:bg-violet-800 text-white transition-all shadow-xs active:scale-98"
+         >
+          <span>← Quay lại danh sách tất cả ảnh</span>
+         </button>
+         <span className="text-xs sm:text-sm font-black text-violet-900 bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200 hidden sm:inline-block">
+          Ảnh {currentIndex + 1} / {list.length}
          </span>
-         <span className="text-[11px] font-bold text-slate-500">Chỉ chuột vào tên</span>
         </div>
-        <nav aria-label="Danh sách tên ảnh" className="space-y-1.5 max-h-[620px] overflow-y-auto pr-1">
-         {list.map((item,idx)=>{
-          const isSelected=currentImage.id===item.id;
-          return (
-           <button
-            key={item.id}
-            type="button"
-            onMouseEnter={()=>{
-             setFocusedImageId(item.id);
-             window.history.replaceState(null,'','#image-'+item.id);
-            }}
-            onFocus={()=>{
-             setFocusedImageId(item.id);
-             window.history.replaceState(null,'','#image-'+item.id);
-            }}
-            onClick={()=>{
-             setFocusedImageId(item.id);
-             window.history.replaceState(null,'','#image-'+item.id);
-            }}
-            className={`w-full text-left p-3 rounded-2xl border text-xs sm:text-sm font-bold transition-all flex items-start gap-2.5 ${
-             isSelected 
-              ? 'bg-violet-700 border-violet-700 text-white shadow-md' 
-              : 'bg-slate-50 hover:bg-violet-50 hover:border-violet-300 border-slate-200/80 text-slate-800'
-            }`}
-           >
-            <span className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black mt-0.5 ${
-             isSelected ? 'bg-white text-violet-800' : 'bg-violet-100 text-violet-900'
-            }`}>
-             {idx + 1}
-            </span>
-            <span className="line-clamp-2 leading-snug">{item.title}</span>
-           </button>
-          );
-         })}
-        </nav>
+
+        <div className="flex items-center gap-2">
+         <button 
+          type="button"
+          disabled={!prevImage}
+          onClick={()=>{
+           if(prevImage){
+            setFocusedImageId(prevImage.id);
+            window.location.hash='image-'+prevImage.id;
+            requestAnimationFrame(()=>{
+             document.getElementById('tradition-content')?.scrollIntoView({behavior:'smooth',block:'start'});
+            });
+           }
+          }} 
+          className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+           prevImage 
+            ? 'bg-slate-100 hover:bg-violet-100 text-slate-800 hover:text-violet-900 border border-slate-200' 
+            : 'bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed'
+          }`}
+          title={prevImage ? 'Xem ảnh trước' : undefined}
+         >
+          ‹ Ảnh trước
+         </button>
+         <span className="text-xs font-black text-slate-700 sm:hidden">
+          {currentIndex + 1}/{list.length}
+         </span>
+         <button 
+          type="button"
+          disabled={!nextImage}
+          onClick={()=>{
+           if(nextImage){
+            setFocusedImageId(nextImage.id);
+            window.location.hash='image-'+nextImage.id;
+            requestAnimationFrame(()=>{
+             document.getElementById('tradition-content')?.scrollIntoView({behavior:'smooth',block:'start'});
+            });
+           }
+          }} 
+          className={`px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+           nextImage 
+            ? 'bg-slate-100 hover:bg-violet-100 text-slate-800 hover:text-violet-900 border border-slate-200' 
+            : 'bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed'
+          }`}
+          title={nextImage ? 'Xem ảnh tiếp theo' : undefined}
+         >
+          Ảnh tiếp theo ›
+         </button>
+        </div>
        </div>
 
-       {/* Cột phải: CHỈ HIỆN BỨC ẢNH ĐÓ VÀ PHẦN GIỚI THIỆU VỀ BỨC ẢNH ĐÓ, KHÔNG HIỆN BỨC ẢNH KHÁC */}
-       <article id={'card-'+currentImage.id} className="bg-white border-2 border-violet-300 rounded-3xl p-5 sm:p-7 space-y-5 shadow-md">
+       {/* Khung hiển thị DUY NHẤT bức ảnh này, giao diện mở rộng toàn bộ chiều ngang (không có cột danh sách tên ảnh khác) */}
+       <article id={'card-'+currentImage.id} className="w-full bg-white border-2 border-violet-300 rounded-3xl p-5 sm:p-7 space-y-6 shadow-md">
         <div className="space-y-3">
          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-          <span className="inline-flex items-center rounded-full bg-violet-50 border border-violet-200 px-3 py-1 text-xs font-extrabold text-violet-900">
-           Hình ảnh tư liệu lịch sử
+          <span className="inline-flex items-center rounded-full bg-violet-50 border border-violet-200 px-3.5 py-1 text-xs font-extrabold text-violet-900">
+           Hình ảnh tư liệu lịch sử • Ảnh {currentIndex + 1}/{list.length}
           </span>
           <button
            type="button"
@@ -262,23 +270,23 @@ export const TraditionPage:React.FC=()=>{
            <span>{copiedImageId===currentImage.id ? 'Đã sao chép liên kết!' : 'Sao chép đường dẫn riêng'}</span>
           </button>
          </div>
-         <h3 className="text-2xl sm:text-3xl font-black text-sky-950 leading-tight">
+         <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-sky-950 leading-tight">
           {currentImage.title}
          </h3>
         </div>
 
-        {/* Khung ảnh duy nhất */}
+        {/* Khung ảnh rộng toàn diện */}
         <div className="w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 flex items-center justify-center shadow-sm">
          <img 
           src={currentImage.mediaUrl} 
           alt={currentImage.title} 
-          className="w-full max-h-[520px] object-contain"
+          className="w-full max-h-[640px] sm:max-h-[720px] object-contain"
          />
         </div>
 
         {/* Phần giới thiệu về bức ảnh đó */}
         {currentImage.text && (
-         <div className="rounded-2xl bg-amber-50/70 border-2 border-amber-200/90 p-5 sm:p-6 space-y-2.5">
+         <div className="rounded-2xl bg-amber-50/80 border-2 border-amber-200/90 p-5 sm:p-6 space-y-2.5">
           <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider flex items-center gap-1.5">
            <span>📖 Giới thiệu chi tiết bức ảnh</span>
           </h4>
@@ -324,20 +332,43 @@ export const TraditionPage:React.FC=()=>{
        </article>
       </div>
      ) : (
+      /* GIAO DIỆN KHI CHƯA MỞ ẢNH: HIỂN THỊ DANH SÁCH / LƯỚI TẤT CẢ CÁC BỨC ẢNH ĐỂ NGƯỜI DÙNG CHỌN */
       list.length ? (
-       <div className="grid sm:grid-cols-2 gap-4 items-stretch">
-        {list.map(item=>(
-         <MaterialCard 
-          key={item.id} 
-          item={item} 
-          compact={false} 
-          onOpenImage={img=>{
-           setFocusedImageId(img.id);
-           setImageViewMode('single');
-           window.history.replaceState(null,'','#image-'+img.id);
+       <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-white border border-slate-200/90 rounded-2xl p-3 shadow-2xs">
+         <p className="text-sm font-bold text-slate-700">
+          👉 Bấm vào bất kỳ bức ảnh nào bên dưới để mở xem ảnh lớn và phần giới thiệu:
+         </p>
+         <button
+          type="button"
+          onClick={()=>{
+           setFocusedImageId(list[0].id);
+           window.location.hash='image-'+list[0].id;
+           requestAnimationFrame(()=>{
+            document.getElementById('tradition-content')?.scrollIntoView({behavior:'smooth',block:'start'});
+           });
           }}
-         />
-        ))}
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold bg-violet-700 hover:bg-violet-800 text-white transition-all shadow-xs"
+         >
+          Mở xem ảnh đầu tiên →
+         </button>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4 items-stretch">
+         {list.map(item=>(
+          <MaterialCard 
+           key={item.id} 
+           item={item} 
+           compact={false} 
+           onOpenImage={img=>{
+            setFocusedImageId(img.id);
+            window.location.hash='image-'+img.id;
+            requestAnimationFrame(()=>{
+             document.getElementById('tradition-content')?.scrollIntoView({behavior:'smooth',block:'start'});
+            });
+           }}
+          />
+         ))}
+        </div>
        </div>
       ) : loading ? (
        <p>Đang tải tư liệu…</p>

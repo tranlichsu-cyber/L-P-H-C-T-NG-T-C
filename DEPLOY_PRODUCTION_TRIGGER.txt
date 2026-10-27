@@ -193,3 +193,4 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Them anh tu lieu Luc luong TNXP Thai Nguyen san lap ho bom khoi phuc duong sat vao muc Hinh anh.
 2026-10-27: Ho tro duong dan rieng permalink, sao chep lien ket va modal phong to khi chon/chi vao tung buc anh.
 2026-10-27: Che do xem tung anh theo ten: khi chi/re chuot vao ten anh thi chi hien duy nhat anh do va phan gioi thieu.
+2026-10-27: Khi mo anh ra chi hien duy nhat 1 anh do, an danh sach ten cac anh khac de giao dien anh rong toi da.
