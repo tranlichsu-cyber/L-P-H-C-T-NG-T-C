@@ -22,7 +22,7 @@ const materialReadingOrder:Record<string,string[]>={
 const materialGuides:Record<string,string>={
  HISTORY:'Từ dấu tích tiền sử, nhân vật lịch sử đến các mốc thành lập tỉnh, cách mạng và quê hương hôm nay.',
  CULTURE:'Dân ca • Lễ hội • Nghề truyền thống và ẩm thực • Không gian văn hóa quê hương.',
- IMAGE:'Ảnh tư liệu lịch sử trước, hình ảnh di tích và cảnh quan sau. Đọc chú thích để biết thời điểm và nguồn ảnh.',
+ IMAGE:'Chỉ chuột hoặc chọn tên ảnh trong danh sách để xem riêng ảnh và lời giới thiệu. Em cũng có thể sao chép liên kết riêng để chia sẻ.',
  VIDEO:'Tìm hiểu lịch sử qua chương trình tư liệu, sau đó khám phá các hoạt động gìn giữ truyền thống hôm nay.',
 };
 const sectionHeaderStyles:Record<string,string>={
@@ -42,6 +42,13 @@ export const TraditionPage:React.FC=()=>{
  const [selectedMapPlace,setSelectedMapPlace]=useState('');
  const [selectedImageModal,setSelectedImageModal]=useState<TraditionMaterial|null>(null);
  const [modalCopied,setModalCopied]=useState(false);
+ const [imageViewMode,setImageViewMode]=useState<'single'|'all'>('single');
+ const [focusedImageId,setFocusedImageId]=useState<string>(()=>{
+  if(typeof window==='undefined')return '';
+  const raw=window.location.hash.slice(1);
+  return raw.startsWith('image-')?raw.replace('image-',''):'';
+ });
+ const [copiedImageId,setCopiedImageId]=useState<string>('');
 
  const curatedMaterials=[...bookCultureArticles,...curatedTraditionMaterials];
  const readingMaterials=[...curatedMaterials,...materials.filter(item=>!curatedMaterials.some(curated=>curated.id===item.id || curated.title===item.title))];
@@ -58,23 +65,19 @@ export const TraditionPage:React.FC=()=>{
    if(raw.startsWith('image-')){
     setActiveSection('material-IMAGE');
     const imageId=raw.replace('image-','');
-    const found=readingMaterials.find(m=>m.id===imageId || m.id==='curated-image-'+imageId || 'image-'+m.id===raw);
-    if(found)setSelectedImageModal(found);
-    requestAnimationFrame(()=>{
-     const card=document.getElementById('card-'+imageId)||document.getElementById('card-curated-image-'+imageId);
-     if(card){
-      card.scrollIntoView({behavior:'smooth',block:'center'});
-      card.classList.add('ring-4','ring-violet-500','ring-offset-2');
-      setTimeout(()=>card.classList.remove('ring-4','ring-violet-500','ring-offset-2'),3500);
-     }
-    });
+    setFocusedImageId(imageId);
+    setImageViewMode('single');
     return;
    }
    if(raw.startsWith('card-')){
     const cardId=raw.replace('card-','');
     const found=readingMaterials.find(m=>m.id===cardId);
     if(found){
-     if(found.kind==='IMAGE')setActiveSection('material-IMAGE');
+     if(found.kind==='IMAGE'){
+      setActiveSection('material-IMAGE');
+      setFocusedImageId(cardId);
+      setImageViewMode('single');
+     }
      else if(found.kind==='VIDEO')setActiveSection('material-VIDEO');
      else if(found.kind==='CULTURE')setActiveSection('material-CULTURE');
      else if(found.kind==='HISTORY')setActiveSection('material-HISTORY');
@@ -145,6 +148,208 @@ export const TraditionPage:React.FC=()=>{
    const label=materialKinds[kind as keyof typeof materialKinds];
    if(!label)return null;
    const list=readingMaterials.filter(i=>i.kind===kind).sort(compareMaterials);
+
+   if(kind==='IMAGE'){
+    const currentImage=list.find(item=>item.id===focusedImageId || 'image-'+item.id===focusedImageId || item.id==='curated-image-'+focusedImageId) || list[0];
+    return <section id="material-IMAGE" className="space-y-4 scroll-mt-4">
+     <div className={`rounded-2xl bg-gradient-to-r ${sectionHeaderStyles.IMAGE} border border-violet-200 p-5 shadow-2xs`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+       <h2 className="font-black text-2xl text-sky-950 flex items-center gap-2.5">{sectionIcons.IMAGE}<span>{label}</span></h2>
+       <span className="rounded-full bg-white/90 border border-violet-300 px-3 py-1 text-xs font-extrabold text-violet-900">{list.length} tư liệu ảnh</span>
+      </div>
+      <p className="mt-2 leading-7 text-slate-700">{materialGuides.IMAGE}</p>
+     </div>
+
+     {/* Thanh chuyển đổi chế độ xem */}
+     <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200/90 rounded-2xl p-3 shadow-2xs">
+      <div className="flex flex-wrap items-center gap-2">
+       <span className="text-xs font-black uppercase text-slate-500">Chế độ xem:</span>
+       <button 
+        type="button"
+        onClick={()=>setImageViewMode('single')} 
+        className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${imageViewMode==='single' ? 'bg-violet-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+       >
+        🎯 Xem từng ảnh theo tên
+       </button>
+       <button 
+        type="button"
+        onClick={()=>setImageViewMode('all')} 
+        className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${imageViewMode==='all' ? 'bg-violet-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+       >
+        ▦ Xem toàn bộ dạng lưới ({list.length})
+       </button>
+      </div>
+      <span className="text-xs text-violet-900 font-semibold bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200">
+       {imageViewMode==='single' ? '👉 Chỉ chuột hoặc chọn tên ảnh để xem riêng ảnh đó' : 'Hiển thị tất cả ảnh'}
+      </span>
+     </div>
+
+     {imageViewMode==='single' && currentImage ? (
+      <div className="grid lg:grid-cols-[330px_minmax(0,1fr)] gap-5 items-start">
+       {/* Cột trái: Danh sách tên bức ảnh */}
+       <div className="bg-white border-2 border-violet-200/80 rounded-3xl p-4 space-y-3 shadow-sm lg:sticky lg:top-5">
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+         <span className="text-xs font-black uppercase text-violet-900 tracking-wider">
+          Danh sách tên ảnh ({list.length})
+         </span>
+         <span className="text-[11px] font-bold text-slate-500">Chỉ chuột vào tên</span>
+        </div>
+        <nav aria-label="Danh sách tên ảnh" className="space-y-1.5 max-h-[620px] overflow-y-auto pr-1">
+         {list.map((item,idx)=>{
+          const isSelected=currentImage.id===item.id;
+          return (
+           <button
+            key={item.id}
+            type="button"
+            onMouseEnter={()=>{
+             setFocusedImageId(item.id);
+             window.history.replaceState(null,'','#image-'+item.id);
+            }}
+            onFocus={()=>{
+             setFocusedImageId(item.id);
+             window.history.replaceState(null,'','#image-'+item.id);
+            }}
+            onClick={()=>{
+             setFocusedImageId(item.id);
+             window.history.replaceState(null,'','#image-'+item.id);
+            }}
+            className={`w-full text-left p-3 rounded-2xl border text-xs sm:text-sm font-bold transition-all flex items-start gap-2.5 ${
+             isSelected 
+              ? 'bg-violet-700 border-violet-700 text-white shadow-md' 
+              : 'bg-slate-50 hover:bg-violet-50 hover:border-violet-300 border-slate-200/80 text-slate-800'
+            }`}
+           >
+            <span className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black mt-0.5 ${
+             isSelected ? 'bg-white text-violet-800' : 'bg-violet-100 text-violet-900'
+            }`}>
+             {idx + 1}
+            </span>
+            <span className="line-clamp-2 leading-snug">{item.title}</span>
+           </button>
+          );
+         })}
+        </nav>
+       </div>
+
+       {/* Cột phải: CHỈ HIỆN BỨC ẢNH ĐÓ VÀ PHẦN GIỚI THIỆU VỀ BỨC ẢNH ĐÓ, KHÔNG HIỆN BỨC ẢNH KHÁC */}
+       <article id={'card-'+currentImage.id} className="bg-white border-2 border-violet-300 rounded-3xl p-5 sm:p-7 space-y-5 shadow-md">
+        <div className="space-y-3">
+         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <span className="inline-flex items-center rounded-full bg-violet-50 border border-violet-200 px-3 py-1 text-xs font-extrabold text-violet-900">
+           Hình ảnh tư liệu lịch sử
+          </span>
+          <button
+           type="button"
+           onClick={async()=>{
+            const link=`${window.location.origin}${window.location.pathname}#image-${currentImage.id}`;
+            window.history.replaceState(null,'','#image-'+currentImage.id);
+            try{
+             await navigator.clipboard.writeText(link);
+            }catch{
+             const input=document.createElement('textarea');
+             input.value=link;
+             document.body.appendChild(input);
+             input.select();
+             document.execCommand('copy');
+             document.body.removeChild(input);
+            }
+            setCopiedImageId(currentImage.id);
+            setTimeout(()=>setCopiedImageId(''),2500);
+           }}
+           className="inline-flex items-center gap-1.5 rounded-xl bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-900 px-3.5 py-1.5 text-xs sm:text-sm font-bold transition-all shadow-2xs"
+          >
+           {copiedImageId===currentImage.id ? <Check size={14} className="text-emerald-600"/> : <LinkIcon size={14} className="text-violet-700"/>}
+           <span>{copiedImageId===currentImage.id ? 'Đã sao chép liên kết!' : 'Sao chép đường dẫn riêng'}</span>
+          </button>
+         </div>
+         <h3 className="text-2xl sm:text-3xl font-black text-sky-950 leading-tight">
+          {currentImage.title}
+         </h3>
+        </div>
+
+        {/* Khung ảnh duy nhất */}
+        <div className="w-full rounded-2xl overflow-hidden bg-slate-950 border border-slate-200 flex items-center justify-center shadow-sm">
+         <img 
+          src={currentImage.mediaUrl} 
+          alt={currentImage.title} 
+          className="w-full max-h-[520px] object-contain"
+         />
+        </div>
+
+        {/* Phần giới thiệu về bức ảnh đó */}
+        {currentImage.text && (
+         <div className="rounded-2xl bg-amber-50/70 border-2 border-amber-200/90 p-5 sm:p-6 space-y-2.5">
+          <h4 className="text-xs font-black uppercase text-amber-900 tracking-wider flex items-center gap-1.5">
+           <span>📖 Giới thiệu chi tiết bức ảnh</span>
+          </h4>
+          <p className="text-base sm:text-lg leading-relaxed text-slate-800 whitespace-pre-line font-medium">
+           {currentImage.text}
+          </p>
+         </div>
+        )}
+
+        {/* Hộp đường dẫn riêng */}
+        <div className="rounded-2xl bg-sky-50 border border-sky-200 p-3.5 space-y-2">
+         <div className="flex items-center justify-between text-xs font-extrabold text-sky-950">
+          <span className="flex items-center gap-1.5"><LinkIcon size={14}/> Đường dẫn riêng của bức ảnh này:</span>
+          <span className="font-mono text-sky-700 bg-sky-100 px-2 py-0.5 rounded text-[11px]">#image-{currentImage.id}</span>
+         </div>
+         <input 
+          type="text" 
+          readOnly 
+          value={typeof window!=='undefined'?`${window.location.origin}${window.location.pathname}#image-${currentImage.id}`:''}
+          onClick={e=>(e.target as HTMLInputElement).select()}
+          className="w-full text-xs font-mono bg-white border border-sky-300 rounded-lg px-3 py-2 text-slate-800 select-all focus:outline-none focus:ring-2 focus:ring-sky-500"
+         />
+        </div>
+
+        {/* Nguồn & liên kết gốc */}
+        {(currentImage.source || currentImage.sourceUrl) && (
+         <div className="flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-slate-600 pt-3 border-t border-slate-100">
+          <span>Nguồn: <strong className="font-semibold text-slate-800">{currentImage.source || 'Tư liệu lịch sử'}</strong></span>
+          <div className="flex items-center gap-3">
+           {currentImage.mediaUrl && (
+            <a href={currentImage.mediaUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-sky-700 hover:text-sky-900 underline">
+             <ExternalLink size={14}/> Mở tệp ảnh gốc ↗
+            </a>
+           )}
+           {currentImage.sourceUrl && (
+            <a href={currentImage.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-emerald-800 hover:text-emerald-950 underline">
+             Xem nguồn tư liệu ↗
+            </a>
+           )}
+          </div>
+         </div>
+        )}
+       </article>
+      </div>
+     ) : (
+      list.length ? (
+       <div className="grid sm:grid-cols-2 gap-4 items-stretch">
+        {list.map(item=>(
+         <MaterialCard 
+          key={item.id} 
+          item={item} 
+          compact={false} 
+          onOpenImage={img=>{
+           setFocusedImageId(img.id);
+           setImageViewMode('single');
+           window.history.replaceState(null,'','#image-'+img.id);
+          }}
+         />
+        ))}
+       </div>
+      ) : loading ? (
+       <p>Đang tải tư liệu…</p>
+      ) : (
+       <p className="bg-white border rounded-xl p-4 text-slate-600">
+        {error || 'Tư liệu đang được giáo viên chuẩn bị và kiểm tra trước khi đưa lên.'}
+       </p>
+      )
+     )}
+    </section>;
+   }
+
    return <section id={'material-'+kind} className="space-y-4 scroll-mt-4">
     <div className={`rounded-2xl bg-gradient-to-r ${sectionHeaderStyles[kind]||sectionHeaderStyles.HISTORY} border p-5 shadow-2xs`}>
      <div className="flex flex-wrap items-center justify-between gap-2">
@@ -169,7 +374,7 @@ export const TraditionPage:React.FC=()=>{
  </> : <TraditionQuizRunner key={selected.id} quiz={selected} onBack={backToQuizzes}/>}
  </div></div>
 
- {/* Lightbox Modal for Selected Image */}
+ {/* Lightbox Modal for Selected Image (when in grid view) */}
  {selectedImageModal && (
   <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6" onClick={()=>{setSelectedImageModal(null);if(window.location.hash.startsWith('#image-')){window.history.replaceState(null,'','#material-IMAGE');}}} role="dialog" aria-modal="true">
    <div className="relative max-w-4xl w-full max-h-[92vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col" onClick={e=>e.stopPropagation()}>

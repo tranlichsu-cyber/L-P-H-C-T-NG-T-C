@@ -114,7 +114,7 @@ export const MaterialCard:React.FC<{item:TraditionMaterial;compact?:boolean;onOp
      )}
      {isArticle&&<button type="button" onClick={()=>setExpanded(false)} className="inline-flex items-center gap-1 rounded-xl bg-slate-100 hover:bg-slate-200 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-slate-800 transition-colors">Thu gọn bài viết ▲</button>}
     </div>
-    <h3 className={`font-black leading-snug text-sky-950 ${isArticle?'text-2xl sm:text-3xl':'text-lg sm:text-xl min-h-[3.25rem] line-clamp-2'}`}>{item.title}</h3>
+    <h3 className={`font-black leading-snug text-sky-950 ${isArticle?'text-2xl sm:text-3xl':'text-lg sm:text-xl min-h-[3.25rem] line-clamp-2'} ${item.kind==='IMAGE'?'cursor-pointer hover:text-violet-700 transition-colors':''}`} onClick={item.kind==='IMAGE'?handleImageSelect:undefined} title={item.kind==='IMAGE'?'Nhấp để xem riêng ảnh này':undefined}>{item.title}</h3>
     {item.kind==='IMAGE' && (failed?<p className="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-900">Không hiển thị được ảnh. Vui lòng kiểm tra quyền chia sẻ hoặc liên kết ảnh.</p>:<div
      className="group relative w-full aspect-[16/10] rounded-2xl bg-slate-100 border border-slate-200/80 overflow-hidden flex items-center justify-center cursor-pointer select-none shadow-2xs hover:shadow-md transition-all"
      onClick={handleImageSelect}
