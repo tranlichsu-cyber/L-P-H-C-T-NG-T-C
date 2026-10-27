@@ -182,3 +182,4 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Cap nhat noi dung toan dien bai gioi thieu Chua Hang - Kim Son Tu gom 5 phan chi tiet.
 2026-10-27: Cap nhat noi dung toan dien bai gioi thieu Khu di tich lich su Quoc gia Na Pau gom 5 phan chi tiet.
 2026-10-27: Cap nhat noi dung toan dien bai gioi thieu Khu di tich lich su Ban Ca (ATK Cho Don) gom 5 phan chi tiet.
+2026-10-27: Cap nhat noi dung toan dien bai gioi thieu Den An Ma (Ho Ba Be) gom 5 phan chi tiet.
