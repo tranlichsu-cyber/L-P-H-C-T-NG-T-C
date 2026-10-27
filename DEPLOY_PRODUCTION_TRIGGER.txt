@@ -196,3 +196,4 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Khi mo anh ra chi hien duy nhat 1 anh do, an danh sach ten cac anh khac de giao dien anh rong toi da.
 
 2026-10-27: Nang cap Background da lop (Ambient Mesh + Dot Pattern) va tinh chinh Giao dien (Be Vietnam Pro, Header kinh mo, Hero Banner Goc truyen thong & Tu luyen).
+2026-10-27: Xoa nen vuong va cac nut chup man hinh o goc logo truong (chuyen sang PNG trong suot school-logo.png va SCHOOL_LOGO_SRC), bo khung vien trang quanh logo tren toan he thong.

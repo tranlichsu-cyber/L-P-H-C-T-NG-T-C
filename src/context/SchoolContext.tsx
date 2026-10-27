@@ -14,6 +14,15 @@ interface SchoolContextType {
 
 const SchoolContext = createContext<SchoolContextType | undefined>(undefined);
 
+const sanitizeLogoUrl = (url?: string): string => {
+  if (!url) return '';
+  // Ignore legacy un-cutout JPEG logos so the transparent PNG SCHOOL_LOGO_SRC is used
+  if (url.startsWith('data:image/jpeg') || url.includes('school-logo.jpg')) {
+    return '';
+  }
+  return url;
+};
+
 export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SchoolSettings>(INITIAL_SCHOOL_SETTINGS);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -47,13 +56,15 @@ export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     []
   );
 
+  const cleanLogoUrl = sanitizeLogoUrl(settings.logoUrl);
+
   const school: School = {
     id: 'school-default',
     name: settings.schoolName,
     code: 'SC2026',
     status: 'ACTIVE',
     academicYear: settings.schoolYear,
-    logoUrl: settings.logoUrl,
+    logoUrl: cleanLogoUrl,
     createdAt: settings.createdAt,
   };
 
@@ -62,7 +73,7 @@ export const SchoolProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       value={{
         settings,
         school,
-        logoUrl: settings.logoUrl || '',
+        logoUrl: cleanLogoUrl,
         updateLogo,
         updateSettings,
         isLoading,

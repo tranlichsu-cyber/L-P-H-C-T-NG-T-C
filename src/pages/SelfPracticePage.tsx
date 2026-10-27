@@ -51,7 +51,7 @@ export function SelfPracticePage(){
    ) : (
     <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
      <div className="flex items-center gap-3">
-      <img src={SCHOOL_LOGO_SRC} alt="Logo Trường Tiểu học Sông Công" className="w-10 h-10 object-contain rounded-xl bg-white p-0.5 ring-1 ring-sky-100 shrink-0"/>
+      <img src={SCHOOL_LOGO_SRC} alt="Logo Trường Tiểu học Sông Công" className="w-11 h-11 object-contain shrink-0 drop-shadow-xs"/>
       <div>
        <p className="font-black text-sky-950 text-sm sm:text-base leading-tight">TRƯỜNG TIỂU HỌC SÔNG CÔNG</p>
        <span className="font-bold text-xs text-emerald-700">Phân hiệu Lý Tự Trọng</span>

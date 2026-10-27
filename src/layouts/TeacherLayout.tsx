@@ -120,13 +120,13 @@ export const TeacherLayout: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex min-w-0 flex-1 items-center">
             <Link to="/teacher" className="group flex min-w-0 items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-sky-600/30 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
-                {currentLogoSrc ? (
-                  <img src={currentLogoSrc} alt="Logo trường" className="w-full h-full object-cover" />
-                ) : (
+              {currentLogoSrc ? (
+                <img src={currentLogoSrc} alt="Logo trường" className="w-11 h-11 object-contain shrink-0 group-hover:scale-105 transition-transform drop-shadow-xs" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-sky-600/30 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
                   <GraduationCap className="w-6 h-6" />
-                )}
-              </div>
+                </div>
+              )}
               <div className="min-w-0">
                 <span title={settings.displayName || settings.schoolName || 'Lớp Học Tương Tác'} className="block truncate text-sm font-black leading-tight tracking-tight text-slate-900 sm:text-lg">
                   {settings.displayName || settings.schoolName || 'Lớp Học Tương Tác'}
