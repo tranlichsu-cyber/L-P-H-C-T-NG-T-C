@@ -8,7 +8,7 @@ import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
-import { subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
+import { subscribeActiveTeacherRooms, closeTeacherRoom, closeMultipleTeacherRooms } from '../../services/qr/activeQrSession';
 import type { MockRoomData } from '../../services/realtime/types';
 import { Users, BookOpen, Radio, Sparkles, Zap, Play, History } from 'lucide-react';
 
@@ -23,8 +23,33 @@ export const DashboardPage: React.FC = () => {
   const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id || '');
   const [selectedQuizId, setSelectedQuizId] = useState(quizzes[0]?.id || '');
   const [activeRooms, setActiveRooms] = useState<MockRoomData[]>([]);
+  const [closingId, setClosingId] = useState<string | null>(null);
   useEffect(() => subscribeActiveTeacherRooms(currentUser?.uid, setActiveRooms), [currentUser?.uid]);
   const activeQrRoom = activeRooms.find((r) => r.responseMode === 'QR_CARD') || activeRooms[0] || null;
+  const otherActiveRooms = activeQrRoom ? activeRooms.filter((r) => r.id !== activeQrRoom.id) : [];
+
+  const handleCloseSingleRoom = async (roomId: string) => {
+    if (closingId) return;
+    setClosingId(roomId);
+    try {
+      await closeTeacherRoom(roomId);
+      setActiveRooms((prev) => prev.filter((r) => r.id !== roomId));
+    } finally {
+      setClosingId(null);
+    }
+  };
+
+  const handleCloseRoomList = async (roomIds: string[]) => {
+    if (!roomIds.length || closingId) return;
+    setClosingId('all');
+    try {
+      await closeMultipleTeacherRooms(roomIds);
+      const closedSet = new Set(roomIds);
+      setActiveRooms((prev) => prev.filter((r) => !closedSet.has(r.id)));
+    } finally {
+      setClosingId(null);
+    }
+  };
 
   // Last used settings for Quick Lesson Mode (v1.1)
   const [lastClassId, setLastClassId] = useState<string>('');
@@ -105,34 +130,96 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {activeQrRoom && (
-        <div className="rounded-2xl border-2 border-emerald-400 bg-gradient-to-r from-emerald-950 to-slate-950 p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="inline-block rounded-full bg-emerald-400/20 px-3 py-0.5 text-xs font-extrabold text-emerald-300 border border-emerald-400/40 mb-1">
-              🟢 ĐANG CHIẾU TRÊN MÁY TÍNH
-            </span>
-            <h2 className="text-xl font-black">
-              Lớp {activeQrRoom.className} • {activeQrRoom.quizTitle || 'Bộ câu hỏi đang chiếu'}
-            </h2>
-            <p className="text-xs text-emerald-200 mt-0.5">
-              Môn: {activeQrRoom.subject || 'Chung'} • Bấm nút bên phải để mở máy quét thẻ QR & điều khiển từ xa trên điện thoại.
-            </p>
+        <div className="rounded-2xl border-2 border-emerald-400 bg-gradient-to-r from-emerald-950 to-slate-950 p-5 text-white shadow-lg space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <span className="inline-block rounded-full bg-emerald-400/20 px-3 py-0.5 text-xs font-extrabold text-emerald-300 border border-emerald-400/40 mb-1">
+                🟢 ĐANG CHIẾU TRÊN MÁY TÍNH
+              </span>
+              <h2 className="text-xl font-black">
+                Lớp {activeQrRoom.className} • {activeQrRoom.quizTitle || 'Bộ câu hỏi đang chiếu'}
+              </h2>
+              <p className="text-xs text-emerald-200 mt-0.5">
+                Môn: {activeQrRoom.subject || 'Chung'} • Bấm nút bên phải để mở máy quét thẻ QR & điều khiển từ xa trên điện thoại.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}/scan`)}
+                className="rounded-xl bg-amber-400 px-4 py-3 text-sm font-black text-slate-950 shadow-md hover:bg-amber-300"
+              >
+                📱 Mở máy quét & Điều khiển từ xa
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}`)}
+                className="rounded-xl border border-emerald-400/60 bg-emerald-900/50 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800/60"
+              >
+                🖥️ Màn điều khiển
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(closingId)}
+                onClick={() => void handleCloseSingleRoom(activeQrRoom.id)}
+                className="rounded-xl border border-rose-400/60 bg-rose-950/70 px-3.5 py-3 text-xs font-bold text-rose-200 hover:bg-rose-900 disabled:opacity-40"
+              >
+                {closingId === activeQrRoom.id ? 'Đang đóng…' : '✕ Đóng phòng này'}
+              </button>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}/scan`)}
-              className="rounded-xl bg-amber-400 px-4 py-3 text-sm font-black text-slate-950 shadow-md hover:bg-amber-300"
-            >
-              📱 Mở máy quét & Điều khiển từ xa
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}`)}
-              className="rounded-xl border border-emerald-400/60 bg-emerald-900/50 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800/60"
-            >
-              🖥️ Màn điều khiển
-            </button>
-          </div>
+
+          {otherActiveRooms.length > 0 && (
+            <div className="border-t border-emerald-800/70 pt-3 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-bold text-emerald-300">
+                  Các phòng đang mở khác của thầy/cô ({otherActiveRooms.length} phòng):
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={Boolean(closingId)}
+                    onClick={() => void handleCloseRoomList(otherActiveRooms.map((r) => r.id))}
+                    className="rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-extrabold text-white hover:bg-rose-500 disabled:opacity-40"
+                  >
+                    {closingId === 'all' ? 'Đang đóng…' : `🗑️ Đóng tất cả ${otherActiveRooms.length} phòng khác`}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={Boolean(closingId)}
+                    onClick={() => void handleCloseRoomList(activeRooms.map((r) => r.id))}
+                    className="rounded-xl border border-rose-400/50 bg-rose-950/60 px-3 py-1.5 text-xs font-bold text-rose-200 hover:bg-rose-900 disabled:opacity-40"
+                  >
+                    Đóng tất cả ({activeRooms.length})
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                {otherActiveRooms.map((r) => (
+                  <div
+                    key={r.id}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/10 pl-3 pr-1.5 py-1 text-xs font-bold text-white"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(r.id)}/scan`)}
+                      className="hover:underline text-left"
+                    >
+                      📱 {r.className} • {r.quizTitle || r.subject || 'Phòng học'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={Boolean(closingId)}
+                      onClick={() => void handleCloseSingleRoom(r.id)}
+                      className="rounded-lg bg-rose-600/90 px-2 py-0.5 text-[11px] font-black text-white hover:bg-rose-500 disabled:opacity-40"
+                    >
+                      {closingId === r.id ? '...' : '✕ Đóng'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
       <button className="w-full rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-5 text-left text-indigo-950" onClick={()=>navigate('/teacher/qr-cards')}><strong className="text-xl">📷 Trả lời bằng thẻ QR</strong><span className="mt-2 block">Chọn lớp → In thẻ → Chiếu câu hỏi → Quét đáp án bằng điện thoại</span></button>

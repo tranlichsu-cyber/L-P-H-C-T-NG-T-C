@@ -7,7 +7,7 @@ import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRoomRealtime } from '../../hooks/useRoomRealtime';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { useAuth } from '../../context/AuthContext';
-import { saveReturnTo, subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
+import { closeTeacherRoom, saveReturnTo, subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
 import type { MockRoomData } from '../../services/realtime/types';
 
 const QrCardsPanel = lazy(() => import('../../components/qr/QrCardsPanel'));
@@ -156,6 +156,19 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
       }
       return await activeRealtimeService.showQuestionResult(currentRoom.id, q.id);
     });
+  }
+
+  async function endRoomNow() {
+    await act(async () => {
+      if (q && (q.status === 'OPEN' || q.status === 'CLOSED')) {
+        if (q.status === 'OPEN') {
+          await Promise.resolve(activeRealtimeService.closeQuestion(currentRoom.id, q.id)).catch(() => false);
+        }
+        await Promise.resolve(activeRealtimeService.showQuestionResult(currentRoom.id, q.id)).catch(() => false);
+      }
+      return await closeTeacherRoom(currentRoom.id);
+    });
+    setConfirmEnd(false);
   }
 
   if (screen === 'present')
@@ -374,8 +387,8 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   className={button}
-                  disabled={busy || q?.status === 'OPEN' || q?.status === 'CLOSED'}
-                  onClick={() => void act(() => activeRealtimeService.finishRoom(room.id))}
+                  disabled={busy}
+                  onClick={() => void endRoomNow()}
                 >
                   Xác nhận kết thúc
                 </button>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Camera, CheckCircle2, Monitor, QrCode, Radio, Smartphone, Users } from 'lucide-react';
+import { ArrowRight, BookOpen, Camera, CheckCircle2, Monitor, QrCode, Radio, Smartphone, Trash2, Users, X } from 'lucide-react';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
@@ -8,7 +8,11 @@ import { QrCardsPrintButton } from '../../components/qr/QrCardsPrintButton';
 import { QrBankService } from '../../services/qrBank/QrBankService';
 import type { QrBank } from '../../services/qrBank/content';
 import type { MockRoomData } from '../../services/realtime/types';
-import { subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
+import {
+  closeMultipleTeacherRooms,
+  closeTeacherRoom,
+  subscribeActiveTeacherRooms,
+} from '../../services/qr/activeQrSession';
 
 const button = 'inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-indigo-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-40';
 const input = 'mt-2 block w-full min-w-0 rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:outline-indigo-500';
@@ -24,6 +28,7 @@ export function QrCardsPage() {
   const [selection, setSelection] = useState<{ bankId: string; ids: string[] } | null>(null);
   const [shuffle, setShuffle] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [closingId, setClosingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [available, setAvailable] = useState<QrBank[]>([]);
   const [activeRooms, setActiveRooms] = useState<MockRoomData[]>([]);
@@ -39,6 +44,9 @@ export function QrCardsPage() {
   }, [currentUser?.uid]);
 
   const activeQrRoom = activeRooms.find(r => r.responseMode === 'QR_CARD') || activeRooms[0] || null;
+  const otherActiveRooms = activeQrRoom
+    ? activeRooms.filter(r => r.id !== activeQrRoom.id)
+    : [];
 
   const cls =
     classes.find(c => c.id === classId) ||
@@ -70,12 +78,49 @@ export function QrCardsPage() {
   try { last = localStorage.getItem(key) || ''; } catch { /* Storage is optional. */ }
   const resumeRoomId = activeQrRoom?.id || last;
 
+  async function handleCloseSingleRoom(roomId: string) {
+    if (closingId) return;
+    setClosingId(roomId);
+    try {
+      await closeTeacherRoom(roomId);
+      if (last === roomId) {
+        try { localStorage.removeItem(key); } catch { /* Ignore */ }
+      }
+      setActiveRooms(prev => prev.filter(r => r.id !== roomId));
+    } finally {
+      setClosingId(null);
+    }
+  }
+
+  async function handleCloseRoomList(roomIds: string[]) {
+    if (!roomIds.length || closingId) return;
+    setClosingId('all');
+    try {
+      await closeMultipleTeacherRooms(roomIds);
+      if (roomIds.includes(last)) {
+        try { localStorage.removeItem(key); } catch { /* Ignore */ }
+      }
+      const closedSet = new Set(roomIds);
+      setActiveRooms(prev => prev.filter(r => !closedSet.has(r.id)));
+    } finally {
+      setClosingId(null);
+    }
+  }
+
   async function start() {
     if (lock.current || !currentUser || !cls || !quiz || !selected.length || !cls.students.length) return;
     lock.current = true;
     setBusy(true);
     setError('');
     try {
+      // Automatically close previous unfinished QR_CARD rooms so only the newly started room is active
+      const oldQrRoomIds = activeRooms
+        .filter(r => r.responseMode === 'QR_CARD')
+        .map(r => r.id);
+      if (oldQrRoomIds.length > 0) {
+        await closeMultipleTeacherRooms(oldQrRoomIds);
+      }
+
       const lessonQuestions = [...selected];
       if (shuffle) {
         for (let i = lessonQuestions.length - 1; i > 0; i--) {
@@ -120,7 +165,7 @@ export function QrCardsPage() {
                 Môn: {activeQrRoom.subject || 'Chung'} • Bấm nút bên dưới để mở bộ câu hỏi, danh sách lớp, điều khiển câu hỏi và quét thẻ từ điện thoại.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3 shrink-0">
+            <div className="flex flex-wrap gap-2.5 shrink-0">
               <Link
                 to={`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}/scan`}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 px-5 py-3.5 text-sm font-black text-slate-950 shadow-lg transition hover:bg-amber-300"
@@ -135,20 +180,70 @@ export function QrCardsPage() {
                 <Monitor className="h-4 w-4" />
                 Màn điều khiển máy tính
               </Link>
+              <button
+                type="button"
+                disabled={Boolean(closingId)}
+                onClick={() => void handleCloseSingleRoom(activeQrRoom.id)}
+                className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-rose-400/60 bg-rose-950/70 px-4 py-3 text-xs font-bold text-rose-200 transition hover:bg-rose-900 disabled:opacity-40"
+                title="Kết thúc và đóng phòng đang mở này"
+              >
+                <X className="h-4 w-4" />
+                {closingId === activeQrRoom.id ? 'Đang đóng…' : 'Đóng phòng này'}
+              </button>
             </div>
           </div>
-          {activeRooms.length > 1 && (
-            <div className="mt-4 border-t border-emerald-800/70 pt-3">
-              <p className="text-xs font-bold text-emerald-300 mb-2">Các phòng đang mở khác của thầy/cô:</p>
-              <div className="flex flex-wrap gap-2">
-                {activeRooms.slice(1, 5).map(r => (
-                  <Link
-                    key={r.id}
-                    to={`/teacher/qr-cards/${encodeURIComponent(r.id)}/scan`}
-                    className="rounded-xl bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20"
+
+          {otherActiveRooms.length > 0 && (
+            <div className="mt-4 border-t border-emerald-800/70 pt-3.5 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-bold text-emerald-300">
+                  Các phòng đang mở khác của thầy/cô ({otherActiveRooms.length} phòng):
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={Boolean(closingId)}
+                    onClick={() => void handleCloseRoomList(otherActiveRooms.map(r => r.id))}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-xs transition hover:bg-rose-500 disabled:opacity-40"
                   >
-                    📱 {r.className} • {r.quizTitle || r.subject}
-                  </Link>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {closingId === 'all'
+                      ? 'Đang đóng các phòng…'
+                      : `Đóng tất cả ${otherActiveRooms.length} phòng khác`}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={Boolean(closingId)}
+                    onClick={() => void handleCloseRoomList(activeRooms.map(r => r.id))}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-rose-400/50 bg-rose-950/60 px-3 py-1.5 text-xs font-bold text-rose-200 transition hover:bg-rose-900 disabled:opacity-40"
+                  >
+                    Đóng tất cả các phòng ({activeRooms.length})
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
+                {otherActiveRooms.map(r => (
+                  <div
+                    key={r.id}
+                    className="inline-flex items-center gap-1 rounded-xl border border-white/15 bg-white/10 pl-3 pr-1.5 py-1 text-xs font-bold text-white"
+                  >
+                    <Link
+                      to={`/teacher/qr-cards/${encodeURIComponent(r.id)}/scan`}
+                      className="hover:underline py-0.5"
+                    >
+                      📱 {r.className} • {r.quizTitle || r.subject || 'Phòng học'}
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={Boolean(closingId)}
+                      onClick={() => void handleCloseSingleRoom(r.id)}
+                      className="ml-1 inline-flex items-center gap-0.5 rounded-lg bg-rose-600/90 px-2 py-1 text-[11px] font-black text-white hover:bg-rose-500 disabled:opacity-40"
+                      title={`Đóng phòng ${r.className}`}
+                    >
+                      <X className="h-3 w-3" />
+                      {closingId === r.id ? '...' : 'Đóng'}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

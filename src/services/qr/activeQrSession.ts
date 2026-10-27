@@ -1,7 +1,7 @@
-import { collection, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot, query, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
-import { isFirebaseActive } from '../realtime/realtimeServiceSwitch';
-import { loadMockDatabase, getRoomByCode } from '../realtime/mockStorage';
+import { activeRealtimeService, isFirebaseActive } from '../realtime/realtimeServiceSwitch';
+import { loadMockDatabase, saveMockDatabase, getRoomByCode } from '../realtime/mockStorage';
 import { eventBus } from '../realtime/broadcastChannel';
 import type { MockRoomData } from '../realtime/types';
 
@@ -129,6 +129,52 @@ export function subscribeActiveTeacherRooms(
   return eventBus.subscribe(() => {
     emitMock();
   });
+}
+
+export async function closeTeacherRoom(roomId: string): Promise<boolean> {
+  if (!roomId) return false;
+  try {
+    const ok = await Promise.resolve(activeRealtimeService.finishRoom(roomId));
+    if (ok) return true;
+  } catch {
+    // Fallback to direct status update if summary generation fails on a stale room
+  }
+
+  if (isFirebaseActive && db) {
+    try {
+      await updateDoc(doc(db, 'rooms', roomId), {
+        status: 'FINISHED',
+        finishedAt: new Date().toISOString(),
+        activeGameId: null,
+        activeGame: null,
+        calledStudent: null,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const mockDb = loadMockDatabase();
+  if (mockDb.rooms?.[roomId]) {
+    mockDb.rooms[roomId].status = 'FINISHED';
+    mockDb.rooms[roomId].finishedAt = new Date().toISOString();
+    saveMockDatabase(mockDb);
+    eventBus.publish({
+      type: 'ROOM_UPDATED',
+      roomId,
+      payload: mockDb.rooms[roomId],
+      timestamp: new Date().toISOString(),
+    });
+    return true;
+  }
+  return false;
+}
+
+export async function closeMultipleTeacherRooms(roomIds: string[]): Promise<void> {
+  const uniqueIds = [...new Set(roomIds.filter(Boolean))];
+  if (!uniqueIds.length) return;
+  await Promise.allSettled(uniqueIds.map(id => closeTeacherRoom(id)));
 }
 
 export async function lookupRoomByCodeForTeacher(
