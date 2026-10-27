@@ -312,6 +312,18 @@ export const curatedTraditionMaterials:TraditionMaterial[] = [
     "updatedAt": "2026-10-27"
   },
   {
+    "id": "curated-image-bac-ho-vo-nguyen-giap-atk",
+    "kind": "IMAGE",
+    "title": "Chủ tịch Hồ Chí Minh cùng Đại tướng Võ Nguyên Giáp tại Chiến khu Việt Bắc – ATK Định Hóa",
+    "text": "Hình ảnh tư liệu ghi lại khoảnh khắc Chủ tịch Hồ Chí Minh và Đại tướng Võ Nguyên Giáp (người đứng mỉm cười phía sau bên trái) cùng các cán bộ quân sự đang xem bản đồ, bàn kế hoạch tác chiến bên chiếc bàn tre mộc mạc trước căn lán dã chiến tại vùng An toàn khu (ATK) Thái Nguyên trong cuộc kháng chiến chống thực dân Pháp. Từ năm 1947 đến năm 1954, Thái Nguyên là \"Thủ đô kháng chiến\", nơi ra đời những quyết sách quan trọng nhất đưa cuộc kháng chiến đến thắng lợi hoàn toàn.",
+    "mediaUrl": "https://thlytutrong.com.vn/images/bac-ho-va-dai-tuong-vo-nguyen-giap-atk.jpg",
+    "source": "Cổng thông tin điện tử tỉnh Thái Nguyên / Khu di tích quốc gia đặc biệt ATK Định Hóa",
+    "sourceUrl": "https://thainguyen.gov.vn/di-tich-danh-lam-thang-canh/khu-di-tich-quoc-gia-dac-biet-atk-dinh-hoa-291210",
+    "published": true,
+    "teacherId": "curated-tradition",
+    "updatedAt": "2026-10-27"
+  },
+  {
     "id": "curated-image-bac-ho-atk-dinh-hoa",
     "kind": "IMAGE",
     "title": "Bác Hồ làm việc tại ATK Định Hóa",
