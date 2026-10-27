@@ -2,15 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  Cloud,
   Download,
+  ExternalLink,
   Eye,
   EyeOff,
   FileText,
+  HardDrive,
+  Link2,
   MonitorPlay,
   Presentation,
   QrCode,
+  RefreshCw,
   Smartphone,
   Trash2,
   Upload,
@@ -28,10 +34,17 @@ import {
   deleteLesson,
   downloadLesson,
   saveLesson,
+  syncLessonsFromGoogleDrive,
   useLessonLibrary,
   validateLessonFile,
   type Lesson,
 } from '../../services/lessons/lessonLibrary';
+import {
+  connectGoogleDrive,
+  extractDriveFileIdFromUrl,
+  getDriveConnectionStatus,
+  uploadFileToGoogleDrive,
+} from '../../services/lessons/googleDriveLessons';
 import { countPptxSlides, type SlideOutlineItem } from '../../services/lessons/pptxParser';
 import {
   publishLessonRemoteState,
@@ -54,16 +67,22 @@ export function LessonsPage() {
   const [replacing, setReplacing] = useState<Lesson | null>(null);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('Toán');
   const [grade, setGrade] = useState('Khối 4');
   const [ppt, setPpt] = useState<File | null>(null);
   const [pdf, setPdf] = useState<File | null>(null);
+  const [saveToDrive, setSaveToDrive] = useState(true);
+  const [driveLinkInput, setDriveLinkInput] = useState('');
+  const [driveSlideCountInput, setDriveSlideCountInput] = useState(15);
+  const [driveConnected, setDriveConnected] = useState(() => getDriveConnectionStatus().connected);
+  const [driveEmail, setDriveEmail] = useState(() => getDriveConnectionStatus().email);
 
   // Active presentation state on computer
   const [preview, setPreview] = useState<Lesson | null>(null);
   const [directFile, setDirectFile] = useState<File | null>(null);
-  const [presentMode, setPresentMode] = useState<'ppt' | 'pdf'>('ppt');
+  const [presentMode, setPresentMode] = useState<'ppt' | 'pdf' | 'drive_embed'>('ppt');
   const [sessionId, setSessionId] = useState('');
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(1);
@@ -157,12 +176,52 @@ export function LessonsPage() {
     );
   }, [preview, sessionId]);
 
+  const refreshDriveStatus = () => {
+    const st = getDriveConnectionStatus();
+    setDriveConnected(st.connected);
+    setDriveEmail(st.email);
+  };
+
+  const handleConnectAndSyncDrive = async () => {
+    if (!currentUser?.uid) {
+      showToast('Vui lòng đăng nhập tài khoản giáo viên.', 'error');
+      return;
+    }
+    setBusy(true);
+    try {
+      await connectGoogleDrive();
+      refreshDriveStatus();
+      const syncedCount = await syncLessonsFromGoogleDrive(currentUser.uid);
+      showToast(
+        syncedCount > 0
+          ? `Đã kết nối Google Drive và đồng bộ ${syncedCount} bài giảng!`
+          : 'Đã kết nối Kho Google Drive thành công! Mọi bài giảng tải lên sẽ được lưu vào Google Drive của thầy/cô.',
+        'success'
+      );
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : 'Không kết nối được Google Drive.',
+        'error'
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const startPresentation = (
     lesson: Lesson,
-    mode?: 'ppt' | 'pdf',
+    mode?: 'ppt' | 'pdf' | 'drive_embed',
     instantFile: File | null = null
   ) => {
-    const chosenMode = mode || (lesson.pptName ? 'ppt' : 'pdf');
+    const chosenMode =
+      mode ||
+      (lesson.pptName
+        ? 'ppt'
+        : lesson.pdfName
+          ? 'pdf'
+          : lesson.externalDriveEmbedUrl
+            ? 'drive_embed'
+            : 'ppt');
     const newSessionId = `${lesson.id.slice(0, 8)}_${Date.now().toString(36)}`;
     setDirectFile(instantFile);
     setPresentMode(chosenMode);
@@ -210,16 +269,17 @@ export function LessonsPage() {
         subject: 'Tổng hợp',
         grade: 'Khối 4',
         createdAt: new Date().toISOString(),
+        storageProvider: 'local',
         pageCount: slideCount,
         ...(isPdf ? { pdfName: file.name } : { pptName: file.name }),
       };
 
-      // Also save into local library so teacher can re-open it anytime
+      // Best-effort save into local library
       if (currentUser?.uid) {
         try {
           await saveLesson(lessonObj, isPptx ? file : null, isPdf ? file : null);
         } catch {
-          // Even if IndexedDB is full, still allow instant presentation from memory
+          // Even if file is huge and exceeds browser cache, still present immediately from memory
         }
       }
 
@@ -239,6 +299,7 @@ export function LessonsPage() {
       showToast(err instanceof Error ? err.message : 'Không xử lý được tệp.', 'error');
     } finally {
       setBusy(false);
+      setUploadProgress(null);
     }
   };
 
@@ -312,7 +373,8 @@ export function LessonsPage() {
             <div>
               <p className="text-xs uppercase font-bold text-indigo-200">Slide hiện tại</p>
               <p className="text-3xl font-black text-white mt-0.5">
-                {activePage} <span className="text-lg font-semibold text-indigo-300">/ {totalCount}</span>
+                {activePage}{' '}
+                <span className="text-lg font-semibold text-indigo-300">/ {totalCount}</span>
               </p>
             </div>
             <button
@@ -461,13 +523,26 @@ export function LessonsPage() {
     const remoteUrl = `${window.location.origin}/teacher/lessons?remote=${encodeURIComponent(sessionId)}`;
     const hasBothModes = Boolean(preview.pptName && preview.pdfName && !directFile);
 
+    // Compute Drive/Slides embed URL if in drive_embed mode
+    const driveEmbedSrc = (() => {
+      if (!preview.externalDriveEmbedUrl) return '';
+      if (preview.externalDriveEmbedUrl.includes('/presentation/')) {
+        return `${preview.externalDriveEmbedUrl}#slide=${page}`;
+      }
+      return preview.externalDriveEmbedUrl;
+    })();
+
     return (
       <div className="fixed inset-0 z-50 bg-slate-950 p-3 flex flex-col gap-2 h-[100dvh] overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-2 shrink-0 text-white bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2">
           <div className="flex items-center gap-3 min-w-0">
             <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-500/20 border border-indigo-400/30 px-2.5 py-1 text-xs font-bold text-indigo-300 shrink-0">
               <Presentation className="w-3.5 h-3.5" />
-              {presentMode === 'ppt' ? 'PPTX Trực tiếp' : 'PDF Trình chiếu'}
+              {presentMode === 'ppt'
+                ? 'PPTX Trực tiếp'
+                : presentMode === 'pdf'
+                  ? 'PDF Trình chiếu'
+                  : 'Google Drive / Slides'}
             </span>
             <strong className="truncate text-sm sm:text-base">{preview.title}</strong>
           </div>
@@ -517,7 +592,16 @@ export function LessonsPage() {
         </div>
 
         <div className="relative flex-1 min-h-0 rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
-          {presentMode === 'ppt' ? (
+          {presentMode === 'drive_embed' && driveEmbedSrc ? (
+            <iframe
+              key={driveEmbedSrc}
+              src={driveEmbedSrc}
+              title={preview.title}
+              className="w-full h-full border-0 bg-slate-950"
+              allow="autoplay; fullscreen"
+              allowFullScreen
+            />
+          ) : presentMode === 'ppt' ? (
             <PptxLessonView
               lesson={preview}
               directFile={directFile}
@@ -586,7 +670,7 @@ export function LessonsPage() {
   }
 
   // ============================================================================
-  // 3. LESSON LIBRARY & QUICK PPTX UPLOAD VIEW (TRANG QUẢN LÝ BÀI GIẢNG PPT)
+  // 3. LESSON LIBRARY & GOOGLE DRIVE REPOSITORY VIEW
   // ============================================================================
   return (
     <div className="space-y-5">
@@ -603,10 +687,28 @@ export function LessonsPage() {
       />
 
       <PageHeader
-        title="BÀI GIẢNG POWERPOINT (.PPTX) & PDF"
-        description="Tải trực tiếp tệp .pptx hoặc .pdf lên trình chiếu ngay trên web và dùng điện thoại làm bút chuyển slide từ xa."
+        title="KHO BÀI GIẢNG PPTX / PDF (GOOGLE DRIVE & MÁY TÍNH)"
+        description="Không giới hạn dung lượng tệp tải lên • Lưu trữ trực tiếp vào Google Drive của thầy/cô để mở trên mọi máy tính và điều khiển bằng điện thoại."
         action={
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => void handleConnectAndSyncDrive()}
+              className={`gap-2 font-bold ${
+                driveConnected
+                  ? 'border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                  : 'border-sky-300 bg-sky-50 text-sky-800 hover:bg-sky-100'
+              }`}
+            >
+              {driveConnected ? (
+                <RefreshCw className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Cloud className="w-4 h-4 text-sky-600" />
+              )}
+              {driveConnected ? 'Đồng bộ từ Google Drive' : 'Kết nối Kho Google Drive'}
+            </Button>
+
             <Button
               variant="outline"
               disabled={busy}
@@ -616,6 +718,7 @@ export function LessonsPage() {
               <Zap className="w-4 h-4 text-amber-500" />
               Chọn tệp .PPTX / .PDF chiếu ngay
             </Button>
+
             <Button
               variant="primary"
               disabled={busy}
@@ -624,16 +727,60 @@ export function LessonsPage() {
                 setTitle('');
                 setPpt(null);
                 setPdf(null);
+                setDriveLinkInput('');
                 setOpen(true);
               }}
               className="gap-2"
             >
               <Upload className="w-4 h-4" />
-              Lưu bài giảng vào kho
+              Tải bài giảng lên Kho
             </Button>
           </div>
         }
       />
+
+      {/* Google Drive Storage Status Bar */}
+      <div className="rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-white to-indigo-50 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <Cloud className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="font-black text-sm text-slate-900">
+                Kho lưu trữ Google Drive cá nhân (Không giới hạn dung lượng tệp)
+              </h2>
+              {driveConnected ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Đã kết nối{' '}
+                  {driveEmail ? `(${driveEmail})` : ''}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-900">
+                  Chưa kết nối phiên này
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-600 mt-0.5">
+              Khi tải giáo án lên, tệp <strong>.pptx / .pdf</strong> (kể cả tệp 100 MB, 500 MB hay
+              hàng GB có video) sẽ được lưu vào thư mục{' '}
+              <strong>“Kho Bài Giảng PPT - Lớp Học Tương Tác”</strong> trên chính Google Drive của
+              thầy/cô.
+            </p>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={busy}
+          onClick={() => void handleConnectAndSyncDrive()}
+          className="shrink-0 gap-1.5"
+        >
+          <Cloud className="w-4 h-4 text-sky-600" />
+          {driveConnected ? 'Làm mới kho Drive' : 'Kết nối Google Drive ngay'}
+        </Button>
+      </div>
 
       {/* Auto-detected Active Presentation Banner (for opening on Phone without scanning QR) */}
       {detectedTeacherPresentation && (
@@ -662,47 +809,6 @@ export function LessonsPage() {
         </div>
       )}
 
-      {/* Feature Highlight & Guide Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-indigo-50 via-sky-50 to-emerald-50 text-slate-800 border border-indigo-200/80 p-4 text-sm grid md:grid-cols-3 gap-4">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 font-black">
-            1
-          </div>
-          <div>
-            <p className="font-bold text-slate-900">Trình chiếu trực tiếp .PPTX</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Chọn ngay tệp <strong>.pptx</strong> từ máy tính để trình chiếu trực tiếp (hỗ trợ nền
-              slide, bố cục chữ, hình ảnh, bảng biểu, âm thanh/video) hoặc dùng kèm bản{' '}
-              <strong>.pdf</strong>.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 font-black">
-            2
-          </div>
-          <div>
-            <p className="font-bold text-slate-900">Điều khiển từ xa bằng Điện thoại</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Khi đang chiếu trên máy tính, bấm <strong>“Điều khiển bằng ĐT”</strong> để quét mã QR
-              hoặc mở trang này trên điện thoại để qua bài, lùi trang, xem ghi chú.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 font-black">
-            3
-          </div>
-          <div>
-            <p className="font-bold text-slate-900">Lưu trữ nhanh trên trình duyệt</p>
-            <p className="text-xs text-slate-600 mt-0.5">
-              Các bài giảng lưu trong kho của trình duyệt máy đang dùng (tối đa 50 MB/tệp), mở tức
-              thì không lo hết dung lượng đám mây.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {library.loading ? (
         <p className="text-slate-600 py-8 text-center">Đang đọc kho bài giảng…</p>
       ) : library.error ? (
@@ -715,45 +821,58 @@ export function LessonsPage() {
             <Presentation className="w-8 h-8" />
           </div>
           <div className="space-y-1 max-w-md mx-auto">
-            <h2 className="text-lg font-black text-slate-900">
-              Chưa có bài giảng nào trong kho máy này
-            </h2>
+            <h2 className="text-lg font-black text-slate-900">Chưa có bài giảng nào trong kho</h2>
             <p className="text-sm text-slate-500">
-              Thầy/cô có thể chọn tệp <strong>.pptx</strong> hoặc <strong>.pdf</strong> để trình
-              chiếu ngay lập tức hoặc lưu vào kho bài giảng của lớp.
+              Thầy/cô có thể tải tệp <strong>.pptx / .pdf</strong> không giới hạn dung lượng lên{' '}
+              <strong>Google Drive</strong>, dán link Google Drive có sẵn hoặc chọn tệp chiếu ngay.
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-3 pt-2">
             <Button
               variant="primary"
-              onClick={() => quickFileInputRef.current?.click()}
-              className="gap-2"
-            >
-              <Zap className="w-4 h-4" />
-              Chọn tệp .PPTX / .PDF chiếu ngay
-            </Button>
-            <Button
-              variant="outline"
               onClick={() => {
                 setReplacing(null);
                 setTitle('');
                 setPpt(null);
                 setPdf(null);
+                setDriveLinkInput('');
                 setOpen(true);
               }}
               className="gap-2"
             >
-              <Upload className="w-4 h-4" />
-              Tải bài giảng lên kho
+              <Cloud className="w-4 h-4" />
+              Tải bài giảng lên Google Drive
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => void handleConnectAndSyncDrive()}
+              className="gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Lấy bài giảng từ Google Drive
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => quickFileInputRef.current?.click()}
+              className="gap-2"
+            >
+              <Zap className="w-4 h-4 text-amber-500" />
+              Chọn tệp trên máy chiếu ngay
             </Button>
           </div>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {library.items.map(lesson => {
-            const canPresentPpt = Boolean(lesson.pptName);
-            const canPresentPdf = Boolean(lesson.pdfName);
-            const canPresent = canPresentPpt || canPresentPdf;
+            const canPresentPpt = Boolean(lesson.pptName || lesson.pptDriveId);
+            const canPresentPdf = Boolean(lesson.pdfName || lesson.pdfDriveId);
+            const canPresentDriveEmbed = Boolean(lesson.externalDriveEmbedUrl);
+            const isDriveStored = Boolean(
+              lesson.storageProvider === 'gdrive' ||
+                lesson.pptDriveId ||
+                lesson.pdfDriveId ||
+                lesson.externalDriveEmbedUrl
+            );
 
             return (
               <article
@@ -761,10 +880,21 @@ export function LessonsPage() {
                 className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
-                      {lesson.grade} • {lesson.subject}
-                    </span>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+                        {lesson.grade} • {lesson.subject}
+                      </span>
+                      {isDriveStored ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-sky-200 px-2.5 py-0.5 text-xs font-bold text-sky-700">
+                          <Cloud className="w-3.5 h-3.5" /> Kho Google Drive
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                          <HardDrive className="w-3.5 h-3.5" /> Lưu trên máy
+                        </span>
+                      )}
+                    </div>
                     {lesson.pageCount && (
                       <span className="text-xs font-bold text-slate-500">
                         {lesson.pageCount} slide
@@ -789,6 +919,12 @@ export function LessonsPage() {
                         <span>
                           <strong>PDF:</strong> {lesson.pdfName}
                         </span>
+                      </p>
+                    )}
+                    {lesson.externalDriveEmbedUrl && !lesson.pptName && !lesson.pdfName && (
+                      <p className="flex items-center gap-1.5 break-all text-sky-700">
+                        <Link2 className="w-4 h-4 shrink-0" />
+                        <span>Liên kết trình chiếu trực tiếp từ Google Drive / Slides</span>
                       </p>
                     )}
                   </div>
@@ -821,6 +957,31 @@ export function LessonsPage() {
                     </Button>
                   )}
 
+                  {canPresentDriveEmbed && (
+                    <Button
+                      variant={canPresentPpt || canPresentPdf ? 'outline' : 'primary'}
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => startPresentation(lesson, 'drive_embed')}
+                      className="gap-1.5"
+                    >
+                      <MonitorPlay className="w-4 h-4" />
+                      Chiếu từ Drive
+                    </Button>
+                  )}
+
+                  {(lesson.pptDriveUrl || lesson.pdfDriveUrl) && (
+                    <a
+                      href={lesson.pptDriveUrl || lesson.pdfDriveUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 rounded-xl border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-700 hover:bg-sky-100"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Mở trên Drive
+                    </a>
+                  )}
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -832,10 +993,11 @@ export function LessonsPage() {
                       setGrade(lesson.grade);
                       setPpt(null);
                       setPdf(null);
+                      setDriveLinkInput(lesson.externalDriveEmbedUrl || '');
                       setOpen(true);
                     }}
                   >
-                    {canPresent ? 'Cập nhật tệp' : 'Bổ sung tệp'}
+                    Cập nhật
                   </Button>
 
                   {lesson.pptName && (
@@ -881,13 +1043,17 @@ export function LessonsPage() {
         </div>
       )}
 
-      {/* Upload / Edit Lesson Modal */}
+      {/* Upload / Save Lesson Modal (Google Drive + Local + Unlimited Size) */}
       <Modal
         isOpen={open}
         onClose={() => {
           if (!busy) setOpen(false);
         }}
-        title={replacing ? 'Cập nhật tệp bài giảng' : 'Tải bài giảng PPTX / PDF lên kho'}
+        title={
+          replacing
+            ? 'Cập nhật bài giảng (Google Drive / Máy tính)'
+            : 'Tải giáo án PPTX / PDF lên Kho Google Drive'
+        }
         footer={
           <>
             <Button variant="secondary" disabled={busy} onClick={() => setOpen(false)}>
@@ -895,12 +1061,13 @@ export function LessonsPage() {
             </Button>
             <Button
               variant="primary"
-              disabled={busy || (!ppt && !pdf)}
+              disabled={busy || (!ppt && !pdf && !driveLinkInput.trim())}
               onClick={() =>
                 run(async () => {
                   if (!currentUser?.uid) throw new Error('Cần đăng nhập giáo viên.');
                   if (!title.trim()) throw new Error('Nhập tên bài giảng.');
                   let pageCount: number | undefined = replacing?.pageCount;
+                  const lessonId = replacing?.id || crypto.randomUUID();
 
                   if (ppt) {
                     await validateLessonFile(ppt, 'ppt');
@@ -908,7 +1075,7 @@ export function LessonsPage() {
                       try {
                         pageCount = await countPptxSlides(ppt);
                       } catch {
-                        // Ignore slide count failure if custom zip
+                        // Ignore slide count failure
                       }
                     }
                   }
@@ -924,31 +1091,127 @@ export function LessonsPage() {
                     }
                   }
 
+                  let pptDriveId = replacing?.pptDriveId;
+                  let pptDriveUrl = replacing?.pptDriveUrl;
+                  let pdfDriveId = replacing?.pdfDriveId;
+                  let pdfDriveUrl = replacing?.pdfDriveUrl;
+                  let externalDriveEmbedUrl = replacing?.externalDriveEmbedUrl;
+
+                  if (driveLinkInput.trim()) {
+                    const parsedLink = extractDriveFileIdFromUrl(driveLinkInput);
+                    if (!parsedLink) {
+                      throw new Error(
+                        'Liên kết Google Drive / Google Slides chưa đúng định dạng. Hãy sao chép liên kết chia sẻ từ Google Drive.'
+                      );
+                    }
+                    externalDriveEmbedUrl = parsedLink.embedUrl;
+                    if (!pageCount) {
+                      pageCount = Math.max(1, driveSlideCountInput || 15);
+                    }
+                  }
+
+                  if (saveToDrive && (ppt || pdf)) {
+                    setUploadProgress(1);
+                    if (ppt) {
+                      const uploadedPpt = await uploadFileToGoogleDrive(
+                        ppt,
+                        {
+                          lessonId,
+                          ownerId: currentUser.uid,
+                          title: title.trim(),
+                          subject,
+                          grade,
+                          fileRole: 'ppt',
+                          pageCount,
+                        },
+                        pct => setUploadProgress(pct)
+                      );
+                      pptDriveId = uploadedPpt.fileId;
+                      pptDriveUrl = uploadedPpt.webViewLink;
+                    }
+                    if (pdf) {
+                      const uploadedPdf = await uploadFileToGoogleDrive(
+                        pdf,
+                        {
+                          lessonId,
+                          ownerId: currentUser.uid,
+                          title: title.trim(),
+                          subject,
+                          grade,
+                          fileRole: 'pdf',
+                          pageCount,
+                        },
+                        pct => setUploadProgress(pct)
+                      );
+                      pdfDriveId = uploadedPdf.fileId;
+                      pdfDriveUrl = uploadedPdf.webViewLink;
+                    }
+                    refreshDriveStatus();
+                  }
+
                   const lesson: Lesson = {
                     ...(replacing || {}),
-                    id: replacing?.id || crypto.randomUUID(),
+                    id: lessonId,
                     ownerId: currentUser.uid,
                     title: title.trim(),
                     subject,
                     grade,
                     createdAt: replacing?.createdAt || new Date().toISOString(),
+                    storageProvider:
+                      saveToDrive || externalDriveEmbedUrl ? 'gdrive' : 'local',
                     ...(pageCount ? { pageCount } : {}),
                     ...(ppt ? { pptName: ppt.name } : {}),
                     ...(pdf ? { pdfName: pdf.name } : {}),
+                    ...(pptDriveId ? { pptDriveId } : {}),
+                    ...(pptDriveUrl ? { pptDriveUrl } : {}),
+                    ...(pdfDriveId ? { pdfDriveId } : {}),
+                    ...(pdfDriveUrl ? { pdfDriveUrl } : {}),
+                    ...(externalDriveEmbedUrl ? { externalDriveEmbedUrl } : {}),
                   };
 
                   await saveLesson(lesson, ppt, pdf);
                   setOpen(false);
-                  showToast('Đã lưu bài giảng! Bấm Trình chiếu để mở ngay.', 'success');
+                  showToast(
+                    saveToDrive && (ppt || pdf)
+                      ? 'Đã tải bài giảng lên Google Drive của thầy/cô thành công!'
+                      : 'Đã lưu bài giảng thành công!',
+                    'success'
+                  );
                 })
               }
             >
-              {busy ? 'Đang kiểm tra và lưu…' : 'Lưu bài giảng'}
+              {busy
+                ? uploadProgress !== null
+                  ? `Đang tải lên Google Drive (${uploadProgress}%)…`
+                  : 'Đang lưu…'
+                : 'Lưu bài giảng'}
             </Button>
           </>
         }
       >
         <div className="space-y-4">
+          {/* Storage target selector */}
+          <div className="rounded-2xl border border-sky-200 bg-sky-50/70 p-3.5 space-y-2">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={saveToDrive}
+                onChange={e => setSaveToDrive(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+              />
+              <div className="text-xs">
+                <span className="font-black text-slate-900 flex items-center gap-1.5 text-sm">
+                  <Cloud className="w-4 h-4 text-sky-600" />
+                  Lưu trực tiếp vào Kho Google Drive của tôi (Khuyên dùng)
+                </span>
+                <p className="text-slate-600 mt-0.5">
+                  Không giới hạn dung lượng tệp tải lên (hỗ trợ tệp .pptx/.pdf nặng hàng trăm MB có
+                  video) và tự động đồng bộ khi mở trên máy tính ở lớp.
+                </p>
+              </div>
+            </label>
+          </div>
+
           <label className="block text-sm font-bold text-slate-700">
             Tên bài giảng
             <input
@@ -958,6 +1221,7 @@ export function LessonsPage() {
               placeholder="Ví dụ: Phân số – Tiết 1"
             />
           </label>
+
           <div className="grid grid-cols-2 gap-3">
             <label className="block text-sm font-bold text-slate-700">
               Môn học
@@ -980,8 +1244,9 @@ export function LessonsPage() {
               </select>
             </label>
           </div>
+
           <label className="block text-sm font-bold text-slate-700">
-            Tệp PowerPoint (.pptx trình chiếu trực tiếp, tối đa 50 MB)
+            Tệp PowerPoint (.pptx / .ppt — Không giới hạn dung lượng)
             <input
               className={field}
               type="file"
@@ -993,8 +1258,9 @@ export function LessonsPage() {
               }}
             />
           </label>
+
           <label className="block text-sm font-bold text-slate-700">
-            Tệp PDF trình chiếu (tùy chọn, tối đa 50 MB)
+            Tệp PDF trình chiếu (tùy chọn — Không giới hạn dung lượng)
             <input
               className={field}
               type="file"
@@ -1006,11 +1272,46 @@ export function LessonsPage() {
               }}
             />
           </label>
-          <p className="text-xs text-slate-500">
-            Thầy/cô có thể chỉ cần chọn tệp <strong>.pptx</strong> để trình chiếu trực tiếp ngay
-            trên web, hoặc tải kèm bản <strong>.pdf</strong> nếu muốn giữ nguyên 100% font chữ đặc
-            biệt.
-          </p>
+
+          <div className="border-t border-slate-200 pt-3 space-y-2">
+            <label className="block text-sm font-bold text-slate-700">
+              Hoặc dán liên kết bài giảng đã có sẵn trên Google Drive / Google Slides (tùy chọn)
+              <input
+                className={field}
+                value={driveLinkInput}
+                onChange={e => setDriveLinkInput(e.target.value)}
+                placeholder="https://docs.google.com/presentation/d/... hoặc https://drive.google.com/file/d/..."
+              />
+            </label>
+            {driveLinkInput.trim() && (
+              <label className="block text-xs font-bold text-slate-600">
+                Số trang slide dự kiến (để điều khiển trên điện thoại)
+                <input
+                  type="number"
+                  min={1}
+                  max={200}
+                  className={field}
+                  value={driveSlideCountInput}
+                  onChange={e => setDriveSlideCountInput(Number(e.target.value) || 1)}
+                />
+              </label>
+            )}
+          </div>
+
+          {uploadProgress !== null && (
+            <div className="rounded-xl bg-sky-50 border border-sky-200 p-3 space-y-1.5">
+              <div className="flex justify-between text-xs font-bold text-sky-900">
+                <span>Đang tải tệp lên Google Drive của thầy/cô...</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-sky-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-sky-600 transition-all duration-200"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
 
@@ -1034,7 +1335,7 @@ export function LessonsPage() {
                   if (deleting) {
                     await deleteLesson(deleting);
                     setDeleting(null);
-                    showToast('Đã xoá bài giảng khỏi kho trên máy.', 'success');
+                    showToast('Đã xoá bài giảng khỏi kho.', 'success');
                   }
                 })
               }
@@ -1046,8 +1347,8 @@ export function LessonsPage() {
       >
         <p className="font-bold text-slate-900">{deleting?.title}</p>
         <p className="mt-2 text-sm text-slate-600">
-          Xoá bản PPTX/PDF đã lưu trong kho trình duyệt này; tệp gốc trong thư mục máy tính của
-          thầy/cô vẫn giữ nguyên.
+          Xoá bài giảng này khỏi danh sách kho (tệp gốc trong thư mục máy tính của thầy/cô vẫn giữ
+          nguyên).
         </p>
       </Modal>
     </div>
