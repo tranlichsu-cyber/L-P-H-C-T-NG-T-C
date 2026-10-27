@@ -160,3 +160,5 @@ Expand four official-source digital heritage profiles: 27/7, Khuon Tat, Tin Keo 
 2026-10-27: Cập nhật thư viện lịch sử: xóa câu ghi chú đối chiếu sách giáo khoa khỏi phần giới thiệu và chuẩn hóa hiển thị bài viết truyền thống.
 
 2026-10-27: Xóa khối Mục lục bài giới thiệu trong phần Tư liệu lịch sử theo yêu cầu.
+
+2026-10-27: Cập nhật nội dung toàn diện bài giới thiệu Di tích lịch sử Quốc gia Căng Bá Vân gồm 5 phần chi tiết.
