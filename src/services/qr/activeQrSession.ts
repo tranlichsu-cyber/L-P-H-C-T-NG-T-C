@@ -20,7 +20,8 @@ export function isAllowedTeacherReturnTo(path: unknown): path is string {
   if (typeof path !== 'string') return false;
   return (
     /^\/teacher\/room\/[^/?#]+(?:\?qr=1)?$/.test(path) ||
-    /^\/teacher\/qr-cards(?:\/[^/?#]+(?:\/(?:scan|present))?)?$/.test(path)
+    /^\/teacher\/qr-cards(?:\/[^/?#]+(?:\/(?:scan|present))?)?$/.test(path) ||
+    /^\/teacher\/lessons(?:\?.*)?$/.test(path)
   );
 }
 
