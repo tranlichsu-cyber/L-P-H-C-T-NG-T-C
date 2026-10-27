@@ -18,8 +18,9 @@ console.log('PASS: article headings/body separation, legacy text preservation, C
 
 const {curatedHistoryArticles}=await load('src/data/historyArticles.ts');
 const {bookCultureArticles}=await load('src/data/bookCultureArticles.ts');
+const {curatedTraditionMaterials}=await load('src/data/traditionMaterials.ts');
 const ids=new Set();
-for(const article of [...curatedHistoryArticles,...bookCultureArticles]){
+for(const article of [...curatedHistoryArticles,...bookCultureArticles,...curatedTraditionMaterials.filter(m=>m.kind==='HISTORY'||m.kind==='CULTURE')]){
  assert.ok(!ids.has(article.id),'unique article '+article.id);ids.add(article.id);
  assert.ok(article.source.trim(),article.id+' has source');
  assert.ok(!article.sourceUrl || new URL(article.sourceUrl).protocol==='https:',article.id+' safe source');
@@ -28,8 +29,16 @@ for(const article of [...curatedHistoryArticles,...bookCultureArticles]){
  assert.ok(article.text.split(/\s+/).length>200,article.id+' connected reading');
  if(article.source.includes('tệp giáo viên'))assert.match(article.source,/trang \d/);
 }
+for(const media of curatedTraditionMaterials.filter(m=>m.kind==='IMAGE'||m.kind==='VIDEO')){
+ assert.ok(!ids.has(media.id),'unique media '+media.id);ids.add(media.id);
+ assert.ok(media.title.trim() && media.text.trim() && media.source.trim(),media.id+' complete metadata');
+ assert.equal(new URL(media.mediaUrl).protocol,'https:',media.id+' safe mediaUrl');
+ assert.equal(new URL(media.sourceUrl).protocol,'https:',media.id+' safe sourceUrl');
+}
+const allMaterials=[...bookCultureArticles,...curatedTraditionMaterials];
+for(const kind of ['HISTORY','CULTURE','IMAGE','VIDEO'])assert.ok(allMaterials.some(m=>m.kind===kind),'has material kind '+kind);
 for(const topic of ['SITE','PERSON','EVENT'])assert.ok(curatedHistoryArticles.some(a=>a.historyTopic===topic));
 assert.ok(curatedHistoryArticles.every(a=>a.question&&a.answer));
 assert.match(curatedHistoryArticles.find(a=>a.id==='reading-nguom').text,/báo cáo sơ bộ/i);
 assert.doesNotMatch(heritageCatalog.find(a=>a.id==='than-sa').detail,/30.000 đến 10.000/);
-console.log('PASS: sourced historical and cultural reading, nonempty sections, book page citations, questions and updated archaeology scope.');
+console.log('PASS: sourced historical and cultural reading, nonempty sections, book page citations, questions, media materials and updated archaeology scope.');
