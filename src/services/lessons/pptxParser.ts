@@ -14,9 +14,14 @@ export interface PptxParagraph {
   runs: PptxTextRun[];
 }
 
+export type PptxAnimEffect = 'fade' | 'flyIn' | 'zoom' | 'wipe' | 'appear';
+
 export interface PptxShapeElement {
   kind: 'shape';
   id: string;
+  spId?: string;
+  animStep?: number;
+  animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
   wPct: number;
@@ -32,6 +37,9 @@ export interface PptxShapeElement {
 export interface PptxImageElement {
   kind: 'image';
   id: string;
+  spId?: string;
+  animStep?: number;
+  animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
   wPct: number;
@@ -42,6 +50,9 @@ export interface PptxImageElement {
 export interface PptxMediaElement {
   kind: 'video' | 'audio';
   id: string;
+  spId?: string;
+  animStep?: number;
+  animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
   wPct: number;
@@ -61,6 +72,9 @@ export interface PptxTableCell {
 export interface PptxTableElement {
   kind: 'table';
   id: string;
+  spId?: string;
+  animStep?: number;
+  animEffect?: PptxAnimEffect;
   xPct: number;
   yPct: number;
   wPct: number;
@@ -79,6 +93,8 @@ export interface ParsedPptxSlide {
   title: string;
   summary: string;
   notes: string;
+  transition?: 'fade' | 'push' | 'wipe' | 'zoom' | 'slide';
+  maxAnimSteps?: number;
   backgroundColor?: string;
   backgroundGradient?: string;
   backgroundImageUrl?: string;
@@ -649,6 +665,45 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
       await parseBgFromDoc(parseXml(layoutXml), layoutRels);
     }
 
+    // Parse slide transition
+    let slideTransition: 'fade' | 'push' | 'wipe' | 'zoom' | 'slide' = 'slide';
+    const transitionNode = findFirstDescendant(slideDoc, 'transition');
+    if (transitionNode) {
+      if (findFirstDescendant(transitionNode, 'fade')) slideTransition = 'fade';
+      else if (findFirstDescendant(transitionNode, 'push')) slideTransition = 'push';
+      else if (findFirstDescendant(transitionNode, 'wipe')) slideTransition = 'wipe';
+      else if (findFirstDescendant(transitionNode, 'zoom')) slideTransition = 'zoom';
+    }
+
+    // Parse element animations from <p:timing>
+    const animMap = new Map<string, { step: number; effect: PptxAnimEffect }>();
+    const timingNode = findFirstDescendant(slideDoc, 'timing');
+    let maxAnimSteps = 0;
+    if (timingNode) {
+      const spTgts = findAllDescendants(timingNode, 'spTgt');
+      let currentStep = 1;
+      for (const spTgt of spTgts) {
+        const spid = spTgt.getAttribute('spid');
+        if (!spid) continue;
+        if (!animMap.has(spid)) {
+          const parent = spTgt.parentElement?.parentElement;
+          const effectNode = parent
+            ? findFirstDescendant(parent, 'animEffect') ||
+              findFirstDescendant(parent, 'anim')
+            : null;
+          const filter = effectNode?.getAttribute('filter');
+          let effect: PptxAnimEffect = 'flyIn';
+          if (filter?.includes('fade')) effect = 'fade';
+          else if (filter?.includes('wipe')) effect = 'wipe';
+          else if (filter?.includes('wheel') || filter?.includes('zoom')) effect = 'zoom';
+
+          animMap.set(spid, { step: currentStep, effect });
+          maxAnimSteps = Math.max(maxAnimSteps, currentStep);
+          currentStep++;
+        }
+      }
+    }
+
     const elements: PptxSlideElement[] = [];
     let slideTitle = '';
     const summaryParts: string[] = [];
@@ -791,6 +846,10 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
         }
 
         if (tag === 'pic') {
+          const cNvPr = findFirstDescendant(node, 'cNvPr');
+          const spId = cNvPr?.getAttribute('id') || '';
+          const animInfo = spId ? animMap.get(spId) : undefined;
+
           const xfrm = findFirstDescendant(node, 'xfrm');
           const box = resolveBoxToPct(xfrm, null, null, groupMapping);
 
@@ -812,6 +871,9 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
               elements.push({
                 kind: videoFile ? 'video' : 'audio',
                 id: `media_${idx}_${elements.length}`,
+                spId,
+                animStep: animInfo?.step || 0,
+                animEffect: animInfo?.effect || 'fade',
                 ...box,
                 url: mediaUrl,
                 posterUrl: imgUrl || undefined,
@@ -824,6 +886,9 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
             elements.push({
               kind: 'image',
               id: `img_${idx}_${elements.length}`,
+              spId,
+              animStep: animInfo?.step || 0,
+              animEffect: animInfo?.effect || 'flyIn',
               ...box,
               url: imgUrl,
             });
@@ -832,6 +897,10 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
         }
 
         if (tag === 'graphicFrame') {
+          const cNvPr = findFirstDescendant(node, 'cNvPr');
+          const spId = cNvPr?.getAttribute('id') || '';
+          const animInfo = spId ? animMap.get(spId) : undefined;
+
           const xfrm = findFirstDescendant(node, 'xfrm');
           const box = resolveBoxToPct(xfrm, null, null, groupMapping);
 
@@ -844,6 +913,9 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
               elements.push({
                 kind: 'image',
                 id: `img_gf_${idx}_${elements.length}`,
+                spId,
+                animStep: animInfo?.step || 0,
+                animEffect: animInfo?.effect || 'flyIn',
                 ...box,
                 url: imgUrl,
               });
@@ -890,6 +962,9 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
               elements.push({
                 kind: 'table',
                 id: `tbl_${idx}_${elements.length}`,
+                spId,
+                animStep: animInfo?.step || 0,
+                animEffect: animInfo?.effect || 'fade',
                 ...box,
                 rows,
               });
@@ -905,6 +980,10 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
           const phIdx = ph?.getAttribute('idx') || null;
           if (phType === 'sldNum' || phType === 'dt' || phType === 'ftr') continue;
 
+          const cNvPr = findFirstDescendant(node, 'cNvPr');
+          const spId = cNvPr?.getAttribute('id') || '';
+          const animInfo = spId ? animMap.get(spId) : undefined;
+
           const spPr = getLocalTagChildren(node, 'spPr')[0];
           const xfrm = findFirstDescendant(node, 'xfrm');
           const box = resolveBoxToPct(xfrm, phType, phIdx, groupMapping);
@@ -919,6 +998,9 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
               elements.push({
                 kind: 'image',
                 id: `img_sp_${idx}_${elements.length}`,
+                spId,
+                animStep: animInfo?.step || 0,
+                animEffect: animInfo?.effect || 'flyIn',
                 ...box,
                 url: imgUrl,
               });
@@ -1040,6 +1122,9 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
             elements.push({
               kind: 'shape',
               id: `sp_${idx}_${elements.length}`,
+              spId,
+              animStep: animInfo?.step || 0,
+              animEffect: animInfo?.effect || (isTitle ? 'fade' : 'flyIn'),
               ...box,
               fillColor,
               borderColor,
@@ -1059,6 +1144,21 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
       await processShapeTree(spTree);
     }
 
+    // If slide has multiple elements and no timing was configured, assign sequential build steps
+    if (maxAnimSteps === 0 && elements.length > 2) {
+      let stepCounter = 1;
+      for (const el of elements) {
+        if (el.kind === 'shape' && el.isTitle) {
+          el.animStep = 0;
+        } else {
+          el.animStep = stepCounter;
+          el.animEffect = el.animEffect || (el.kind === 'image' ? 'zoom' : 'flyIn');
+          stepCounter++;
+        }
+      }
+      maxAnimSteps = stepCounter - 1;
+    }
+
     if (!slideTitle && summaryParts.length > 0) {
       slideTitle = summaryParts[0].slice(0, 90);
     }
@@ -1073,6 +1173,8 @@ export async function parsePptxPresentation(blob: Blob): Promise<ParsedPptxPrese
       title: slideTitle,
       summary,
       notes: notesText,
+      transition: slideTransition,
+      maxAnimSteps,
       backgroundColor,
       backgroundGradient,
       backgroundImageUrl,

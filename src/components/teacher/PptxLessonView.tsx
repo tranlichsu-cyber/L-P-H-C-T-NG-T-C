@@ -10,7 +10,10 @@ interface PptxLessonViewProps {
   lesson: Lesson;
   directFile?: Blob | File | null;
   page: number;
+  animStep?: number;
+  enableAnimations?: boolean;
   onCount?: (count: number) => void;
+  onMaxAnimSteps?: (max: number) => void;
   onOutlines?: (outlines: SlideOutlineItem[]) => void;
 }
 
@@ -18,7 +21,10 @@ export function PptxLessonView({
   lesson,
   directFile,
   page,
+  animStep = 0,
+  enableAnimations = true,
   onCount,
+  onMaxAnimSteps,
   onOutlines,
 }: PptxLessonViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,11 +34,13 @@ export function PptxLessonView({
   const [containerSize, setContainerSize] = useState({ width: 960, height: 540 });
 
   const onCountRef = useRef(onCount);
+  const onMaxAnimStepsRef = useRef(onMaxAnimSteps);
   const onOutlinesRef = useRef(onOutlines);
   useEffect(() => {
     onCountRef.current = onCount;
+    onMaxAnimStepsRef.current = onMaxAnimSteps;
     onOutlinesRef.current = onOutlines;
-  }, [onCount, onOutlines]);
+  }, [onCount, onMaxAnimSteps, onOutlines]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -133,12 +141,49 @@ export function PptxLessonView({
       ? presentation.slides[Math.min(presentation.slides.length - 1, Math.max(0, page - 1))]
       : null;
 
+  useEffect(() => {
+    if (currentSlide) {
+      onMaxAnimStepsRef.current?.(currentSlide.maxAnimSteps || 0);
+    }
+  }, [currentSlide]);
+
   return (
     <div
       ref={containerRef}
-      className="w-full h-full min-h-0 flex items-center justify-center overflow-hidden bg-slate-950 select-none"
+      className="w-full h-full min-h-0 flex items-center justify-center overflow-hidden bg-slate-950 select-none relative"
       aria-label={`Bài giảng PowerPoint ${lesson.title}, slide ${page}`}
     >
+      <style>{`
+        @keyframes pptxSlidePush {
+          0% { opacity: 0.1; transform: translateX(35px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pptxSlideFade {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes pptxSlideZoom {
+          0% { opacity: 0.2; transform: scale(0.94); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pptxAnimFlyIn {
+          0% { opacity: 0; transform: translateY(28px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pptxAnimZoomIn {
+          0% { opacity: 0; transform: scale(0.65); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pptxAnimFadeIn {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes pptxAnimWipeIn {
+          0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+          100% { opacity: 1; clip-path: inset(0 0 0 0); }
+        }
+      `}</style>
+
       {error ? (
         <div
           role="alert"
@@ -154,7 +199,8 @@ export function PptxLessonView({
         </div>
       ) : currentSlide ? (
         <div
-          className="relative overflow-hidden rounded-lg shadow-2xl transition-all duration-150"
+          key={`slide_${page}`}
+          className="relative overflow-hidden rounded-lg shadow-2xl transition-all duration-200"
           style={{
             width: `${Math.floor(stageWidth)}px`,
             height: `${Math.floor(stageHeight)}px`,
@@ -164,9 +210,34 @@ export function PptxLessonView({
               : currentSlide.backgroundGradient || undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            animation:
+              currentSlide.transition === 'fade'
+                ? 'pptxSlideFade 0.3s ease-out both'
+                : currentSlide.transition === 'zoom'
+                  ? 'pptxSlideZoom 0.35s cubic-bezier(0.16, 1, 0.3, 1) both'
+                  : 'pptxSlidePush 0.35s cubic-bezier(0.16, 1, 0.3, 1) both',
           }}
         >
           {currentSlide.elements.map(el => {
+            const isVisible =
+              !enableAnimations || !el.animStep || el.animStep <= (animStep || 0);
+
+            if (!isVisible) return null;
+
+            const animStyle =
+              enableAnimations && el.animStep && el.animStep > 0
+                ? {
+                    animation:
+                      el.animEffect === 'zoom'
+                        ? 'pptxAnimZoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both'
+                        : el.animEffect === 'fade'
+                          ? 'pptxAnimFadeIn 0.4s ease-out both'
+                          : el.animEffect === 'wipe'
+                            ? 'pptxAnimWipeIn 0.5s ease-out both'
+                            : 'pptxAnimFlyIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both',
+                  }
+                : {};
+
             if (el.kind === 'image') {
               return (
                 <img
@@ -183,6 +254,7 @@ export function PptxLessonView({
                     height: `${el.hPct}%`,
                     objectFit: 'contain',
                     zIndex: 2,
+                    ...animStyle,
                   }}
                 />
               );
@@ -205,6 +277,8 @@ export function PptxLessonView({
                     objectFit: 'contain',
                     backgroundColor: '#000',
                     borderRadius: '6px',
+                    zIndex: 3,
+                    ...animStyle,
                   }}
                 />
               );
@@ -219,6 +293,8 @@ export function PptxLessonView({
                     left: `${el.xPct}%`,
                     top: `${el.yPct}%`,
                     width: `${Math.max(el.wPct, 24)}%`,
+                    zIndex: 3,
+                    ...animStyle,
                   }}
                   className="bg-slate-900/85 backdrop-blur-xs p-2 rounded-xl shadow-lg"
                 >
@@ -238,6 +314,8 @@ export function PptxLessonView({
                     width: `${el.wPct}%`,
                     height: `${el.hPct}%`,
                     fontSize: `${Math.max(10, Math.round(16 * fontScale))}px`,
+                    zIndex: 2,
+                    ...animStyle,
                   }}
                   className="overflow-auto"
                 >
@@ -305,6 +383,8 @@ export function PptxLessonView({
                   justifyContent,
                   overflow: 'hidden',
                   boxSizing: 'border-box',
+                  zIndex: el.fillColor || el.borderColor ? 1 : 2,
+                  ...animStyle,
                 }}
               >
                 {el.paragraphs.map((para, pIdx) => {
@@ -375,6 +455,9 @@ export function PptxLessonView({
           {/* Subtle slide number badge */}
           <div className="absolute bottom-2 right-3 rounded-full bg-slate-900/55 px-2.5 py-0.5 text-[11px] font-bold text-white/90 pointer-events-none">
             {page} / {presentation?.slides.length || 1}
+            {currentSlide.maxAnimSteps && currentSlide.maxAnimSteps > 0
+              ? ` • Bước ${animStep}/${currentSlide.maxAnimSteps}`
+              : ''}
           </div>
         </div>
       ) : null}

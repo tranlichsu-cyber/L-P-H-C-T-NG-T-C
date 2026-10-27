@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -86,6 +86,9 @@ export function LessonsPage() {
   const [sessionId, setSessionId] = useState('');
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(1);
+  const [animStep, setAnimStep] = useState(0);
+  const [maxAnimSteps, setMaxAnimSteps] = useState(0);
+  const [enableAnimations, setEnableAnimations] = useState(true);
   const [blackout, setBlackout] = useState(false);
   const [outlines, setOutlines] = useState<SlideOutlineItem[]>([]);
   const [showPhoneQrModal, setShowPhoneQrModal] = useState(false);
@@ -132,6 +135,24 @@ export function LessonsPage() {
     );
   }, [activeRemoteSessionId, showToast]);
 
+  const stepForward = useCallback(() => {
+    if (enableAnimations && maxAnimSteps > 0 && animStep < maxAnimSteps) {
+      setAnimStep(prev => prev + 1);
+    } else {
+      setPage(prev => Math.min(count, prev + 1));
+      setAnimStep(0);
+    }
+  }, [enableAnimations, maxAnimSteps, animStep, count]);
+
+  const stepBack = useCallback(() => {
+    if (enableAnimations && animStep > 0) {
+      setAnimStep(prev => prev - 1);
+    } else {
+      setPage(prev => Math.max(1, prev - 1));
+      setAnimStep(0);
+    }
+  }, [enableAnimations, animStep]);
+
   // Keep stateRef updated and broadcast whenever computer presentation state changes
   useEffect(() => {
     if (!preview || !sessionId) {
@@ -147,13 +168,25 @@ export function LessonsPage() {
       grade: preview.grade,
       page,
       count,
+      animStep,
+      maxAnimSteps,
       blackout,
       outlines,
       updatedAt: new Date().toISOString(),
     };
     stateRef.current = nextState;
     publishLessonRemoteState(nextState);
-  }, [preview, sessionId, currentUser?.uid, page, count, blackout, outlines]);
+  }, [
+    preview,
+    sessionId,
+    currentUser?.uid,
+    page,
+    count,
+    animStep,
+    maxAnimSteps,
+    blackout,
+    outlines,
+  ]);
 
   // Listen for phone remote commands when computer is presenting
   useEffect(() => {
@@ -163,18 +196,19 @@ export function LessonsPage() {
       () => stateRef.current,
       cmd => {
         if (cmd.action === 'NEXT') {
-          setPage(prev => Math.min(stateRef.current?.count || 1, prev + 1));
+          stepForward();
         } else if (cmd.action === 'PREV') {
-          setPage(prev => Math.max(1, prev - 1));
+          stepBack();
         } else if (cmd.action === 'SET_PAGE' && typeof cmd.page === 'number') {
           const maxCount = stateRef.current?.count || 1;
           setPage(Math.min(maxCount, Math.max(1, cmd.page)));
+          setAnimStep(0);
         } else if (cmd.action === 'TOGGLE_BLACKOUT') {
           setBlackout(prev => !prev);
         }
       }
     );
-  }, [preview, sessionId]);
+  }, [preview, sessionId, stepForward, stepBack]);
 
   const refreshDriveStatus = () => {
     const st = getDriveConnectionStatus();
@@ -226,6 +260,8 @@ export function LessonsPage() {
     setDirectFile(instantFile);
     setPresentMode(chosenMode);
     setPage(1);
+    setAnimStep(0);
+    setMaxAnimSteps(0);
     setCount(lesson.pageCount || 1);
     setBlackout(false);
     setOutlines([]);
@@ -372,10 +408,17 @@ export function LessonsPage() {
           <div className="rounded-2xl bg-white/10 border border-white/15 p-4 flex items-center justify-between">
             <div>
               <p className="text-xs uppercase font-bold text-indigo-200">Slide hiện tại</p>
-              <p className="text-3xl font-black text-white mt-0.5">
-                {activePage}{' '}
-                <span className="text-lg font-semibold text-indigo-300">/ {totalCount}</span>
-              </p>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <p className="text-3xl font-black text-white">
+                  {activePage}{' '}
+                  <span className="text-lg font-semibold text-indigo-300">/ {totalCount}</span>
+                </p>
+                {remoteState?.maxAnimSteps && remoteState.maxAnimSteps > 0 ? (
+                  <span className="rounded-full bg-amber-400/20 border border-amber-400/40 px-2.5 py-0.5 text-xs font-bold text-amber-300">
+                    Bước {remoteState.animStep || 0}/{remoteState.maxAnimSteps}
+                  </span>
+                ) : null}
+              </div>
             </div>
             <button
               type="button"
@@ -395,22 +438,38 @@ export function LessonsPage() {
           <div className="grid grid-cols-2 gap-3 pt-1">
             <button
               type="button"
-              disabled={activePage <= 1}
+              disabled={
+                activePage <= 1 &&
+                (!remoteState?.animStep || remoteState.animStep <= 0)
+              }
               onClick={() => triggerRemoteCommand('PREV')}
               className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-95 disabled:opacity-40 border border-slate-600 py-6 px-4 text-white font-black transition-all shadow-md"
             >
               <ChevronLeft className="w-8 h-8 text-sky-300" />
-              <span className="text-base">SLIDE TRƯỚC</span>
+              <span className="text-base">
+                {remoteState?.maxAnimSteps && (remoteState?.animStep || 0) > 0
+                  ? 'BƯỚC TRƯỚC'
+                  : 'SLIDE TRƯỚC'}
+              </span>
             </button>
 
             <button
               type="button"
-              disabled={activePage >= totalCount}
+              disabled={
+                activePage >= totalCount &&
+                (!remoteState?.maxAnimSteps ||
+                  (remoteState?.animStep || 0) >= remoteState.maxAnimSteps)
+              }
               onClick={() => triggerRemoteCommand('NEXT')}
               className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 active:scale-95 disabled:opacity-40 py-6 px-4 text-white font-black transition-all shadow-lg shadow-indigo-600/40"
             >
               <ChevronRight className="w-8 h-8 text-white" />
-              <span className="text-base">SLIDE TIẾP</span>
+              <span className="text-base">
+                {remoteState?.maxAnimSteps &&
+                (remoteState?.animStep || 0) < remoteState.maxAnimSteps
+                  ? 'BƯỚC TIẾP'
+                  : 'SLIDE TIẾP'}
+              </span>
             </button>
           </div>
         </div>
@@ -525,11 +584,16 @@ export function LessonsPage() {
 
     // Compute Drive/Slides embed URL if in drive_embed mode
     const driveEmbedSrc = (() => {
-      if (!preview.externalDriveEmbedUrl) return '';
-      if (preview.externalDriveEmbedUrl.includes('/presentation/')) {
-        return `${preview.externalDriveEmbedUrl}#slide=${page}`;
+      if (preview.externalDriveEmbedUrl) {
+        if (preview.externalDriveEmbedUrl.includes('/presentation/')) {
+          return `${preview.externalDriveEmbedUrl}#slide=${page}`;
+        }
+        return preview.externalDriveEmbedUrl;
       }
-      return preview.externalDriveEmbedUrl;
+      if (preview.pptDriveId) {
+        return `https://docs.google.com/presentation/d/${preview.pptDriveId}/embed?start=false&loop=false&delayms=3000#slide=${page}`;
+      }
+      return '';
     })();
 
     return (
@@ -542,12 +606,23 @@ export function LessonsPage() {
                 ? 'PPTX Trực tiếp'
                 : presentMode === 'pdf'
                   ? 'PDF Trình chiếu'
-                  : 'Google Drive / Slides'}
+                  : 'Google Slides'}
             </span>
             <strong className="truncate text-sm sm:text-base">{preview.title}</strong>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {driveEmbedSrc && (
+              <Button
+                variant={presentMode === 'drive_embed' ? 'primary' : 'outline'}
+                size="sm"
+                className="text-xs"
+                onClick={() => setPresentMode(prev => (prev === 'drive_embed' ? 'ppt' : 'drive_embed'))}
+              >
+                {presentMode === 'drive_embed' ? '← Xem PPTX Trực tiếp' : 'Chiếu bằng Google Slides'}
+              </Button>
+            )}
+
             {hasBothModes && (
               <div className="inline-flex rounded-lg bg-slate-800 p-0.5 border border-slate-700">
                 <button
@@ -606,8 +681,11 @@ export function LessonsPage() {
               lesson={preview}
               directFile={directFile}
               page={page}
+              animStep={animStep}
+              enableAnimations={enableAnimations}
               onCount={setCount}
               onOutlines={setOutlines}
+              onMaxAnimSteps={setMaxAnimSteps}
             />
           ) : (
             <PdfLessonView lesson={preview} page={page} onCount={setCount} />
@@ -630,6 +708,12 @@ export function LessonsPage() {
           page={page}
           count={count}
           onPage={setPage}
+          animStep={animStep}
+          maxAnimSteps={maxAnimSteps}
+          enableAnimations={enableAnimations}
+          onToggleAnimations={() => setEnableAnimations(prev => !prev)}
+          onStepForward={stepForward}
+          onStepBack={stepBack}
           blackout={blackout}
           onToggleBlackout={() => setBlackout(prev => !prev)}
           onOpenPhoneQr={() => setShowPhoneQrModal(true)}

@@ -10,6 +10,8 @@ export interface LessonRemoteState {
   page: number;
   count: number;
   blackout: boolean;
+  animStep?: number;
+  maxAnimSteps?: number;
   outlines: SlideOutlineItem[];
   updatedAt: string;
 }
@@ -17,7 +19,7 @@ export interface LessonRemoteState {
 export interface LessonRemoteCommand {
   type: 'PPT_COMMAND';
   sessionId: string;
-  action: 'SET_PAGE' | 'NEXT' | 'PREV' | 'TOGGLE_BLACKOUT' | 'PING_STATE';
+  action: 'SET_PAGE' | 'NEXT' | 'PREV' | 'TOGGLE_BLACKOUT' | 'PING_STATE' | 'NEXT_STEP' | 'PREV_STEP';
   page?: number;
 }
 
