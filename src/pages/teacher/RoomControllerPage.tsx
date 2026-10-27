@@ -627,7 +627,32 @@ export const RoomControllerPage: React.FC = () => {
         </div>
       )}
 
-      <button className="rounded-xl bg-indigo-700 px-5 py-3 font-bold text-white" onClick={()=>navigate('/teacher/qr-cards')}>📷 TRẢ LỜI BẰNG THẺ QR • MỤC RIÊNG</button>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-4">
+        <div className="space-y-1">
+          <p className="text-xs font-extrabold uppercase text-indigo-800">📱 Điều khiển từ xa & Quét thẻ QR (Như Plickers)</p>
+          <p className="text-xs text-slate-700">
+            Quét mã QR bên phải bằng <strong>điện thoại giáo viên</strong> để hiện bộ câu hỏi <strong>{room.quizTitle}</strong> và lớp <strong>{room.className}</strong> trên điện thoại, chuyển câu từ xa và quét thẻ học sinh.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button
+              className="rounded-xl bg-indigo-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-800"
+              onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(room.id)}/scan`)}
+            >
+              📱 Mở màn quét & điều khiển phòng đang chiếu này
+            </button>
+            <button
+              className="rounded-xl border border-indigo-300 bg-white px-4 py-2.5 text-xs font-bold text-indigo-800 hover:bg-indigo-100"
+              onClick={() => navigate('/teacher/qr-cards')}
+            >
+              📷 Mở Kho câu hỏi thẻ QR riêng
+            </button>
+          </div>
+        </div>
+        <div className="rounded-xl border border-indigo-200 bg-white p-2 text-center shadow-xs">
+          <QRCodeSVG value={`${window.location.origin}/teacher/qr-cards/${encodeURIComponent(room.id)}/scan`} size={96} level="M" />
+          <span className="mt-1 block text-[10px] font-black text-indigo-900">QR Điện thoại Giáo viên</span>
+        </div>
+      </div>
       {/* Quick Actions Bar */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap gap-2">

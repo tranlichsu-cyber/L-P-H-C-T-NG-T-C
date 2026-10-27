@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import type { MockRoomData } from '../services/realtime/types';
 import { activeRealtimeService } from '../services/realtime/realtimeServiceSwitch';
+import { useAuth } from '../context/AuthContext';
 
 export const useRoomRealtime = (roomId: string | null) => {
   const [room, setRoom] = useState<MockRoomData | null>(null);
+  const { currentUser, authReady } = useAuth();
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !authReady) return;
 
     let active = true;
     const unsubscribe = activeRealtimeService.subscribeRoom(roomId, (updatedRoom) => {
@@ -17,7 +19,7 @@ export const useRoomRealtime = (roomId: string | null) => {
       active = false;
       unsubscribe();
     };
-  }, [roomId]);
+  }, [roomId, authReady, currentUser?.uid, currentUser?.isAnonymous]);
 
   return room?.id === roomId ? room : null;
 };

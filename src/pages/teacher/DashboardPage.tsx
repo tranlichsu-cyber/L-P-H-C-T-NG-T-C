@@ -8,6 +8,8 @@ import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
+import { subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
+import type { MockRoomData } from '../../services/realtime/types';
 import { Users, BookOpen, Radio, Sparkles, Zap, Play, History } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -20,6 +22,9 @@ export const DashboardPage: React.FC = () => {
   const [isCreateRoomOpen, setIsCreateRoomOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id || '');
   const [selectedQuizId, setSelectedQuizId] = useState(quizzes[0]?.id || '');
+  const [activeRooms, setActiveRooms] = useState<MockRoomData[]>([]);
+  useEffect(() => subscribeActiveTeacherRooms(currentUser?.uid, setActiveRooms), [currentUser?.uid]);
+  const activeQrRoom = activeRooms.find((r) => r.responseMode === 'QR_CARD') || activeRooms[0] || null;
 
   // Last used settings for Quick Lesson Mode (v1.1)
   const [lastClassId, setLastClassId] = useState<string>('');
@@ -99,6 +104,37 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {activeQrRoom && (
+        <div className="rounded-2xl border-2 border-emerald-400 bg-gradient-to-r from-emerald-950 to-slate-950 p-5 text-white shadow-lg flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span className="inline-block rounded-full bg-emerald-400/20 px-3 py-0.5 text-xs font-extrabold text-emerald-300 border border-emerald-400/40 mb-1">
+              🟢 ĐANG CHIẾU TRÊN MÁY TÍNH
+            </span>
+            <h2 className="text-xl font-black">
+              Lớp {activeQrRoom.className} • {activeQrRoom.quizTitle || 'Bộ câu hỏi đang chiếu'}
+            </h2>
+            <p className="text-xs text-emerald-200 mt-0.5">
+              Môn: {activeQrRoom.subject || 'Chung'} • Bấm nút bên phải để mở máy quét thẻ QR & điều khiển từ xa trên điện thoại.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}/scan`)}
+              className="rounded-xl bg-amber-400 px-4 py-3 text-sm font-black text-slate-950 shadow-md hover:bg-amber-300"
+            >
+              📱 Mở máy quét & Điều khiển từ xa
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}`)}
+              className="rounded-xl border border-emerald-400/60 bg-emerald-900/50 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-800/60"
+            >
+              🖥️ Màn điều khiển
+            </button>
+          </div>
+        </div>
+      )}
       <button className="w-full rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-5 text-left text-indigo-950" onClick={()=>navigate('/teacher/qr-cards')}><strong className="text-xl">📷 Trả lời bằng thẻ QR</strong><span className="mt-2 block">Chọn lớp → In thẻ → Chiếu câu hỏi → Quét đáp án bằng điện thoại</span></button>
       <PageHeader
         title=""

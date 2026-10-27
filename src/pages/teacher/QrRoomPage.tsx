@@ -2,10 +2,13 @@ import { QrProjector } from '../../components/qr/QrProjector';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrQuestionContent } from '../../components/qr/QrQuestionContent';
 import { choiceIndex } from '../../services/realtime/choiceStatistics';
-import { lazy, Suspense, useRef, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRoomRealtime } from '../../hooks/useRoomRealtime';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
+import { useAuth } from '../../context/AuthContext';
+import { saveReturnTo, subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
+import type { MockRoomData } from '../../services/realtime/types';
 
 const QrCardsPanel = lazy(() => import('../../components/qr/QrCardsPanel'));
 const button =
@@ -15,29 +18,73 @@ const secondaryButton =
 
 export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan' | 'present' }) {
   const navigate = useNavigate();
+  const routerLocation = useLocation();
+  const { currentUser, signOutTeacher } = useAuth();
   const questionStage = useRef<HTMLElement>(null);
   const { roomId } = useParams();
   const room = useRoomRealtime(roomId || null);
+  const [activeRooms, setActiveRooms] = useState<MockRoomData[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showTopQr, setShowTopQr] = useState(true);
   const [showGraph, setShowGraph] = useState(false);
   const [revealAnswers, setRevealAnswers] = useState(false);
   const lock = useRef(false);
 
-  if (!room)
+  useEffect(() => {
+    return subscribeActiveTeacherRooms(currentUser?.uid, setActiveRooms);
+  }, [currentUser?.uid]);
+
+  if (!room) {
+    const otherActive = activeRooms.find(r => r.responseMode === 'QR_CARD') || activeRooms[0] || null;
     return (
-      <div className="space-y-4 rounded-xl bg-white p-6">
-        <p>
-          Đang tải tiết học dùng thẻ QR… Nếu không tải được, hãy kiểm tra kết nối và tài khoản giáo
-          viên phụ trách lớp.
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 text-slate-900 shadow-sm">
+        <p className="font-bold text-slate-800">
+          Đang tải tiết học dùng thẻ QR… Nếu chưa hiện bộ câu hỏi và lớp học, hãy kiểm tra tài khoản
+          giáo viên trên điện thoại có trùng với tài khoản trên máy tính không.
         </p>
-        <Link className={button} to="/teacher/qr-cards">
-          Về mục thẻ QR
-        </Link>
+        {currentUser?.email && (
+          <p className="rounded-xl bg-slate-100 p-3 text-xs font-bold text-slate-700">
+            Tài khoản đang đăng nhập trên thiết bị này: <strong className="text-indigo-700">{currentUser.email}</strong>
+          </p>
+        )}
+        {otherActive && otherActive.id !== roomId && (
+          <div className="rounded-2xl border-2 border-emerald-400 bg-emerald-50 p-4 space-y-2">
+            <p className="text-xs font-extrabold uppercase text-emerald-800">
+              🟢 Phát hiện tiết học đang chiếu trên tài khoản này:
+            </p>
+            <p className="text-base font-black text-emerald-950">
+              Lớp {otherActive.className} • {otherActive.quizTitle || 'Bộ câu hỏi đang chiếu'}
+            </p>
+            <Link
+              className={button}
+              to={`/teacher/qr-cards/${encodeURIComponent(otherActive.id)}/scan`}
+            >
+              📱 Mở ngay bộ câu hỏi & lớp đang chiếu này
+            </Link>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Link className={button} to="/teacher/qr-cards">
+            Về mục thẻ QR
+          </Link>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 hover:bg-slate-50"
+            onClick={async () => {
+              saveReturnTo(routerLocation.pathname + routerLocation.search);
+              await signOutTeacher();
+              navigate('/login', { state: { returnTo: routerLocation.pathname + routerLocation.search } });
+            }}
+          >
+            Đổi tài khoản giáo viên trên điện thoại
+          </button>
+        </div>
       </div>
     );
+  }
 
   const base = `/teacher/qr-cards/${encodeURIComponent(room.id)}`;
   const ids = (room.questionOrder || Object.keys(room.liveQuestions)).filter(
@@ -127,9 +174,18 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
         </div>
         <div className="flex flex-wrap gap-2">
           {screen === 'control' && (
-            <Link className={button} to={`${base}/present`}>
-              Mở màn chiếu toàn màn hình
-            </Link>
+            <>
+              <button
+                type="button"
+                className="inline-flex items-center justify-center rounded-xl border-2 border-indigo-600 bg-indigo-50 px-4 py-3 text-sm font-extrabold text-indigo-900 hover:bg-indigo-100"
+                onClick={() => setShowTopQr(v => !v)}
+              >
+                {showTopQr ? 'Ẩn mã QR điện thoại' : '📱 Mã QR kết nối điện thoại'}
+              </button>
+              <Link className={button} to={`${base}/present`}>
+                Mở màn chiếu toàn màn hình
+              </Link>
+            </>
           )}
           {screen === 'scan' && (
             <Link className={button} to={base}>
@@ -138,6 +194,26 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
           )}
         </div>
       </header>
+
+      {screen === 'control' && showTopQr && (
+        <section className="grid items-center gap-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50/70 p-4 sm:grid-cols-[1fr_auto]">
+          <div className="space-y-1.5">
+            <p className="text-xs font-extrabold uppercase tracking-wider text-indigo-800">
+              📱 Kết nối điện thoại làm máy quét & điều khiển từ xa (Như Plickers)
+            </p>
+            <h2 className="text-base font-black text-slate-900">
+              Quét mã bên phải bằng điện thoại giáo viên để mở ngay Lớp {room.className} • Bộ câu hỏi: {room.quizTitle}
+            </h2>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Lưu ý: Trên điện thoại, hãy đăng nhập cùng tài khoản giáo viên{currentUser?.email ? ` (${currentUser.email})` : ''} đang dùng trên máy tính. Hoặc mở trực tiếp mục <strong>Trả lời bằng thẻ QR</strong> trên điện thoại, hệ thống sẽ tự động hiện tiết học đang chiếu này.
+            </p>
+          </div>
+          <div className="w-fit rounded-xl border border-indigo-200 bg-white p-2 shadow-xs mx-auto sm:mx-0">
+            <QRCodeSVG value={`${location.origin}${base}/scan`} size={124} marginSize={2} />
+            <p className="mt-1 text-center text-[11px] font-black text-indigo-900">Quét bằng ĐT Giáo viên</p>
+          </div>
+        </section>
+      )}
 
       {screen === 'control' && (
         <section

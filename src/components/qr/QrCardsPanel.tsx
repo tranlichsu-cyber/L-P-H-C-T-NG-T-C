@@ -58,6 +58,7 @@ export default function QrCardsPanel({
   const [ctrlBusy, setCtrlBusy] = useState(false);
   const [ctrlError, setCtrlError] = useState('');
   const [showGraph, setShowGraph] = useState(false);
+  const [revealStudentChoices, setRevealStudentChoices] = useState(false);
   const ctrlLock = useRef(false);
 
   async function runControl(work: () => boolean | Promise<boolean>) {
@@ -123,13 +124,16 @@ export default function QrCardsPanel({
 
   return (
     <section className="space-y-4 rounded-2xl border-2 border-indigo-200 bg-white p-4 text-slate-900">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-black">
-            Quét thẻ & Điều khiển từ xa • {room.className}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-900 p-4 text-white">
+        <div className="space-y-1">
+          <span className="inline-block rounded-full bg-emerald-400/20 px-2.5 py-0.5 text-[11px] font-extrabold uppercase tracking-wider text-emerald-300 border border-emerald-400/40">
+            🟢 Đang đồng bộ với màn chiếu máy tính
+          </span>
+          <h2 className="text-lg font-black sm:text-xl">
+            Lớp: {room.className} ({room.roster.length} học sinh)
           </h2>
-          <p className="text-xs font-bold text-indigo-700">
-            Câu {index + 1}/{ids.length} • Đã nhận {submissions.length}/{room.roster.length} em
+          <p className="text-xs font-bold text-amber-300 sm:text-sm">
+            Bộ câu hỏi: {room.quizTitle || 'Bộ câu hỏi trực tiếp'} {room.subject ? `• Môn ${room.subject}` : ''} • Câu {index + 1}/{ids.length}
           </p>
         </div>
         <button className={button} onClick={onClose}>
@@ -302,6 +306,125 @@ export default function QrCardsPanel({
       </div>
 
       <Scanner key={q?.id || 'none'} room={room} />
+
+      {/* Full Question Set Queue on Phone */}
+      <details className="rounded-2xl border border-indigo-200 bg-indigo-50/40 p-4" open>
+        <summary className="cursor-pointer text-sm font-black text-indigo-950">
+          📋 Bộ câu hỏi đang chiếu: {room.quizTitle || 'Danh sách câu hỏi'} ({ids.length} câu)
+        </summary>
+        <p className="mt-1 text-xs text-slate-600">
+          Chạm vào bất kỳ câu nào bên dưới để chiếu ngay câu đó lên màn hình máy tính.
+        </p>
+        <ol className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+          {ids.map((id, i) => {
+            const item = room.liveQuestions[id];
+            const isCurrent = id === q?.id;
+            const st = item?.status;
+            return (
+              <li
+                key={id}
+                className={`flex items-center justify-between gap-2 rounded-xl border p-2.5 text-xs ${
+                  isCurrent
+                    ? 'border-indigo-500 bg-indigo-100/90 text-indigo-950 font-bold'
+                    : st === 'RESULT'
+                      ? 'border-emerald-200 bg-emerald-50/70 text-slate-700'
+                      : 'border-slate-200 bg-white text-slate-800'
+                }`}
+              >
+                <div className="min-w-0 flex-1">
+                  <span className="font-black text-indigo-700">Câu {i + 1}: </span>
+                  <span className="break-words font-semibold">{item?.content}</span>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold ${
+                      st === 'OPEN'
+                        ? 'bg-emerald-600 text-white'
+                        : st === 'RESULT'
+                          ? 'bg-sky-700 text-white'
+                          : st === 'CLOSED'
+                            ? 'bg-amber-500 text-slate-950'
+                            : 'bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {st === 'OPEN'
+                      ? 'Đang chiếu'
+                      : st === 'RESULT'
+                        ? 'Đã chấm'
+                        : st === 'CLOSED'
+                          ? 'Đã đóng'
+                          : 'Chờ phát'}
+                  </span>
+                  {!isCurrent && st !== 'RESULT' && (
+                    <button
+                      type="button"
+                      disabled={ctrlBusy || finished}
+                      onClick={() => void jumpToQuestion(id)}
+                      className="rounded-lg bg-indigo-700 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-indigo-800 disabled:opacity-40"
+                    >
+                      Chiếu câu này
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </details>
+
+      {/* Full Class Roster on Phone */}
+      <details className="rounded-2xl border border-slate-200 bg-white p-4" open>
+        <summary className="cursor-pointer text-sm font-black text-slate-900">
+          👥 Danh sách lớp đang chiếu: {room.className} ({submissions.length}/{room.roster.length} em đã trả lời câu {index + 1})
+        </summary>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-slate-500">
+            Cập nhật tức thì khi điện thoại quét trúng thẻ của học sinh.
+          </p>
+          <button
+            type="button"
+            onClick={() => setRevealStudentChoices(v => !v)}
+            className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-50"
+          >
+            {revealStudentChoices || isResult ? 'Ẩn chữ A/B/C/D' : 'Hiện chữ A/B/C/D'}
+          </button>
+        </div>
+        <ul className="mt-3 grid max-h-64 gap-1.5 overflow-y-auto sm:grid-cols-2">
+          {room.roster.map((p, idx) => {
+            const sub = submissions.find(s => s.studentId === p.studentId);
+            const ansIdx = sub
+              ? choiceIndex(q?.options || [], sub.answer, q?.type || 'MULTIPLE_CHOICE')
+              : -1;
+            const isCorrect = isResult && sub && ansIdx === correctIdx;
+            const showChoice = revealStudentChoices || isResult;
+            return (
+              <li
+                key={p.studentId}
+                className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-xs font-semibold ${
+                  !sub
+                    ? 'bg-slate-50 text-slate-500'
+                    : !isResult
+                      ? 'border border-sky-200 bg-sky-50 text-sky-950'
+                      : isCorrect
+                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-950'
+                        : 'border border-rose-200 bg-rose-50 text-rose-950'
+                }`}
+              >
+                <span className="min-w-0 truncate">
+                  {idx + 1}. {p.name}
+                </span>
+                <span className="shrink-0 font-black">
+                  {!sub
+                    ? 'Chưa quét'
+                    : showChoice
+                      ? `Chọn ${sub.answer}${isResult ? (isCorrect ? ' ✓' : ' ✗') : ''}`
+                      : 'Đã quét ✓'}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </details>
 
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <QrCardsPrintButton classId={room.classId} className={room.className} roster={room.roster} />

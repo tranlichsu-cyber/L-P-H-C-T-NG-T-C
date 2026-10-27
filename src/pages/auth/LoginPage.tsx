@@ -6,21 +6,27 @@ import { GraduationCap, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SchoolService } from '../../services/school/SchoolService';
 import { auth } from '../../services/firebase/firebase';
+import { consumeReturnTo, peekReturnTo } from '../../services/qr/activeQrSession';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const location=useLocation();
+  const location = useLocation();
   const { signInTeacher, signInTeacherWithGoogle, resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const pendingReturnTo = peekReturnTo(location.state?.returnTo);
+
   const navigateAfterLogin = async () => {
     const uid = auth?.currentUser?.uid;
     const profile = uid ? await SchoolService.getUser(uid) : null;
 
-    const returnTo=location.state?.returnTo;
-    if(profile?.status==='ACTIVE'&&typeof returnTo==='string'&&(/^\/teacher\/room\/[^/?#]+\?qr=1$/.test(returnTo)||/^\/teacher\/qr-cards(?:\/[^/?#]+(?:\/(?:scan|present))?)?$/.test(returnTo))){navigate(returnTo,{replace:true});return;}
+    const returnTo = consumeReturnTo(location.state?.returnTo);
+    if ((!uid || profile?.status === 'ACTIVE') && returnTo) {
+      navigate(returnTo, { replace: true });
+      return;
+    }
 
     if (profile?.role === 'SCHOOL_ADMIN') {
       navigate('/admin');
@@ -81,8 +87,18 @@ export const LoginPage: React.FC = () => {
             <GraduationCap className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Đăng Nhập Giáo Viên</h1>
-          <p className="text-sm text-slate-500 mt-1">Đăng nhập tài khoản giáo viên để bắt đầu tiết học</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {pendingReturnTo
+              ? 'Đăng nhập cùng tài khoản giáo viên trên máy tính để mở ngay lớp học & bộ câu hỏi đang chiếu'
+              : 'Đăng nhập tài khoản giáo viên để bắt đầu tiết học'}
+          </p>
         </div>
+
+        {pendingReturnTo && (
+          <div className="mb-5 rounded-2xl border border-indigo-200 bg-indigo-50 p-3.5 text-xs font-bold text-indigo-900">
+            📱 Sau khi đăng nhập, điện thoại sẽ tự động mở màn hình quét thẻ QR & điều khiển câu hỏi của tiết học đang chiếu trên máy tính.
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -118,7 +134,7 @@ export const LoginPage: React.FC = () => {
           </div>
 
           <Button type="submit" variant="primary" fullWidth size="lg" className="mt-2" disabled={isSubmitting}>
-            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập vào Dashboard'}
+            {isSubmitting ? 'Đang đăng nhập...' : pendingReturnTo ? 'Đăng nhập & Mở màn quét thẻ' : 'Đăng nhập vào Dashboard'}
           </Button>
         </form>
 

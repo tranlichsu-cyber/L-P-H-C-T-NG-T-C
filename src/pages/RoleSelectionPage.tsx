@@ -19,6 +19,7 @@ import { useSchool } from '../context/SchoolContext';
 import { SchoolService } from '../services/school/SchoolService';
 import { auth } from '../services/firebase/firebase';
 import { SCHOOL_LOGO_SRC } from '../assets/schoolLogo';
+import { consumeReturnTo, peekReturnTo } from '../services/qr/activeQrSession';
 
 type PortalTab = 'TEACHER' | 'STUDENT';
 
@@ -32,7 +33,7 @@ export const RoleSelectionPage: React.FC = () => {
   const { joinRoom } = useStudentSession();
   const { settings, logoUrl } = useSchool();
 
-  const [tab, setTab] = useState<PortalTab>('STUDENT');
+  const [tab, setTab] = useState<PortalTab>(() => (peekReturnTo() ? 'TEACHER' : 'STUDENT'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -50,6 +51,12 @@ export const RoleSelectionPage: React.FC = () => {
   const navigateAfterTeacherLogin = async () => {
     const uid = auth?.currentUser?.uid;
     const profile = uid ? await SchoolService.getUser(uid) : null;
+
+    const returnTo = consumeReturnTo();
+    if ((!uid || profile?.status === 'ACTIVE') && returnTo) {
+      navigate(returnTo, { replace: true });
+      return;
+    }
 
     if (profile?.role === 'SCHOOL_ADMIN') {
       navigate('/admin');

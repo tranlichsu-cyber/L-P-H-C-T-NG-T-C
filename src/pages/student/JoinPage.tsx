@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { useStudentSession } from '../../context/StudentSessionContext';
+import { lookupRoomByCodeForTeacher } from '../../services/qr/activeQrSession';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
 export const JoinPage: React.FC = () => {
@@ -10,6 +11,7 @@ export const JoinPage: React.FC = () => {
   const { session, joinRoom } = useStudentSession();
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
+  const [teacherRoom, setTeacherRoom] = useState<{ roomId: string; className: string; subject: string; responseMode?: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto handle QR Code URL scan (?room=839201)
@@ -17,6 +19,14 @@ export const JoinPage: React.FC = () => {
     const roomParam = searchParams.get('room');
     if (roomParam && roomParam.length === 6) {
       setPin(roomParam);
+      void lookupRoomByCodeForTeacher(roomParam).then((info) => {
+        if (info) {
+          setTeacherRoom(info);
+          if (info.responseMode === 'QR_CARD') {
+            navigate(`/teacher/qr-cards/${encodeURIComponent(info.roomId)}/scan`, { replace: true });
+          }
+        }
+      });
       void joinRoom(roomParam).then((res) => {
         if (res.success) {
           navigate('/student/select-name');
@@ -40,6 +50,9 @@ export const JoinPage: React.FC = () => {
       return;
     }
 
+    const info = await lookupRoomByCodeForTeacher(pin.trim());
+    if (info) setTeacherRoom(info);
+
     const res = await joinRoom(pin);
     if (!res.success) {
       setError(res.message || 'Không tìm thấy phòng học.');
@@ -58,6 +71,21 @@ export const JoinPage: React.FC = () => {
 
       <h1 className="text-2xl sm:text-3xl font-black text-sky-950 mb-1 tracking-tight">THAM GIA LỚP HỌC</h1>
       <p className="text-slate-600 text-sm mb-6 font-semibold">Nhập mã phòng do thầy/cô cung cấp 🎈</p>
+
+      {teacherRoom && (
+        <div className="mb-4 rounded-2xl border-2 border-indigo-300 bg-indigo-50 p-3.5 text-left">
+          <p className="text-xs font-extrabold text-indigo-900">
+            👩‍🏫 Dành cho Giáo viên ({teacherRoom.className}):
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(teacherRoom.roomId)}/scan`)}
+            className="mt-2 w-full rounded-xl bg-indigo-700 px-4 py-2.5 text-xs font-black text-white hover:bg-indigo-800"
+          >
+            📱 Mở bộ câu hỏi & điều khiển lớp này trên điện thoại →
+          </button>
+        </div>
+      )}
 
       <button type="button" onClick={()=>navigate('/student/test')} className="w-full mb-4 p-3 rounded-xl bg-sky-700 text-white font-bold">VÀO BÀI KIỂM TRA BẰNG MÃ RIÊNG</button>
       <form onSubmit={handleJoin} className="space-y-6">

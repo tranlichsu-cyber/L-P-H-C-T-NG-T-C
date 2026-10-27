@@ -89,6 +89,19 @@ export const SelectNamePage: React.FC = () => {
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-6 animate-fade-in">
+      {/* Teacher Phone Remote Shortcut if Teacher Scanned Student Join QR */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-indigo-200 bg-indigo-50/90 px-4 py-3 text-xs">
+        <span className="font-bold text-indigo-950">
+          👩‍🏫 Dành cho Giáo viên: Quét thẻ QR & điều khiển lớp <strong>{activeRoom.className}</strong>
+        </span>
+        <button
+          type="button"
+          onClick={() => navigate(`/teacher/qr-cards/${encodeURIComponent(activeRoom.id)}/scan`)}
+          className="rounded-xl bg-indigo-700 px-3 py-1.5 font-black text-white hover:bg-indigo-800"
+        >
+          📱 Mở màn điều khiển & bộ câu hỏi →
+        </button>
+      </div>
       {/* Room Badge Header */}
       <div className="flex items-center justify-between">
         <button

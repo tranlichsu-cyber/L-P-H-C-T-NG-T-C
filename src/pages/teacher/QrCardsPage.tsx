@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, BookOpen, Camera, CheckCircle2, Monitor, QrCode, Users } from 'lucide-react';
+import { ArrowRight, BookOpen, Camera, CheckCircle2, Monitor, QrCode, Radio, Smartphone, Users } from 'lucide-react';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { QrCardsPrintButton } from '../../components/qr/QrCardsPrintButton';
 import { QrBankService } from '../../services/qrBank/QrBankService';
 import type { QrBank } from '../../services/qrBank/content';
+import type { MockRoomData } from '../../services/realtime/types';
+import { subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
 
 const button = 'inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-indigo-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-40';
 const input = 'mt-2 block w-full min-w-0 rounded-xl border border-slate-300 bg-white p-3 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:outline-indigo-500';
@@ -24,13 +26,29 @@ export function QrCardsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [available, setAvailable] = useState<QrBank[]>([]);
+  const [activeRooms, setActiveRooms] = useState<MockRoomData[]>([]);
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(0);
   const lock = useRef(false);
   const key = `qr-last-room-${currentUser?.uid || 'teacher'}`;
-  const cls = classes.find(c => c.id === classId) || classes[0];
+
+  useEffect(() => {
+    return subscribeActiveTeacherRooms(currentUser?.uid, rooms => {
+      setActiveRooms(rooms);
+    });
+  }, [currentUser?.uid]);
+
+  const activeQrRoom = activeRooms.find(r => r.responseMode === 'QR_CARD') || activeRooms[0] || null;
+
+  const cls =
+    classes.find(c => c.id === classId) ||
+    (activeQrRoom ? classes.find(c => c.id === activeQrRoom.classId) : undefined) ||
+    classes[0];
   const filtered = available.filter(q => !subject || q.subject === subject);
-  const quiz = filtered.find(q => q.id === quizId) || filtered[0];
+  const quiz =
+    filtered.find(q => q.id === quizId) ||
+    (activeQrRoom ? filtered.find(q => q.id === activeQrRoom.quizId) : undefined) ||
+    filtered[0];
   const questions = quiz?.questions || [];
   const selectedIds = selection && quiz && selection.bankId === quiz.id ? selection.ids : questions.map(q => q.id);
   const selected = questions.filter(q => selectedIds.includes(q.id));
@@ -50,6 +68,7 @@ export function QrCardsPage() {
 
   let last = '';
   try { last = localStorage.getItem(key) || ''; } catch { /* Storage is optional. */ }
+  const resumeRoomId = activeQrRoom?.id || last;
 
   async function start() {
     if (lock.current || !currentUser || !cls || !quiz || !selected.length || !cls.students.length) return;
@@ -70,6 +89,9 @@ export function QrCardsPage() {
         responseMode: 'QR_CARD', questionSource: 'QR_BANK', questions: lessonQuestions,
         roster: cls.students.map(s => ({ id: s.id, name: s.name })),
       });
+      if (lessonQuestions[0]?.id) {
+        await Promise.resolve(activeRealtimeService.openQuestion(room.id, lessonQuestions[0].id)).catch(() => undefined);
+      }
       try { localStorage.setItem(key, room.id); } catch { /* Starting does not depend on storage. */ }
       navigate(`/teacher/qr-cards/${encodeURIComponent(room.id)}`);
     } catch (e) {
@@ -79,6 +101,61 @@ export function QrCardsPage() {
 
   return (
     <section className="mx-auto max-w-6xl space-y-6 text-slate-900">
+      {/* ACTIVE ROOM SYNC BANNER FOR PHONE & PC */}
+      {activeQrRoom && (
+        <section
+          aria-label="Tiết học đang chiếu trên máy tính"
+          className="rounded-3xl border-2 border-emerald-400 bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 p-5 text-white shadow-xl sm:p-6"
+        >
+          <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-400/20 px-3 py-1 text-xs font-extrabold uppercase tracking-wider text-emerald-300 border border-emerald-400/40">
+                <Radio className="h-4 w-4 animate-pulse text-emerald-400" />
+                Đang chiếu trên máy tính • Kết nối đồng bộ
+              </div>
+              <h2 className="text-xl font-black sm:text-2xl">
+                Lớp {activeQrRoom.className} • {activeQrRoom.quizTitle || 'Bộ câu hỏi đang chiếu'}
+              </h2>
+              <p className="text-xs font-semibold text-emerald-200 sm:text-sm">
+                Môn: {activeQrRoom.subject || 'Chung'} • Bấm nút bên dưới để mở bộ câu hỏi, danh sách lớp, điều khiển câu hỏi và quét thẻ từ điện thoại.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3 shrink-0">
+              <Link
+                to={`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}/scan`}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-amber-400 px-5 py-3.5 text-sm font-black text-slate-950 shadow-lg transition hover:bg-amber-300"
+              >
+                <Smartphone className="h-5 w-5" />
+                Mở màn quét & điều khiển trên điện thoại
+              </Link>
+              <Link
+                to={`/teacher/qr-cards/${encodeURIComponent(activeQrRoom.id)}`}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/60 bg-emerald-900/50 px-4 py-3 text-sm font-bold text-white transition hover:bg-emerald-800/60"
+              >
+                <Monitor className="h-4 w-4" />
+                Màn điều khiển máy tính
+              </Link>
+            </div>
+          </div>
+          {activeRooms.length > 1 && (
+            <div className="mt-4 border-t border-emerald-800/70 pt-3">
+              <p className="text-xs font-bold text-emerald-300 mb-2">Các phòng đang mở khác của thầy/cô:</p>
+              <div className="flex flex-wrap gap-2">
+                {activeRooms.slice(1, 5).map(r => (
+                  <Link
+                    key={r.id}
+                    to={`/teacher/qr-cards/${encodeURIComponent(r.id)}/scan`}
+                    className="rounded-xl bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20"
+                  >
+                    📱 {r.className} • {r.quizTitle || r.subject}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-800 via-indigo-700 to-violet-600 p-6 text-white sm:p-8">
         <QrCode className="pointer-events-none absolute -right-6 -top-6 h-48 w-48 rotate-12 text-white/5" aria-hidden="true" />
         <div className="relative max-w-2xl">
@@ -131,7 +208,13 @@ export function QrCardsPage() {
             <button className={`${button} w-full`} disabled={busy || loading || !currentUser || !cls?.students.length || !selected.length} onClick={() => void start()}>{busy ? 'Đang tạo tiết học…' : 'Bắt đầu tiết học bằng thẻ QR'}</button>
             {!selected.length && quiz && <p className="text-sm text-amber-800" role="status">Chọn ít nhất một câu hỏi để bắt đầu.</p>}
           </section>
-          {last && <Link className="flex items-center gap-3 rounded-2xl border border-indigo-200 bg-white p-4 text-sm font-bold text-indigo-700 hover:bg-indigo-50" to={`/teacher/qr-cards/${encodeURIComponent(last)}`}><Monitor className="h-5 w-5 shrink-0" />Tiếp tục tiết dùng thẻ gần nhất trên máy này <ArrowRight className="h-4 w-4 shrink-0" /></Link>}
+          {resumeRoomId && (
+            <Link className="flex items-center gap-3 rounded-2xl border border-indigo-200 bg-white p-4 text-sm font-bold text-indigo-700 hover:bg-indigo-50" to={`/teacher/qr-cards/${encodeURIComponent(resumeRoomId)}/scan`}>
+              <Monitor className="h-5 w-5 shrink-0" />
+              Tiếp tục tiết dùng thẻ đang mở (Màn quét & điều khiển)
+              <ArrowRight className="h-4 w-4 shrink-0" />
+            </Link>
+          )}
         </aside>
       </div>
       <details className="rounded-2xl border border-sky-200 bg-sky-50 p-5"><summary className="cursor-pointer font-bold text-sky-900">Cách chiếu trên máy tính và quét bằng điện thoại</summary><ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700"><li>Bắt đầu tiết học, mở màn chiếu trên máy tính.</li><li>Dùng điện thoại quét mã mở màn quét và đăng nhập cùng tài khoản giáo viên.</li><li>Phát câu hỏi, yêu cầu học sinh giơ thẻ; quét từng nhóm nhỏ.</li><li>Kiểm tra tên và đáp án trước khi gửi. Đóng trả lời, công bố đáp án rồi chuyển câu.</li></ol></details>

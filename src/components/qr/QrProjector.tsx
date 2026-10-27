@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import type { LiveQuestionPublic, MockRoomData } from '../../services/realtime/types';
 import { choiceIndex } from '../../services/realtime/choiceStatistics';
 import { QrQuestionContent } from './QrQuestionContent';
@@ -21,6 +22,9 @@ export function QrProjector({
   const [notice, setNotice] = useState('');
   const [showGraph, setShowGraph] = useState(false);
   const [showRoster, setShowRoster] = useState(true);
+  const [showPhoneQr, setShowPhoneQr] = useState(false);
+
+  const phoneScanUrl = `${window.location.origin}/teacher/qr-cards/${encodeURIComponent(room.id)}/scan`;
 
   useEffect(() => {
     const update = () => setFullscreen(document.fullscreenElement === root.current);
@@ -66,9 +70,21 @@ export function QrProjector({
       <div className="qr-projector-inner">
         <header className="flex flex-wrap items-center justify-between gap-2 text-sm font-bold text-indigo-200">
           <p className="min-w-0 break-words">
-            {room.className} • Câu {index + 1}/{total} • {status}
+            {room.className} {room.quizTitle ? `• ${room.quizTitle}` : ''} • Câu {index + 1}/{total} • {status}
           </p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowPhoneQr(v => !v)}
+              aria-pressed={showPhoneQr}
+              className={`rounded-lg border px-3 py-1.5 text-xs font-extrabold transition-colors ${
+                showPhoneQr
+                  ? 'border-emerald-300 bg-emerald-400 text-slate-950'
+                  : 'border-amber-300 bg-amber-400/20 text-amber-200 hover:bg-amber-400/30'
+              }`}
+            >
+              {showPhoneQr ? 'Đóng mã QR điện thoại' : '📱 Mã QR kết nối điện thoại'}
+            </button>
             <button
               type="button"
               onClick={() => setShowGraph(v => !v)}
@@ -105,6 +121,36 @@ export function QrProjector({
             </button>
           </div>
         </header>
+
+        {showPhoneQr && (
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border-2 border-amber-300 bg-slate-900/95 p-4 text-white shadow-2xl">
+            <div className="space-y-1.5 max-w-xl">
+              <p className="text-xs font-extrabold uppercase tracking-wider text-amber-300">
+                📱 Kết nối điện thoại giáo viên (Như Plickers)
+              </p>
+              <h2 className="text-lg font-black">
+                Lớp {room.className} • Bộ câu hỏi: {room.quizTitle || 'Trả lời bằng thẻ QR'}
+              </h2>
+              <p className="text-xs text-indigo-100 leading-relaxed">
+                Dùng camera điện thoại quét mã QR bên phải và đăng nhập <strong>cùng tài khoản giáo viên trên máy tính</strong>. Điện thoại sẽ hiện đầy đủ bộ câu hỏi, danh sách lớp, nút chuyển câu và camera quét thẻ.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="rounded-xl bg-white p-2 text-center shadow-lg">
+                <QRCodeSVG value={phoneScanUrl} size={132} marginSize={2} />
+                <p className="mt-1 text-[11px] font-black text-slate-900">Quét bằng ĐT Giáo viên</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPhoneQr(false)}
+                className="rounded-xl border border-slate-600 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        )}
+
         {notice && (
           <p role="status" className="rounded-lg bg-slate-800 p-2 text-sm">
             {notice}
@@ -130,7 +176,7 @@ export function QrProjector({
             >
               <div className="mb-2 flex items-center justify-between gap-2 border-b border-slate-800 pb-2">
                 <h2 className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">
-                  Danh sách lớp
+                  Danh sách lớp {room.className}
                 </h2>
                 <span className="rounded-full bg-indigo-500/30 px-2.5 py-0.5 text-xs font-black text-amber-300">
                   {count}/{room.roster.length}
