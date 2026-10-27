@@ -14,7 +14,7 @@ import {TraditionQuizRunner} from '../components/tradition/TraditionQuizRunner';
 
 // Curated reading order: historical periods, then related cultural themes.
 const materialReadingOrder:Record<string,string[]>={
- HISTORY:['Thần Sa','Hồ Đề','Lý Bí','Đỗ Cận','Năm 1831','năm 1917','Chợ Chu','Bá Vân','Chùa Đán','Bá Xuyên','Lục Giáp','ATK Định Hóa','Bắc Thái 1965','Đại đội 915','Sông Công','Thái Nguyên hôm nay'],
+ HISTORY:['Thần Sa','Hồ Đề','Lý Bí','Đỗ Cận','Đuổm','Năm 1831','năm 1917','Chợ Chu','Bá Vân','Chùa Đán','Bá Xuyên','Lục Giáp','ATK Định Hóa','Bắc Thái 1965','Đại đội 915','Sông Công','Thái Nguyên hôm nay'],
  CULTURE:['Then','Soọng cô','Pả Dung','đền Đuổm','Núi Văn','Lồng tồng','Cầu mùa','Tân Cương','Tương nếp','Xôi ngũ sắc','Cơm lam','Bảo tàng','Thiên nhiên','Hồ Núi Cốc','Tự hào'],
  IMAGE:['Ảnh tư liệu 1945','Ảnh tư liệu 1965','Thần Sa','Không gian văn hóa trà','Quảng trường'],
  VIDEO:['ATK Định Hóa','Nẻo về nguồn cội','Hội xuân'],
