@@ -288,6 +288,18 @@ export const curatedTraditionMaterials:TraditionMaterial[] = [
     "updatedAt": "2026-10-27"
   },
   {
+    "id": "curated-image-bac-ho-atk-dinh-hoa",
+    "kind": "IMAGE",
+    "title": "Bác Hồ làm việc tại ATK Định Hóa",
+    "text": "Bác Hồ làm việc tại ATK Định Hóa – Chủ tịch Hồ Chí Minh cùng Ban Thường vụ Trung ương Đảng họp bàn, chỉ đạo cuộc kháng chiến tại An toàn khu (ATK) Định Hóa, Thái Nguyên.",
+    "mediaUrl": "https://baotanglichsu.vn/DataFiles/2022/02/News/Tieng%20Viet/18.2.2022/ATK%20Thai%20Nguyen%20trong%20khang%20chien%20chong%20thuc%20dan%20Phap/2.jpg",
+    "source": "Bảo tàng Lịch sử Quốc gia / An toàn khu Định Hóa (Thái Nguyên) trong kháng chiến chống thực dân Pháp",
+    "sourceUrl": "https://baotanglichsu.vn/vi/Articles/3097/72888/an-toan-khu-djinh-hoa-thai-nguyen-trong-khang-chien-chong-thuc-dan-phap.html",
+    "published": true,
+    "teacherId": "curated-tradition",
+    "updatedAt": "2026-10-27"
+  },
+  {
     "id": "curated-image-atk-dinh-hoa",
     "kind": "IMAGE",
     "title": "Ảnh tư liệu ATK Định Hóa – Nhà tưởng niệm Chủ tịch Hồ Chí Minh trên đèo De",
