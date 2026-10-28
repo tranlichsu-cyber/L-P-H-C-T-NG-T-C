@@ -2,6 +2,9 @@ import type { SelfPracticeQuiz } from '../../services/selfPractice/content';
 import type { Quiz } from '../../types';
 
 export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
+  // ==========================================
+  // ĐỀ 1: TOÁN LỚP 4 – TRƯỜNG TIỂU HỌC SÔNG CÔNG
+  // ==========================================
   {
     id: 'gk1-2026-grade4-math-01',
     teacherId: 'editorial',
@@ -13,7 +16,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
     published: true,
     updatedAt: '2026-10-28',
     instructions:
-      'Đề kiểm tra giữa học kì I môn Toán lớp 4 – Trường Tiểu học Hà Nguyên Thị (UBND Xã Phúc Thọ). Thời gian làm bài: 40 phút. Gồm Phần I: Trắc nghiệm (9 câu) và Phần II: Tự luận (4 bài tính toán và giải toán). Em hãy làm bài cẩn thận và kiểm tra lại kết quả trước khi nộp.',
+      'Đề kiểm tra giữa học kì I môn Toán lớp 4 – Trường Tiểu học Sông Công. Thời gian làm bài: 40 phút. Gồm Phần I: Trắc nghiệm (9 câu) và Phần II: Tự luận (4 bài tính toán và giải toán). Em hãy làm bài cẩn thận và kiểm tra lại kết quả trước khi nộp.',
     questions: [
       {
         id: 'toan4-gk1-c01',
@@ -48,7 +51,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         correctAnswer: '19 800 000',
         points: 0.5,
         explanation:
-          'Chữ số hàng chục nghìn là 6 (lớn hơn hoặc bằng 5), nên ta làm tròn tăng chữ số hàng trăm nghìn lên 1 đơn vị: 19 762 318 làm tròn thành 19 800 000.',
+          'Chữ số hàng chục nghìn là 6 (≥ 5), nên ta làm tròn tăng chữ số hàng trăm nghìn lên 1 đơn vị: 19 762 318 làm tròn thành 19 800 000.',
         caseInsensitive: true,
         trimWhitespace: true,
       },
@@ -264,6 +267,203 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
       },
     ],
   },
+
+  // ==========================================
+  // ĐỀ 2: TOÁN LỚP 4 – TRƯỜNG TIỂU HỌC SÔNG CÔNG
+  // ==========================================
+  {
+    id: 'gk1-2026-grade4-math-02',
+    teacherId: 'editorial',
+    title: 'Đề ôn giữa học kỳ I – Đề 2 – Toán lớp 4 (2026–2027)',
+    subject: 'Toán',
+    grade: 'Khối 4',
+    category: 'EXAM',
+    durationMinutes: 40,
+    published: true,
+    updatedAt: '2026-10-28',
+    instructions:
+      'Đề kiểm tra giữa học kì I môn Toán lớp 4 – Trường Tiểu học Sông Công (Đề số 2). Thời gian làm bài: 40 phút. Gồm Phần I: Trắc nghiệm (6 câu) và Phần II: Tự luận (4 bài). Em hãy đọc kĩ đề bài và tính toán cẩn thận.',
+    questions: [
+      {
+        id: 'toan4-de2-c01',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 1 (0,5 điểm). Số 68 405 được đọc là:',
+        options: [
+          'Sáu mươi tám nghìn bốn trăm linh năm',
+          'Sáu mươi tám nghìn bốn trăm năm mươi',
+          'Sáu mươi tám nghìn bốn trăm không trăm năm',
+          'Sáu nghìn tám trăm bốn mươi lăm',
+        ],
+        correctAnswer: 'Sáu mươi tám nghìn bốn trăm linh năm',
+        points: 0.5,
+        explanation: 'Số 68 405 đọc là: Sáu mươi tám nghìn bốn trăm linh năm.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c02',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 2 (0,5 điểm). Chữ số 8 trong số 867 952 431 thuộc hàng nào, lớp nào?',
+        options: [
+          'Hàng triệu, lớp triệu',
+          'Hàng trăm nghìn, lớp nghìn',
+          'Hàng trăm triệu, lớp triệu',
+          'Hàng chục triệu, lớp triệu',
+        ],
+        correctAnswer: 'Hàng trăm triệu, lớp triệu',
+        points: 0.5,
+        explanation: 'Trong số 867 952 431, chữ số 8 đứng ở hàng trăm triệu, thuộc lớp triệu.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c03',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 3 (0,5 điểm). Khẳng định nào sau đây là đúng về tính chẵn, lẻ của các số?',
+        options: [
+          'Số 35 728 là số chẵn; Số 46 000 là số chẵn',
+          'Số 35 728 là số lẻ; Số 46 000 là số chẵn',
+          'Số 35 728 là số lẻ; Số 46 000 là số lẻ',
+          'Số 35 728 là số chẵn; Số 46 000 là số lẻ',
+        ],
+        correctAnswer: 'Số 35 728 là số chẵn; Số 46 000 là số chẵn',
+        points: 0.5,
+        explanation:
+          '35 728 có tận cùng là 8 nên là số chẵn; 46 000 có tận cùng là 0 nên là số chẵn.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c04',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 4 (0,5 điểm). Góc có số đo 90° và góc có số đo 125° lần lượt là:',
+        options: [
+          'Góc vuông và góc tù',
+          'Góc nhọn và góc vuông',
+          'Góc bẹt và góc tù',
+          'Góc vuông và góc nhọn',
+        ],
+        correctAnswer: 'Góc vuông và góc tù',
+        points: 0.5,
+        explanation: 'Góc 90° là góc vuông; góc 125° (lớn hơn 90° và bé hơn 180°) là góc tù.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c05',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 5 (0,5 điểm). 8 tấn 15 kg = … kg. Số cần điền vào chỗ chấm là:',
+        options: ['950 kg', '815 kg', '8 015 kg', '8 150 kg'],
+        correctAnswer: '8 015 kg',
+        points: 0.5,
+        explanation: '8 tấn = 8 000 kg. 8 000 kg + 15 kg = 8 015 kg.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c06',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 6 (0,5 điểm). Làm tròn số 5 278 381 đến hàng trăm nghìn ta được số nào?',
+        options: ['5 278 000', '5 000 381', '5 200 000', '5 300 000'],
+        correctAnswer: '5 300 000',
+        points: 0.5,
+        explanation:
+          'Chữ số hàng chục nghìn là 7 (≥ 5) nên làm tròn tăng lên hàng trăm nghìn: 5 278 381 làm tròn thành 5 300 000.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c07a',
+        type: 'SHORT_ANSWER',
+        content:
+          'Bài 1a – Tự luận (0,5 điểm). Đặt tính rồi tính: 58 623 + 25 047. Nhập kết quả:',
+        correctAnswer: '83670',
+        points: 0.5,
+        explanation: '58 623 + 25 047 = 83 670.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c07b',
+        type: 'SHORT_ANSWER',
+        content: 'Bài 1b – Tự luận (0,5 điểm). Đặt tính rồi tính: 36 073 − 2 855. Nhập kết quả:',
+        correctAnswer: '33218',
+        points: 0.5,
+        explanation: '36 073 − 2 855 = 33 218.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c07c',
+        type: 'SHORT_ANSWER',
+        content: 'Bài 1c – Tự luận (0,5 điểm). Đặt tính rồi tính: 17 218 × 4. Nhập kết quả:',
+        correctAnswer: '68872',
+        points: 0.5,
+        explanation: '17 218 × 4 = 68 872.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c07d',
+        type: 'SHORT_ANSWER',
+        content: 'Bài 1d – Tự luận (0,5 điểm). Đặt tính rồi tính: 88 445 : 7. Nhập kết quả:',
+        correctAnswer: '12635',
+        points: 0.5,
+        explanation: '88 445 : 7 = 12 635.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c08a',
+        type: 'SHORT_ANSWER',
+        content:
+          'Bài 2a – Tính giá trị biểu thức (1 điểm). Tính giá trị của biểu thức a + b × c với a = 2 370, b = 105 và c = 6. Nhập kết quả:',
+        correctAnswer: '3000',
+        points: 1,
+        explanation: 'Thay số: 2 370 + 105 × 6 = 2 370 + 630 = 3 000.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c08b',
+        type: 'SHORT_ANSWER',
+        content:
+          'Bài 2b – Tính giá trị biểu thức (0,5 điểm). Tính: 24 000 : 6 × 5. Nhập kết quả:',
+        correctAnswer: '20000',
+        points: 0.5,
+        explanation: '24 000 : 6 × 5 = 4 000 × 5 = 20 000.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c09',
+        type: 'SHORT_ANSWER',
+        content:
+          'Bài 3 (2 điểm). An mua 1 bút mực và 6 quyển vở. Giá một bút mực là 15 000 đồng, mỗi quyển vở giá 8 500 đồng. An đưa cô bán hàng 100 000 đồng. Hỏi cô bán hàng phải trả lại cho An bao nhiêu tiền? (Em nhập đáp số số tiền trả lại, đơn vị đồng):',
+        correctAnswer: '34000',
+        points: 2,
+        explanation:
+          'Bài giải: Mua 6 quyển vở hết: 8 500 × 6 = 51 000 (đồng). Tổng tiền mua bút và vở: 51 000 + 15 000 = 66 000 (đồng). Cô bán hàng trả lại An: 100 000 − 66 000 = 34 000 (đồng). Đáp số: 34 000 đồng.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c10',
+        type: 'SHORT_ANSWER',
+        content:
+          'Bài 4 (1 điểm). Cho các chữ số 1, 0, 5, 3, 7 và 8. Hãy lập số lớn nhất và số bé nhất có 6 chữ số khác nhau từ các chữ số trên (viết số lớn nhất trước, số bé nhất sau, cách nhau bằng dấu phẩy):',
+        correctAnswer: '875310, 103578',
+        points: 1,
+        explanation: 'Số lớn nhất có 6 chữ số khác nhau: 875 310. Số bé nhất: 103 578.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+    ],
+  },
+
+  // ==========================================
+  // ĐỀ 1: TIẾNG VIỆT – TRƯỜNG TIỂU HỌC SÔNG CÔNG (VÕ THỊ SÁU)
+  // ==========================================
   {
     id: 'gk1-2026-grade4-vietnamese-01',
     teacherId: 'editorial',
@@ -279,7 +479,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
     passage:
       'Vào năm mười hai tuổi, Sáu đã đi theo anh trai tham gia hoạt động cách mạng. Mỗi lần được các anh giao nhiệm vụ gì Sáu đều hoàn thành tốt. Một hôm, Sáu mang lựu đạn phục kích giết tên cai Tòng, một tên Việt gian bán nước ngay tại xã nhà. Lần đó, Sáu bị giặc bắt. Sau gần ba năm tra tấn, giam cầm, giặc Pháp đưa chị ra ở Côn Đảo.\n\nTrong ngục giam, chị vẫn hồn nhiên, vui tươi, tin tưởng vào ngày chiến thắng của đất nước. Bọn giặc Pháp đã lén lút đem chị đi thủ tiêu, vì sợ các chiến sĩ cách mạng trong tù sẽ nổi giận phản đối. Trên đường ra pháp trường, chị đã ngắt một bông hoa còn ướt đẫm sương đêm cài lên tóc. Bọn chúng kinh ngạc vì thấy một người trước lúc hi sinh lại bình tĩnh đến thế. Tới bãi đất, chị gỡ bông hoa từ mái tóc mình tặng cho người lính Âu Phi. Chị đi tới cột trói: mỉm cười, chị nhìn trời xanh bao la và chị cất cao giọng hát.\n\nLúc một tên lính bảo chị quỳ xuống, chị đã quát vào mặt lũ đao phủ: “Tao chỉ biết đứng không biết quỳ”.\n\nMột tiếng hô: “Bắn”.\n\nMột tràng súng nổ, chị Sáu ngã xuống. Máu chị thấm ướt bãi cát.',
     instructions:
-      'Đề kiểm tra giữa học kì I môn Tiếng Việt lớp 4 – Trường Tiểu học Hà Nguyên Thị (UBND Xã Phúc Thọ). Thời gian làm bài: 60 phút. Gồm Phần A: Kiểm tra đọc và kiến thức tiếng Việt (Đọc văn bản chị Võ Thị Sáu và trả lời các câu hỏi) và Phần B: Kiểm tra viết (Kể lại một câu chuyện cổ tích yêu thích).',
+      'Đề kiểm tra giữa học kì I môn Tiếng Việt lớp 4 – Trường Tiểu học Sông Công. Thời gian làm bài: 60 phút. Gồm Phần A: Kiểm tra đọc và kiến thức tiếng Việt (Đọc văn bản chị Võ Thị Sáu và trả lời các câu hỏi) và Phần B: Kiểm tra viết (Kể lại một câu chuyện cổ tích yêu thích).',
     questions: [
       {
         id: 'tv4-gk1-c01',
@@ -383,7 +583,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         content:
           'Câu 7 (M3 – 1 điểm). Qua bài đọc em thấy chị Sáu là người như thế nào? Là một học sinh, em sẽ làm gì để tỏ lòng biết ơn những người có công với đất nước như chị Võ Thị Sáu? (Em hãy viết 2 – 3 câu):',
         correctAnswer:
-          'Chị Võ Thị Sáu là một người nữ anh hùng dũng cảm, kiên cường, bất khuất, sẵn sàng hi sinh vì nền độc lập của Tổ quốc. Là một học sinh, em nguyện chăm chỉ học tập, rèn luyện đạo đức tốt, vâng lời thầy cô và noi gương tinh thần yêu nước của các anh hùng dân tộc.',
+          'Chị Võ Thị Sáu là một người nữ anh hùng dũng cảm, kiên cường, bất khuất, sẵn sàng hi sinh vì nền độc lập của Tổ quốc. Là một học sinh Trường Tiểu học Sông Công, em nguyện chăm chỉ học tập, rèn luyện đạo đức tốt, vâng lời thầy cô và noi gương tinh thần yêu nước của các anh hùng dân tộc.',
         points: 1,
         explanation:
           'Hướng dẫn chấm: Nêu được phẩm chất anh dũng, kiên cường của chị Sáu (0,5đ); Nêu được hành động cụ thể để tỏ lòng biết ơn như học tập chăm ngoan, giữ gìn hòa bình (0,5đ).',
@@ -447,6 +647,168 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         points: 10,
         explanation:
           'Giáo viên chấm điểm theo barem: Mở bài (2đ), Thân bài (6đ), Kết bài (2đ), Trình bày & chính tả (1đ). Tùy mức độ diễn đạt của học sinh có thể trừ lỗi chính tả.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+    ],
+  },
+
+  // ==========================================
+  // ĐỀ 2: TIẾNG VIỆT – TRƯỜNG TIỂU HỌC SÔNG CÔNG (THANH KIẾM VÀ HOA HỒNG)
+  // ==========================================
+  {
+    id: 'gk1-2026-grade4-vietnamese-02',
+    teacherId: 'editorial',
+    title: 'Đề ôn tập giữa học kỳ I – Đề 2 – Tiếng Việt lớp 4 (2026–2027)',
+    subject: 'Tiếng Việt',
+    grade: 'Khối 4',
+    category: 'EXAM',
+    durationMinutes: 60,
+    published: true,
+    updatedAt: '2026-10-28',
+    passageTitle: 'Thanh kiếm và hoa hồng',
+    passage:
+      'Một lần thanh kiếm và hoa hồng cãi nhau, thanh kiếm cao giọng bảo:\n- Tôi khoẻ hơn bạn, chắc chắn sẽ giúp ích cho con người nhiều hơn rồi! Còn bạn yếu ớt và mảnh dẻ thế kia thì làm sao chống chọi với thiên tai, giặc giã được.\nHoa hồng ngạc nhiên:\n- Tôi không hiểu tại sao anh lại chê tôi như vậy? Hay là anh ghen tị vì anh không có được hương thơm và vẻ đẹp lộng lẫy của tôi?\n- Bạn nhầm to bạn đẹp thật nhưng vẻ đẹp của bạn chẳng để làm gì. Thanh kiếm lắc đầu, mỉa mai.\n- Bỗng lúc đó có một nhà thông thái đi tới, chúng bèn nhờ ông phân xử. Nhà thông thái ôn tồn giải thích:\n- Con người cần cả kiếm và hoa hồng các cháu ạ. Kiếm giúp con người chống lại kẻ thù và tránh được các hiểm hoạ. Còn hoa hồng đem lại hương thơm, sự ngọt ngào, niềm vui sướng cho cuộc sống và trái tim của họ…\n- Thanh kiếm và hoa hồng hiểu ra, chúng rối rít cảm ơn nhà thông thái. Cả hai bắt tay nhau thân thiện và không bao giờ cãi nhau nữa.',
+    instructions:
+      'Đề kiểm tra giữa học kì I môn Tiếng Việt lớp 4 – Trường Tiểu học Sông Công (Đề số 2). Thời gian: 60 phút. Gồm Phần A: Đọc thầm bài "Thanh kiếm và hoa hồng" trả lời câu hỏi và Phần B: Tập làm văn (Kể lại câu chuyện em yêu thích).',
+    questions: [
+      {
+        id: 'tv4-de2-c01',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 1 (0,5 điểm). Tại sao thanh kiếm cho rằng nó có ích còn hoa hồng vô ích?',
+        options: [
+          'Nó khoẻ mạnh nên nó chống được thiên tai, giặc giã.',
+          'Hoa hồng yếu ớt không thể có sức lực để chống lại giặc giã.',
+          'Nó khoẻ, chống được thiên tai, giặc giã; còn hoa hồng yếu ớt.',
+          'Hoa hồng mạnh khoẻ để chống lại giặc giã.',
+        ],
+        correctAnswer: 'Nó khoẻ, chống được thiên tai, giặc giã; còn hoa hồng yếu ớt.',
+        points: 0.5,
+        explanation:
+          'Thanh kiếm cho rằng mình khỏe, chống được thiên tai, giặc giã; còn hoa hồng yếu ớt, mảnh dẻ.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c02',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 2 (0,5 điểm). Hoa hồng hiểu sự chê bai của thanh kiếm xuất phát từ lí do nào?',
+        options: [
+          'Thanh kiếm ganh tị với hương thơm và vẻ đẹp của hoa hồng.',
+          'Thanh kiếm không hiểu được vẻ đẹp lộng lẫy, kiêu sa của hoa hồng.',
+          'Thanh kiếm là một kẻ thiển cận.',
+          'Thanh kiếm là nhà thông thái.',
+        ],
+        correctAnswer: 'Thanh kiếm ganh tị với hương thơm và vẻ đẹp của hoa hồng.',
+        points: 0.5,
+        explanation: 'Hoa hồng nói: "Hay là anh ghen tị vì anh không có được hương thơm và vẻ đẹp lộng lẫy của tôi?".',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c03',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 3 (0,5 điểm). Nhà thông thái đã giải thích điều gì cho thanh kiếm và hoa hồng?',
+        options: [
+          'Công dụng của thanh kiếm đối với cuộc sống của con người.',
+          'Vẻ đẹp của hoa hồng, sự cần thiết của hoa hồng.',
+          'Vai trò của thanh kiếm và hoa hồng đối với cuộc sống của con người.',
+          'Kiếm giúp con người chống lại kẻ thù và tránh được các hiểm hoạ.',
+        ],
+        correctAnswer: 'Vai trò của thanh kiếm và hoa hồng đối với cuộc sống của con người.',
+        points: 0.5,
+        explanation:
+          'Nhà thông thái chỉ rõ: Kiếm giúp chống kẻ thù, còn hoa hồng đem lại hương thơm và niềm vui cho cuộc sống.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c04',
+        type: 'MULTIPLE_CHOICE',
+        content: 'Câu 4 (0,5 điểm). Câu chuyện "Thanh kiếm và hoa hồng" muốn nói với chúng ta điều gì?',
+        options: [
+          'Không nên cãi nhau vì những chuyện nhỏ nhặt trong cuộc sống.',
+          'Không nên kiêu căng, tự phụ, tự cho mình hơn hẳn người khác.',
+          'Con người cần cả sức mạnh, hương thơm, niềm tin và sự ngọt ngào.',
+          'Thanh kiếm và hoa hồng là niềm tự hào của con người.',
+        ],
+        correctAnswer: 'Con người cần cả sức mạnh, hương thơm, niềm tin và sự ngọt ngào.',
+        points: 0.5,
+        explanation: 'Cuộc sống con người cần cả sự bảo vệ vững vàng lẫn những vẻ đẹp tinh thần ngọt ngào.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c05',
+        type: 'SHORT_ANSWER',
+        content:
+          'Câu 5 (1 điểm). Hãy ghi lại các động từ có trong câu: "Bỗng lúc đó có một nhà thông thái đi tới, hoa hồng và thanh kiếm bèn nhờ ông phân xử" (viết cách nhau bởi dấu phẩy):',
+        correctAnswer: 'có, đi tới, nhờ, phân xử',
+        points: 1,
+        explanation: 'Các động từ trong câu gồm: "có", "đi tới", "nhờ", "phân xử".',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c06',
+        type: 'SHORT_ANSWER',
+        content:
+          'Câu 6 (1 điểm). Tìm các danh từ thích hợp điền vào chỗ chấm:\na) Trong mưa thường xuất hiện những (1)... long trời, lở đất.\nb) Chúng tôi phản đối (2)... và mong muốn hòa bình.\nc) Các tỉnh miền Trung thường xảy ra (3)... hằng năm.\nd) (4)... là người dạy em biết đọc, biết viết.\n(Nhập 4 danh từ lần lượt cách nhau bởi dấu phẩy):',
+        correctAnswer: 'tiếng sấm, chiến tranh, lũ lụt, cô giáo',
+        points: 1,
+        explanation: 'Ví dụ phù hợp: (1) tiếng sấm; (2) chiến tranh; (3) lũ lụt (bão lũ); (4) cô giáo (thầy giáo).',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c07',
+        type: 'SHORT_ANSWER',
+        reviewMode: 'TEACHER',
+        content:
+          'Câu 7 (1 điểm). Qua bài đọc, em rút ra bài học gì cho bản thân? (Em hãy viết câu trả lời từ 1 – 2 câu):',
+        correctAnswer:
+          'Bài học: Mỗi người, mỗi vật đều có giá trị và sứ mệnh riêng trong cuộc sống; ta không nên kiêu căng, tự phụ mà cần biết tôn trọng, hòa thuận và hợp tác với mọi người.',
+        points: 1,
+        explanation: 'Học sinh nêu được bài học về sự khiêm tốn, không tự phụ và tôn trọng giá trị của người khác.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c08',
+        type: 'SHORT_ANSWER',
+        reviewMode: 'TEACHER',
+        content:
+          'Câu 8 (1 điểm). Đặt câu theo gợi ý:\na) Đặt 1 câu có chứa danh từ riêng chỉ tên người:\nb) Đặt 1 câu có chứa động từ chỉ hoạt động:\n(Em viết 2 câu vào ô bên dưới, mỗi câu một dòng):',
+        correctAnswer:
+          'Ví dụ:\na) Bạn Linh là học sinh giỏi của lớp em.\nb) Đàn chim én đang bay lượn trên bầu trời mùa xuân.',
+        points: 1,
+        explanation: 'Giáo viên chấm: Câu a có danh từ riêng viết hoa đúng (0,5đ); Câu b có động từ chỉ hoạt động đúng ngữ pháp (0,5đ).',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c09',
+        type: 'SHORT_ANSWER',
+        reviewMode: 'TEACHER',
+        content:
+          'Câu 9 (1 điểm). Em hãy đặt 1 câu nói về một việc mà em hoặc bạn em đã làm để giúp đỡ người có hoàn cảnh khó khăn:',
+        correctAnswer:
+          'Ví dụ: Em đã cùng các bạn trong lớp quyên góp sách vở và quần áo ấm để gửi tặng các bạn nhỏ vùng cao.',
+        points: 1,
+        explanation: 'Câu văn có nội dung nhân ái, giúp đỡ người khó khăn, đúng ngữ pháp tiếng Việt.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'tv4-de2-c10',
+        type: 'SHORT_ANSWER',
+        reviewMode: 'TEACHER',
+        content:
+          'PHẦN II: KIỂM TRA VIẾT (TẬP LÀM VĂN – 10 ĐIỂM)\n\nĐề bài: Em hãy kể lại một câu chuyện cổ tích đã được nghe hoặc được đọc mà em yêu thích nhất.\n\n(Yêu cầu: Bài viết có bố cục 3 phần Mở bài, Thân bài, Kết bài. Kể diễn biến câu chuyện rõ ràng, cảm xúc chân thực. Em hãy viết bài văn vào khung dưới đây):',
+        correctAnswer:
+          'Barem chấm điểm:\n- Mở bài (2đ): Giới thiệu câu chuyện định kể.\n- Thân bài (5đ + 1đ sáng tạo): Kể diễn biến câu chuyện theo trình tự hợp lý, sinh động.\n- Kết bài (2đ): Kết thúc câu chuyện, nêu bài học và cảm nghĩ của em.',
+        points: 10,
+        explanation: 'Giáo viên chấm điểm bài làm văn của học sinh theo tiêu chí 3 phần và lỗi chính tả.',
         caseInsensitive: true,
         trimWhitespace: true,
       },

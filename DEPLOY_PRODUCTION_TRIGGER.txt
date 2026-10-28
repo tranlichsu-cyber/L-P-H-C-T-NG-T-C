@@ -233,3 +233,4 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-10-28: Cap nhat tinh nang tro choi tuong tac: Bat buoc co nut "Bat dau" thi thoi gian moi dem, cho phep giao vien chu dong tuy chinh va dieu chinh thoi gian linh hoat tren toan bo 5 tro choi.
 2026-10-28: Tich hop toan bo kho cau hoi tren web (SGK Toan 4, SGK Lich su & Dia li 4, Bo de cua giao vien) vao tro choi tuong tac, kem bo chuyen doi thong minh va chuc nang tuy bien/chinh sua cau hoi truc tiep cho giao vien.
 2026-10-28: Them 2 de thi on giua hoc ky I (Toan lop 4 thoi gian 40 phut va Tieng Viet lop 4 thoi gian 60 phut) vao muc De thi cho hoc sinh tu luyen lam bai truc tiep, kem dap an va huong dan cham chi tiet.
+2026-10-28: Chuan hoa ten truong thanh Truong Tieu hoc Song Cong tren toan bo he thong de thi va bo sung De 2 Toan, De 2 Tieng Viet vao muc De thi hoc sinh.
