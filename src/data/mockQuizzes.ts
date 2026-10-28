@@ -1,6 +1,9 @@
 import type { Quiz } from '../types';
 
+import { BUILTIN_MIDTERM_QUIZZES } from './exams/builtInMidtermExams';
+
 export const INITIAL_QUIZZES: Quiz[] = [
+  ...BUILTIN_MIDTERM_QUIZZES,
   {
     id: 'quiz-1',
     title: 'Bài 43 – Nhân với số có hai chữ số',

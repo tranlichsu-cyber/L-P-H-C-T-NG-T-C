@@ -13,8 +13,18 @@ import {matchesGrade,type SelfPracticeQuiz} from '../services/selfPractice/conte
 import {curatedTraditionQuizzes} from '../data/traditionQuizzes';
 import {TraditionQuizRunner} from '../components/tradition/TraditionQuizRunner';
 import { SCHOOL_LOGO_SRC } from '../assets/schoolLogo';
+import { BUILTIN_MIDTERM_EXAMS } from '../data/exams/builtInMidtermExams';
 
-const builtIn:SelfPracticeQuiz[]=withWeeklyWritingSets(curatedTraditionQuizzes.map(q=>({...q,teacherId:'editorial',subject:'Giáo dục địa phương',published:true,updatedAt:'2026-10-13'})));
+const builtIn: SelfPracticeQuiz[] = withWeeklyWritingSets([
+  ...curatedTraditionQuizzes.map((q) => ({
+    ...q,
+    teacherId: 'editorial',
+    subject: 'Giáo dục địa phương',
+    published: true as const,
+    updatedAt: '2026-10-13',
+  })),
+  ...BUILTIN_MIDTERM_EXAMS,
+]);
 export function SelfPracticePage(){
  const [student,setStudent]=useState<StudentAccess|null>(null),[work,setWork]=useState<WorkPayload|null>(null),[saved,setSaved]=useState(true);
  const markSaved=useCallback(()=>setSaved(true),[]);

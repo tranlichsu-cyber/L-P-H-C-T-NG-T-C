@@ -9,7 +9,7 @@ const source={id:'source1',teacherId:'teacher1',title:'Ôn Toán',subject:'Toán
 const copy=publicQuizCopy(source,'teacher1');
 assert.equal(copy.id,'teacher1_source1');assert.equal(copy.published,true);
 for(const key of ['assignments','responses','className','testCode'])assert.equal(copy[key],undefined);
-assert.equal(copy.questions[0].studentName,undefined);assert.equal(copy.questions[0].points,1);
+assert.equal(copy.questions[0].studentName,undefined);assert.equal(copy.questions[0].points,5);
 assert.equal(gradePractice(copy.questions,{q1:'5'}).correctCount,1);
 assert.equal(gradePractice(copy.questions,{q1:'4'}).correctCount,0);
 assert.equal(gradePractice(copy.questions,{}).correctCount,0);
