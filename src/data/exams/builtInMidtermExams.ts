@@ -8,7 +8,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
   {
     id: 'gk1-2026-grade4-math-01',
     teacherId: 'editorial',
-    title: 'Đề ôn giữa học kỳ I – Đề 1 – Toán lớp 4 (2026–2027)',
+    title: 'Đề ôn GHKI - Lớp 4 - Toán - Đề 01',
     subject: 'Toán',
     grade: 'Khối 4',
     category: 'EXAM',
@@ -274,7 +274,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
   {
     id: 'gk1-2026-grade4-math-02',
     teacherId: 'editorial',
-    title: 'Đề ôn giữa học kỳ I – Đề 2 – Toán lớp 4 (2026–2027)',
+    title: 'Đề ôn GHKI - Lớp 4 - Toán - Đề 02',
     subject: 'Toán',
     grade: 'Khối 4',
     category: 'EXAM',
@@ -282,7 +282,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
     published: true,
     updatedAt: '2026-10-28',
     instructions:
-      'Đề kiểm tra giữa học kì I môn Toán lớp 4 – Trường Tiểu học Sông Công (Đề số 2). Thời gian làm bài: 40 phút. Gồm Phần I: Trắc nghiệm (6 câu) và Phần II: Tự luận (4 bài). Em hãy đọc kĩ đề bài và tính toán cẩn thận.',
+      'Đề kiểm tra giữa học kì I môn Toán lớp 4 – Trường Tiểu học Sông Công (Đề số 2). Thời gian làm bài: 40 phút. Gồm Phần I: Trắc nghiệm (6 câu - 3 điểm) và Phần II: Tự luận (4 bài - 7 điểm). Em hãy đọc kĩ đề bài và tính toán cẩn thận.',
     questions: [
       {
         id: 'toan4-de2-c01',
@@ -319,17 +319,17 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
       {
         id: 'toan4-de2-c03',
         type: 'MULTIPLE_CHOICE',
-        content: 'Câu 3 (0,5 điểm). Khẳng định nào sau đây là đúng về tính chẵn, lẻ của các số?',
+        content: 'Câu 3 (0,5 điểm). Điền Đ (Đúng) hoặc S (Sai) vào nhận định: a) Số 35 728 là số lẻ. b) Số 46 000 là số chẵn.',
         options: [
-          'Số 35 728 là số chẵn; Số 46 000 là số chẵn',
-          'Số 35 728 là số lẻ; Số 46 000 là số chẵn',
-          'Số 35 728 là số lẻ; Số 46 000 là số lẻ',
-          'Số 35 728 là số chẵn; Số 46 000 là số lẻ',
+          'a) S — b) Đ (35 728 là số lẻ: Sai; 46 000 là số chẵn: Đúng)',
+          'a) Đ — b) S (35 728 là số lẻ: Đúng; 46 000 là số chẵn: Sai)',
+          'a) Đ — b) Đ (Cả hai câu đều đúng)',
+          'a) S — b) S (Cả hai câu đều sai)',
         ],
-        correctAnswer: 'Số 35 728 là số chẵn; Số 46 000 là số chẵn',
+        correctAnswer: 'a) S — b) Đ (35 728 là số lẻ: Sai; 46 000 là số chẵn: Đúng)',
         points: 0.5,
         explanation:
-          '35 728 có tận cùng là 8 nên là số chẵn; 46 000 có tận cùng là 0 nên là số chẵn.',
+          'Số 35 728 tận cùng bằng 8 là số chẵn nên nhận định "là số lẻ" là SAI (S). Số 46 000 tận cùng bằng 0 là số chẵn nên nhận định "là số chẵn" là ĐÚNG (Đ).',
         caseInsensitive: true,
         trimWhitespace: true,
       },
@@ -376,7 +376,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         id: 'toan4-de2-c07a',
         type: 'SHORT_ANSWER',
         content:
-          'Bài 1a – Tự luận (0,5 điểm). Đặt tính rồi tính: 58 623 + 25 047. Nhập kết quả:',
+          'Bài 1a – Tự luận (0,5 điểm). Đặt tính rồi tính ra giấy nháp: 58 623 + 25 047. Nhập kết quả:',
         correctAnswer: '83670',
         points: 0.5,
         explanation: '58 623 + 25 047 = 83 670.',
@@ -386,7 +386,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
       {
         id: 'toan4-de2-c07b',
         type: 'SHORT_ANSWER',
-        content: 'Bài 1b – Tự luận (0,5 điểm). Đặt tính rồi tính: 36 073 − 2 855. Nhập kết quả:',
+        content: 'Bài 1b – Tự luận (0,5 điểm). Đặt tính rồi tính ra giấy nháp: 36 073 − 2 855. Nhập kết quả:',
         correctAnswer: '33218',
         points: 0.5,
         explanation: '36 073 − 2 855 = 33 218.',
@@ -396,7 +396,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
       {
         id: 'toan4-de2-c07c',
         type: 'SHORT_ANSWER',
-        content: 'Bài 1c – Tự luận (0,5 điểm). Đặt tính rồi tính: 17 218 × 4. Nhập kết quả:',
+        content: 'Bài 1c – Tự luận (0,5 điểm). Đặt tính rồi tính ra giấy nháp: 17 218 × 4. Nhập kết quả:',
         correctAnswer: '68872',
         points: 0.5,
         explanation: '17 218 × 4 = 68 872.',
@@ -406,7 +406,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
       {
         id: 'toan4-de2-c07d',
         type: 'SHORT_ANSWER',
-        content: 'Bài 1d – Tự luận (0,5 điểm). Đặt tính rồi tính: 88 445 : 7. Nhập kết quả:',
+        content: 'Bài 1d – Tự luận (0,5 điểm). Đặt tính rồi tính ra giấy nháp: 88 445 : 7. Nhập kết quả:',
         correctAnswer: '12635',
         points: 0.5,
         explanation: '88 445 : 7 = 12 635.',
@@ -417,9 +417,9 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         id: 'toan4-de2-c08a',
         type: 'SHORT_ANSWER',
         content:
-          'Bài 2a – Tính giá trị biểu thức (1 điểm). Tính giá trị của biểu thức a + b × c với a = 2 370, b = 105 và c = 6. Nhập kết quả:',
+          'Bài 2a – Tính giá trị biểu thức (1,5 điểm). Tính giá trị của biểu thức a + b × c với a = 2 370, b = 105 và c = 6. Nhập kết quả:',
         correctAnswer: '3000',
-        points: 1,
+        points: 1.5,
         explanation: 'Thay số: 2 370 + 105 × 6 = 2 370 + 630 = 3 000.',
         caseInsensitive: true,
         trimWhitespace: true,
@@ -428,7 +428,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         id: 'toan4-de2-c08b',
         type: 'SHORT_ANSWER',
         content:
-          'Bài 2b – Tính giá trị biểu thức (0,5 điểm). Tính: 24 000 : 6 × 5. Nhập kết quả:',
+          'Bài 2b – Tính giá trị biểu thức (0,5 điểm). Tính giá trị của: 24 000 : 6 × 5. Nhập kết quả:',
         correctAnswer: '20000',
         points: 0.5,
         explanation: '24 000 : 6 × 5 = 4 000 × 5 = 20 000.',
@@ -439,7 +439,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         id: 'toan4-de2-c09',
         type: 'SHORT_ANSWER',
         content:
-          'Bài 3 (2 điểm). An mua 1 bút mực và 6 quyển vở. Giá một bút mực là 15 000 đồng, mỗi quyển vở giá 8 500 đồng. An đưa cô bán hàng 100 000 đồng. Hỏi cô bán hàng phải trả lại cho An bao nhiêu tiền? (Em nhập đáp số số tiền trả lại, đơn vị đồng):',
+          'Bài 3 – Giải toán có lời văn (2 điểm). An mua 1 bút mực và 6 quyển vở. Giá một bút mực là 15 000 đồng, mỗi quyển vở giá 8 500 đồng. An đưa cô bán hàng 100 000 đồng. Hỏi cô bán hàng phải trả lại cho An bao nhiêu tiền? (Em nhập số tiền cần trả lại, ví dụ 34000):',
         correctAnswer: '34000',
         points: 2,
         explanation:
@@ -448,13 +448,24 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
         trimWhitespace: true,
       },
       {
-        id: 'toan4-de2-c10',
+        id: 'toan4-de2-c10a',
         type: 'SHORT_ANSWER',
         content:
-          'Bài 4 (1 điểm). Cho các chữ số 1, 0, 5, 3, 7 và 8. Hãy lập số lớn nhất và số bé nhất có 6 chữ số khác nhau từ các chữ số trên (viết số lớn nhất trước, số bé nhất sau, cách nhau bằng dấu phẩy):',
-        correctAnswer: '875310, 103578',
-        points: 1,
-        explanation: 'Số lớn nhất có 6 chữ số khác nhau: 875 310. Số bé nhất: 103 578.',
+          'Bài 4a – Tìm số (0,5 điểm). Cho các chữ số 1, 0, 5, 3, 7 và 8. Hãy lập số lớn nhất có 6 chữ số khác nhau từ các chữ số trên. Nhập số lập được:',
+        correctAnswer: '875310',
+        points: 0.5,
+        explanation: 'Để được số lớn nhất có 6 chữ số khác nhau, ta xếp các chữ số theo thứ tự từ lớn đến bé: 875 310.',
+        caseInsensitive: true,
+        trimWhitespace: true,
+      },
+      {
+        id: 'toan4-de2-c10b',
+        type: 'SHORT_ANSWER',
+        content:
+          'Bài 4b – Tìm số (0,5 điểm). Cho các chữ số 1, 0, 5, 3, 7 và 8. Hãy lập số bé nhất có 6 chữ số khác nhau từ các chữ số trên. Nhập số lập được:',
+        correctAnswer: '103578',
+        points: 0.5,
+        explanation: 'Để được số bé nhất có 6 chữ số khác nhau, chữ số đầu tiên phải khác 0 nhỏ nhất là 1, các chữ số còn lại xếp từ bé đến lớn: 103 578.',
         caseInsensitive: true,
         trimWhitespace: true,
       },
@@ -467,7 +478,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
   {
     id: 'gk1-2026-grade4-vietnamese-01',
     teacherId: 'editorial',
-    title: 'Đề ôn tập giữa học kỳ I – Đề 1 – Tiếng Việt lớp 4 (2026–2027)',
+    title: 'Đề ôn GHKI - Lớp 4 - Tiếng Việt - Đề 01',
     subject: 'Tiếng Việt',
     grade: 'Khối 4',
     category: 'EXAM',
@@ -659,7 +670,7 @@ export const BUILTIN_MIDTERM_EXAMS: SelfPracticeQuiz[] = [
   {
     id: 'gk1-2026-grade4-vietnamese-02',
     teacherId: 'editorial',
-    title: 'Đề ôn tập giữa học kỳ I – Đề 2 – Tiếng Việt lớp 4 (2026–2027)',
+    title: 'Đề ôn GHKI - Lớp 4 - Tiếng Việt - Đề 02',
     subject: 'Tiếng Việt',
     grade: 'Khối 4',
     category: 'EXAM',
