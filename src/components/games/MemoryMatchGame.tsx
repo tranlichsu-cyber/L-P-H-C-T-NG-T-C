@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { SAMPLE_MEMORY_PAIRS } from './classroomGamesData';
-import { playCorrectSound, playWrongSound, playFanfareSound, playTickSound } from '../../utils/audio';
+import { playCorrectSound, playWrongSound, playFanfareSound, playTickSound, playStartSound } from '../../utils/audio';
 import { triggerConfetti } from '../../utils/confetti';
-import { RotateCcw, Trophy, Clock, Zap } from 'lucide-react';
+import { RotateCcw, Trophy, Clock, Zap, Play, Pause, Plus, Minus } from 'lucide-react';
 
 interface CardItem {
   uid: string;
@@ -28,8 +28,15 @@ export const MemoryMatchGame: React.FC<MemoryMatchGameProps> = ({
   const [moves, setMoves] = useState(0);
   const [matchesCount, setMatchesCount] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
-  const [seconds, setSeconds] = useState(0);
   const [isWon, setIsWon] = useState(false);
+  const [isTimeOut, setIsTimeOut] = useState(false);
+
+  // Timer settings
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [timeMode, setTimeMode] = useState<'COUNTUP' | 'COUNTDOWN'>('COUNTUP');
+  const [countdownDuration, setCountdownDuration] = useState(60);
+  const [seconds, setSeconds] = useState(0);
 
   // Initialize and shuffle cards
   const initCards = () => {
@@ -58,25 +65,64 @@ export const MemoryMatchGame: React.FC<MemoryMatchGameProps> = ({
     setMoves(0);
     setMatchesCount(0);
     setIsLocked(false);
-    setSeconds(0);
     setIsWon(false);
+    setIsTimeOut(false);
+    setIsGameStarted(false);
+    setIsTimerPaused(false);
+    setSeconds(timeMode === 'COUNTDOWN' ? countdownDuration : 0);
   };
 
   useEffect(() => {
     initCards();
   }, [customPairs]);
 
-  // Stopwatch
+  // Start game & timer
+  const handleStartGame = () => {
+    playStartSound();
+    setIsGameStarted(true);
+    setIsTimerPaused(false);
+  };
+
+  const handleSetTimeMode = (mode: 'COUNTUP' | 'COUNTDOWN', dur: number = 60) => {
+    setTimeMode(mode);
+    setCountdownDuration(dur);
+    setSeconds(mode === 'COUNTDOWN' ? dur : 0);
+    setIsGameStarted(false);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+  };
+
+  const handleAdjustSeconds = (amount: number) => {
+    setSeconds((prev) => Math.max(1, prev + amount));
+  };
+
+  // Timer effect
   useEffect(() => {
-    if (isWon) return;
+    if (!isGameStarted || isTimerPaused || isWon || isTimeOut) return;
+
     const interval = setInterval(() => {
-      setSeconds((prev) => prev + 1);
+      setSeconds((prev) => {
+        if (timeMode === 'COUNTDOWN') {
+          if (prev <= 1) {
+            clearInterval(interval);
+            playWrongSound();
+            setIsTimeOut(true);
+            return 0;
+          }
+          if (prev <= 6) {
+            playTickSound();
+          }
+          return prev - 1;
+        }
+        return prev + 1;
+      });
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [isWon]);
+  }, [isGameStarted, isTimerPaused, isWon, isTimeOut, timeMode]);
 
   const handleCardClick = (uid: string) => {
-    if (isLocked || isWon) return;
+    if (!isGameStarted || isLocked || isWon || isTimeOut) return;
 
     const clickedCard = cards.find((c) => c.uid === uid);
     if (!clickedCard || clickedCard.isFlipped || clickedCard.isMatched) return;
@@ -197,6 +243,90 @@ export const MemoryMatchGame: React.FC<MemoryMatchGameProps> = ({
               Thoát
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Teacher Timer Control Bar (Start & Adjust) */}
+      <div className="bg-slate-900/90 border-2 border-emerald-700/80 rounded-2xl p-3.5 my-4 max-w-5xl mx-auto w-full flex flex-wrap items-center justify-between gap-3 shadow-md">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1 mr-1">
+            <Clock className="w-4 h-4 text-emerald-400" /> THỜI GIAN:
+          </span>
+
+          {!isGameStarted ? (
+            <button
+              type="button"
+              onClick={handleStartGame}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-300 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-400/30 border-2 border-emerald-200 cursor-pointer active:scale-95 flex items-center gap-1.5 animate-pulse"
+            >
+              <Play className="w-4 h-4 fill-slate-950" /> BẮT ĐẦU CHƠI
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsTimerPaused(!isTimerPaused)}
+              className={`px-3.5 py-1.5 rounded-xl font-black text-xs border-2 flex items-center gap-1.5 transition-all ${
+                isTimerPaused
+                  ? 'bg-emerald-500 hover:bg-emerald-400 border-emerald-300 text-slate-950'
+                  : 'bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-400 text-emerald-300'
+              }`}
+            >
+              {isTimerPaused ? <Play className="w-4 h-4 fill-slate-950" /> : <Pause className="w-4 h-4" />}
+              {isTimerPaused ? 'TIẾP TỤC GIỜ' : 'TẠM DỪNG'}
+            </button>
+          )}
+
+          {/* Quick +/- buttons */}
+          {timeMode === 'COUNTDOWN' && (
+            <div className="flex items-center gap-1 ml-1">
+              <button
+                type="button"
+                onClick={() => handleAdjustSeconds(-15)}
+                className="px-2 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-800 border border-emerald-700 text-[11px] font-bold text-emerald-300 flex items-center"
+                title="Giảm 15 giây"
+              >
+                <Minus className="w-3 h-3 mr-0.5" /> 15s
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAdjustSeconds(15)}
+                className="px-2 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-800 border border-emerald-700 text-[11px] font-bold text-amber-300 flex items-center"
+                title="Cộng thêm 15 giây"
+              >
+                <Plus className="w-3 h-3 mr-0.5" /> 15s
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Mode & presets duration selector */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] text-slate-400 font-medium">Chế độ:</span>
+          <button
+            type="button"
+            onClick={() => handleSetTimeMode('COUNTUP')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+              timeMode === 'COUNTUP'
+                ? 'bg-emerald-400 text-slate-950 border border-emerald-200 shadow-sm'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+            }`}
+          >
+            ⏱ Tự do
+          </button>
+          {[30, 60, 90, 120].map((sec) => (
+            <button
+              type="button"
+              key={sec}
+              onClick={() => handleSetTimeMode('COUNTDOWN', sec)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                timeMode === 'COUNTDOWN' && countdownDuration === sec
+                  ? 'bg-amber-400 text-slate-950 border border-amber-200 shadow-sm'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+              }`}
+            >
+              ⏳ {sec}s
+            </button>
+          ))}
         </div>
       </div>
 

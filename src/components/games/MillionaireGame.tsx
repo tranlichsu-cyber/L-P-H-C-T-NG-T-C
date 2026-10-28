@@ -8,6 +8,7 @@ import {
   playLifelineSound,
   playFanfareSound,
   playTickSound,
+  playStartSound,
 } from '../../utils/audio';
 import { triggerConfetti } from '../../utils/confetti';
 import {
@@ -18,6 +19,9 @@ import {
   Play,
   Pause,
   Award,
+  Clock,
+  Plus,
+  Minus,
 } from 'lucide-react';
 
 interface MillionaireGameProps {
@@ -46,9 +50,11 @@ export const MillionaireGame: React.FC<MillionaireGameProps> = ({
   const [usedFriend, setUsedFriend] = useState(false);
   const [chosenFriend, setChosenFriend] = useState<string | null>(null);
 
-  // Timer
+  // Timer Settings & Controls
+  const [timerDuration, setTimerDuration] = useState<number>(30); // 0 = unlimited
   const [secondsLeft, setSecondsLeft] = useState<number>(30);
-  const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [isTimerStarted, setIsTimerStarted] = useState<boolean>(false);
+  const [isTimerPaused, setIsTimerPaused] = useState<boolean>(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentQ = questions[currentIdx] || questions[0];
@@ -69,13 +75,39 @@ export const MillionaireGame: React.FC<MillionaireGameProps> = ({
     setEliminatedOptions([]);
     setAudienceStats(null);
     setChosenFriend(null);
-    setSecondsLeft(30);
+    setIsTimerStarted(false);
     setIsTimerPaused(false);
+    setSecondsLeft(timerDuration);
+  };
+
+  // Start Timer manually
+  const handleStartTimer = () => {
+    playStartSound();
+    setIsTimerStarted(true);
+    setIsTimerPaused(false);
+  };
+
+  // Change Timer Duration
+  const handleChangeDuration = (sec: number) => {
+    setTimerDuration(sec);
+    setSecondsLeft(sec);
+  };
+
+  // Quick adjust seconds (+ / -)
+  const handleAdjustSeconds = (amount: number) => {
+    setSecondsLeft((prev) => Math.max(1, prev + amount));
   };
 
   // Timer ticking
   useEffect(() => {
-    if (isAnswerRevealed || isGameOver || isWon || isTimerPaused) {
+    if (
+      !isTimerStarted ||
+      isTimerPaused ||
+      isAnswerRevealed ||
+      isGameOver ||
+      isWon ||
+      timerDuration === 0
+    ) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
@@ -97,7 +129,7 @@ export const MillionaireGame: React.FC<MillionaireGameProps> = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [currentIdx, isAnswerRevealed, isGameOver, isWon, isTimerPaused]);
+  }, [currentIdx, isTimerStarted, isTimerPaused, isAnswerRevealed, isGameOver, isWon, timerDuration]);
 
   const handleTimeOut = () => {
     setIsAnswerRevealed(true);
@@ -345,14 +377,94 @@ export const MillionaireGame: React.FC<MillionaireGameProps> = ({
             {/* Floating Timer Badge */}
             <div className="absolute -top-6 right-8">
               <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl border-4 shadow-xl transition-all ${
-                  secondsLeft <= 5
+                className={`min-w-14 h-14 px-3 rounded-2xl flex items-center justify-center font-black text-2xl border-4 shadow-xl transition-all ${
+                  timerDuration === 0
+                    ? 'bg-indigo-900 border-amber-400 text-amber-300'
+                    : !isTimerStarted
+                    ? 'bg-slate-900 border-amber-400/80 text-amber-300'
+                    : secondsLeft <= 5
                     ? 'bg-rose-600 border-rose-300 text-white animate-bounce'
+                    : isTimerPaused
+                    ? 'bg-amber-600 border-amber-300 text-white'
                     : 'bg-indigo-900 border-amber-400 text-amber-300'
                 }`}
+                title={!isTimerStarted ? 'Đang chờ giáo viên bấm Bắt đầu' : isTimerPaused ? 'Đang tạm dừng' : 'Thời gian còn lại'}
               >
-                {secondsLeft}
+                {timerDuration === 0 ? '∞' : `${secondsLeft}s`}
               </div>
+            </div>
+          </div>
+
+          {/* Teacher Timer Control Bar (Start & Adjust) */}
+          <div className="bg-slate-900/90 border-2 border-indigo-700/80 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-md">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1 mr-1">
+                <Clock className="w-4 h-4 text-amber-400" /> THỜI GIAN:
+              </span>
+
+              {!isTimerStarted ? (
+                <button
+                  type="button"
+                  onClick={handleStartTimer}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-400/30 border-2 border-amber-200 cursor-pointer active:scale-95 flex items-center gap-1.5 animate-pulse"
+                >
+                  <Play className="w-4 h-4 fill-slate-950" /> BẮT ĐẦU TÍNH GIỜ
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsTimerPaused(!isTimerPaused)}
+                  className={`px-3.5 py-1.5 rounded-xl font-black text-xs border-2 flex items-center gap-1.5 transition-all ${
+                    isTimerPaused
+                      ? 'bg-emerald-500 hover:bg-emerald-400 border-emerald-300 text-slate-950'
+                      : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400 text-amber-300'
+                  }`}
+                >
+                  {isTimerPaused ? <Play className="w-4 h-4 fill-slate-950" /> : <Pause className="w-4 h-4" />}
+                  {isTimerPaused ? 'TIẾP TỤC GIỜ' : 'TẠM DỪNG'}
+                </button>
+              )}
+
+              {/* Quick +/- buttons */}
+              {timerDuration !== 0 && (
+                <div className="flex items-center gap-1 ml-1">
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustSeconds(-5)}
+                    className="px-2 py-1 rounded-lg bg-indigo-950 hover:bg-indigo-800 border border-indigo-700 text-[11px] font-bold text-indigo-300 flex items-center"
+                    title="Giảm 5 giây"
+                  >
+                    <Minus className="w-3 h-3 mr-0.5" /> 5s
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustSeconds(10)}
+                    className="px-2 py-1 rounded-lg bg-indigo-950 hover:bg-indigo-800 border border-indigo-700 text-[11px] font-bold text-amber-300 flex items-center"
+                    title="Cộng thêm 10 giây"
+                  >
+                    <Plus className="w-3 h-3 mr-0.5" /> 10s
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Presets duration selector */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-400 font-medium">Đặt mức:</span>
+              {[15, 30, 45, 60, 0].map((sec) => (
+                <button
+                  type="button"
+                  key={sec}
+                  onClick={() => handleChangeDuration(sec)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all ${
+                    timerDuration === sec
+                      ? 'bg-amber-400 text-slate-950 border border-amber-200 shadow-sm'
+                      : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700'
+                  }`}
+                >
+                  {sec === 0 ? '∞ Vô hạn' : `${sec}s`}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -420,14 +532,9 @@ export const MillionaireGame: React.FC<MillionaireGameProps> = ({
           {/* Controls Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setIsTimerPaused(!isTimerPaused)}
-                className="px-3 py-2 rounded-xl bg-indigo-900/60 hover:bg-indigo-800 border border-indigo-700 text-xs font-bold text-indigo-200 flex items-center gap-1.5"
-              >
-                {isTimerPaused ? <Play className="w-4 h-4 text-emerald-400" /> : <Pause className="w-4 h-4 text-amber-400" />}
-                {isTimerPaused ? 'Tiếp tục giờ' : 'Tạm dừng giờ'}
-              </button>
+              <span className="text-xs text-indigo-300 font-bold bg-indigo-950/60 px-3 py-1.5 rounded-xl border border-indigo-800">
+                {timerDuration === 0 ? '∞ Thời gian tự do' : isTimerStarted ? (isTimerPaused ? '⏸ Đang tạm dừng' : `⏳ Đang tính giờ: ${secondsLeft}s`) : '⏸ Chờ giáo viên bấm Bắt đầu'}
+              </span>
             </div>
 
             <div className="flex items-center gap-3">

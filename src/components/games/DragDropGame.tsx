@@ -1,8 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SAMPLE_DRAG_DROP_CATEGORIES } from './classroomGamesData';
-import { playCorrectSound, playWrongSound, playFanfareSound, playTickSound } from '../../utils/audio';
+import {
+  playCorrectSound,
+  playWrongSound,
+  playFanfareSound,
+  playTickSound,
+  playStartSound,
+} from '../../utils/audio';
 import { triggerConfetti } from '../../utils/confetti';
-import { RotateCcw, CheckCircle2, ArrowRight } from 'lucide-react';
+import {
+  RotateCcw,
+  CheckCircle2,
+  ArrowRight,
+  Play,
+  Pause,
+  Clock,
+  Plus,
+  Minus,
+  AlertCircle,
+} from 'lucide-react';
 
 interface Category {
   id: string;
@@ -35,8 +51,17 @@ export const DragDropGame: React.FC<DragDropGameProps> = ({
   const [isChecked, setIsChecked] = useState(false);
   const [isWon, setIsWon] = useState(false);
 
+  // Timer controls for classroom interaction
+  const [timerDuration, setTimerDuration] = useState<number>(60); // 0 = unlimited
+  const [secondsLeft, setSecondsLeft] = useState<number>(60);
+  const [isTimerStarted, setIsTimerStarted] = useState<boolean>(false);
+  const [isTimerPaused, setIsTimerPaused] = useState<boolean>(false);
+  const [isTimeOut, setIsTimeOut] = useState<boolean>(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Initialize
   const resetGame = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
     // Shuffle unassigned items
     const shuffled = [...data.items].sort(() => Math.random() - 0.5);
     setUnassignedItems(shuffled);
@@ -49,7 +74,58 @@ export const DragDropGame: React.FC<DragDropGameProps> = ({
     setSelectedItemId(null);
     setIsChecked(false);
     setIsWon(false);
+    setIsTimerStarted(false);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+    setSecondsLeft(timerDuration);
   };
+
+  const handleStartTimer = () => {
+    playStartSound();
+    setIsTimerStarted(true);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+  };
+
+  const handleChangeDuration = (sec: number) => {
+    setTimerDuration(sec);
+    setSecondsLeft(sec);
+    setIsTimerStarted(false);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+  };
+
+  const handleAdjustSeconds = (amount: number) => {
+    setSecondsLeft((prev) => Math.max(1, prev + amount));
+    setIsTimeOut(false);
+  };
+
+  // Timer tick effect
+  useEffect(() => {
+    if (!isTimerStarted || isTimerPaused || isWon || isTimeOut || timerDuration === 0) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setIsTimeOut(true);
+          playWrongSound();
+          return 0;
+        }
+        if (prev <= 6) {
+          playTickSound();
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isTimerStarted, isTimerPaused, isWon, isTimeOut, timerDuration]);
 
   useEffect(() => {
     resetGame();
@@ -123,6 +199,8 @@ export const DragDropGame: React.FC<DragDropGameProps> = ({
   // Check answers
   const handleCheck = () => {
     setIsChecked(true);
+    setIsTimerPaused(true);
+    if (timerRef.current) clearInterval(timerRef.current);
 
     // Verify all items are in correct category
     let totalCorrect = 0;
@@ -185,7 +263,127 @@ export const DragDropGame: React.FC<DragDropGameProps> = ({
       </div>
 
       {/* Main Play Area */}
-      <div className="my-6 space-y-6 max-w-6xl mx-auto w-full">
+      <div className="my-6 space-y-4 max-w-6xl mx-auto w-full">
+        {/* Teacher Timer Control Bar */}
+        <div className="bg-slate-900/90 border-2 border-indigo-700/80 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+              <Clock className="w-4 h-4 text-amber-400" /> THỜI GIAN LÀM BÀI:
+            </span>
+
+            {/* Countdown Badge */}
+            {timerDuration > 0 && (
+              <span
+                className={`px-3 py-1 rounded-xl text-xs sm:text-sm font-black border transition-all ${
+                  !isTimerStarted
+                    ? 'bg-slate-800 text-amber-300 border-amber-400/40'
+                    : secondsLeft <= 5
+                    ? 'bg-rose-600 text-white border-rose-300 animate-pulse'
+                    : isTimerPaused
+                    ? 'bg-amber-600 text-white border-amber-300'
+                    : 'bg-emerald-600 text-white border-emerald-300'
+                }`}
+              >
+                ⏱ {secondsLeft}s {isTimerPaused ? '(Tạm dừng)' : !isTimerStarted ? '(Chờ bấm bắt đầu)' : ''}
+              </span>
+            )}
+
+            {!isTimerStarted ? (
+              <button
+                type="button"
+                onClick={handleStartTimer}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-400/30 border-2 border-amber-200 cursor-pointer active:scale-95 flex items-center gap-1.5 animate-pulse ml-1"
+              >
+                <Play className="w-4 h-4 fill-slate-950" /> BẮT ĐẦU TÍNH GIỜ
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsTimerPaused(!isTimerPaused)}
+                className={`px-3.5 py-1.5 rounded-xl font-black text-xs border-2 flex items-center gap-1.5 transition-all ml-1 ${
+                  isTimerPaused
+                    ? 'bg-emerald-500 hover:bg-emerald-400 border-emerald-300 text-slate-950'
+                    : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400 text-amber-300'
+                }`}
+              >
+                {isTimerPaused ? (
+                  <>
+                    <Play className="w-3.5 h-3.5" /> TIẾP TỤC
+                  </>
+                ) : (
+                  <>
+                    <Pause className="w-3.5 h-3.5" /> TẠM DỪNG
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Quick Adjust Buttons */}
+            {isTimerStarted && timerDuration > 0 && (
+              <div className="flex items-center gap-1 ml-1">
+                <button
+                  type="button"
+                  onClick={() => handleAdjustSeconds(-15)}
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold flex items-center gap-0.5"
+                  title="Bớt 15 giây"
+                >
+                  <Minus className="w-3 h-3" />15s
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAdjustSeconds(15)}
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold flex items-center gap-0.5"
+                  title="Thêm 15 giây"
+                >
+                  <Plus className="w-3 h-3" />15s
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Preset Buttons for Teacher */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-slate-400 font-bold hidden sm:inline">Thời lượng:</span>
+            {[
+              { label: '30s', sec: 30 },
+              { label: '60s', sec: 60 },
+              { label: '90s', sec: 90 },
+              { label: '120s', sec: 120 },
+              { label: '∞', sec: 0 },
+            ].map((preset) => (
+              <button
+                type="button"
+                key={preset.sec}
+                onClick={() => handleChangeDuration(preset.sec)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all ${
+                  timerDuration === preset.sec
+                    ? 'bg-blue-600 text-white border-blue-300 shadow-sm'
+                    : 'bg-slate-800 text-slate-400 hover:text-white border-slate-700'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Time out warning banner */}
+        {isTimeOut && (
+          <div className="p-3 rounded-2xl bg-rose-600/90 border border-rose-300 text-white text-xs sm:text-sm font-bold flex items-center justify-between gap-3 animate-fade-in shadow-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <span>⏰ Hết thời gian phân loại! Thầy cô có thể cho thêm thời gian hoặc bấm "Kiểm tra đáp án" bên dưới.</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleAdjustSeconds(30)}
+              className="px-3 py-1.5 bg-white text-slate-950 rounded-xl font-black text-xs hover:bg-amber-200 shrink-0"
+            >
+              +30 giây nữa
+            </button>
+          </div>
+        )}
+
         {/* Unassigned Items Pool */}
         <div className="bg-slate-900/80 border-2 border-indigo-700/80 rounded-3xl p-5 shadow-xl">
           <div className="flex items-center justify-between mb-3">

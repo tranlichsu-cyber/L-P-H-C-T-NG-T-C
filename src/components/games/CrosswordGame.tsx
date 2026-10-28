@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SAMPLE_CROSSWORD_DATA } from './classroomGamesData';
 import {
   playCorrectSound,
   playWrongSound,
   playFanfareSound,
   playTickSound,
+  playStartSound,
 } from '../../utils/audio';
 import { triggerConfetti } from '../../utils/confetti';
-import { RotateCcw, Eye, Key } from 'lucide-react';
+import { RotateCcw, Eye, Key, Play, Pause, Clock, Plus, Minus, AlertCircle } from 'lucide-react';
 
 interface CrosswordClue {
   row: number;
@@ -44,7 +45,16 @@ export const CrosswordGame: React.FC<CrosswordGameProps> = ({
   const [guessInput, setGuessInput] = useState('');
   const [isGuessModalOpen, setIsGuessModalOpen] = useState(false);
 
+  // Timer controls for classroom interaction
+  const [timerDuration, setTimerDuration] = useState<number>(30); // 0 = unlimited
+  const [secondsLeft, setSecondsLeft] = useState<number>(30);
+  const [isTimerStarted, setIsTimerStarted] = useState<boolean>(false);
+  const [isTimerPaused, setIsTimerPaused] = useState<boolean>(false);
+  const [isTimeOut, setIsTimeOut] = useState<boolean>(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const resetGame = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
     const init: Record<number, boolean[]> = {};
     data.clues.forEach((c, idx) => {
       init[idx] = new Array(c.word.replace(/\s+/g, '').length).fill(false);
@@ -55,12 +65,73 @@ export const CrosswordGame: React.FC<CrosswordGameProps> = ({
     setIsWon(false);
     setGuessInput('');
     setIsGuessModalOpen(false);
+    setIsTimerStarted(false);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+    setSecondsLeft(timerDuration);
   };
 
   const handleSelectRow = (idx: number) => {
     setSelectedRow(idx);
+    setIsTimerStarted(false);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+    setSecondsLeft(timerDuration);
     playTickSound();
   };
+
+  const handleStartTimer = () => {
+    playStartSound();
+    setIsTimerStarted(true);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+  };
+
+  const handleChangeDuration = (sec: number) => {
+    setTimerDuration(sec);
+    setSecondsLeft(sec);
+    setIsTimerStarted(false);
+    setIsTimerPaused(false);
+    setIsTimeOut(false);
+  };
+
+  const handleAdjustSeconds = (amount: number) => {
+    setSecondsLeft((prev) => Math.max(1, prev + amount));
+    setIsTimeOut(false);
+  };
+
+  useEffect(() => {
+    if (
+      !isTimerStarted ||
+      isTimerPaused ||
+      isWon ||
+      isTimeOut ||
+      timerDuration === 0 ||
+      selectedRow === null
+    ) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          setIsTimeOut(true);
+          playWrongSound();
+          return 0;
+        }
+        if (prev <= 6) {
+          playTickSound();
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [selectedRow, isTimerStarted, isTimerPaused, isWon, isTimeOut, timerDuration]);
 
   // Reveal a single cell
   const handleRevealCell = (rowIdx: number, charIdx: number) => {
@@ -179,33 +250,161 @@ export const CrosswordGame: React.FC<CrosswordGameProps> = ({
       </div>
 
       {/* Clue Prompt Display (Top spotlight) */}
-      <div className="my-5 max-w-5xl mx-auto w-full">
+      <div className="my-5 max-w-5xl mx-auto w-full space-y-3">
         {currentClue ? (
-          <div className="bg-gradient-to-r from-purple-950 via-indigo-900 to-purple-950 border-3 border-amber-400 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in">
-            <div className="space-y-1 text-center md:text-left flex-1">
-              <span className="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-black uppercase border border-amber-400/40 inline-block mb-1">
-                Gợi ý Hàng ngang số {currentClue.row} ({currentClue.word.replace(/\s+/g, '').length} chữ cái)
-              </span>
-              <h3 className="text-xl sm:text-2xl font-black text-white leading-relaxed">
-                {currentClue.clue}
-              </h3>
+          <div className="bg-gradient-to-r from-purple-950 via-indigo-900 to-purple-950 border-3 border-amber-400 rounded-3xl p-5 sm:p-6 shadow-2xl relative animate-fade-in">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center md:text-left flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-1 justify-center md:justify-start">
+                  <span className="px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-black uppercase border border-amber-400/40 inline-block">
+                    Gợi ý Hàng ngang số {currentClue.row} ({currentClue.word.replace(/\s+/g, '').length} chữ cái)
+                  </span>
+                  {timerDuration > 0 && (
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-black border ${
+                        !isTimerStarted
+                          ? 'bg-slate-800 text-amber-300 border-amber-400/40'
+                          : secondsLeft <= 5
+                          ? 'bg-rose-600 text-white border-rose-300 animate-pulse'
+                          : isTimerPaused
+                          ? 'bg-amber-600 text-white border-amber-300'
+                          : 'bg-emerald-600 text-white border-emerald-300'
+                      }`}
+                    >
+                      ⏱ {secondsLeft}s {isTimerPaused ? '(Tạm dừng)' : !isTimerStarted ? '(Chưa bấm bắt đầu)' : ''}
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-white leading-relaxed">
+                  {currentClue.clue}
+                </h3>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleRevealRow(selectedRow!)}
+                  className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm border border-emerald-300 shadow-md flex items-center gap-1.5"
+                >
+                  <Eye className="w-4 h-4" /> Mở toàn bộ hàng
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleRevealRow(selectedRow!)}
-                className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm border border-emerald-300 shadow-md flex items-center gap-1.5"
-              >
-                <Eye className="w-4 h-4" /> Mở toàn bộ hàng
-              </button>
-            </div>
+            {/* Time out warning banner */}
+            {isTimeOut && (
+              <div className="mt-3 p-2.5 rounded-xl bg-rose-600/90 border border-rose-300 text-white text-xs font-bold flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>⏰ Hết thời gian suy nghĩ! Mời thầy cô gọi học sinh trả lời hoặc bấm "+10s" để thêm thời gian.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleAdjustSeconds(10)}
+                  className="px-2 py-1 bg-white text-slate-950 rounded-lg font-black text-xs hover:bg-amber-200"
+                >
+                  +10 giây nữa
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-slate-900/80 border-2 border-dashed border-purple-800/80 rounded-3xl p-6 text-center text-purple-300 text-sm font-medium">
             👉 Bấm vào bất kỳ hàng ngang nào bên dưới để hiển thị câu hỏi gợi ý cho cả lớp cùng giải!
           </div>
         )}
+
+        {/* Teacher Timer Control Bar */}
+        <div className="bg-slate-900/90 border-2 border-purple-800/80 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1 mr-1">
+              <Clock className="w-4 h-4 text-amber-400" /> THỜI GIAN NGHĨ:
+            </span>
+
+            {selectedRow !== null ? (
+              !isTimerStarted ? (
+                <button
+                  type="button"
+                  onClick={handleStartTimer}
+                  className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-300 hover:to-orange-300 text-slate-950 font-black text-xs shadow-lg shadow-amber-400/30 border-2 border-amber-200 cursor-pointer active:scale-95 flex items-center gap-1.5 animate-pulse"
+                >
+                  <Play className="w-3.5 h-3.5 fill-slate-950" /> BẮT ĐẦU TÍNH GIỜ
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsTimerPaused(!isTimerPaused)}
+                  className={`px-3 py-1.5 rounded-xl font-black text-xs border-2 flex items-center gap-1.5 transition-all ${
+                    isTimerPaused
+                      ? 'bg-emerald-500 hover:bg-emerald-400 border-emerald-300 text-slate-950'
+                      : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400 text-amber-300'
+                  }`}
+                >
+                  {isTimerPaused ? (
+                    <>
+                      <Play className="w-3.5 h-3.5" /> TIẾP TỤC
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="w-3.5 h-3.5" /> TẠM DỪNG
+                    </>
+                  )}
+                </button>
+              )
+            ) : (
+              <span className="text-xs text-purple-300 italic">
+                (Chọn một hàng ngang để bắt đầu tính giờ)
+              </span>
+            )}
+
+            {/* Quick Adjust Buttons */}
+            {selectedRow !== null && isTimerStarted && timerDuration > 0 && (
+              <div className="flex items-center gap-1 ml-1">
+                <button
+                  type="button"
+                  onClick={() => handleAdjustSeconds(-5)}
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold flex items-center gap-0.5"
+                  title="Bớt 5 giây"
+                >
+                  <Minus className="w-3 h-3" />5s
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleAdjustSeconds(10)}
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold flex items-center gap-0.5"
+                  title="Thêm 10 giây"
+                >
+                  <Plus className="w-3 h-3" />10s
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Preset Buttons for Teacher */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-slate-400 font-bold hidden sm:inline">Mức thời gian:</span>
+            {[
+              { label: '15s', sec: 15 },
+              { label: '30s', sec: 30 },
+              { label: '45s', sec: 45 },
+              { label: '60s', sec: 60 },
+              { label: '∞', sec: 0 },
+            ].map((preset) => (
+              <button
+                type="button"
+                key={preset.sec}
+                onClick={() => handleChangeDuration(preset.sec)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-black border transition-all ${
+                  timerDuration === preset.sec
+                    ? 'bg-purple-600 text-white border-purple-300 shadow-sm'
+                    : 'bg-slate-800 text-slate-400 hover:text-white border-slate-700'
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Crossword Grid Area */}

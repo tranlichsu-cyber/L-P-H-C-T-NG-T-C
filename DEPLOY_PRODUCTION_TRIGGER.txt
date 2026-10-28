@@ -230,3 +230,4 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-10-28: Them bo cau hoi the QR rieng cho 27 bai Lich su va Dia li lop 4 (135 cau hoi trac nghiem chuan SGK Ket noi tri thuc taphuan.nxbgd.vn) vao kho the QR va quan ly tiet hoc.
 2026-10-28: Kiem tra giao dien toan dien, toi uu vendor chunking, lazy loading WorksheetPage va tinh gon 14 tep code thua.
 2026-10-28: Them Kho tro choi tuong tac lop hoc chieu may chieu: Rung chuong vang / Ai la trieu phu, Lat the tim cap, Ghep noi & Phan loai, Vuot chuong ngai vat giai cuu con tau, Do chu & O chu tuong tac. Cap nhat va toi uu bao mat firestore.rules va database.rules.json.
+2026-10-28: Cap nhat tinh nang tro choi tuong tac: Bat buoc co nut "Bat dau" thi thoi gian moi dem, cho phep giao vien chu dong tuy chinh va dieu chinh thoi gian linh hoat tren toan bo 5 tro choi.
