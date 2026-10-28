@@ -5,8 +5,12 @@ import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { QrBankService } from '../../services/qrBank/QrBankService';
 import type { QrBank } from '../../services/qrBank/content';
-import { getStandardGrade4MathBanks } from '../../services/qrBank/standardBanks';
-import { BookOpen, CheckCircle, Play, Search } from 'lucide-react';
+import {
+  getAllStandardGrade4Banks,
+  getStandardGrade4MathBanks,
+  getStandardGrade4HistoryGeoBanks
+} from '../../services/qrBank/standardBanks';
+import { BookOpen, CheckCircle, Compass, Hash, Play, Search } from 'lucide-react';
 
 const button = 'inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-700 px-4 py-2.5 font-bold text-white hover:bg-indigo-800 disabled:opacity-40 text-sm transition';
 const secondaryButton = 'inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40 text-sm transition';
@@ -26,11 +30,13 @@ function BankList() {
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
 
-  const [activeTab, setActiveTab] = useState<'all' | 'curriculum' | 'custom'>('curriculum');
+  const [activeTab, setActiveTab] = useState<'math' | 'historygeo' | 'all-curriculum' | 'custom' | 'all'>('math');
   const [volumeFilter, setVolumeFilter] = useState<'all' | 'vol1' | 'vol2'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const standardBanks = useMemo(() => getStandardGrade4MathBanks(), []);
+  const mathBanks = useMemo(() => getStandardGrade4MathBanks(), []);
+  const historyGeoBanks = useMemo(() => getStandardGrade4HistoryGeoBanks(), []);
+  const allStandards = useMemo(() => getAllStandardGrade4Banks(), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,14 +72,20 @@ function BankList() {
     }
   }
 
-  // Filtered standard banks
+  // Filtered standard banks based on tab, volume, and search
   const filteredStandards = useMemo(() => {
-    return standardBanks.filter(b => {
-      // Volume filter
-      const matchNumber = b.title.match(/Bài\s+(\d+)/i);
-      const num = matchNumber ? parseInt(matchNumber[1], 10) : 0;
-      if (volumeFilter === 'vol1' && num > 37) return false;
-      if (volumeFilter === 'vol2' && (num < 38 || num > 73)) return false;
+    let source = allStandards;
+    if (activeTab === 'math') source = mathBanks;
+    else if (activeTab === 'historygeo') source = historyGeoBanks;
+
+    return source.filter(b => {
+      // Volume filter for Math
+      if (b.subject === 'Toán') {
+        const matchNumber = b.title.match(/Bài\s+(\d+)/i);
+        const num = matchNumber ? parseInt(matchNumber[1], 10) : 0;
+        if (volumeFilter === 'vol1' && num > 37) return false;
+        if (volumeFilter === 'vol2' && (num < 38 || num > 73)) return false;
+      }
 
       // Search filter
       if (searchTerm.trim()) {
@@ -82,7 +94,7 @@ function BankList() {
       }
       return true;
     });
-  }, [standardBanks, volumeFilter, searchTerm]);
+  }, [allStandards, mathBanks, historyGeoBanks, activeTab, volumeFilter, searchTerm]);
 
   // Filtered custom banks
   const filteredCustom = useMemo(() => {
@@ -95,6 +107,9 @@ function BankList() {
     });
   }, [items, searchTerm]);
 
+  const showCurriculum = activeTab !== 'custom';
+  const showCustom = activeTab === 'custom' || activeTab === 'all';
+
   return (
     <section className="mx-auto max-w-5xl space-y-6">
       <Link to="/teacher/qr-cards" className="inline-flex items-center gap-1.5 font-bold text-indigo-700 hover:underline">
@@ -105,7 +120,7 @@ function BankList() {
         <div>
           <h1 className="text-3xl font-black text-slate-900">Kho câu hỏi thẻ QR</h1>
           <p className="mt-1 text-slate-600">
-            Trọn bộ 73 bài Toán lớp 4 (SGK Kết nối tri thức - taphuan.nxbgd.vn) và các bộ câu hỏi riêng của thầy cô.
+            Trọn bộ câu hỏi QR chuẩn SGK lớp 4 (Toán: 73 bài, Lịch sử và Địa lí: 27 bài) theo bộ sách Kết nối tri thức (taphuan.nxbgd.vn) và các bộ đề riêng của thầy cô.
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
@@ -126,14 +141,36 @@ function BankList() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setActiveTab('curriculum')}
-              className={`rounded-xl px-4 py-2 text-sm font-black transition ${
-                activeTab === 'curriculum'
+              onClick={() => setActiveTab('math')}
+              className={`rounded-xl px-4 py-2 text-sm font-black transition flex items-center gap-1.5 ${
+                activeTab === 'math'
                   ? 'bg-indigo-700 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              📚 Toán lớp 4 - Chuẩn SGK (73 bài)
+              <Hash className="h-4 w-4" /> Toán 4 ({mathBanks.length} bài)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('historygeo')}
+              className={`rounded-xl px-4 py-2 text-sm font-black transition flex items-center gap-1.5 ${
+                activeTab === 'historygeo'
+                  ? 'bg-emerald-700 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <Compass className="h-4 w-4" /> Lịch sử và Địa lí 4 ({historyGeoBanks.length} bài)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('all-curriculum')}
+              className={`rounded-xl px-4 py-2 text-sm font-black transition flex items-center gap-1.5 ${
+                activeTab === 'all-curriculum'
+                  ? 'bg-slate-800 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }`}
+            >
+              <BookOpen className="h-4 w-4" /> Tất cả SGK ({allStandards.length} bài)
             </button>
             <button
               type="button"
@@ -155,11 +192,11 @@ function BankList() {
                   : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
-              Tất cả ({items.length + standardBanks.length})
+              Toàn bộ ({items.length + allStandards.length})
             </button>
           </div>
 
-          {(activeTab === 'curriculum' || activeTab === 'all') && (
+          {activeTab === 'math' && (
             <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
               <span>Lọc tập:</span>
               <button
@@ -193,7 +230,7 @@ function BankList() {
           <input
             type="text"
             className="w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 py-2.5 text-sm font-medium text-slate-900 focus:border-indigo-500 focus:bg-white focus:outline-indigo-500"
-            placeholder="Tìm theo tên bài học (vd: Bài 1, Phép cộng, Góc nhọn, Phân số, Yến tạ tấn...)"
+            placeholder="Tìm theo tên bài học (vd: Bài 1, Đền Hùng, Thăng Long, Cố đô Huế, Phân số, Địa đạo Củ Chi...)"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -211,54 +248,72 @@ function BankList() {
       )}
 
       {/* CURRICULUM SECTION */}
-      {(activeTab === 'curriculum' || activeTab === 'all') && (
+      {showCurriculum && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-black text-slate-900">
               <BookOpen className="h-5 w-5 text-indigo-600" />
-              Bộ câu hỏi chuẩn SGK Toán lớp 4 ({filteredStandards.length} bài)
+              {activeTab === 'math'
+                ? `Bộ câu hỏi Toán lớp 4 (${filteredStandards.length} bài)`
+                : activeTab === 'historygeo'
+                ? `Bộ câu hỏi Lịch sử và Địa lí lớp 4 (${filteredStandards.length} bài)`
+                : `Bộ câu hỏi chuẩn SGK lớp 4 (${filteredStandards.length} bài)`}
             </h2>
             <span className="text-xs font-semibold text-slate-500">NXB Giáo dục Việt Nam • Kết nối tri thức</span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {filteredStandards.map(bank => (
-              <article key={bank.id} className="flex flex-col justify-between space-y-3 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700">
-                      <CheckCircle className="h-3.5 w-3.5 text-indigo-600" /> Chuẩn SGK
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500">{bank.questions.length} câu trắc nghiệm</span>
+            {filteredStandards.map(bank => {
+              const isHisGeo = bank.subject.includes('Lịch sử');
+              return (
+                <article
+                  key={bank.id}
+                  className={`flex flex-col justify-between space-y-3 rounded-2xl border p-5 shadow-sm transition hover:shadow-md ${
+                    isHisGeo ? 'border-emerald-100 hover:border-emerald-300' : 'border-indigo-100 hover:border-indigo-300'
+                  } bg-white`}
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold ${
+                          isHisGeo ? 'bg-emerald-50 text-emerald-800' : 'bg-indigo-50 text-indigo-800'
+                        }`}
+                      >
+                        <CheckCircle className={`h-3.5 w-3.5 ${isHisGeo ? 'text-emerald-600' : 'text-indigo-600'}`} /> Chuẩn SGK
+                      </span>
+                      <span className="text-xs font-semibold text-slate-500">{bank.questions.length} câu trắc nghiệm</span>
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900">{bank.title}</h3>
+                    <p className="text-xs text-slate-600">
+                      Môn: <strong className={isHisGeo ? 'text-emerald-800' : 'text-indigo-900'}>{bank.subject}</strong> • {bank.grade} • Đáp án A–D chuẩn hóa
+                    </p>
                   </div>
-                  <h3 className="text-lg font-black text-slate-900">{bank.title}</h3>
-                  <p className="text-xs text-slate-600">
-                    Môn: <strong className="text-indigo-900">{bank.subject}</strong> • {bank.grade} • Đáp án A–D chuẩn hóa
-                  </p>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-                  <Link
-                    to={`/teacher/qr-cards?quizId=${encodeURIComponent(bank.id)}`}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
-                  >
-                    <Play className="h-3.5 w-3.5" /> Chiếu thẻ QR
-                  </Link>
-                  <Link
-                    to={`/teacher/qr-cards/bank/${bank.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
-                  >
-                    Xem & Tùy biến câu hỏi
-                  </Link>
-                </div>
-              </article>
-            ))}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                    <Link
+                      to={`/teacher/qr-cards?quizId=${encodeURIComponent(bank.id)}`}
+                      className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-white transition ${
+                        isHisGeo ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-indigo-700 hover:bg-indigo-800'
+                      }`}
+                    >
+                      <Play className="h-3.5 w-3.5" /> Chiếu thẻ QR
+                    </Link>
+                    <Link
+                      to={`/teacher/qr-cards/bank/${bank.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+                    >
+                      Xem & Tùy biến câu hỏi
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       )}
 
       {/* CUSTOM SECTION */}
-      {(activeTab === 'custom' || activeTab === 'all') && (
+      {showCustom && (
         <section className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-xl font-black text-slate-900">
@@ -271,7 +326,9 @@ function BankList() {
 
           {!loading && !filteredCustom.length && (
             <p className="rounded-2xl bg-slate-50 p-6 text-sm text-slate-600">
-              {searchTerm ? 'Không tìm thấy bộ tự soạn nào phù hợp từ khóa.' : 'Thầy cô chưa có bộ tự soạn nào. Thầy cô có thể chọn "Soạn bộ câu hỏi mới" hoặc xem bộ chuẩn SGK ở trên.'}
+              {searchTerm
+                ? 'Không tìm thấy bộ tự soạn nào phù hợp từ khóa.'
+                : 'Thầy cô chưa có bộ tự soạn nào. Thầy cô có thể chọn "Soạn bộ câu hỏi mới" hoặc xem bộ chuẩn SGK ở trên.'}
             </p>
           )}
 
@@ -283,10 +340,16 @@ function BankList() {
                   {bank.subject} • {bank.grade} • {Array.isArray(bank.questions) ? bank.questions.length : 0} câu
                 </p>
                 <div className="flex flex-wrap gap-2 pt-2">
-                  <Link to={`/teacher/qr-cards?quizId=${encodeURIComponent(bank.id)}`} className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition">
+                  <Link
+                    to={`/teacher/qr-cards?quizId=${encodeURIComponent(bank.id)}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                  >
                     <Play className="h-3.5 w-3.5" /> Chiếu thẻ QR
                   </Link>
-                  <Link to={`/teacher/qr-cards/bank/${bank.id}`} className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-700 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-800 transition">
+                  <Link
+                    to={`/teacher/qr-cards/bank/${bank.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-700 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-800 transition"
+                  >
                     Sửa câu hỏi / Ảnh / Video
                   </Link>
                   <button

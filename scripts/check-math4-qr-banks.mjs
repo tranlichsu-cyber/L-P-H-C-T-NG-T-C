@@ -38,7 +38,7 @@ assert.ok(b73);
 assert.equal(b73.title, 'Bài 73 – Ôn tập chung');
 
 const merged = mergeWithStandardBanks([]);
-assert.equal(merged.length, 73);
+assert.equal(merged.length, 100);
 
 const mockCustom = [{
   id: 'custom-1',
@@ -51,7 +51,7 @@ const mockCustom = [{
   updatedAt: ''
 }];
 const mergedWithCustom = mergeWithStandardBanks(mockCustom);
-assert.equal(mergedWithCustom.length, 74);
+assert.equal(mergedWithCustom.length, 101);
 assert.equal(mergedWithCustom[0].id, 'custom-1');
 
 console.log('PASS: All 73 Grade 4 Math lessons and 365 QR questions verified according to SGK Ket noi tri thuc (taphuan.nxbgd.vn)!');
