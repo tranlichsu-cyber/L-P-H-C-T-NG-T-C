@@ -114,3 +114,75 @@ export const playFanfareSound = () => {
     osc.stop(ctx.currentTime + idx * 0.12 + 0.45);
   });
 };
+
+export const playWrongSound = () => {
+  if (isMuted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const notes = [220, 196, 174.61]; // A3, G3, F3 downward buzz
+  notes.forEach((freq, idx) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+
+    gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.3);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime + idx * 0.12);
+    osc.stop(ctx.currentTime + idx * 0.12 + 0.35);
+  });
+};
+
+export const playSuspenseSound = () => {
+  if (isMuted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(130, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(260, ctx.currentTime + 1.2);
+
+  gain.gain.setValueAtTime(0.02, ctx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.8);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.3);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start(ctx.currentTime);
+  osc.stop(ctx.currentTime + 1.35);
+};
+
+export const playLifelineSound = () => {
+  if (isMuted) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
+  notes.forEach((freq, idx) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.09);
+
+    gain.gain.setValueAtTime(0.18, ctx.currentTime + idx * 0.09);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.09 + 0.25);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime + idx * 0.09);
+    osc.stop(ctx.currentTime + idx * 0.09 + 0.3);
+  });
+};
+

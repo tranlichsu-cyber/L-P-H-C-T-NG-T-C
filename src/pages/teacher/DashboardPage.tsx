@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { subscribeActiveTeacherRooms, closeTeacherRoom, closeMultipleTeacherRooms } from '../../services/qr/activeQrSession';
 import type { MockRoomData } from '../../services/realtime/types';
-import { Users, BookOpen, Radio, Sparkles, Zap, Play, History } from 'lucide-react';
+import { Users, BookOpen, Radio, Sparkles, Zap, Play, History, Gamepad2 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
@@ -222,7 +222,42 @@ export const DashboardPage: React.FC = () => {
           )}
         </div>
       )}
-      <button className="w-full rounded-2xl border-2 border-indigo-200 bg-indigo-50 p-5 text-left text-indigo-950" onClick={()=>navigate('/teacher/qr-cards')}><strong className="text-xl">📷 Trả lời bằng thẻ QR</strong><span className="mt-2 block">Chọn lớp → In thẻ → Chiếu câu hỏi → Quét đáp án bằng điện thoại</span></button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          type="button"
+          className="group rounded-3xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-indigo-100/60 p-5 text-left text-indigo-950 hover:border-indigo-500 hover:shadow-lg transition-all"
+          onClick={() => navigate('/teacher/qr-cards')}
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-indigo-600/30 group-hover:scale-105 transition-transform">
+              <span className="text-2xl">📷</span>
+            </div>
+            <div>
+              <strong className="text-lg font-black text-indigo-950 block">Trả lời bằng thẻ QR</strong>
+              <span className="text-xs text-indigo-800 font-medium mt-0.5 block">In thẻ học sinh → Chiếu câu hỏi → Quét đáp án bằng điện thoại</span>
+            </div>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className="group rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50/50 to-white p-5 text-left text-amber-950 hover:border-amber-500 hover:shadow-lg transition-all"
+          onClick={() => navigate('/teacher/games')}
+        >
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center shrink-0 shadow-md shadow-amber-500/30 border border-amber-300 group-hover:scale-105 transition-transform">
+              <Gamepad2 className="w-6 h-6 fill-slate-950" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <strong className="text-lg font-black text-amber-950">Trò chơi lớp học (Máy chiếu)</strong>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 animate-pulse">HOT</span>
+              </div>
+              <span className="text-xs text-amber-900 font-medium mt-0.5 block">Rung chuông vàng, Lật thẻ, Ghép nối, Vượt chướng ngại vật, Ô chữ...</span>
+            </div>
+          </div>
+        </button>
+      </div>
       <PageHeader
         title=""
         description={`Xin chào, ${teacherName} 👋`}
@@ -308,7 +343,21 @@ export const DashboardPage: React.FC = () => {
           <Sparkles className="w-5 h-5 text-sky-600" /> Các chức năng giảng dạy chính
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <Card
+            className="p-6 border-2 border-amber-300 hover:border-amber-500 hover:-translate-y-1 hover:shadow-xl cursor-pointer transition-all space-y-3 bg-gradient-to-br from-amber-50 via-orange-50/40 to-white"
+            onClick={() => navigate('/teacher/games')}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/30 border border-amber-300">
+              <Gamepad2 className="w-6 h-6 fill-slate-950" />
+            </div>
+            <h3 className="font-black text-amber-900 text-base flex items-center gap-1.5">
+              TRÒ CHƠI LỚP HỌC <span className="text-[10px] bg-amber-400 px-1.5 py-0.5 rounded-md font-black">HOT</span>
+            </h3>
+            <p className="text-xs text-slate-600 font-medium">
+              Rung chuông vàng, Lật thẻ, Ghép nối, Ô chữ, Vượt chướng ngại vật... chiếu máy chiếu.
+            </p>
+          </Card>
           <Card
             className="p-6 border-2 border-sky-200 hover:border-sky-500 hover:-translate-y-1 hover:shadow-xl cursor-pointer transition-all space-y-3 bg-gradient-to-br from-sky-50 via-white to-blue-100"
             onClick={handleOpenCreateRoom}

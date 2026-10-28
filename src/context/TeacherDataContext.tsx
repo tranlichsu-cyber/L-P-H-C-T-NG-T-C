@@ -110,6 +110,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const needsTeacherData =
     (pathname === '/teacher' || pathname.startsWith('/teacher/')) && !isLiveRoomRoute;
   const loadedUid = useRef('');
+  const [loadedForUid, setLoadedForUid] = useState<string>('');
   const loadedAt = useRef(0);
   const [quizzes, setQuizzes] = useState<Quiz[]>(
     isFirebaseConfigured ? [] : INITIAL_QUIZZES
@@ -130,7 +131,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!authReady) return;
 
     if (!isTeacherAuthenticated || !currentUser?.uid) {
-      loadedUid.current = '';
+      loadedUid.current = ''; setLoadedForUid('');
       setClasses([]);
       setQuizzes([]);
       return;
@@ -142,7 +143,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Hydrate immediately from localStorage cache if available
     if (loadedUid.current !== uid && (cachedClasses?.items.length || cachedQuizzes?.items.length)) {
-      loadedUid.current = uid;
+      loadedUid.current = uid; setLoadedForUid(uid); setLoadedForUid(uid);
       loadedAt.current = Math.min(cachedClasses?.savedAt || 0, cachedQuizzes?.savedAt || 0);
       setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
       setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
@@ -157,7 +158,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (cacheFresh) return;
 
     if (isFirestoreTemporarilyExhausted()) {
-      loadedUid.current = uid;
+      loadedUid.current = uid; setLoadedForUid(uid);
       loadedAt.current = Date.now();
       setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
       setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
@@ -268,7 +269,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         );
 
         if (!cancelled) {
-          loadedUid.current = uid;
+          loadedUid.current = uid; setLoadedForUid(uid);
           loadedAt.current = Date.now();
           const finalClasses = realClasses.length > 0 ? realClasses : cachedClasses?.items || [];
           const finalQuizzes = realQuizzes.length > 0 ? realQuizzes : cachedQuizzes?.items || [];
@@ -283,7 +284,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
         console.warn('Tạm dùng dữ liệu lớp/bộ câu hỏi đã lưu cục bộ:', error);
         if (!cancelled) {
-          loadedUid.current = uid;
+          loadedUid.current = uid; setLoadedForUid(uid);
           loadedAt.current = Date.now();
           setClasses((prev) =>
             prev.length > 0
@@ -855,8 +856,8 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   return (
     <TeacherDataContext.Provider
       value={{
-        classes:isFirebaseConfigured&&loadedUid.current!==currentUser?.uid?[]:classes,
-        quizzes:isFirebaseConfigured&&loadedUid.current!==currentUser?.uid?[]:quizzes,
+        classes: isFirebaseConfigured && loadedForUid !== currentUser?.uid ? [] : classes,
+        quizzes: isFirebaseConfigured && loadedForUid !== currentUser?.uid ? [] : quizzes,
         addClass,
         updateClass,
         deleteClass,

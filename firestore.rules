@@ -53,6 +53,12 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.teacherId == request.auth.uid);
     }
 
+    // Phòng còn mở cho học sinh (chưa kết thúc). Dùng để giới hạn dữ liệu học sinh được đọc.
+    function roomIsOpen(roomId) {
+      let roomDoc = /databases/$(database)/documents/rooms/$(roomId);
+      return exists(roomDoc) && get(roomDoc).data.get('status', 'ACTIVE') in ['WAITING', 'ACTIVE'];
+    }
+
     function isSameTeam(teamIds) {
       return isTeacher() && getUserData().teamIds.hasAny(teamIds);
     }
@@ -95,8 +101,25 @@ service cloud.firestore {
 
     // 4. Single School Join Requests (joinRequests/{requestId})
     match /joinRequests/{requestId} {
-      allow read: if isSchoolAdmin();
-      allow create: if isAuthenticated();
+      // Mỗi tài khoản (Google/Email, không ẩn danh) chỉ được gửi đúng 1 yêu cầu cho chính mình,
+      // trạng thái bắt buộc PENDING, chỉ các trường đã định nghĩa và có giới hạn độ dài.
+      function validJoinRequest() {
+        let d = request.resource.data;
+        return d.keys().hasAll(['id','uid','displayName','email','requestedAt','status'])
+          && d.keys().hasOnly(['id','uid','displayName','email','requestedAt','status'])
+          && d.id == request.auth.uid && d.uid == request.auth.uid
+          && d.status == 'PENDING'
+          && d.displayName is string && d.displayName.size() >= 1 && d.displayName.size() <= 100
+          && d.email is string && d.email.size() <= 254 && d.email == request.auth.token.email
+          && d.requestedAt is string && d.requestedAt.size() <= 40;
+      }
+      allow get: if isSchoolAdmin() || (isAuthenticated() && request.auth.uid == requestId);
+      allow list: if isSchoolAdmin();
+      allow create: if isAuthenticated()
+        && request.auth.token.firebase.sign_in_provider != 'anonymous'
+        && requestId == request.auth.uid
+        && !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && validJoinRequest();
       allow update, delete: if isSchoolAdmin();
     }
 
@@ -502,13 +525,15 @@ service cloud.firestore {
       }
 
       match /roster/{studentId} {
-        allow read: if isAuthenticated();
+        // Học sinh được đọc danh sách khi phòng còn mở; giáo viên quản lý / QTV được đọc mọi lúc.
+        allow read: if canManageRoom(roomId) || (isAuthenticated() && roomIsOpen(roomId));
         allow create: if canCreateRoomChild(roomId);
         allow update, delete: if canManageRoom(roomId);
       }
 
       match /participants/{studentId} {
-        allow read: if isAuthenticated();
+        // Học sinh được đọc danh sách khi phòng còn mở; giáo viên quản lý / QTV được đọc mọi lúc.
+        allow read: if canManageRoom(roomId) || (isAuthenticated() && roomIsOpen(roomId));
         allow create: if isAuthenticated()
           && get(/databases/$(database)/documents/rooms/$(roomId)).data.get('responseMode','') != 'QR_CARD'
           && exists(/databases/$(database)/documents/rooms/$(roomId)/roster/$(studentId))
@@ -781,8 +806,24 @@ service cloud.firestore {
 
     // 11. Feedback
     match /pilotFeedback/{feedbackId} {
+      function validFeedback() {
+        let d = request.resource.data;
+        return d.keys().hasAll(['id','role','rating','appVersion','browserInfo','createdAt'])
+          && d.keys().hasOnly(['id','role','rating','emojiReaction','category','comment','appVersion','browserInfo','createdAt'])
+          && d.id == feedbackId
+          && d.role in ['TEACHER','STUDENT']
+          && d.rating is int && d.rating >= 1 && d.rating <= 5
+          && (!('emojiReaction' in d) || d.emojiReaction in ['HAPPY','NEUTRAL','SAD'])
+          && (!('category' in d) || d.category in ['USABILITY','SPEED','STABILITY','INTERFACE','OTHER'])
+          && (!('comment' in d) || (d.comment is string && d.comment.size() <= 1000))
+          && d.appVersion is string && d.appVersion.size() <= 32
+          && d.browserInfo is string && d.browserInfo.size() <= 200
+          && d.createdAt is string && d.createdAt.size() <= 40;
+      }
       allow read: if isSchoolAdmin();
-      allow create: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && feedbackId.matches('fb-[0-9]{10,16}-[0-9]{1,4}')
+        && validFeedback();
     }
   }
 }

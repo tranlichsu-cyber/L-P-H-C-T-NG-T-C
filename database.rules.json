@@ -1,8 +1,30 @@
 {
   "rules": {
     "qrRelay": {
-      ".read": "auth != null",
-      ".write": "auth != null"
+      "rooms": {
+        "$roomId": {
+          ".read": "auth != null",
+          ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && (data.exists() ? data.child('room/teacherId').val() === auth.uid : newData.child('room/teacherId').val() === auth.uid) && (!newData.exists() || newData.child('room/teacherId').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['room', 'updatedAt']) && newData.child('room/id').val() === $roomId && newData.child('updatedAt').isNumber()",
+          "room": { ".validate": "newData.hasChildren(['id', 'teacherId'])" },
+          "privateQuestions": { ".validate": "true" },
+          "updatedAt": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      },
+      "teacherRooms": {
+        "$teacherId": {
+          ".read": "auth != null && auth.uid === $teacherId",
+          ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && auth.uid === $teacherId",
+          "$roomId": {
+            ".validate": "newData.hasChildren(['room', 'updatedAt']) && newData.child('room/id').val() === $roomId && newData.child('room/teacherId').val() === $teacherId && newData.child('updatedAt').isNumber()",
+            "room": { ".validate": "true" },
+            "privateQuestions": { ".validate": "true" },
+            "updatedAt": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        }
+      }
     }
   }
 }

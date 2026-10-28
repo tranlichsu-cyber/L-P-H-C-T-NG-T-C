@@ -29,7 +29,7 @@ class EventBus {
           try {
             const event: RealtimeEvent = JSON.parse(e.newValue);
             this.notifyListeners(event);
-          } catch (err) {
+          } catch {
             // Ignore parse errors
           }
         }
@@ -53,7 +53,7 @@ class EventBus {
     // 3. Update localStorage fallback key to trigger storage event in other tabs
     try {
       localStorage.setItem('lhtt_realtime_event', JSON.stringify(event));
-    } catch (err) {
+    } catch {
       // Ignore quota errors
     }
   }

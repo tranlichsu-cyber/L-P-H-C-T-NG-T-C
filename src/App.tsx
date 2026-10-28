@@ -1,4 +1,3 @@
-import {WorksheetPage} from './pages/student/WorksheetPage';
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { StudentSessionProvider } from './context/StudentSessionContext';
@@ -67,6 +66,9 @@ const PracticeListPage = lazy(() =>
 const PracticeEditorPage = lazy(() =>
   import('./pages/teacher/PracticeEditorPage').then((m) => ({ default: m.PracticeEditorPage }))
 );
+const TeacherGamesPage = lazy(() =>
+  import('./pages/teacher/TeacherGamesPage').then((m) => ({ default: m.TeacherGamesPage }))
+);
 const PracticeMonitorPage = lazy(() =>
   import('./pages/teacher/PracticeMonitorPage').then((m) => ({ default: m.PracticeMonitorPage }))
 );
@@ -98,6 +100,7 @@ const SelfPracticePage = lazy(()=>import('./pages/SelfPracticePage').then(m=>({d
 const SelfPracticeManagerPage = lazy(()=>import('./pages/teacher/SelfPracticeManagerPage').then(m=>({default:m.SelfPracticeManagerPage})));
 const TraditionManagerPage = lazy(()=>import('./pages/teacher/TraditionManagerPage').then(m=>({default:m.TraditionManagerPage})));
 const TestJoinPage = lazy(() => import('./pages/student/TestJoinPage').then(m=>({default:m.TestJoinPage})));
+const WorksheetPage = lazy(() => import('./pages/student/WorksheetPage').then(m=>({default:m.WorksheetPage})));
 const StudentPracticeHubPage = lazy(() =>
   import('./pages/student/StudentPracticeHubPage').then((m) => ({ default: m.StudentPracticeHubPage }))
 );
@@ -167,6 +170,8 @@ export const App: React.FC = () => {
                     <Route path="practice/new" element={<PracticeEditorPage />} />
                     <Route path="practice/:practiceSetId" element={<PracticeMonitorPage />} />
                     <Route path="practice/:practiceSetId/edit" element={<PracticeEditorPage />} />
+                    <Route path="games" element={<TeacherGamesPage />} />
+                    <Route path="games/:gameId" element={<TeacherGamesPage />} />
                     <Route path="history" element={<HistoryPage />} />
                     <Route path="history/:roomId" element={<SessionDetailPage />} />
                     <Route path="qr-cards" element={<QrCardsPage />} />

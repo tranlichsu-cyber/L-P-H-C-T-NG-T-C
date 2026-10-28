@@ -63,7 +63,7 @@ export const HistoryPage: React.FC = () => {
       const res = await HistoryService.getHistoryList(filters, page, pageSize);
       setSummaries(res.summaries);
       setTotalCount(res.totalCount);
-    } catch (err) {
+    } catch {
       showToast('Không thể tải lịch sử học tập. Hãy thử lại.', 'error');
     } finally {
       setIsLoading(false);
