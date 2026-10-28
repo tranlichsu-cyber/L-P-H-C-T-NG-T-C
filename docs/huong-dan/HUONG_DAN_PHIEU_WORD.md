@@ -2,7 +2,7 @@
 
 ## Giáo viên
 
-1. Mở phòng học, chọn **Phiếu Word**. Khi dạy cùng PowerPoint, mở **Phiếu Word / Chiếu bài làm** trong bảng điều khiển.
+1. Mở phòng học, chọn **Phiếu Word**. Mở **Phiếu Word / Chiếu bài làm** trong bảng điều khiển.
 2. Tải **phiếu Word mẫu** hoặc chọn file `.docx` của mình. File `.doc` cũ cần được lưu lại thành `.docx` trong Word.
 3. Kiểm tra bản xem trước và các ô học sinh sẽ trả lời. Phiếu nhận biết các đề mục như `Câu 1:`, `Bài 1:` hoặc `1.`. Thầy/cô có thể sửa tên câu hỏi, thêm hoặc bỏ ô. Phiếu không có đề mục được gợi ý một ô “Bài làm của em”.
 4. Bấm **Phát phiếu cho học sinh**. Các em đã vào phòng và chọn tên sẽ được chuyển đến phiếu.

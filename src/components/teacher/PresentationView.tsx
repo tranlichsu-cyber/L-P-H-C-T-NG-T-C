@@ -3,9 +3,6 @@ import {useWorksheetState} from '../../hooks/useWorksheet';
 import { SessionLeaderboard } from './SessionLeaderboard';
 import { choiceIndex, countChoices } from '../../services/realtime/choiceStatistics';
 import React, { useEffect, useState } from 'react';
-import { PdfLessonView } from './PdfLessonView';
-import { LessonSlideControls } from './LessonSlideControls';
-import type { Lesson } from '../../services/lessons/lessonLibrary';
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
@@ -14,10 +11,6 @@ import { Users, X, Sparkles, CheckCircle2, Award, ArrowRight } from 'lucide-reac
 
 interface PresentationViewProps {
   room: MockRoomData;
-  lesson?: Lesson | null;
-  lessonPage?: number;
-  onLessonPage?: (page: number) => void;
-  onChooseLesson?: () => void;
   onClose: () => void;
   onOpenQuestion?: (questionId: string) => void;
   onCloseQuestion?: (questionId: string) => void;
@@ -28,10 +21,6 @@ interface PresentationViewProps {
 
 export const PresentationView: React.FC<PresentationViewProps> = ({
   room,
-  lesson,
-  lessonPage = 1,
-  onLessonPage,
-  onChooseLesson,
   onClose,
   onOpenQuestion,
   onCloseQuestion,
@@ -41,9 +30,6 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   const {state:worksheetState}=useWorksheetState(room.id);
   const [showWorksheet,setShowWorksheet]=useState(false);
   useEffect(()=>{if(worksheetState.worksheetId||worksheetState.projectedWorksheetId)setShowWorksheet(true);else setShowWorksheet(false);},[worksheetState.worksheetId,worksheetState.projectedStudentId,worksheetState.projectedWorksheetId]);
-  const [showLesson, setShowLesson] = useState(Boolean(lesson));
-  const [pageCount, setPageCount] = useState(lesson?.pageCount || 1);
-  useEffect(() => { setShowLesson(Boolean(lesson)); setPageCount(lesson?.pageCount || 1); }, [lesson?.id, lesson?.pageCount]);
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [showStudentName, setShowStudentName] = useState(true);
   const [showSubmissionPicker, setShowSubmissionPicker] = useState(false);
@@ -92,32 +78,32 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
         <div className="flex flex-wrap items-center gap-2">
           {room.status !== 'WAITING' && liveQ && (
-            <Button variant="primary" size="sm" onClick={() => { setShowLesson(false); setShowSubmissionPicker((v) => !v); }}>
+            <Button variant="primary" size="sm" onClick={() => { setShowSubmissionPicker((v) => !v); }}>
               CHIẾU BÀI HỌC SINH ({answeredCount})
             </Button>
           )}
 
 
           {qStatus === 'READY' && onOpenQuestion && (
-            <Button variant="success" size="sm" onClick={() => { setShowLesson(false); onOpenQuestion(currentQuestionId); }} className="font-bold">
+            <Button variant="success" size="sm" onClick={() => { onOpenQuestion(currentQuestionId); }} className="font-bold">
               PHÁT CÂU HỎI
             </Button>
           )}
 
           {qStatus === 'OPEN' && onCloseQuestion && (
-            <Button variant="danger" size="sm" onClick={() => { setShowLesson(false); onCloseQuestion(currentQuestionId); }} className="font-bold">
+            <Button variant="danger" size="sm" onClick={() => { onCloseQuestion(currentQuestionId); }} className="font-bold">
               ĐÓNG TRẢ LỜI
             </Button>
           )}
 
           {qStatus === 'CLOSED' && onShowResult && (
-            <Button variant="primary" size="sm" onClick={() => { setShowLesson(false); onShowResult(currentQuestionId); }} className="font-bold">
+            <Button variant="primary" size="sm" onClick={() => { onShowResult(currentQuestionId); }} className="font-bold">
               HIỂN THỊ ĐÁP ÁN
             </Button>
           )}
 
           {qStatus === 'RESULT' && onNextQuestion && (
-            <Button variant="primary" size="sm" onClick={() => { setShowLesson(false); onNextQuestion(); }} className="font-bold">
+            <Button variant="primary" size="sm" onClick={() => { onNextQuestion(); }} className="font-bold">
               CÂU TIẾP THEO <ArrowRight className="w-5 h-5 ml-2 inline" />
             </Button>
           )}
@@ -143,19 +129,12 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
         </div>
       </div>
 
-      {onChooseLesson && <div className="shrink-0 flex flex-wrap gap-2 items-center">
-        <Button variant="primary" size="sm" onClick={onChooseLesson}>Chọn bài giảng</Button>
-        {lesson && <Button variant={showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(true)}>Bài giảng: {lesson.title}</Button>}
-        <Button variant={!showLesson ? 'warning' : 'primary'} size="sm" onClick={() => setShowLesson(false)}>Câu hỏi / Bài học sinh</Button>
-      </div>}
-      {(worksheetState.worksheetId||worksheetState.projectedWorksheetId)&&<div className="flex gap-3 shrink-0"><button onClick={()=>setShowWorksheet(true)} className="rounded-xl bg-sky-700 text-white px-4 py-2 font-bold">Hoạt động / Bài được chọn</button><button onClick={()=>setShowWorksheet(false)} className="rounded-xl bg-slate-800 text-white px-4 py-2 font-bold">Câu hỏi / Bài giảng</button></div>}
+      
+      {(worksheetState.worksheetId||worksheetState.projectedWorksheetId)&&<div className="flex gap-3 shrink-0"><button onClick={()=>setShowWorksheet(true)} className="rounded-xl bg-sky-700 text-white px-4 py-2 font-bold">Hoạt động / Bài được chọn</button><button onClick={()=>setShowWorksheet(false)} className="rounded-xl bg-slate-800 text-white px-4 py-2 font-bold">Câu hỏi trực tiếp</button></div>}
       {/* Main Content Area */}
       <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_280px] gap-4 py-2">
       <main className="min-w-0 min-h-0 overflow-y-auto pr-1" aria-label="Câu hỏi và đáp án đang trình chiếu">
-        {showWorksheet&&(worksheetState.worksheetId||worksheetState.projectedWorksheetId)?<WorksheetProjection roomId={room.id}/>:showLesson && lesson && onLessonPage ? <div className="h-full flex flex-col gap-2 min-h-0">
-          <div className="flex-1 min-h-0"><PdfLessonView lesson={lesson} page={lessonPage} onCount={setPageCount} /></div>
-          <LessonSlideControls page={lessonPage} count={pageCount} onPage={onLessonPage} />
-        </div> : <>
+        {showWorksheet&&(worksheetState.worksheetId||worksheetState.projectedWorksheetId)?<WorksheetProjection roomId={room.id}/>: <>
         {/* Called Student Banner Overlay if Active */}
         {!selectedSubmission && room.calledStudent && (
           <div className="mb-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 p-3 rounded-2xl text-slate-950 shadow-2xl text-center border-2 border-amber-300">
