@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, Monitor, QrCode, Radio, Smartphone, Trash2, X } from 'lucide-react';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useAuth } from '../../context/AuthContext';
 import { activeRealtimeService } from '../../services/realtime/realtimeServiceSwitch';
 import { QrCardsPrintButton } from '../../components/qr/QrCardsPrintButton';
 import { QrBankService } from '../../services/qrBank/QrBankService';
+import { mergeWithStandardBanks } from '../../services/qrBank/standardBanks';
 import type { QrBank } from '../../services/qrBank/content';
 import type { MockRoomData } from '../../services/realtime/types';
 import {
@@ -23,8 +24,10 @@ export function QrCardsPage() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [classId, setClassId] = useState('');
-  const [quizId, setQuizId] = useState('');
+  const [searchParams] = useSearchParams();
+  const [quizId, setQuizId] = useState(() => searchParams.get('quizId') || '');
   const [subject, setSubject] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selection, setSelection] = useState<{ bankId: string; ids: string[] } | null>(null);
   const [shuffle, setShuffle] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -52,7 +55,9 @@ export function QrCardsPage() {
     classes.find(c => c.id === classId) ||
     (activeQrRoom ? classes.find(c => c.id === activeQrRoom.classId) : undefined) ||
     classes[0];
-  const filtered = available.filter(q => !subject || q.subject === subject);
+  const filtered = available
+    .filter(q => !subject || q.subject === subject)
+    .filter(q => !searchTerm.trim() || q.title.toLowerCase().includes(searchTerm.trim().toLowerCase()));
   const quiz =
     filtered.find(q => q.id === quizId) ||
     (activeQrRoom ? filtered.find(q => q.id === activeQrRoom.quizId) : undefined) ||
@@ -70,8 +75,9 @@ export function QrCardsPage() {
     QrBankService.list(uid, reload > 0)
       .then(items => {
         if (cancelled) return;
-        if (items.length > 0) {
-          setAvailable(items);
+        const merged = mergeWithStandardBanks(items);
+        if (merged.length > 0) {
+          setAvailable(merged);
           return;
         }
         // Fallback: convert multiple-choice quizzes from TeacherDataContext into QR Banks
@@ -336,8 +342,11 @@ export function QrCardsPage() {
           <section className={card}>
             <h2 className="flex items-center gap-3 text-lg font-black"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700">2</span>Cấu hình câu hỏi cho tiết học</h2>
             <fieldset disabled={busy || loading} className="min-w-0 space-y-4 disabled:opacity-60">
-              <label className="block font-bold">Lọc theo môn<select className={input} value={subject} onChange={e => { setSubject(e.target.value); setQuizId(''); setSelection(null); }}><option value="">Tất cả môn học</option>{[...new Set(available.map(q => q.subject))].sort((a, b) => a.localeCompare(b, 'vi')).map(s => <option key={s}>{s}</option>)}</select></label>
-              <label className="block font-bold">Bộ câu hỏi QR riêng<select className={input} value={quiz?.id || ''} onChange={e => { setQuizId(e.target.value); setSelection(null); }}>{!filtered.length && <option value="">{loading ? 'Đang tải kho câu hỏi…' : 'Chưa có bộ câu hỏi'}</option>}{filtered.map(q => <option key={q.id} value={q.id}>{q.title} • {q.subject} • {q.grade}</option>)}</select></label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block font-bold">Lọc theo môn<select className={input} value={subject} onChange={e => { setSubject(e.target.value); setQuizId(''); setSelection(null); }}><option value="">Tất cả môn học</option>{[...new Set(available.map(q => q.subject))].sort((a, b) => a.localeCompare(b, 'vi')).map(s => <option key={s}>{s}</option>)}</select></label>
+                <label className="block font-bold">Tìm bài học / chủ đề<input type="text" className={input} placeholder="Nhập tên hoặc số bài (vd: Bài 1, Phân số...)" value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setQuizId(''); setSelection(null); }} /></label>
+              </div>
+              <label className="block font-bold">Bộ câu hỏi QR ({filtered.length} bộ)<select className={input} value={quiz?.id || ''} onChange={e => { setQuizId(e.target.value); setSelection(null); }}>{!filtered.length && <option value="">{loading ? 'Đang tải kho câu hỏi…' : 'Không có bộ câu hỏi phù hợp'}</option>}{filtered.map(q => <option key={q.id} value={q.id}>{q.title} • {q.subject} • {q.grade}</option>)}</select></label>
               {quiz && <>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm"><p className="font-bold" aria-live="polite">Đã chọn {selected.length}/{questions.length} câu</p><div className="flex gap-4"><button type="button" className="font-bold text-indigo-700 underline" onClick={() => setSelection({ bankId: quiz.id, ids: questions.map(q => q.id) })}>Chọn tất cả</button><button type="button" className="font-bold text-slate-600 underline" onClick={() => setSelection({ bankId: quiz.id, ids: [] })}>Bỏ chọn</button></div></div>
                 <div className="max-h-80 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100">{questions.map((q, i) => <label key={q.id} className="flex cursor-pointer items-start gap-3 p-3 hover:bg-indigo-50"><input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-indigo-700" checked={selectedIds.includes(q.id)} onChange={e => setSelection({ bankId: quiz.id, ids: e.target.checked ? [...selectedIds, q.id] : selectedIds.filter(id => id !== q.id) })} /><span className="min-w-0"><span className="block break-words text-sm font-semibold">{i + 1}. {q.content}</span><span className="mt-1 block text-xs text-slate-500">{q.options.length} lựa chọn • Đúng +{q.correctPoints ?? 10} điểm • Sai {(q.wrongPenalty ?? 0) ? `−${q.wrongPenalty}` : '0'} điểm{q.media?.imageUrl ? ' • Có ảnh' : ''}{q.media?.videoUrl ? ' • Có video' : ''}</span></span></label>)}</div>

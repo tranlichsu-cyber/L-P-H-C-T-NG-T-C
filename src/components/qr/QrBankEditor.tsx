@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, Check, Copy, Eye, FileText, ImagePlus, Pencil, Plus
 import { useAuth } from '../../context/AuthContext';
 import { QrBankService } from '../../services/qrBank/QrBankService';
 import { newQrQuestion, validateQrBank, type QrBank, type QrQuestion } from '../../services/qrBank/content';
+import { getStandardGrade4MathBank } from '../../services/qrBank/standardBanks';
 import { prepareQrImage } from '../../services/qrBank/imageUpload';
 import { QrQuestionContent } from './QrQuestionContent';
 
@@ -42,6 +43,13 @@ export function QrBankEditor() {
   useEffect(() => {
     if (!bankId || bankId === 'new') return;
     let cancelled = false;
+    const std = getStandardGrade4MathBank(bankId);
+    if (std) {
+      setBank({ ...std, teacherId: uid || 'teacher' });
+      setDirty(false);
+      setLoading(false);
+      return;
+    }
     QrBankService.get(uid, bankId).then(value => {
       if (cancelled) return;
       if (!value) throw new Error('Không tìm thấy bộ câu hỏi.');
