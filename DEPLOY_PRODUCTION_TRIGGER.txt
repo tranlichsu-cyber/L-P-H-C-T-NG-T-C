@@ -225,3 +225,4 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-10-28
 
 2026-10-28: Remove PPT lesson presentation feature (Bai giang PPT) from navigation and room controller, and update web.
+2026-10-28: Remove QR instructions details block from QR Cards page and update web.

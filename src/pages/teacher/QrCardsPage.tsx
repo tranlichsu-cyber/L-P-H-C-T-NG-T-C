@@ -365,7 +365,6 @@ export function QrCardsPage() {
           )}
         </aside>
       </div>
-      <details className="rounded-2xl border border-sky-200 bg-sky-50 p-5"><summary className="cursor-pointer font-bold text-sky-900">Cách chiếu trên máy tính và quét bằng điện thoại</summary><ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-slate-700"><li>Bắt đầu tiết học, mở màn chiếu trên máy tính.</li><li>Dùng điện thoại quét mã mở màn quét và đăng nhập cùng tài khoản giáo viên.</li><li>Phát câu hỏi, yêu cầu học sinh giơ thẻ; quét từng nhóm nhỏ.</li><li>Kiểm tra tên và đáp án trước khi gửi. Đóng trả lời, công bố đáp án rồi chuyển câu.</li></ol></details>
     </section>
   );
 }
