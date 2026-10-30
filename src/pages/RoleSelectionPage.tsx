@@ -12,6 +12,7 @@ import {
   BookOpenCheck,
   MapPinned,
   Sparkles,
+  Compass,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useStudentSession } from '../context/StudentSessionContext';
@@ -185,6 +186,23 @@ export const RoleSelectionPage: React.FC = () => {
                   <span className="min-w-0 flex-1">
                     <strong className="block text-base font-black text-emerald-950">Góc truyền thống số</strong>
                     <span className="mt-0.5 block text-xs font-semibold text-emerald-800">Khám phá quê hương Thái Nguyên</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/mo-hinh')}
+                  className="group min-h-24 flex items-center gap-3.5 rounded-2xl border-2 border-amber-200/90 bg-gradient-to-br from-white via-amber-50/70 to-orange-100/60 px-4 py-4 text-left text-amber-950 shadow-sm transition hover:border-amber-400 focus-visible:outline-4 focus-visible:outline-amber-600 sm:col-span-2"
+                >
+                  <span className="shrink-0 rounded-2xl bg-gradient-to-br from-amber-600 to-orange-600 p-3.5 text-white shadow-md shadow-amber-600/25 transition-transform group-hover:scale-105">
+                    <Compass size={26} aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <strong className="block text-base font-black text-amber-950">Kho Mô hình & Sa bàn 3D</strong>
+                      <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-800 border border-amber-400/40">Mới</span>
+                    </div>
+                    <span className="mt-0.5 block text-xs font-semibold text-amber-800">Sa bàn Đền Hùng, Địa đạo Củ Chi & Mô hình Khoa học</span>
                   </span>
                 </button>
               </nav>

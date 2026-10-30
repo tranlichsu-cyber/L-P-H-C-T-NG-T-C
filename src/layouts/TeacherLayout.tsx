@@ -1,7 +1,7 @@
 import { TeacherNavigation } from '../components/navigation/TeacherNavigation';
 import React, { useEffect, useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { QrCode, LayoutDashboard, Users, BookOpen, Radio, LogOut, Building2, Crown, GraduationCap, UserCircle, KeyRound, Link2, CheckCircle2, Gamepad2 } from 'lucide-react';
+import { QrCode, LayoutDashboard, Users, BookOpen, Radio, LogOut, Building2, Crown, GraduationCap, UserCircle, KeyRound, Link2, CheckCircle2, Gamepad2, Compass } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSchool } from '../context/SchoolContext';
 import { SCHOOL_LOGO_SRC } from '../assets/schoolLogo';
@@ -99,6 +99,7 @@ export const TeacherLayout: React.FC = () => {
     { path: '/teacher/tradition', label: 'Góc truyền thống số', icon: BookOpen, idle: 'bg-emerald-50 text-emerald-700 border-emerald-200', active: 'bg-emerald-700 text-white border-emerald-700' },
     { path: '/teacher/tests', label: 'Bài kiểm tra', icon: BookOpen, idle: 'bg-violet-50 text-violet-700 border-violet-200', active: 'bg-violet-600 text-white border-violet-600 shadow-violet-200' },
     { path: '/teacher/games', label: 'Trò chơi lớp học', icon: Gamepad2, idle: 'bg-amber-50 text-amber-800 border-amber-200', active: 'bg-amber-500 text-white border-amber-500 shadow-amber-200' },
+    { path: '/mo-hinh', label: 'Mô hình & Sa bàn 3D', icon: Compass, idle: 'bg-amber-50 text-amber-800 border-amber-200', active: 'bg-amber-600 text-white border-amber-600 shadow-amber-200' },
     { path: '/teacher/qr-cards', label: 'Trả lời bằng thẻ QR', icon: QrCode, idle: 'bg-indigo-50 text-indigo-700 border-indigo-200', active: 'bg-indigo-700 text-white border-indigo-700' },
     { path: '/teacher/room', label: 'Phòng học Live', icon: Radio, idle: 'bg-rose-50 text-rose-700 border-rose-200', active: 'bg-rose-600 text-white border-rose-600 shadow-rose-200' },
     { path: '/team', label: 'Tổ chuyên môn', icon: Crown, idle: 'bg-orange-50 text-orange-700 border-orange-200', active: 'bg-orange-500 text-white border-orange-500 shadow-orange-200' },

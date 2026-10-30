@@ -99,6 +99,8 @@ const TraditionPage = lazy(()=>import('./pages/TraditionPage').then(m=>({default
 const SelfPracticePage = lazy(()=>import('./pages/SelfPracticePage').then(m=>({default:m.SelfPracticePage})));
 const SelfPracticeManagerPage = lazy(()=>import('./pages/teacher/SelfPracticeManagerPage').then(m=>({default:m.SelfPracticeManagerPage})));
 const TraditionManagerPage = lazy(()=>import('./pages/teacher/TraditionManagerPage').then(m=>({default:m.TraditionManagerPage})));
+const ModelHubPage = lazy(() => import('./pages/models/ModelHubPage').then(m => ({ default: m.ModelHubPage })));
+const HungTemplePage = lazy(() => import('./pages/models/HungTemplePage').then(m => ({ default: m.HungTemplePage })));
 const TestJoinPage = lazy(() => import('./pages/student/TestJoinPage').then(m=>({default:m.TestJoinPage})));
 const WorksheetPage = lazy(() => import('./pages/student/WorksheetPage').then(m=>({default:m.WorksheetPage})));
 const StudentPracticeHubPage = lazy(() =>
@@ -134,6 +136,8 @@ export const App: React.FC = () => {
                   <Route path="/" element={<RoleSelectionPage />} />
                   <Route path="/tu-luyen" element={<SelfPracticePage />} />
                   <Route path="/goc-truyen-thong" element={<TraditionPage />} />
+                  <Route path="/mo-hinh" element={<ModelHubPage />} />
+                  <Route path="/mo-hinh/den-hung" element={<HungTemplePage />} />
 
                   {/* Teacher Auth */}
                   <Route path="/login" element={<LoginPage />} />

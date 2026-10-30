@@ -2,7 +2,7 @@ import {RewardShop,EquippedAvatar} from '../components/rewards/RewardShop';
 import {useCallback,useEffect,useState} from 'react';
 import {StudentEntry} from '../components/selfPractice/StudentEntry';
 import {WorkDelivery,type WorkPayload} from '../components/selfPractice/WorkDelivery';
-import type {StudentAccess} from '../services/selfPractice/studentAccess';
+import {StudentAccessService, type StudentAccess} from '../services/selfPractice/studentAccess';
 import {getWritingLesson,withWeeklyWritingSets} from '../data/writing';
 import {WritingPracticeRunner} from '../components/writing/WritingPracticeRunner';
 import {Link} from 'react-router-dom';
@@ -27,6 +27,29 @@ const builtIn: SelfPracticeQuiz[] = withWeeklyWritingSets([
 ]);
 export function SelfPracticePage(){
  const [student,setStudent]=useState<StudentAccess|null>(null),[work,setWork]=useState<WorkPayload|null>(null),[saved,setSaved]=useState(true);
+ const [checkingSaved,setCheckingSaved]=useState<boolean>(()=>{
+   try { return Boolean(localStorage.getItem('lhtt_self_practice_code')); } catch { return false; }
+ });
+ useEffect(()=>{
+   let alive=true;
+   const savedCode=localStorage.getItem('lhtt_self_practice_code');
+   if(savedCode){
+     StudentAccessService.enter(savedCode).then(access=>{
+       if(alive){
+         setStudent(access);
+         setGrade(access.grade.match(/[1-5]/)?.[0]||'');
+       }
+     }).catch(err=>{
+       console.warn('Mã tự luyện không còn hiệu lực:',err);
+       try{localStorage.removeItem('lhtt_self_practice_code');}catch{}
+     }).finally(()=>{
+       if(alive)setCheckingSaved(false);
+     });
+   }else{
+     setCheckingSaved(false);
+   }
+   return()=>{alive=false;};
+ },[]);
  const markSaved=useCallback(()=>setSaved(true),[]);
  const complete=useCallback((data:WorkPayload['data'])=>{setSaved(false);setWork({id:crypto.randomUUID(),data});},[]);
  const [weekFilter,setWeekFilter]=useState(''),[items,setItems]=useState<SelfPracticeQuiz[]>(builtIn),[loading,setLoading]=useState(true),[error,setError]=useState(''),[grade,setGrade]=useState(''),[subject,setSubject]=useState(''),[search,setSearch]=useState(''),[selected,setSelected]=useState<SelfPracticeQuiz|null>(null),[retry,setRetry]=useState(0),[section,setSection]=useState<'PRACTICE'|'WRITING'|'EXAM'>('PRACTICE');
@@ -51,7 +74,7 @@ export function SelfPracticePage(){
       </div>
      </div>
      <div className="flex items-center gap-2">
-      <button type="button" className="min-h-11 rounded-xl border border-violet-200 bg-violet-50/70 hover:bg-violet-100 px-4 py-2 font-bold text-violet-900 transition-colors" onClick={()=>{if(!saved&&!window.confirm('Bài chưa được gửi. Em muốn đổi học sinh?'))return;setStudent(null);setSelected(null);setWork(null);setSaved(true);}}>Đổi học sinh</button>
+      <button type="button" className="min-h-11 rounded-xl border border-violet-200 bg-violet-50/70 hover:bg-violet-100 px-4 py-2 font-bold text-violet-900 transition-colors" onClick={()=>{if(!saved&&!window.confirm('Bài chưa được gửi. Em muốn đổi học sinh?'))return;try{localStorage.removeItem('lhtt_self_practice_code');}catch{}setStudent(null);setSelected(null);setWork(null);setSaved(true);}}>Đổi học sinh</button>
       <Link to="/" className="min-h-11 inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 hover:bg-sky-100 px-3.5 py-2 text-sm font-black text-sky-900 transition-colors">
        <Home size={16} className="text-sky-700"/>
        <span>Trang chủ</span>
@@ -76,7 +99,7 @@ export function SelfPracticePage(){
   </header>
 
   <main className="max-w-6xl mx-auto p-4 sm:p-6 space-y-5">
- {!student&&<section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-800 via-indigo-800 to-teal-800 p-6 sm:p-7 text-white border-b-4 border-amber-400 shadow-lg shadow-sky-900/15">
+ {!student&&!checkingSaved&&<section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-800 via-indigo-800 to-teal-800 p-6 sm:p-7 text-white border-b-4 border-amber-400 shadow-lg shadow-sky-900/15">
   <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-amber-300/15 blur-2xl"/>
   <div className="relative">
    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur-xs border border-white/25 px-3 py-1 text-xs font-extrabold text-amber-200">
@@ -87,7 +110,14 @@ export function SelfPracticePage(){
    <p className="mt-1.5 text-xs sm:text-sm text-sky-100/90">Sau khi nộp, bài làm được gửi cho giáo viên theo dõi; kết quả tự luyện không cộng vào điểm kiểm tra của lớp.</p>
   </div>
  </section>}
- {!student?<StudentEntry onEnter={value=>{setStudent(value);setGrade(value.grade.match(/[1-5]/)?.[0]||'');}}/>:<>
+ {checkingSaved ? (
+  <section className="max-w-md mx-auto p-8 bg-white border-2 border-sky-200 rounded-3xl text-center space-y-3 shadow-md">
+    <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto"/>
+    <p className="font-bold text-sky-950">Đang tự động vào góc tự luyện...</p>
+  </section>
+ ) : !student ? (
+  <StudentEntry onEnter={value=>{try{localStorage.setItem('lhtt_self_practice_code',value.code);}catch{}setStudent(value);setGrade(value.grade.match(/[1-5]/)?.[0]||'');}}/>
+ ) : <>
  {!selected&&<RewardShop key={student.code} identity={{classId:student.classId,studentId:student.studentId,accessCode:student.code}}/>}
  {selected&&work&&<WorkDelivery key={work.id} student={student} quiz={selected} work={work} onSaved={markSaved}/>}
  {selected?(writingLesson?<WritingPracticeRunner key={selected.id} lesson={writingLesson} onBack={back} studentKey={student.classId+'-'+student.studentId} onComplete={data=>complete(data)} onDraftChange={()=>setSaved(false)}/>:<TraditionQuizRunner key={selected.id} quiz={selected} onBack={back} onComplete={answers=>complete({answers})} mode="practice" durationMinutes={selected.category==='EXAM'?(selected.durationMinutes||30):undefined}/>):<>

@@ -235,3 +235,4 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-10-28: Them 2 de thi on giua hoc ky I (Toan lop 4 thoi gian 40 phut va Tieng Viet lop 4 thoi gian 60 phut) vao muc De thi cho hoc sinh tu luyen lam bai truc tiep, kem dap an va huong dan cham chi tiet.
 2026-10-28: Chuan hoa ten truong thanh Truong Tieu hoc Song Cong tren toan bo he thong de thi va bo sung De 2 Toan, De 2 Tieng Viet vao muc De thi hoc sinh.
 2026-10-28: Chuan hoa dinh dang ten de thi theo mau 'De on GHKI - Lop 4 - [Mon] - De 01, 02'; can doi thang diem 10/10 va toi uu hoa tu cham de thi Truong Tieu hoc Song Cong.
+2026-10-30: Them muc Kho Mo hinh 3D & Sa ban hoc tap (mon Khoa hoc, mon Lich su va Dia li) tren trang chu va thanh dieu huong giao vien. Hoan thien Sa ban tuong tac Bai 7: Den Hung va le gio To mon Lich su & Dia li 4 voi 8 diem di tich tren nui Nghia Linh, thuyet minh giong doc tu dong, hoat canh Le hoi Gio To 10/3 va trac nghiem cung co bai hoc.

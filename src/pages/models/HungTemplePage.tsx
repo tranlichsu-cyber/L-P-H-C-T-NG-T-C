@@ -1,0 +1,107 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Home, BookOpen, Sparkles, Compass, MapPin } from 'lucide-react';
+import { HungTempleDiorama } from '../../components/models/HungTempleDiorama';
+import { SCHOOL_LOGO_SRC } from '../../assets/schoolLogo';
+import { useSchool } from '../../context/SchoolContext';
+
+export const HungTemplePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { logoUrl, settings } = useSchool();
+  const schoolName = settings.displayName || settings.schoolName || 'TRƯỜNG TIỂU HỌC SÔNG CÔNG';
+  const currentLogo = logoUrl || SCHOOL_LOGO_SRC;
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      {/* Top Navigation Bar */}
+      <nav className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-4 sm:px-8 py-3 sticky top-0 z-30 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/mo-hinh')}
+            className="p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-bold border border-slate-700"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Kho Mô hình & Sa bàn</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="p-2 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs font-bold border border-slate-700"
+            title="Về Trang chủ"
+          >
+            <Home className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <img src={currentLogo} alt="Logo" className="h-8 w-8 object-contain" />
+          <span className="text-xs font-black tracking-wide text-slate-200 hidden md:inline">
+            {schoolName.toUpperCase()}
+          </span>
+        </div>
+      </nav>
+
+      {/* Page Body */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+        {/* Breadcrumb & Intro */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+            <Compass className="h-3.5 w-3.5" />
+            <span>Kho Mô hình & Sa bàn</span>
+            <span>•</span>
+            <span>Môn Lịch sử và Địa lí 4</span>
+            <span>•</span>
+            <span>Bài 7</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Sa bàn Đền Hùng & Lễ Giỗ Tổ Hùng Vương
+          </h1>
+          <p className="text-sm text-slate-400 max-w-3xl leading-relaxed">
+            Học sinh được trải nghiệm hành hương qua từng bậc đá trên núi Nghĩa Lĩnh cao 175m, tìm hiểu sự tích bánh chưng bánh giầy, bọc trăm trứng Âu Cơ và lời căn dặn thiêng liêng của Bác Hồ.
+          </p>
+        </div>
+
+        {/* The Interactive Diorama Canvas */}
+        <HungTempleDiorama />
+
+        {/* Lesson Objectives & Educational Outcomes */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-slate-900/80 rounded-3xl p-5 border border-slate-800 space-y-2">
+            <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+              <MapPin className="h-4 w-4" />
+              <span>Vị trí địa lý</span>
+            </div>
+            <h3 className="text-sm font-bold text-white">Núi Nghĩa Lĩnh (Phú Thọ)</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Xác định được vị trí của núi Nghĩa Lĩnh và các công trình đền chính (Đền Hạ, Đền Trung, Đền Thượng, Đền Giếng) trên sa bàn thực tế.
+            </p>
+          </div>
+
+          <div className="bg-slate-900/80 rounded-3xl p-5 border border-slate-800 space-y-2">
+            <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+              <BookOpen className="h-4 w-4" />
+              <span>Ý nghĩa lịch sử</span>
+            </div>
+            <h3 className="text-sm font-bold text-white">Cội nguồn Dân tộc</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Hiểu sâu sắc đạo lý "Uống nước nhớ nguồn", truyền thuyết Mẹ Âu Cơ và sự tích Lang Liêu sáng tạo ra bánh chưng, bánh giầy.
+            </p>
+          </div>
+
+          <div className="bg-slate-900/80 rounded-3xl p-5 border border-slate-800 space-y-2">
+            <div className="flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider">
+              <Sparkles className="h-4 w-4" />
+              <span>Ngày Giỗ Tổ Mùng 10/3</span>
+            </div>
+            <h3 className="text-sm font-bold text-white">Di sản thế giới UNESCO</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Nắm được các nghi lễ chính (rước kiệu, dâng hương) và các nét đẹp văn hóa dân gian (Hát Xoan, bơi chải sông Lô, thi gói bánh).
+            </p>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+};
