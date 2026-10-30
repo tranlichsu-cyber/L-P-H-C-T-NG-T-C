@@ -202,7 +202,7 @@ export const RoleSelectionPage: React.FC = () => {
                       <strong className="block text-base font-black text-amber-950">Kho Mô hình & Sa bàn 3D</strong>
                       <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-black text-amber-800 border border-amber-400/40">Mới</span>
                     </div>
-                    <span className="mt-0.5 block text-xs font-semibold text-amber-800">Sa bàn Đền Hùng, Địa đạo Củ Chi & Mô hình Khoa học</span>
+                    <span className="mt-0.5 block text-xs font-semibold text-amber-800">Sa bàn Đền Hùng, Quả Địa Cầu & Vòng tuần hoàn của nước</span>
                   </span>
                 </button>
               </nav>

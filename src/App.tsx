@@ -103,6 +103,7 @@ const ModelHubPage = lazy(() => import('./pages/models/ModelHubPage').then(m => 
 const HungTemplePage = lazy(() => import('./pages/models/HungTemplePage').then(m => ({ default: m.HungTemplePage })));
 const WaterCyclePage = lazy(() => import('./pages/models/WaterCyclePage').then(m => ({ default: m.WaterCyclePage })));
 const GlobePage = lazy(() => import('./pages/models/GlobePage').then(m => ({ default: m.GlobePage })));
+const RedRiverDikePage = lazy(() => import('./pages/models/RedRiverDikePage').then(m => ({ default: m.RedRiverDikePage })));
 const TestJoinPage = lazy(() => import('./pages/student/TestJoinPage').then(m=>({default:m.TestJoinPage})));
 const WorksheetPage = lazy(() => import('./pages/student/WorksheetPage').then(m=>({default:m.WorksheetPage})));
 const StudentPracticeHubPage = lazy(() =>
@@ -142,6 +143,7 @@ export const App: React.FC = () => {
                   <Route path="/mo-hinh/den-hung" element={<HungTemplePage />} />
                   <Route path="/mo-hinh/vong-tuan-hoan-nuoc" element={<WaterCyclePage />} />
                   <Route path="/mo-hinh/qua-dia-cau" element={<GlobePage />} />
+                  <Route path="/mo-hinh/de-song-hong" element={<RedRiverDikePage />} />
 
                   {/* Teacher Auth */}
                   <Route path="/login" element={<LoginPage />} />

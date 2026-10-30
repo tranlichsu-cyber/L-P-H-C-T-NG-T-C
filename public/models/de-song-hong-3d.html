@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#b45309">
+<title>Sa bàn 3D Mặt cắt Hệ thống Đê sông Hồng – Lịch sử & Địa lí 4</title>
+<style>
+:root {
+  --primary: #b45309;
+  --primary-dark: #78350f;
+  --accent: #f59e0b;
+  --gold: #fbbf24;
+  --bg-dark: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.92);
+  --border: rgba(245, 158, 11, 0.3);
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --fs: 15px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  font-size: var(--fs);
+  background: var(--bg-dark);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+button:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+button.active {
+  background: linear-gradient(135deg, #b45309, #d97706);
+  color: #fff;
+  border-color: #fde68a;
+  box-shadow: 0 0 15px rgba(217, 119, 6, 0.5);
+}
+#app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+header {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 2px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+.brand {
+  min-width: 0;
+  flex: 1;
+}
+.brand h1 {
+  font-size: clamp(16px, 2vw, 22px);
+  margin: 0;
+  color: #fbbf24;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#workspace {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+#side {
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.88);
+  border-right: 1px solid var(--border);
+  padding: 14px;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stations-list {
+  display: grid;
+  gap: 8px;
+}
+.station-btn {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.station-btn .badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.station-btn.active .badge {
+  background: #fff;
+  color: var(--primary-dark);
+}
+.station-btn .title {
+  font-size: 13px;
+  font-weight: 700;
+}
+.station-btn .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sim-controls {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.ctrl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+#stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute;
+  inset: 0;
+}
+#canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* Floating 3D Markers */
+#labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.marker-3d {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid var(--accent);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s, background 0.2s;
+}
+.marker-3d:hover {
+  transform: translate(-50%, -110%) scale(1.08);
+  background: var(--primary);
+}
+.marker-3d::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent);
+}
+
+/* Info popup card */
+#info-card {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: min(390px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(16px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+#info-card.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+#info-card h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--gold);
+}
+#info-card .category-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fde68a;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+#info-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+#info-card .fun-fact {
+  background: rgba(245, 158, 11, 0.12);
+  border-left: 3px solid var(--gold);
+  padding: 8px 10px;
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+  color: #fef3c7;
+  margin-top: 10px;
+}
+
+/* Water Level Gauge Indicator */
+#water-gauge {
+  position: absolute;
+  left: 14px;
+  bottom: 20px;
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 14px;
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+}
+#water-gauge strong {
+  color: #f59e0b;
+}
+
+/* Bottom HUD */
+#bottom-hud {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+  #workspace {
+    grid-template-columns: 1fr;
+  }
+  #side {
+    display: none;
+  }
+  #info-card {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 48%;
+    border-radius: 20px 20px 0 0;
+  }
+  #bottom-hud {
+    bottom: 50%;
+    transform: translate(-50%, 50%);
+  }
+  #water-gauge {
+    display: none;
+  }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button onclick="if(window.history.length>1){window.history.back();}else{window.location.href='/mo-hinh/de-song-hong';}" style="background:#78350f;color:#fff;">
+      ◀ Quay lại
+    </button>
+    <div class="brand">
+      <h1>🌊 SA BÀN 3D MẶT CẮT ĐÊ SÔNG HỒNG</h1>
+      <p>Lịch sử & Địa lí lớp 4 · Bài 8: Thiên nhiên vùng Đồng bằng Bắc Bộ</p>
+    </div>
+    <div class="header-actions">
+      <button id="btn-toggle-flood" class="active">🌊 Mùa lũ cao</button>
+      <button id="btn-cross-section">📐 Mặt cắt chuẩn</button>
+      <button id="btn-toggle-labels" class="active">🏷️ Nhãn</button>
+      <button id="btn-rotate-auto">🔄 Xoay</button>
+      <button id="btn-fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <div id="workspace">
+    <aside id="side">
+      <div class="section-title">Các Điểm Khám Phá</div>
+      <div class="stations-list" id="stationsList">
+        <button class="station-btn active" data-station="0">
+          <div class="badge">1</div>
+          <div>
+            <div class="title">Mặt cắt thân đê kiên cố</div>
+            <div class="sub">Hình thang đắp đất & kè đá</div>
+          </div>
+        </button>
+        <button class="station-btn" data-station="1">
+          <div class="badge">2</div>
+          <div>
+            <div class="title">Dòng sông Hồng đỏ phù sa</div>
+            <div class="sub">Nguồn phù sa & lưu lượng lũ lớn</div>
+          </div>
+        </button>
+        <button class="station-btn" data-station="2">
+          <div class="badge">3</div>
+          <div>
+            <div class="title">Bãi bồi trồng màu ven sông</div>
+            <div class="sub">Bãi ngô, dâu tằm xanh mướt</div>
+          </div>
+        </button>
+        <button class="station-btn" data-station="3">
+          <div class="badge">4</div>
+          <div>
+            <div class="title">Đồng ruộng & Làng quê trong đê</div>
+            <div class="sub">Vùng trũng được bảo vệ an toàn</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="section-title">Mô phỏng mực nước lũ</div>
+      <div class="sim-controls">
+        <div class="ctrl-row">
+          <span>Chế độ mùa nước:</span>
+          <button id="btnSeason" style="padding:4px 8px;font-size:11px;">Mùa lũ (Nước cao)</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Góc nhìn Camera:</span>
+          <button id="btnResetCam" style="padding:4px 8px;font-size:11px;">Mặt cắt ngang</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Tiếng sóng sông:</span>
+          <button id="btnSound" style="padding:4px 8px;font-size:11px;">🔇 Tắt tiếng</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:auto;">Ý nghĩa lịch sử</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">
+        • Hệ thống đê dài hàng ngàn km là công trình vĩ đại cha ông ta đắp qua nghìn năm trị thủy.<br>
+        • Nước sông mùa lũ cao hơn cả nóc nhà trong đê, nhưng nhờ con đê vững chắc mà dân làng an cư lạc nghiệp.
+      </div>
+    </aside>
+
+    <div id="stage">
+      <div id="canvas-container"></div>
+      <div id="labels-layer"></div>
+
+      <!-- Water Gauge Indicator -->
+      <div id="water-gauge">
+        <div>Mực nước sông: <strong id="gauge-level">Mùa lũ cao (+8.5m)</strong></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;">Đê cao hơn mặt ruộng trong đê: 6 – 10m</div>
+      </div>
+
+      <!-- Info Card Floating -->
+      <div id="info-card">
+        <button onclick="document.getElementById('info-card').classList.add('hidden')" style="float:right;padding:2px 8px;font-size:11px;border-radius:6px;">✕</button>
+        <div id="info-badge" class="category-badge">Cấu tạo địa hình</div>
+        <h2 id="info-title">Cấu Tạo Mặt Cắt Con Đê</h2>
+        <p id="info-desc">Con đê có mặt cắt hình thang kiên cố gồm: Chân đê rộng vững chãi, thân đê đắp bằng đất sét nện chặt, sườn đê phía ngoài bọc kè đá hộ đê chống sóng xói lở, và mặt đê phẳng rộng kết hợp làm đường giao thông.</p>
+        <div id="info-fact" class="fun-fact">
+          💡 <strong>Em có biết:</strong> Mặt nước sông Hồng vào mùa lũ thường cao hơn hẳn mặt ruộng bên trong đồng, do đó bảo vệ đê là nhiệm vụ sống còn của muôn dân!
+        </div>
+      </div>
+
+      <!-- Bottom HUD Quick -->
+      <div id="bottom-hud">
+        <button onclick="selectStation(0)">1. Mặt cắt đê</button>
+        <button onclick="selectStation(1)">2. Sông Hồng</button>
+        <button onclick="selectStation(2)">3. Bãi bồi</button>
+        <button onclick="selectStation(3)">4. Làng trong đê</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATIONS = [
+  {
+    title: 'Cấu Tạo Mặt Cắt Con Đê',
+    badge: 'Hình thang đất nện kiên cố',
+    desc: 'Đê sông Hồng có kết cấu hình thang: Chân đê to bè rộng hàng chục mét, thân đê đắp bằng đất sét nện chặt nhiều lớp, mái đê phía sông kè đá tảng chống xói lở sóng gió, mặt đê phẳng rải nhựa làm đường giao thông.',
+    fact: 'Thời nhà Lý năm 1108, đê Cơ Xá được đắp để bảo vệ kinh thành Thăng Long, mở đầu cho thiên tình sử đắp đê trị thủy của dân tộc ta.',
+    camPos: { x: 0, y: 18, z: 50 },
+    camTarget: { x: 0, y: 5, z: 0 }
+  },
+  {
+    title: 'Dòng Sông Hồng Đỏ Phù Sa',
+    badge: 'Nguồn phù sa & Lũ lớn',
+    desc: 'Sông Hồng bắt nguồn từ vùng núi cao, dòng nước cuộn đỏ vì chứa lượng phù sa màu mỡ khổng lồ (khoảng 100 triệu tấn phù sa mỗi năm). Vào mùa mưa lũ (tháng 6 – 8), nước dâng rất nhanh và hung dữ.',
+    fact: 'Màu nước đỏ đặc trưng của phù sa sông Hồng đã bồi đắp nên toàn bộ Đồng bằng Bắc Bộ màu mỡ phì nhiêu ngày nay.',
+    camPos: { x: -35, y: 15, z: 35 },
+    camTarget: { x: -25, y: 2, z: 0 }
+  },
+  {
+    title: 'Bãi Bồi Trồng Màu Ngoài Đê',
+    badge: 'Đất bồi phù sa trù phú',
+    desc: 'Khoảng đất thoai thoải nằm giữa lòng sông và chân đê gọi là bãi bồi ven sông. Hàng năm khi mùa cạn về, bà con nông dân tận dụng đất phù sa phì nhiêu để trồng ngô, khoai, đỗ và dâu tằm xanh tốt.',
+    fact: 'Bãi bồi ngoài đê hàng năm đều đón nhận lớp phù sa mới màu mỡ lắng đọng sau mỗi mùa nước lũ rút đi.',
+    camPos: { x: -15, y: 12, z: 35 },
+    camTarget: { x: -10, y: 3, z: 0 }
+  },
+  {
+    title: 'Đồng Ruộng & Xóm Làng Trong Đê',
+    badge: 'Vùng trũng trù phú an bình',
+    desc: 'Vùng đất trong đê được con đê che chắn khỏi nước lũ, giúp người dân yên tâm cấy lúa nước, lập làng mạc, xây dựng nhà cửa và trường học. Do không có phù sa bồi đắp, mặt đất trong đê thường trũng thấp.',
+    fact: 'Vào mùa lũ lớn, mặt nước sông ngoài đê có thể dâng cao hơn mái nhà của các hộ dân bên trong đê, minh chứng cho sự kỳ diệu và tầm quan trọng của con đê!',
+    camPos: { x: 30, y: 15, z: 35 },
+    camTarget: { x: 20, y: 2, z: 0 }
+  }
+];
+
+const MARKERS = [
+  { id: 'm1', name: 'Thân đê & Mặt đường', pos: new THREE.Vector3(0, 9, 0), stationIdx: 0 },
+  { id: 'm2', name: 'Sông Hồng đỏ phù sa', pos: new THREE.Vector3(-30, 4, -5), stationIdx: 1 },
+  { id: 'm3', name: 'Bãi bồi trồng ngô dâu', pos: new THREE.Vector3(-14, 3, 5), stationIdx: 2 },
+  { id: 'm4', name: 'Kè đá hộ đê', pos: new THREE.Vector3(-5, 4, -2), stationIdx: 0 },
+  { id: 'm5', name: 'Làng quê trong đê', pos: new THREE.Vector3(25, 2.5, 5), stationIdx: 3 }
+];
+
+let scene, camera, renderer, controls;
+let riverMesh, waterLevel = 4.5;
+let isFlood = true;
+let showLabels = true;
+let autoRotate = false;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0c1322);
+
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
+  camera.position.set(0, 22, 60);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  container.appendChild(renderer.domElement);
+
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.maxPolarAngle = Math.PI / 2 + 0.05;
+  controls.minDistance = 20;
+  controls.maxDistance = 150;
+  controls.target.set(0, 5, 0);
+
+  setupLighting();
+  createCrossSectionTerrain();
+  createRiver();
+  createVillageAndFields();
+  createHtmlMarkers();
+
+  window.addEventListener('resize', onWindowResize);
+  setupUI();
+
+  selectStation(0);
+  animate();
+}
+
+function setupLighting() {
+  const hemi = new THREE.HemisphereLight(0xfff7ed, 0x0f172a, 0.7);
+  scene.add(hemi);
+
+  const sun = new THREE.DirectionalLight(0xfef08a, 1.5);
+  sun.position.set(-40, 50, 30);
+  sun.castShadow = true;
+  sun.shadow.mapSize.width = 2048;
+  sun.shadow.mapSize.height = 2048;
+  scene.add(sun);
+}
+
+function createCrossSectionTerrain() {
+  const terrainGroup = new THREE.Group();
+
+  // 1. The Dike (Embankment trapezoid prism)
+  // Base width = 24, Top width = 8, Height = 9, Length = 70 along Z
+  const dikeShape = new THREE.Shape();
+  dikeShape.moveTo(-12, 0);
+  dikeShape.lineTo(-4, 9);
+  dikeShape.lineTo(4, 9);
+  dikeShape.lineTo(12, 0);
+  dikeShape.lineTo(-12, 0);
+
+  const extrudeSettings = { depth: 70, bevelEnabled: false };
+  const dikeGeo = new THREE.ExtrudeGeometry(dikeShape, extrudeSettings);
+  const dikeMat = new THREE.MeshStandardMaterial({
+    color: 0x22c55e, // Grass coated embankment
+    roughness: 0.9,
+    flatShading: true
+  });
+  const dike = new THREE.Mesh(dikeGeo, dikeMat);
+  dike.position.set(0, 0, -35);
+  dike.receiveShadow = true;
+  dike.castShadow = true;
+  terrainGroup.add(dike);
+
+  // Top road of dike (Mặt đê trải nhựa/bê tông)
+  const roadGeo = new THREE.BoxGeometry(7.5, 0.2, 70);
+  const roadMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
+  const road = new THREE.Mesh(roadGeo, roadMat);
+  road.position.set(0, 9.1, 0);
+  terrainGroup.add(road);
+
+  // Guard rails / posts along dike road
+  for (let z = -32; z <= 32; z += 4) {
+    const postGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 8);
+    const postMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+    const p1 = new THREE.Mesh(postGeo, postMat);
+    p1.position.set(-3.5, 9.6, z);
+    const p2 = p1.clone();
+    p2.position.set(3.5, 9.6, z);
+    terrainGroup.add(p1);
+    terrainGroup.add(p2);
+  }
+
+  // Stone revetment (Kè đá hộ đê phía sông)
+  for (let i = 0; i < 40; i++) {
+    const stoneSize = 0.8 + Math.random() * 0.8;
+    const stoneGeo = new THREE.DodecahedronGeometry(stoneSize, 0);
+    const stoneMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.9 });
+    const stone = new THREE.Mesh(stoneGeo, stoneMat);
+    const sx = -10 - Math.random() * 3;
+    const sy = 0.5 + Math.random() * 3;
+    const sz = -32 + Math.random() * 64;
+    stone.position.set(sx, sy, sz);
+    terrainGroup.add(stone);
+  }
+
+  // 2. Riverbank beach (Bãi bồi trồng màu ngoài đê)
+  const beachGeo = new THREE.BoxGeometry(20, 2, 70);
+  const beachMat = new THREE.MeshStandardMaterial({ color: 0xa16207, roughness: 0.9 });
+  const beach = new THREE.Mesh(beachGeo, beachMat);
+  beach.position.set(-22, -1, 0);
+  beach.receiveShadow = true;
+  terrainGroup.add(beach);
+
+  // Corn & crops on the river beach
+  for (let i = 0; i < 45; i++) {
+    const corn = new THREE.Mesh(
+      new THREE.ConeGeometry(0.4, 1.8, 5),
+      new THREE.MeshStandardMaterial({ color: 0x84cc16 })
+    );
+    corn.position.set(-16 - Math.random() * 10, 0.8, -32 + Math.random() * 64);
+    terrainGroup.add(corn);
+  }
+
+  // 3. Protected inland plain (Vùng đồng bằng trong đê - trũng thấp)
+  const plainGeo = new THREE.BoxGeometry(32, 2, 70);
+  const plainMat = new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.8 }); // Golden rice fields
+  const plain = new THREE.Mesh(plainGeo, plainMat);
+  plain.position.set(28, -1, 0);
+  plain.receiveShadow = true;
+  terrainGroup.add(plain);
+
+  scene.add(terrainGroup);
+}
+
+function createRiver() {
+  // Red river silt-laden water (Màu nâu đỏ phù sa)
+  const riverGeo = new THREE.PlaneGeometry(35, 70, 20, 20);
+  const riverMat = new THREE.MeshStandardMaterial({
+    color: 0x9a3412, // Rich red silt color of Song Hong
+    roughness: 0.3,
+    metalness: 0.3,
+    transparent: true,
+    opacity: 0.92
+  });
+  riverMesh = new THREE.Mesh(riverGeo, riverMat);
+  riverMesh.rotation.x = -Math.PI / 2;
+  riverMesh.position.set(-42, waterLevel, 0);
+  scene.add(riverMesh);
+
+  // Traditional wooden boat on river
+  const boatGroup = new THREE.Group();
+  const boatHull = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 0.8, 6),
+    new THREE.MeshStandardMaterial({ color: 0x78350f })
+  );
+  boatGroup.add(boatHull);
+  const boatSail = new THREE.Mesh(
+    new THREE.ConeGeometry(1.5, 3, 3),
+    new THREE.MeshStandardMaterial({ color: 0xd97706 })
+  );
+  boatSail.rotation.y = Math.PI / 4;
+  boatSail.position.y = 1.8;
+  boatGroup.add(boatSail);
+
+  boatGroup.position.set(-40, waterLevel + 0.4, 5);
+  scene.add(boatGroup);
+}
+
+function createVillageAndFields() {
+  const villageGroup = new THREE.Group();
+
+  // Houses in the inland plain
+  function makeHouse(x, z) {
+    const h = new THREE.Group();
+    // Walls
+    const wall = new THREE.Mesh(
+      new THREE.BoxGeometry(3.5, 2.2, 3),
+      new THREE.MeshStandardMaterial({ color: 0xfef08a })
+    );
+    wall.position.y = 1.1;
+    h.add(wall);
+    // Red tile roof (Mái ngói đỏ tươi)
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(3, 1.8, 4),
+      new THREE.MeshStandardMaterial({ color: 0xb91c1c, flatShading: true })
+    );
+    roof.position.y = 2.8;
+    roof.rotation.y = Math.PI / 4;
+    h.add(roof);
+
+    h.position.set(x, 0, z);
+    return h;
+  }
+
+  villageGroup.add(makeHouse(24, -15));
+  villageGroup.add(makeHouse(32, -8));
+  villageGroup.add(makeHouse(26, 12));
+  villageGroup.add(makeHouse(34, 20));
+
+  // Bamboo clusters (Lũy tre làng)
+  for (let i = 0; i < 18; i++) {
+    const bamboo = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.6, 0.8, 5, 6),
+      new THREE.MeshStandardMaterial({ color: 0x15803d, flatShading: true })
+    );
+    bamboo.position.set(18 + Math.random() * 20, 2.5, -30 + Math.random() * 60);
+    villageGroup.add(bamboo);
+  }
+
+  scene.add(villageGroup);
+}
+
+function createHtmlMarkers() {
+  const layer = document.getElementById('labels-layer');
+  layer.innerHTML = '';
+  MARKERS.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'marker-3d';
+    el.id = 'label-' + m.id;
+    el.innerHTML = `<span>📍</span><span>${m.name}</span>`;
+    el.onclick = () => selectStation(m.stationIdx);
+    layer.appendChild(el);
+  });
+}
+
+function updateMarkers() {
+  if (!showLabels) return;
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  MARKERS.forEach(m => {
+    const el = document.getElementById('label-' + m.id);
+    if (!el) return;
+
+    const screenPos = m.pos.clone().project(camera);
+    if (screenPos.z > 1) {
+      el.style.display = 'none';
+      return;
+    }
+
+    const x = (screenPos.x * 0.5 + 0.5) * w;
+    const y = (-(screenPos.y * 0.5) + 0.5) * h;
+
+    el.style.display = 'flex';
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+  });
+}
+
+function selectStation(idx) {
+  const st = STATIONS[idx];
+  if (!st) return;
+
+  document.querySelectorAll('.station-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === idx);
+  });
+
+  const card = document.getElementById('info-card');
+  card.classList.remove('hidden');
+  document.getElementById('info-badge').textContent = st.badge;
+  document.getElementById('info-title').textContent = st.title;
+  document.getElementById('info-desc').textContent = st.desc;
+  document.getElementById('info-fact').innerHTML = `💡 <strong>Em có biết:</strong> ${st.fact}`;
+
+  smoothMoveCamera(st.camPos, st.camTarget);
+}
+
+function smoothMoveCamera(targetPos, targetLookAt) {
+  const startPos = camera.position.clone();
+  const startTarget = controls.target.clone();
+  const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
+  const endTarget = new THREE.Vector3(targetLookAt.x, targetLookAt.y, targetLookAt.z);
+
+  let progress = 0;
+  const duration = 40;
+
+  function step() {
+    progress++;
+    const t = Math.min(progress / duration, 1);
+    const ease = 0.5 - Math.cos(t * Math.PI) / 2;
+
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+
+    if (progress < duration) {
+      requestAnimationFrame(step);
+    }
+  }
+  step();
+}
+
+function toggleFloodMode() {
+  isFlood = !isFlood;
+  const floodBtn = document.getElementById('btn-toggle-flood');
+  const seasonBtn = document.getElementById('btnSeason');
+  const gaugeText = document.getElementById('gauge-level');
+
+  floodBtn.classList.toggle('active', isFlood);
+
+  if (isFlood) {
+    waterLevel = 4.8;
+    floodBtn.textContent = '🌊 Mùa lũ cao';
+    seasonBtn.textContent = 'Mùa lũ (Nước cao)';
+    gaugeText.textContent = 'Mùa lũ cao (+8.5m)';
+    gaugeText.style.color = '#ef4444';
+  } else {
+    waterLevel = 0.8;
+    floodBtn.textContent = '☀️ Mùa cạn';
+    seasonBtn.textContent = 'Mùa cạn (Nước thấp)';
+    gaugeText.textContent = 'Mùa cạn bình thường (+2.0m)';
+    gaugeText.style.color = '#10b981';
+  }
+
+  if (riverMesh) {
+    riverMesh.position.y = waterLevel;
+  }
+}
+
+function setupUI() {
+  document.querySelectorAll('.station-btn').forEach((btn, idx) => {
+    btn.addEventListener('click', () => selectStation(idx));
+  });
+
+  document.getElementById('btn-toggle-flood').addEventListener('click', toggleFloodMode);
+  document.getElementById('btnSeason').addEventListener('click', toggleFloodMode);
+
+  // Cross section camera view
+  document.getElementById('btn-cross-section').addEventListener('click', () => {
+    smoothMoveCamera({ x: 0, y: 14, z: 52 }, { x: 0, y: 5, z: 0 });
+  });
+  document.getElementById('btnResetCam').addEventListener('click', () => {
+    smoothMoveCamera({ x: 0, y: 22, z: 60 }, { x: 0, y: 5, z: 0 });
+  });
+
+  // Labels toggle
+  const labelsBtn = document.getElementById('btn-toggle-labels');
+  labelsBtn.addEventListener('click', () => {
+    showLabels = !showLabels;
+    labelsBtn.classList.toggle('active', showLabels);
+    document.getElementById('labels-layer').style.display = showLabels ? 'block' : 'none';
+  });
+
+  // Rotate auto
+  const rotBtn = document.getElementById('btn-rotate-auto');
+  rotBtn.addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    rotBtn.classList.toggle('active', autoRotate);
+    controls.autoRotate = autoRotate;
+    controls.autoRotateSpeed = 1.0;
+  });
+
+  // Fullscreen
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+}
+
+function onWindowResize() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const time = Date.now() * 0.001;
+
+  // River water waves
+  if (riverMesh) {
+    const pos = riverMesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const u = pos.getX(i);
+      const v = pos.getY(i);
+      pos.setZ(i, Math.sin(u * 0.2 + time * 2) * 0.3 + Math.cos(v * 0.2 + time * 1.5) * 0.25);
+    }
+    pos.needsUpdate = true;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+  updateMarkers();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
