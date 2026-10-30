@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#0369a1">
+<title>Sa bàn 3D Vòng tuần hoàn của nước – Khoa học 4</title>
+<style>
+:root {
+  --primary: #0284c7;
+  --primary-dark: #0369a1;
+  --accent: #38bdf8;
+  --gold: #f59e0b;
+  --bg-dark: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.9);
+  --border: rgba(56, 189, 248, 0.25);
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --fs: 15px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  font-size: var(--fs);
+  background: var(--bg-dark);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+button:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+button.active {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #fff;
+  border-color: #7dd3fc;
+  box-shadow: 0 0 15px rgba(2, 132, 199, 0.5);
+}
+#app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+header {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.brand {
+  min-width: 0;
+  flex: 1;
+}
+.brand h1 {
+  font-size: clamp(16px, 2vw, 22px);
+  margin: 0;
+  color: #38bdf8;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#workspace {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+#side {
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.85);
+  border-right: 1px solid var(--border);
+  padding: 14px;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stage-list {
+  display: grid;
+  gap: 8px;
+}
+.stage-btn {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.stage-btn .badge {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.stage-btn.active .badge {
+  background: #fff;
+  color: var(--primary-dark);
+}
+.stage-btn .title {
+  font-size: 13px;
+  font-weight: 700;
+}
+.stage-btn .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sim-controls {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.ctrl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+#stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute;
+  inset: 0;
+}
+#canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* Floating labels in 3D */
+#labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.marker-3d {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1.5px solid var(--accent);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s, background 0.2s;
+}
+.marker-3d:hover {
+  transform: translate(-50%, -110%) scale(1.08);
+  background: var(--primary-dark);
+}
+.marker-3d::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent);
+}
+
+/* Info popup card */
+#info-card {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: min(380px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(16px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+#info-card.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+#info-card h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: var(--accent);
+}
+#info-card .state-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #7dd3fc;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+#info-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+#info-card .fun-fact {
+  background: rgba(245, 158, 11, 0.12);
+  border-left: 3px solid var(--gold);
+  padding: 8px 10px;
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+  color: #fef3c7;
+  margin-top: 10px;
+}
+
+/* Bottom HUD */
+#bottom-hud {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+  #workspace {
+    grid-template-columns: 1fr;
+  }
+  #side {
+    display: none;
+  }
+  #info-card {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 48%;
+    border-radius: 20px 20px 0 0;
+  }
+  #bottom-hud {
+    bottom: 50%;
+    transform: translate(-50%, 50%);
+  }
+}
+</style>
+<!-- Three.js and OrbitControls -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button onclick="if(window.history.length>1){window.history.back();}else{window.location.href='/mo-hinh/vong-tuan-hoan-nuoc';}" style="background:#0369a1;color:#fff;">
+      ◀ Quay lại
+    </button>
+    <div class="brand">
+      <h1>💧 VÒNG TUẦN HOÀN CỦA NƯỚC</h1>
+      <p>Khoa học lớp 4 · Bài 2: Sự chuyển thể của nước và vòng tuần hoàn của nước trong tự nhiên</p>
+    </div>
+    <div class="header-actions">
+      <button id="btn-sun-boost" title="Mặt Trời hun nóng">☀️ Nắng to</button>
+      <button id="btn-toggle-rain" class="active" title="Bật/Tắt mưa">🌧️ Mưa rơi</button>
+      <button id="btn-toggle-labels" title="Ẩn/Hiện nhãn 3D">🏷️ Nhãn</button>
+      <button id="btn-rotate-auto" title="Tự động xoay 360">🔄 Xoay</button>
+      <button id="btn-fullscreen" title="Toàn màn hình">⛶</button>
+    </div>
+  </header>
+
+  <div id="workspace">
+    <aside id="side">
+      <div class="section-title">4 Giai đoạn Tuần hoàn</div>
+      <div class="stage-list" id="stageList">
+        <button class="stage-btn active" data-stage="0">
+          <div class="badge">1</div>
+          <div>
+            <div class="title">Bay hơi</div>
+            <div class="sub">Biển ➔ Hơi nước bay lên</div>
+          </div>
+        </button>
+        <button class="stage-btn" data-stage="1">
+          <div class="badge">2</div>
+          <div>
+            <div class="title">Ngưng tụ</div>
+            <div class="sub">Hơi nước tạo thành mây</div>
+          </div>
+        </button>
+        <button class="stage-btn" data-stage="2">
+          <div class="badge">3</div>
+          <div>
+            <div class="title">Mưa rơi</div>
+            <div class="sub">Mây nặng rơi thành mưa</div>
+          </div>
+        </button>
+        <button class="stage-btn" data-stage="3">
+          <div class="badge">4</div>
+          <div>
+            <div class="title">Dòng chảy & Nước ngầm</div>
+            <div class="sub">Thấm vào đất & đổ về biển</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="section-title">Điều khiển thời tiết</div>
+      <div class="sim-controls">
+        <div class="ctrl-row">
+          <span>Tốc độ bay hơi:</span>
+          <button id="btnSpeed" style="padding:4px 8px;font-size:11px;">Chuẩn 1x</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Góc nhìn Camera:</span>
+          <button id="btnResetCam" style="padding:4px 8px;font-size:11px;">Toàn cảnh</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Âm thanh tự nhiên:</span>
+          <button id="btnSound" style="padding:4px 8px;font-size:11px;">🔊 Bật tiếng</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:auto;">Gợi ý tương tác</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">
+        • Giữ chuột trái & kéo để xoay góc nhìn 360°.<br>
+        • Cuộn chuột để phóng to / thu nhỏ mô hình.<br>
+        • Nhấp vào các thẻ điểm hoặc các nút bên trái để xem diễn giải chi tiết từng giai đoạn.
+      </div>
+    </aside>
+
+    <div id="stage">
+      <div id="canvas-container"></div>
+      <div id="labels-layer"></div>
+
+      <!-- Info Card Floating -->
+      <div id="info-card">
+        <button onclick="document.getElementById('info-card').classList.add('hidden')" style="float:right;padding:2px 8px;font-size:11px;border-radius:6px;">✕</button>
+        <div id="info-badge" class="state-badge">Giai đoạn 1</div>
+        <h2 id="info-title">Hiện tượng Bay hơi (Evaporation)</h2>
+        <p id="info-desc">Nước ở mặt biển, ao hồ và mặt đất nhận nhiệt lượng từ ánh nắng Mặt Trời, chuyển thể từ thể lỏng sang thể khí (hơi nước) và bay lên cao trong khí quyển.</p>
+        <div id="info-fact" class="fun-fact">
+          💡 <strong>Em có biết:</strong> Càng lên cao nhiệt độ càng giảm! Khoảng cứ lên cao 100m nhiệt độ không khí lại giảm khoảng 0,6°C.
+        </div>
+      </div>
+
+      <!-- Bottom HUD Quick Stages -->
+      <div id="bottom-hud">
+        <button onclick="setStage(0)">1. Bay hơi</button>
+        <button onclick="setStage(1)">2. Ngưng tụ</button>
+        <button onclick="setStage(2)">3. Mưa rơi</button>
+        <button onclick="setStage(3)">4. Nước ngầm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Stage Data definition
+const STAGES = [
+  {
+    title: 'Hiện tượng Bay hơi (Evaporation)',
+    badge: 'Thể lỏng ➔ Thể khí',
+    desc: 'Dưới ánh nắng Mặt Trời, nước biển, sông hồ ấm lên và biến đổi từ thể lỏng thành thể khí (hơi nước) không màu bay lên cao. Lá cây cũng thoát hơi nước vào không khí.',
+    fact: 'Mỗi năm Mặt Trời làm bốc hơi hơn 500.000 tỉ mét khối nước để nuôi dưỡng vòng tuần hoàn sự sống trên Trái Đất!',
+    camPos: { x: -60, y: 35, z: 70 },
+    camTarget: { x: -30, y: 5, z: 0 }
+  },
+  {
+    title: 'Hiện tượng Ngưng tụ (Condensation)',
+    badge: 'Thể khí ➔ Thể lỏng (Hạt nhỏ li ti)',
+    desc: 'Hơi nước bay lên tầng cao gặp không khí lạnh sẽ ngưng tụ lại thành hàng triệu giọt nước nhỏ li ti. Tập hợp vô vàn giọt nước này lơ lửng tạo thành những đám mây bồng bềnh.',
+    fact: 'Một đám mây xốp nhìn nhẹ như bông nhưng trung bình chứa tới 500 tấn nước!',
+    camPos: { x: 0, y: 70, z: 70 },
+    camTarget: { x: 0, y: 35, z: 0 }
+  },
+  {
+    title: 'Hiện tượng Mưa rơi (Precipitation)',
+    badge: 'Hạt nước lớn rơi xuống',
+    desc: 'Gió đẩy mây bay vào đất liền gặp khí lạnh. Các giọt nước nhỏ li ti va chạm, kết hợp thành giọt nước lớn và nặng hơn. Khi quá nặng không thể bay lơ lửng, chúng rơi xuống thành mưa.',
+    fact: 'Ở vùng núi cao rất lạnh như Fansipan vào mùa đông, nước có thể rơi xuống dưới dạng tuyết trắng hoặc mưa đá (thể rắn).',
+    camPos: { x: 40, y: 45, z: 50 },
+    camTarget: { x: 25, y: 15, z: 0 }
+  },
+  {
+    title: 'Dòng chảy bề mặt & Mạch nước ngầm',
+    badge: 'Thể lỏng luân chuyển về biển',
+    desc: 'Nước mưa rơi xuống ngấm vào đất tạo mạch nước ngầm mát lành, hoặc gom thành suối nhỏ, đổ vào sông lớn rồi lại chảy xuôi ra biển cả. Vòng tuần hoàn tiếp tục lặp lại vô tận.',
+    fact: 'Nước trên Trái Đất không tự sinh ra và không bao giờ mất đi, nó chỉ liên tục chuyển thể và tuần hoàn qua hàng tỉ năm!',
+    camPos: { x: 10, y: 25, z: 85 },
+    camTarget: { x: -5, y: 0, z: 0 }
+  }
+];
+
+// Markers definitions
+const MARKERS = [
+  { id: 'm1', name: '1. Biển bốc hơi', pos: new THREE.Vector3(-45, 12, 10), stageIndex: 0 },
+  { id: 'm2', name: '2. Mây ngưng tụ', pos: new THREE.Vector3(-10, 48, -5), stageIndex: 1 },
+  { id: 'm3', name: '3. Mưa tưới núi rừng', pos: new THREE.Vector3(30, 32, -10), stageIndex: 2 },
+  { id: 'm4', name: '4. Dòng sông hồi hương', pos: new THREE.Vector3(5, 7, 15), stageIndex: 3 },
+  { id: 'm5', name: '5. Mạch nước ngầm', pos: new THREE.Vector3(20, -5, 20), stageIndex: 3 }
+];
+
+let scene, camera, renderer, controls;
+let vaporParticles, rainParticles, cloudsGroup, oceanMesh, sunMesh;
+let isRaining = true;
+let isSunBoosted = false;
+let autoRotate = false;
+let vaporSpeed = 1.0;
+let showLabels = true;
+let soundEnabled = false;
+let audioCtx = null;
+let rainAudioNode = null;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0c192c);
+  scene.fog = new THREE.FogExp2(0x0c192c, 0.005);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
+  camera.position.set(0, 50, 110);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // Controls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.maxPolarAngle = Math.PI / 2 + 0.08;
+  controls.minDistance = 20;
+  controls.maxDistance = 220;
+  controls.target.set(0, 10, 0);
+
+  // Lights
+  setupLighting();
+
+  // World Elements
+  createOcean();
+  createTerrainAndMountains();
+  createSun();
+  createClouds();
+  createVaporParticles();
+  createRainParticles();
+  createUndergroundAquifer();
+  createMarkersHtml();
+
+  // Event Listeners
+  window.addEventListener('resize', onWindowResize);
+  setupUIEvents();
+
+  // Default Stage
+  setStage(0);
+
+  // Animation Loop
+  animate();
+}
+
+function setupLighting() {
+  const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x0f172a, 0.7);
+  scene.add(hemiLight);
+
+  const dirLight = new THREE.DirectionalLight(0xfff7ed, 1.4);
+  dirLight.position.set(-60, 90, 40);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.width = 2048;
+  dirLight.shadow.mapSize.height = 2048;
+  dirLight.shadow.bias = -0.0005;
+  scene.add(dirLight);
+
+  const ambient = new THREE.AmbientLight(0x38bdf8, 0.35);
+  scene.add(ambient);
+}
+
+function createSun() {
+  const sunGeo = new THREE.SphereGeometry(10, 32, 32);
+  const sunMat = new THREE.MeshBasicMaterial({ color: 0xffea00 });
+  sunMesh = new THREE.Mesh(sunGeo, sunMat);
+  sunMesh.position.set(-65, 80, -20);
+  scene.add(sunMesh);
+
+  // Glow halo
+  const haloGeo = new THREE.SphereGeometry(14, 32, 32);
+  const haloMat = new THREE.MeshBasicMaterial({
+    color: 0xf59e0b,
+    transparent: true,
+    opacity: 0.35,
+    side: THREE.BackSide
+  });
+  const halo = new THREE.Mesh(haloGeo, haloMat);
+  sunMesh.add(halo);
+}
+
+function createOcean() {
+  const oceanGeo = new THREE.PlaneGeometry(70, 90, 40, 40);
+  const oceanMat = new THREE.MeshStandardMaterial({
+    color: 0x0284c7,
+    roughness: 0.2,
+    metalness: 0.6,
+    flatShading: true,
+    transparent: true,
+    opacity: 0.88
+  });
+  oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+  oceanMesh.rotation.x = -Math.PI / 2;
+  oceanMesh.position.set(-45, 0, 0);
+  oceanMesh.receiveShadow = true;
+  scene.add(oceanMesh);
+}
+
+function createTerrainAndMountains() {
+  const terrainGroup = new THREE.Group();
+
+  // Mountain range on the right side
+  const mtnGeo = new THREE.ConeGeometry(28, 48, 7);
+  const mtnMat = new THREE.MeshStandardMaterial({
+    color: 0x334155,
+    roughness: 0.8,
+    flatShading: true
+  });
+  const peak = new THREE.Mesh(mtnGeo, mtnMat);
+  peak.position.set(45, 24, -15);
+  peak.castShadow = true;
+  peak.receiveShadow = true;
+  terrainGroup.add(peak);
+
+  // Snow cap on peak
+  const snowGeo = new THREE.ConeGeometry(12, 18, 7);
+  const snowMat = new THREE.MeshStandardMaterial({
+    color: 0xf8fafc,
+    roughness: 0.4,
+    flatShading: true
+  });
+  const snowCap = new THREE.Mesh(snowGeo, snowMat);
+  snowCap.position.set(45, 39, -15);
+  terrainGroup.add(snowCap);
+
+  // Secondary hill
+  const hillGeo = new THREE.ConeGeometry(20, 32, 6);
+  const hillMat = new THREE.MeshStandardMaterial({
+    color: 0x166534,
+    roughness: 0.9,
+    flatShading: true
+  });
+  const hill = new THREE.Mesh(hillGeo, hillMat);
+  hill.position.set(30, 16, 20);
+  hill.castShadow = true;
+  terrainGroup.add(hill);
+
+  // Coastal plain and riverbank
+  const plainGeo = new THREE.BoxGeometry(60, 4, 90);
+  const plainMat = new THREE.MeshStandardMaterial({
+    color: 0x15803d,
+    roughness: 0.9
+  });
+  const plain = new THREE.Mesh(plainGeo, plainMat);
+  plain.position.set(15, -2, 0);
+  plain.receiveShadow = true;
+  terrainGroup.add(plain);
+
+  // River flowing from mountain to ocean
+  const riverCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(38, 2, -10),
+    new THREE.Vector3(22, 1, 0),
+    new THREE.Vector3(10, 0.6, 12),
+    new THREE.Vector3(-10, 0.4, 15)
+  ]);
+  const riverTubeGeo = new THREE.TubeGeometry(riverCurve, 30, 2.8, 8, false);
+  const riverMat = new THREE.MeshStandardMaterial({
+    color: 0x38bdf8,
+    roughness: 0.1,
+    metalness: 0.8
+  });
+  const river = new THREE.Mesh(riverTubeGeo, riverMat);
+  river.scale.set(1, 0.3, 1);
+  river.position.y = 0.1;
+  terrainGroup.add(river);
+
+  // Pine trees on hills
+  for (let i = 0; i < 24; i++) {
+    const treeTrunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.5, 2),
+      new THREE.MeshStandardMaterial({ color: 0x78350f })
+    );
+    const treeFoliage = new THREE.Mesh(
+      new THREE.ConeGeometry(2, 4, 5),
+      new THREE.MeshStandardMaterial({ color: 0x14532d, flatShading: true })
+    );
+    treeFoliage.position.y = 2.5;
+    const tree = new THREE.Group();
+    tree.add(treeTrunk);
+    tree.add(treeFoliage);
+
+    const tx = 10 + Math.random() * 35;
+    const tz = -35 + Math.random() * 70;
+    tree.position.set(tx, 0, tz);
+    terrainGroup.add(tree);
+  }
+
+  scene.add(terrainGroup);
+}
+
+function createUndergroundAquifer() {
+  // Semi-transparent soil cross-section
+  const strataGeo = new THREE.BoxGeometry(60, 16, 88);
+  const strataMat = new THREE.MeshStandardMaterial({
+    color: 0x451a03,
+    roughness: 0.9,
+    transparent: true,
+    opacity: 0.75
+  });
+  const strata = new THREE.Mesh(strataGeo, strataMat);
+  strata.position.set(15, -12, 0);
+  scene.add(strata);
+
+  // Underground water vein (Aquifer)
+  const aquaCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(35, -12, -5),
+    new THREE.Vector3(15, -14, 5),
+    new THREE.Vector3(-5, -15, 0),
+    new THREE.Vector3(-15, -14, -5)
+  ]);
+  const aquaGeo = new THREE.TubeGeometry(aquaCurve, 20, 2.2, 8, false);
+  const aquaMat = new THREE.MeshStandardMaterial({
+    color: 0x0ea5e9,
+    roughness: 0.2,
+    emissive: 0x0284c7,
+    emissiveIntensity: 0.4
+  });
+  const aquifer = new THREE.Mesh(aquaGeo, aquaMat);
+  scene.add(aquifer);
+}
+
+function createClouds() {
+  cloudsGroup = new THREE.Group();
+
+  function makeCloud(x, y, z, scale) {
+    const puffMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.9,
+      flatShading: true
+    });
+    const c = new THREE.Group();
+    const positions = [
+      [0, 0, 0, 6],
+      [4, 1, 0, 5],
+      [-4, 0.5, 0, 5],
+      [2, 3, 0, 4.5],
+      [-2, 2.5, 1, 4]
+    ];
+    positions.forEach(([px, py, pz, r]) => {
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(r, 7, 7), puffMat);
+      puff.position.set(px, py, pz);
+      c.add(puff);
+    });
+    c.position.set(x, y, z);
+    c.scale.set(scale, scale, scale);
+    return c;
+  }
+
+  cloudsGroup.add(makeCloud(-15, 45, -10, 1.2));
+  cloudsGroup.add(makeCloud(10, 50, 5, 1.5));
+  cloudsGroup.add(makeCloud(35, 48, -15, 1.3));
+  cloudsGroup.add(makeCloud(25, 42, 20, 1.1));
+
+  scene.add(cloudsGroup);
+}
+
+function createVaporParticles() {
+  const count = 350;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const velocities = [];
+
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = -65 + Math.random() * 45;
+    positions[i * 3 + 1] = 1 + Math.random() * 45;
+    positions[i * 3 + 2] = -35 + Math.random() * 70;
+    velocities.push({
+      vy: 0.15 + Math.random() * 0.25,
+      vx: 0.05 + Math.random() * 0.1
+    });
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  const material = new THREE.PointsMaterial({
+    color: 0x7dd3fc,
+    size: 1.5,
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending
+  });
+
+  vaporParticles = new THREE.Points(geometry, material);
+  vaporParticles.userData.velocities = velocities;
+  scene.add(vaporParticles);
+}
+
+function createRainParticles() {
+  const count = 1200;
+  const geometry = new THREE.BufferGeometry();
+  const positions = new Float32Array(count * 3);
+  const velocities = [];
+
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = 5 + Math.random() * 50;
+    positions[i * 3 + 1] = 5 + Math.random() * 40;
+    positions[i * 3 + 2] = -35 + Math.random() * 70;
+    velocities.push(0.8 + Math.random() * 0.6);
+  }
+
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+  const material = new THREE.PointsMaterial({
+    color: 0x38bdf8,
+    size: 0.8,
+    transparent: true,
+    opacity: 0.6
+  });
+
+  rainParticles = new THREE.Points(geometry, material);
+  rainParticles.userData.velocities = velocities;
+  scene.add(rainParticles);
+}
+
+function createMarkersHtml() {
+  const container = document.getElementById('labels-layer');
+  container.innerHTML = '';
+  MARKERS.forEach(m => {
+    const el = document.createElement('div');
+    el.className = 'marker-3d';
+    el.id = 'label-' + m.id;
+    el.innerHTML = `<span>💧</span><span>${m.name}</span>`;
+    el.onclick = () => setStage(m.stageIndex);
+    container.appendChild(el);
+  });
+}
+
+function updateMarkersPosition() {
+  if (!showLabels) return;
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  MARKERS.forEach(m => {
+    const el = document.getElementById('label-' + m.id);
+    if (!el) return;
+
+    const tempV = m.pos.clone().project(camera);
+    if (tempV.z > 1) {
+      el.style.display = 'none';
+      return;
+    }
+
+    const x = (tempV.x * 0.5 + 0.5) * w;
+    const y = (-(tempV.y * 0.5) + 0.5) * h;
+
+    el.style.display = 'flex';
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+  });
+}
+
+function setStage(index) {
+  const stage = STAGES[index];
+  if (!stage) return;
+
+  // Update UI lists
+  document.querySelectorAll('.stage-btn').forEach((btn, idx) => {
+    btn.classList.toggle('active', idx === index);
+  });
+
+  // Update Info Card
+  const infoCard = document.getElementById('info-card');
+  infoCard.classList.remove('hidden');
+  document.getElementById('info-badge').textContent = `Giai đoạn ${index + 1}: ${stage.badge}`;
+  document.getElementById('info-title').textContent = stage.title;
+  document.getElementById('info-desc').textContent = stage.desc;
+  document.getElementById('info-fact').innerHTML = `💡 <strong>Em có biết:</strong> ${stage.fact}`;
+
+  // Smooth Camera transition
+  smoothMoveCamera(stage.camPos, stage.camTarget);
+}
+
+function smoothMoveCamera(targetPos, targetLookAt) {
+  const startPos = camera.position.clone();
+  const startTarget = controls.target.clone();
+  const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
+  const endTarget = new THREE.Vector3(targetLookAt.x, targetLookAt.y, targetLookAt.z);
+
+  let progress = 0;
+  const duration = 40; // frames
+
+  function step() {
+    progress++;
+    const t = Math.min(progress / duration, 1);
+    const ease = 0.5 - Math.cos(t * Math.PI) / 2;
+
+    camera.position.lerpVectors(startPos, endPos, ease);
+    controls.target.lerpVectors(startTarget, endTarget, ease);
+
+    if (progress < duration) {
+      requestAnimationFrame(step);
+    }
+  }
+  step();
+}
+
+function setupUIEvents() {
+  // Stage click list
+  document.querySelectorAll('.stage-btn').forEach((btn, idx) => {
+    btn.addEventListener('click', () => setStage(idx));
+  });
+
+  // Sun boost button
+  const sunBtn = document.getElementById('btn-sun-boost');
+  sunBtn.addEventListener('click', () => {
+    isSunBoosted = !isSunBoosted;
+    sunBtn.classList.toggle('active', isSunBoosted);
+    vaporSpeed = isSunBoosted ? 2.5 : 1.0;
+    sunMesh.scale.setScalar(isSunBoosted ? 1.3 : 1.0);
+  });
+
+  // Rain toggle button
+  const rainBtn = document.getElementById('btn-toggle-rain');
+  rainBtn.addEventListener('click', () => {
+    isRaining = !isRaining;
+    rainBtn.classList.toggle('active', isRaining);
+    rainParticles.visible = isRaining;
+    toggleRainSound(isRaining && soundEnabled);
+  });
+
+  // Labels toggle button
+  const labelsBtn = document.getElementById('btn-toggle-labels');
+  labelsBtn.addEventListener('click', () => {
+    showLabels = !showLabels;
+    labelsBtn.classList.toggle('active', showLabels);
+    document.getElementById('labels-layer').style.display = showLabels ? 'block' : 'none';
+  });
+
+  // Auto rotate button
+  const rotBtn = document.getElementById('btn-rotate-auto');
+  rotBtn.addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    rotBtn.classList.toggle('active', autoRotate);
+    controls.autoRotate = autoRotate;
+    controls.autoRotateSpeed = 1.0;
+  });
+
+  // Reset Camera
+  document.getElementById('btnResetCam').addEventListener('click', () => {
+    smoothMoveCamera({ x: 0, y: 50, z: 110 }, { x: 0, y: 10, z: 0 });
+  });
+
+  // Speed
+  const speedBtn = document.getElementById('btnSpeed');
+  speedBtn.addEventListener('click', () => {
+    if (vaporSpeed === 1.0) {
+      vaporSpeed = 2.0;
+      speedBtn.textContent = 'Nhanh 2x';
+    } else if (vaporSpeed === 2.0) {
+      vaporSpeed = 0.5;
+      speedBtn.textContent = 'Chậm 0.5x';
+    } else {
+      vaporSpeed = 1.0;
+      speedBtn.textContent = 'Chuẩn 1x';
+    }
+  });
+
+  // Sound toggle
+  const soundBtn = document.getElementById('btnSound');
+  soundBtn.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    soundBtn.textContent = soundEnabled ? '🔊 Bật tiếng' : '🔇 Tắt tiếng';
+    toggleRainSound(soundEnabled && isRaining);
+  });
+
+  // Fullscreen
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+}
+
+// Gentle Web Audio Rain Synthesizer
+function toggleRainSound(play) {
+  if (!play) {
+    if (rainAudioNode) {
+      rainAudioNode.stop();
+      rainAudioNode.disconnect();
+      rainAudioNode = null;
+    }
+    return;
+  }
+
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    // White noise buffer for rain
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    whiteNoise.loop = true;
+
+    // Filter to sound like soft rain
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1000;
+
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.08;
+
+    whiteNoise.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    whiteNoise.start();
+    rainAudioNode = whiteNoise;
+  } catch (e) {
+    console.warn('Audio not allowed yet:', e);
+  }
+}
+
+function onWindowResize() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const time = Date.now() * 0.001;
+
+  // Ocean wave simulation
+  if (oceanMesh) {
+    const pos = oceanMesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const u = pos.getX(i);
+      const v = pos.getY(i);
+      pos.setZ(i, Math.sin(u * 0.15 + time * 1.5) * 0.6 + Math.cos(v * 0.15 + time * 1.2) * 0.5);
+    }
+    pos.needsUpdate = true;
+  }
+
+  // Animate Vapor Particles (Rising up and drifting toward clouds)
+  if (vaporParticles) {
+    const pos = vaporParticles.geometry.attributes.position;
+    const vels = vaporParticles.userData.velocities;
+    for (let i = 0; i < pos.count; i++) {
+      let y = pos.getY(i) + vels[i].vy * vaporSpeed;
+      let x = pos.getX(i) + vels[i].vx * vaporSpeed;
+
+      if (y > 48) {
+        y = 1 + Math.random() * 3;
+        x = -65 + Math.random() * 45;
+      }
+      pos.setY(i, y);
+      pos.setX(i, x);
+    }
+    pos.needsUpdate = true;
+  }
+
+  // Animate Rain Particles
+  if (rainParticles && isRaining) {
+    const pos = rainParticles.geometry.attributes.position;
+    const vels = rainParticles.userData.velocities;
+    for (let i = 0; i < pos.count; i++) {
+      let y = pos.getY(i) - vels[i] * 1.4;
+      if (y < 0) {
+        y = 48 + Math.random() * 6;
+      }
+      pos.setY(i, y);
+    }
+    pos.needsUpdate = true;
+  }
+
+  // Gentle Cloud sway
+  if (cloudsGroup) {
+    cloudsGroup.position.x = Math.sin(time * 0.2) * 2;
+    cloudsGroup.position.y = Math.cos(time * 0.3) * 0.8;
+  }
+
+  // Controls update
+  controls.update();
+
+  // Render 3D Scene
+  renderer.render(scene, camera);
+
+  // Update HTML Labels 2D Projection
+  updateMarkersPosition();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

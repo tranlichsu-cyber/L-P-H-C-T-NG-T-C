@@ -1,7 +1,7 @@
 {
   "name": "l-p-h-c-t-ng-t-c",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",

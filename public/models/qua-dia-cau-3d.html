@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#1e1b4b">
+<title>Mô hình 3D Quả Địa Cầu – Lịch sử & Địa lí 4</title>
+<style>
+:root {
+  --primary: #4f46e5;
+  --primary-dark: #3730a3;
+  --accent: #818cf8;
+  --gold: #f59e0b;
+  --bg-dark: #0a0a16;
+  --card-bg: rgba(15, 17, 35, 0.92);
+  --border: rgba(129, 140, 248, 0.3);
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --fs: 15px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  font-size: var(--fs);
+  background: var(--bg-dark);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 27, 75, 0.85);
+  color: var(--text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+button:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+button.active {
+  background: linear-gradient(135deg, #4f46e5, #4338ca);
+  color: #fff;
+  border-color: #a5b4fc;
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+}
+#app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+header {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(15, 17, 35, 0.95);
+  border-bottom: 2px solid rgba(129, 140, 248, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+.brand {
+  min-width: 0;
+  flex: 1;
+}
+.brand h1 {
+  font-size: clamp(16px, 2vw, 22px);
+  margin: 0;
+  color: #a5b4fc;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#workspace {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+}
+#side {
+  z-index: 5;
+  background: rgba(15, 17, 35, 0.88);
+  border-right: 1px solid var(--border);
+  padding: 14px;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.features-list {
+  display: grid;
+  gap: 8px;
+}
+.feature-btn {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(30, 27, 75, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.feature-btn .icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(129, 140, 248, 0.15);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.feature-btn.active .icon {
+  background: #fff;
+  color: var(--primary-dark);
+}
+.feature-btn .title {
+  font-size: 13px;
+  font-weight: 700;
+}
+.feature-btn .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sim-controls {
+  background: rgba(30, 27, 75, 0.4);
+  border: 1px solid rgba(129, 140, 248, 0.15);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.ctrl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+#stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute;
+  inset: 0;
+}
+#canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* Floating 3D Labels */
+#labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.globe-marker {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: rgba(15, 17, 35, 0.9);
+  border: 1.5px solid var(--accent);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: transform 0.2s, background 0.2s;
+}
+.globe-marker:hover {
+  transform: translate(-50%, -110%) scale(1.1);
+  background: var(--primary-dark);
+}
+.globe-marker.vietnam {
+  border-color: #ef4444;
+  background: rgba(153, 27, 27, 0.9);
+  color: #fef08a;
+  animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Info Popup */
+#info-card {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: min(380px, calc(100% - 28px));
+  max-height: calc(100% - 28px);
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(16px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+#info-card.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+#info-card h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #c7d2fe;
+}
+#info-card .category-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(129, 140, 248, 0.15);
+  color: #a5b4fc;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+#info-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+#info-card .fun-fact {
+  background: rgba(245, 158, 11, 0.12);
+  border-left: 3px solid var(--gold);
+  padding: 8px 10px;
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+  color: #fef3c7;
+  margin-top: 10px;
+}
+
+/* Bottom HUD */
+#bottom-hud {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 17, 35, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+  #workspace {
+    grid-template-columns: 1fr;
+  }
+  #side {
+    display: none;
+  }
+  #info-card {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 48%;
+    border-radius: 20px 20px 0 0;
+  }
+  #bottom-hud {
+    bottom: 50%;
+    transform: translate(-50%, 50%);
+  }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button onclick="if(window.history.length>1){window.history.back();}else{window.location.href='/mo-hinh/qua-dia-cau';}" style="background:#3730a3;color:#fff;">
+      ◀ Quay lại
+    </button>
+    <div class="brand">
+      <h1>🌍 QUẢ ĐỊA CẦU 3D TƯƠNG TÁC</h1>
+      <p>Lịch sử & Địa lí lớp 4 · Bài 1: Làm quen với phương tiện học tập môn Lịch sử và Địa lí</p>
+    </div>
+    <div class="header-actions">
+      <button id="btn-focus-vn" class="active" style="background:#991b1b;color:#fef08a;border-color:#f87171;">⭐ Tìm Việt Nam</button>
+      <button id="btn-toggle-equator" class="active">Đường Xích đạo</button>
+      <button id="btn-toggle-grid" class="active">Lưới Kinh/Vĩ tuyến</button>
+      <button id="btn-toggle-spin" class="active">Tự quay</button>
+      <button id="btn-fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <div id="workspace">
+    <aside id="side">
+      <div class="section-title">Các Thành Phần Cốt Lõi</div>
+      <div class="features-list" id="featuresList">
+        <button class="feature-btn active" data-feature="0">
+          <div class="icon">🇻🇳</div>
+          <div>
+            <div class="title">Việt Nam trên Địa cầu</div>
+            <div class="sub">Hà Nội, Hoàng Sa & Trường Sa</div>
+          </div>
+        </button>
+        <button class="feature-btn" data-feature="1">
+          <div class="icon">📐</div>
+          <div>
+            <div class="title">Đường Xích đạo (0°)</div>
+            <div class="sub">Chia đôi Bắc - Nam bán cầu</div>
+          </div>
+        </button>
+        <button class="feature-btn" data-feature="2">
+          <div class="icon">🌐</div>
+          <div>
+            <div class="title">Kinh tuyến & Vĩ tuyến</div>
+            <div class="sub">Hệ thống tọa độ địa lý</div>
+          </div>
+        </button>
+        <button class="feature-btn" data-feature="3">
+          <div class="icon">📍</div>
+          <div>
+            <div class="title">Trục Trái Đất & 2 Cực</div>
+            <div class="sub">Nghiêng 23,5° sinh ra mùa</div>
+          </div>
+        </button>
+        <button class="feature-btn" data-feature="4">
+          <div class="icon">🗺️</div>
+          <div>
+            <div class="title">6 Châu Lục & 4 Đại Dương</div>
+            <div class="sub">Toàn cảnh lục địa thế giới</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="section-title">Công cụ quan sát</div>
+      <div class="sim-controls">
+        <div class="ctrl-row">
+          <span>Tốc độ quay:</span>
+          <button id="btnSpeed" style="padding:4px 8px;font-size:11px;">Chuẩn 1x</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Ánh sáng Ngày/Đêm:</span>
+          <button id="btnDayNight" style="padding:4px 8px;font-size:11px;">Mặt Trời</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Âm thanh vũ trụ:</span>
+          <button id="btnSound" style="padding:4px 8px;font-size:11px;">🔇 Tắt tiếng</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:auto;">Gợi ý cho học sinh</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">
+        • Giữ chuột và rê để xoay quả địa cầu mọi hướng.<br>
+        • Nhấp "Tìm Việt Nam" để quả cầu tự xoay về dải đất hình chữ S.<br>
+        • Bật/tắt đường Xích đạo vàng kim và lưới vĩ tuyến để quan sát bán cầu.
+      </div>
+    </aside>
+
+    <div id="stage">
+      <div id="canvas-container"></div>
+      <div id="labels-layer"></div>
+
+      <!-- Info Card -->
+      <div id="info-card">
+        <button onclick="document.getElementById('info-card').classList.add('hidden')" style="float:right;padding:2px 8px;font-size:11px;border-radius:6px;">✕</button>
+        <div id="info-badge" class="category-badge">Vị trí địa lý</div>
+        <h2 id="info-title">Việt Nam Trên Quả Địa Cầu</h2>
+        <p id="info-desc">Nước Việt Nam nằm ở khu vực Đông Nam Á, thuộc Bán cầu Bắc và Bán cầu Đông. Dải đất liền hình chữ S tiếp giáp Biển Đông với hai quần đảo thiêng liêng Hoàng Sa và Trường Sa.</p>
+        <div id="info-fact" class="fun-fact">
+          💡 <strong>Em có biết:</strong> Quả Địa Cầu là mô hình thu nhỏ chính xác nhất hình dạng Trái Đất vì không làm méo mó các châu lục như khi vẽ trên bản đồ giấy phẳng!
+        </div>
+      </div>
+
+      <!-- Quick HUD Buttons -->
+      <div id="bottom-hud">
+        <button onclick="focusVietnam()">⭐ Việt Nam</button>
+        <button onclick="selectFeature(1)">Xích đạo</button>
+        <button onclick="selectFeature(2)">Kinh vĩ tuyến</button>
+        <button onclick="selectFeature(3)">Trục nghiêng</button>
+        <button onclick="selectFeature(4)">Châu lục</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const FEATURES = [
+  {
+    title: 'Việt Nam Trên Quả Địa Cầu',
+    badge: 'Đông Nam Á · Bán cầu Bắc',
+    desc: 'Việt Nam nằm ở bán đảo Đông Dương, Bán cầu Bắc. Dải đất liền uốn lượn hình chữ S trải dài từ Lũng Cú (Hà Giang) đến Mũi Cà Mau, cùng vùng biển đảo bao gồm quần đảo Hoàng Sa và Trường Sa.',
+    fact: 'Thủ đô Hà Nội của chúng ta nằm ở tọa độ khoảng 21° Bắc và 105° Đông.',
+    targetRotY: -1.8,
+    camPos: { x: 0, y: 10, z: 40 }
+  },
+  {
+    title: 'Đường Xích Đạo (Vĩ tuyến 0°)',
+    badge: 'Đường viền vàng kim',
+    desc: 'Đường tròn lớn nhất nằm ở chính giữa bề mặt Trái Đất, cách đều hai cực. Xích đạo chia quả địa cầu thành Bán cầu Bắc (ở phía trên) và Bán cầu Nam (ở phía dưới).',
+    fact: 'Đường Xích đạo dài khoảng 40.075 km. Vùng đất quanh xích đạo có khí hậu nhiệt đới nắng ấm quanh năm.',
+    targetRotY: 0,
+    camPos: { x: 0, y: 0, z: 42 }
+  },
+  {
+    title: 'Hệ Thống Kinh Tuyến & Vĩ Tuyến',
+    badge: 'Lưới tọa độ địa lý',
+    desc: 'Kinh tuyến là các đường nối Cực Bắc và Cực Nam (Kinh tuyến gốc 0° qua đài Greenwich - Anh). Vĩ tuyến là các đường tròn song song với Xích đạo. Giao điểm của kinh tuyến và vĩ tuyến tạo nên tọa độ một địa điểm.',
+    fact: 'Nhờ có lưới kinh vĩ tuyến, tàu thuyền đi biển và máy bay trên trời có thể định vị chính xác vị trí của mình giữa đại dương mênh mông.',
+    targetRotY: 1.2,
+    camPos: { x: 25, y: 15, z: 35 }
+  },
+  {
+    title: 'Trục Trái Đất & Cực Bắc - Cực Nam',
+    badge: 'Độ nghiêng 23,5°',
+    desc: 'Trục Trái Đất là đường tưởng tượng nối hai cực Bắc và Nam. Trục luôn nghiêng khoảng 23,5° so với phương thẳng đứng khi Trái Đất tự quay từ Tây sang Đông.',
+    fact: 'Chính nhờ độ nghiêng 23,5° này kết hợp quay quanh Mặt Trời đã tạo nên 4 mùa: Xuân, Hạ, Thu, Đông kỳ diệu trên Trái Đất!',
+    targetRotY: 0,
+    camPos: { x: 35, y: 25, z: 30 }
+  },
+  {
+    title: '6 Châu Lục & 4 Đại Dương',
+    badge: 'Địa lý thế giới',
+    desc: '6 Châu lục: Châu Á (lớn nhất), Châu Phi, Châu Âu, Châu Mỹ, Châu Đại Dương và Châu Nam Cực. 4 Đại dương: Thái Bình Dương, Đại Tây Dương, Ấn Độ Dương và Bắc Băng Dương.',
+    fact: 'Đại dương chiếm hơn 70% bề mặt Trái Đất. Nhìn từ vũ trụ, Trái Đất của chúng ta như một "Viên ngọc xanh" lấp lánh tuyệt đẹp!',
+    targetRotY: -3.5,
+    camPos: { x: -30, y: 15, z: 35 }
+  }
+];
+
+const MARKERS = [
+  { id: 'vn-hanoi', name: 'Thủ đô Hà Nội (Việt Nam)', lat: 21.0285, lon: 105.8542, isVn: true },
+  { id: 'vn-hoangsa', name: 'QĐ. Hoàng Sa (Việt Nam)', lat: 16.5, lon: 112.0, isVn: true },
+  { id: 'vn-truongsa', name: 'QĐ. Trường Sa (Việt Nam)', lat: 8.8, lon: 114.2, isVn: true },
+  { id: 'asia', name: 'Châu Á', lat: 34.0479, lon: 100.6197, isVn: false },
+  { id: 'europe', name: 'Châu Âu', lat: 54.5260, lon: 15.2551, isVn: false },
+  { id: 'africa', name: 'Châu Phi', lat: -8.7832, lon: 34.5085, isVn: false },
+  { id: 'pacific', name: 'Thái Bình Dương', lat: 0, lon: 160.0, isVn: false },
+  { id: 'atlantic', name: 'Đại Tây Dương', lat: 10, lon: -30.0, isVn: false },
+  { id: 'north-pole', name: 'Cực Bắc', lat: 90, lon: 0, isVn: false },
+  { id: 'south-pole', name: 'Cực Nam', lat: -90, lon: 0, isVn: false }
+];
+
+let scene, camera, renderer, controls;
+let globeGroup, earthMesh, equatorMesh, gridMesh, axisMesh, standGroup;
+let isSpinning = true;
+let spinSpeed = 0.003;
+let showEquator = true;
+let showGrid = true;
+let showMarkers = true;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060713);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+  camera.position.set(0, 10, 42);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Controls
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 20;
+  controls.maxDistance = 100;
+  controls.target.set(0, 0, 0);
+
+  // Lighting
+  setupLights();
+
+  // Create Globe with stand
+  createGlobeAndStand();
+  createHtmlMarkers();
+
+  // Resize
+  window.addEventListener('resize', onWindowResize);
+  setupUI();
+
+  // Select Default
+  selectFeature(0);
+
+  // Loop
+  animate();
+}
+
+function setupLights() {
+  const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+  scene.add(ambient);
+
+  const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
+  dirLight.position.set(40, 20, 30);
+  scene.add(dirLight);
+
+  const backLight = new THREE.DirectionalLight(0x4338ca, 0.6);
+  backLight.position.set(-40, -20, -30);
+  scene.add(backLight);
+}
+
+function createProceduralEarthCanvas() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 2048;
+  canvas.height = 1024;
+  const ctx = canvas.getContext('2d');
+
+  // Deep ocean gradient
+  const oceanGrad = ctx.createLinearGradient(0, 0, 0, 1024);
+  oceanGrad.addColorStop(0, '#0f2b46');
+  oceanGrad.addColorStop(0.5, '#1e4976');
+  oceanGrad.addColorStop(1, '#0f2b46');
+  ctx.fillStyle = oceanGrad;
+  ctx.fillRect(0, 0, 2048, 1024);
+
+  // Continent shapes (Simplified aesthetic stylized continents)
+  ctx.fillStyle = '#2d6a4f';
+
+  function drawContinent(cx, cy, rx, ry) {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Asia & Europe
+  drawContinent(1400, 320, 280, 160);
+  drawContinent(1100, 280, 120, 100);
+  // Africa
+  drawContinent(1150, 560, 150, 180);
+  // North America
+  drawContinent(500, 320, 200, 140);
+  // South America
+  drawContinent(680, 680, 130, 200);
+  // Australia / Oceania
+  drawContinent(1650, 720, 140, 100);
+  // Antarctica
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillRect(0, 950, 2048, 74);
+
+  // Draw Vietnam S-shape highlight
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 10;
+  ctx.beginPath();
+  ctx.moveTo(1480, 420);
+  ctx.bezierCurveTo(1470, 460, 1500, 500, 1485, 540);
+  ctx.stroke();
+
+  // Draw Parallels & Meridians subtle lines on texture
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.lineWidth = 1;
+  for (let lat = 0; lat <= 1024; lat += 1024 / 6) {
+    ctx.beginPath();
+    ctx.moveTo(0, lat);
+    ctx.lineTo(2048, lat);
+    ctx.stroke();
+  }
+  for (let lon = 0; lon <= 2048; lon += 2048 / 12) {
+    ctx.beginPath();
+    ctx.moveTo(lon, 0);
+    ctx.lineTo(lon, 1024);
+    ctx.stroke();
+  }
+
+  return canvas;
+}
+
+function createGlobeAndStand() {
+  globeGroup = new THREE.Group();
+  globeGroup.rotation.z = -23.5 * Math.PI / 180; // 23.5 degree axial tilt!
+
+  const radius = 12;
+
+  // Earth Sphere
+  const texture = new THREE.CanvasTexture(createProceduralEarthCanvas());
+  const earthGeo = new THREE.SphereGeometry(radius, 64, 64);
+  const earthMat = new THREE.MeshStandardMaterial({
+    map: texture,
+    roughness: 0.6,
+    metalness: 0.1
+  });
+  earthMesh = new THREE.Mesh(earthGeo, earthMat);
+  globeGroup.add(earthMesh);
+
+  // Glowing Atmosphere
+  const atmosGeo = new THREE.SphereGeometry(radius + 0.3, 32, 32);
+  const atmosMat = new THREE.MeshBasicMaterial({
+    color: 0x818cf8,
+    transparent: true,
+    opacity: 0.15,
+    side: THREE.BackSide
+  });
+  const atmos = new THREE.Mesh(atmosGeo, atmosMat);
+  globeGroup.add(atmos);
+
+  // Equator Line (Gold ring)
+  const eqGeo = new THREE.TorusGeometry(radius + 0.08, 0.12, 16, 100);
+  const eqMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+  equatorMesh = new THREE.Mesh(eqGeo, eqMat);
+  equatorMesh.rotation.x = Math.PI / 2;
+  globeGroup.add(equatorMesh);
+
+  // Latitude and Longitude Grid 3D
+  const gridGroup = new THREE.Group();
+  // Tropic of Cancer (23.5 N)
+  const cancerY = radius * Math.sin(23.5 * Math.PI / 180);
+  const cancerR = radius * Math.cos(23.5 * Math.PI / 180);
+  const cancerGeo = new THREE.TorusGeometry(cancerR + 0.05, 0.06, 8, 80);
+  const tropicMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+  const cancerMesh = new THREE.Mesh(cancerGeo, tropicMat);
+  cancerMesh.position.y = cancerY;
+  cancerMesh.rotation.x = Math.PI / 2;
+  gridGroup.add(cancerMesh);
+
+  // Tropic of Capricorn (23.5 S)
+  const capMesh = cancerMesh.clone();
+  capMesh.position.y = -cancerY;
+  gridGroup.add(capMesh);
+
+  gridMesh = gridGroup;
+  globeGroup.add(gridMesh);
+
+  // Central Axis Pin
+  const axisGeo = new THREE.CylinderGeometry(0.2, 0.2, radius * 2.8, 16);
+  const axisMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8, roughness: 0.2 });
+  axisMesh = new THREE.Mesh(axisGeo, axisMat);
+  globeGroup.add(axisMesh);
+
+  scene.add(globeGroup);
+
+  // Stand (Base & Meridian semi-circle arch)
+  standGroup = new THREE.Group();
+
+  const archCurve = new THREE.EllipseCurve(0, 0, radius + 2, radius + 2, -Math.PI / 2, Math.PI / 2, false, 0);
+  const points = archCurve.getPoints(50);
+  const archGeo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(p.x, p.y, 0))), 50, 0.4, 8, false);
+  const archMat = new THREE.MeshStandardMaterial({ color: 0xb45309, metalness: 0.6, roughness: 0.3 });
+  const arch = new THREE.Mesh(archGeo, archMat);
+  arch.rotation.z = -23.5 * Math.PI / 180;
+  standGroup.add(arch);
+
+  // Wooden / Metallic Round Base
+  const baseGeo = new THREE.CylinderGeometry(8, 10, 2, 32);
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x271911, roughness: 0.7 });
+  const base = new THREE.Mesh(baseGeo, baseMat);
+  base.position.y = -radius - 4;
+  standGroup.add(base);
+
+  // Vertical Pillar
+  const pillarGeo = new THREE.CylinderGeometry(0.8, 1.2, 4, 16);
+  const pillar = new THREE.Mesh(pillarGeo, archMat);
+  pillar.position.y = -radius - 2;
+  standGroup.add(pillar);
+
+  scene.add(standGroup);
+}
+
+function latLonToVector3(lat, lon, radius) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  const theta = (lon + 180) * (Math.PI / 180);
+  const x = -(radius * Math.sin(phi) * Math.cos(theta));
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+  const y = radius * Math.cos(phi);
+  return new THREE.Vector3(x, y, z);
+}
+
+function createHtmlMarkers() {
+  const layer = document.getElementById('labels-layer');
+  layer.innerHTML = '';
+  MARKERS.forEach(m => {
+    const el = document.createElement('div');
+    el.className = `globe-marker ${m.isVn ? 'vietnam' : ''}`;
+    el.id = 'label-' + m.id;
+    el.innerHTML = `${m.isVn ? '⭐' : '📍'} <span>${m.name}</span>`;
+    layer.appendChild(el);
+  });
+}
+
+function updateMarkers() {
+  if (!showMarkers) return;
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  const radius = 12.3;
+
+  MARKERS.forEach(m => {
+    const el = document.getElementById('label-' + m.id);
+    if (!el) return;
+
+    // Local sphere pos
+    const localPos = latLonToVector3(m.lat, m.lon, radius);
+    // Apply earth rotation around Y
+    localPos.applyAxisAngle(new THREE.Vector3(0, 1, 0), earthMesh.rotation.y);
+    // Apply globe tilt
+    localPos.applyAxisAngle(new THREE.Vector3(0, 0, 1), globeGroup.rotation.z);
+
+    // Project
+    const screenPos = localPos.clone().project(camera);
+
+    // Check if behind globe
+    const cameraDir = camera.position.clone().sub(localPos).normalize();
+    const normal = localPos.clone().normalize();
+    const dot = normal.dot(cameraDir);
+
+    if (screenPos.z > 1 || dot < -0.1) {
+      el.style.display = 'none';
+      return;
+    }
+
+    const x = (screenPos.x * 0.5 + 0.5) * w;
+    const y = (-(screenPos.y * 0.5) + 0.5) * h;
+
+    el.style.display = 'flex';
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+  });
+}
+
+function selectFeature(index) {
+  const f = FEATURES[index];
+  if (!f) return;
+
+  document.querySelectorAll('.feature-btn').forEach((btn, idx) => {
+    btn.classList.toggle('active', idx === index);
+  });
+
+  const card = document.getElementById('info-card');
+  card.classList.remove('hidden');
+  document.getElementById('info-badge').textContent = f.badge;
+  document.getElementById('info-title').textContent = f.title;
+  document.getElementById('info-desc').textContent = f.desc;
+  document.getElementById('info-fact').innerHTML = `💡 <strong>Em có biết:</strong> ${f.fact}`;
+
+  // Rotate Earth to highlight
+  earthMesh.rotation.y = f.targetRotY;
+}
+
+function focusVietnam() {
+  selectFeature(0);
+}
+
+function setupUI() {
+  document.querySelectorAll('.feature-btn').forEach((btn, idx) => {
+    btn.addEventListener('click', () => selectFeature(idx));
+  });
+
+  document.getElementById('btn-focus-vn').addEventListener('click', focusVietnam);
+
+  const eqBtn = document.getElementById('btn-toggle-equator');
+  eqBtn.addEventListener('click', () => {
+    showEquator = !showEquator;
+    eqBtn.classList.toggle('active', showEquator);
+    equatorMesh.visible = showEquator;
+  });
+
+  const gridBtn = document.getElementById('btn-toggle-grid');
+  gridBtn.addEventListener('click', () => {
+    showGrid = !showGrid;
+    gridBtn.classList.toggle('active', showGrid);
+    gridMesh.visible = showGrid;
+  });
+
+  const spinBtn = document.getElementById('btn-toggle-spin');
+  spinBtn.addEventListener('click', () => {
+    isSpinning = !isSpinning;
+    spinBtn.classList.toggle('active', isSpinning);
+  });
+
+  // Speed
+  const speedBtn = document.getElementById('btnSpeed');
+  speedBtn.addEventListener('click', () => {
+    if (spinSpeed === 0.003) {
+      spinSpeed = 0.008;
+      speedBtn.textContent = 'Nhanh 2x';
+    } else if (spinSpeed === 0.008) {
+      spinSpeed = 0.001;
+      speedBtn.textContent = 'Chậm 0.5x';
+    } else {
+      spinSpeed = 0.003;
+      speedBtn.textContent = 'Chuẩn 1x';
+    }
+  });
+
+  // Fullscreen
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+}
+
+function onWindowResize() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (isSpinning && earthMesh) {
+    earthMesh.rotation.y += spinSpeed;
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+  updateMarkers();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
