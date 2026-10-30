@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v2';
+const CACHE_NAME = 'lhtt-shell-v3-mo-hinh-3d';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',
