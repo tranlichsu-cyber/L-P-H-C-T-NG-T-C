@@ -12,6 +12,7 @@
     "deploy:prod": "npm run build && firebase use prod && firebase deploy --only hosting,firestore:rules"
   },
   "dependencies": {
+    "@types/three": "^0.186.0",
     "dompurify": "^3.4.17",
     "firebase": "^12.19.0",
     "jsqr": "^1.4.0",
@@ -22,6 +23,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
+    "three": "^0.187.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

@@ -18,6 +18,8 @@ import {
   Info,
   Layers,
   RotateCcw,
+  ExternalLink,
+  Eye,
 } from 'lucide-react';
 import {
   hungTempleData,
@@ -26,10 +28,10 @@ import {
 import { triggerConfetti } from '../../utils/confetti';
 import { playCorrectSound } from '../../utils/audio';
 
-type ActiveTab = 'DIORAMA' | 'FESTIVAL' | 'QUIZ';
+type ActiveTab = '3D_VIEW' | 'DIORAMA' | 'FESTIVAL' | 'QUIZ';
 
 export const HungTempleDiorama: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('DIORAMA');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('3D_VIEW');
   const [selectedStation, setSelectedStation] = useState<HungTempleStation | null>(
     hungTempleData.stations[0]
   );
@@ -184,6 +186,18 @@ export const HungTempleDiorama: React.FC = () => {
           <div className="bg-slate-800/80 p-1 rounded-2xl border border-slate-700/80 flex items-center text-xs font-bold">
             <button
               type="button"
+              onClick={() => setActiveTab('3D_VIEW')}
+              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                activeTab === '3D_VIEW'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>Sa bàn 3D (360°)</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('DIORAMA')}
               className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
                 activeTab === 'DIORAMA'
@@ -192,7 +206,7 @@ export const HungTempleDiorama: React.FC = () => {
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>Sa bàn Núi</span>
+              <span>Sơ đồ & Tư liệu</span>
             </button>
             <button
               type="button"
@@ -220,6 +234,17 @@ export const HungTempleDiorama: React.FC = () => {
             </button>
           </div>
 
+          <a
+            href="/models/den-hung-3d.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Mở ứng dụng 3D độc lập"
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-white transition border border-slate-700 hidden sm:flex items-center gap-1.5 text-xs font-bold"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Cửa sổ 3D</span>
+          </a>
+
           <button
             type="button"
             onClick={toggleFullscreen}
@@ -233,6 +258,35 @@ export const HungTempleDiorama: React.FC = () => {
 
       {/* Main Content Areas */}
       <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* TAB 0: SA BÀN 3D WEBGL TƯƠNG TÁC XOAY 360 ĐỘ */}
+        {activeTab === '3D_VIEW' && (
+          <div className="relative flex-1 w-full min-h-[620px] sm:min-h-[700px] bg-slate-950 flex flex-col">
+            <div className="absolute top-3 left-4 z-10 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-amber-500/40 text-xs shadow-lg pointer-events-none">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-black text-amber-300">Sa bàn 3D tương tác:</span>
+              <span className="text-slate-300 hidden sm:inline">Dùng chuột/tay kéo để xoay 360°, cuộn để phóng to, bấm vào đền để xem chi tiết</span>
+            </div>
+
+            <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
+              <a
+                href="/models/den-hung-3d.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black shadow-lg flex items-center gap-1.5 transition"
+              >
+                <span>Mở toàn màn hình 3D</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+
+            <iframe
+              src="/models/den-hung-3d.html"
+              title="Sa bàn 3D Đền Hùng WebGL"
+              className="w-full flex-1 border-0 min-h-[620px] sm:min-h-[700px]"
+              allow="fullscreen"
+            />
+          </div>
+        )}
         {/* TAB 1: SA BÀN NÚI NGHĨA LĨNH */}
         {activeTab === 'DIORAMA' && (
           <div className="flex-1 flex flex-col lg:flex-row min-h-[580px]">

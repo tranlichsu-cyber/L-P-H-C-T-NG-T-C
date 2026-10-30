@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Clock,
   CheckCircle2,
+  ExternalLink,
 } from 'lucide-react';
 import { modelsCatalog } from '../../data/models/modelsCatalog';
 import { SCHOOL_LOGO_SRC } from '../../assets/schoolLogo';
@@ -123,7 +124,7 @@ export const ModelHubPage: React.FC = () => {
                 ))}
               </div>
 
-              <div className="pt-3">
+              <div className="flex flex-wrap items-center gap-3 pt-3">
                 <button
                   type="button"
                   onClick={() => navigate(featuredModel.route || '/mo-hinh/den-hung')}
@@ -132,6 +133,16 @@ export const ModelHubPage: React.FC = () => {
                   <span>Khám phá sa bàn ngay</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
+
+                <a
+                  href="/models/den-hung-3d.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-sm border border-slate-700 flex items-center gap-2 transition"
+                >
+                  <span>Mở 3D Toàn Cảnh</span>
+                  <ExternalLink className="h-4 w-4" />
+                </a>
               </div>
             </div>
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, BookOpen, Sparkles, Compass, MapPin } from 'lucide-react';
+import { ArrowLeft, Home, BookOpen, Sparkles, Compass, MapPin, ExternalLink } from 'lucide-react';
 import { HungTempleDiorama } from '../../components/models/HungTempleDiorama';
 import { SCHOOL_LOGO_SRC } from '../../assets/schoolLogo';
 import { useSchool } from '../../context/SchoolContext';
@@ -46,21 +46,33 @@ export const HungTemplePage: React.FC = () => {
       {/* Page Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         {/* Breadcrumb & Intro */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
-            <Compass className="h-3.5 w-3.5" />
-            <span>Kho Mô hình & Sa bàn</span>
-            <span>•</span>
-            <span>Môn Lịch sử và Địa lí 4</span>
-            <span>•</span>
-            <span>Bài 7</span>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400">
+              <Compass className="h-3.5 w-3.5" />
+              <span>Kho Mô hình & Sa bàn</span>
+              <span>•</span>
+              <span>Môn Lịch sử và Địa lí 4</span>
+              <span>•</span>
+              <span>Bài 7</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Sa bàn 3D Đền Hùng & Lễ Giỗ Tổ Hùng Vương
+            </h1>
+            <p className="text-sm text-slate-400 max-w-3xl leading-relaxed">
+              Trải nghiệm mô hình kiến trúc 3D xoay 360 độ các đền thờ (Cổng Đền, Đền Hạ, Đền Trung, Đền Thượng, Lăng Vua Hùng, Đền Giếng) trên núi Nghĩa Lĩnh cao 175m.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Sa bàn Đền Hùng & Lễ Giỗ Tổ Hùng Vương
-          </h1>
-          <p className="text-sm text-slate-400 max-w-3xl leading-relaxed">
-            Học sinh được trải nghiệm hành hương qua từng bậc đá trên núi Nghĩa Lĩnh cao 175m, tìm hiểu sự tích bánh chưng bánh giầy, bọc trăm trứng Âu Cơ và lời căn dặn thiêng liêng của Bác Hồ.
-          </p>
+
+          <a
+            href="/models/den-hung-3d.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs flex items-center gap-2 shadow-xl shadow-amber-500/20 shrink-0 self-start md:self-center transition transform hover:scale-105"
+          >
+            <span>Mở Sa bàn 3D Toàn Cảnh</span>
+            <ExternalLink className="h-4 w-4" />
+          </a>
         </div>
 
         {/* The Interactive Diorama Canvas */}
