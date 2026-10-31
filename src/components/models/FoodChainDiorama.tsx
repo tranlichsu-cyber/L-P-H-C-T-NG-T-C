@@ -207,25 +207,25 @@ export const FoodChainDiorama: React.FC = () => {
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs border border-slate-700"
-            title={isFullscreen ? 'Thoát toàn màn hình' : 'Toàn màn hình'}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/30 transition transform hover:scale-105"
+            title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Chiếu toàn màn hình lên TV/Máy chiếu'}
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <span className="hidden sm:inline">{isFullscreen ? 'Thu nhỏ' : '📺 Chiếu toàn màn hình'}</span>
           </button>
         </div>
       </div>
 
       {/* Main Tab Panels */}
-      <div className="flex-1 min-h-[560px] flex flex-col">
+      <div className={`flex-1 flex flex-col ${isFullscreen ? 'h-[calc(100vh-65px)] p-2' : 'min-h-[560px]'}`}>
         {/* Tab 1: 3D Canvas */}
         {activeTab === '3d' && (
-          <div className="relative w-full h-[620px] bg-slate-950 flex flex-col">
-            <iframe
-              ref={iframeRef}
+          <div className={`relative w-full ${isFullscreen ? 'h-full flex-1' : 'h-[620px]'} bg-slate-950 flex flex-col rounded-2xl overflow-hidden border border-slate-800`}>
+            <iframe ref={iframeRef}
               src="/models/chuoi-thuc-an-3d.html"
               title="Sa bàn 3D Chuỗi thức ăn"
-              className="w-full h-full border-0"
-              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              className="w-full h-full flex-1 border-0"
+              allow="fullscreen; accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
             />
             {/* Overlay hint banner */}
             <div className="absolute top-4 left-4 pointer-events-none bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 text-slate-300 text-xs flex items-center gap-2">

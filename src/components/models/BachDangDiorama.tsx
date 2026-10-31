@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Swords,
   Maximize2,
@@ -20,6 +20,31 @@ export const BachDangDiorama: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'3d' | 'stages' | 'tactics' | 'quiz'>('3d');
   const [selectedStage, setSelectedStage] = useState<BachDangStage>(BACH_DANG_STAGES[0]);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => setIsFullscreen(true));
+      } else {
+        setIsFullscreen(true);
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
@@ -76,7 +101,9 @@ export const BachDangDiorama: React.FC = () => {
   ).length;
 
   return (
-    <div className="bg-slate-900 rounded-3xl border border-red-900/50 shadow-2xl overflow-hidden flex flex-col">
+    <div
+      ref={containerRef}
+      className={`bg-slate-900 rounded-3xl border border-red-900/50 shadow-2xl overflow-hidden flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 rounded-none w-screen h-screen' : ''}`}>
       {/* Control Bar */}
       <div className="bg-slate-950/80 px-4 sm:px-6 py-3 border-b border-red-900/40 flex flex-wrap items-center justify-between gap-3">
         {/* Navigation Tabs */}
@@ -170,25 +197,25 @@ export const BachDangDiorama: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
-            title={isFullscreen ? 'Thu nhỏ' : 'Toàn màn hình'}
+            onClick={toggleFullscreen}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-sky-600/30 transition transform hover:scale-105"
+            title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Chiếu toàn màn hình lên TV/Máy chiếu'}
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <span className="hidden sm:inline">{isFullscreen ? 'Thu nhỏ' : '📺 Chiếu toàn màn hình'}</span>
           </button>
         </div>
       </div>
 
       {/* Main Container */}
-      <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-slate-950 p-4' : 'min-h-[580px]'}`}>
+      <div className={`relative flex-1 flex flex-col ${isFullscreen ? 'h-[calc(100vh-65px)] p-2' : 'min-h-[580px]'}`}>
         {/* TAB 1: 3D THREE.JS SIMULATION */}
         {activeTab === '3d' && (
-          <div className="w-full h-full min-h-[580px] relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800">
-            <iframe
-              src="/models/bach-dang-938-3d.html"
+          <div className="w-full flex-1 min-h-[580px] relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex flex-col">
+            <iframe src="/models/bach-dang-938-3d.html"
               title="Sa bàn 3D Chiến thắng Bạch Đằng năm 938"
-              className="w-full h-full min-h-[580px] border-0"
-              allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+              className="w-full h-full flex-1 border-0"
+              allow="fullscreen; accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
             />
           </div>
         )}

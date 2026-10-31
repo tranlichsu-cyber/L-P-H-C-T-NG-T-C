@@ -250,10 +250,11 @@ export const HungTempleDiorama: React.FC = () => {
           <button
             type="button"
             onClick={toggleFullscreen}
-            title={isFullscreen ? 'Thu nhỏ' : 'Toàn màn hình trình chiếu'}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700"
+            title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Chiếu toàn màn hình lên TV/Máy chiếu'}
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-600/30 transition transform hover:scale-105"
           >
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            <span className="hidden sm:inline">{isFullscreen ? 'Thu nhỏ' : '📺 Chiếu toàn màn hình'}</span>
           </button>
         </div>
       </header>
