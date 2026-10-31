@@ -18,6 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { triggerConfetti } from '../../utils/confetti';
+import { unlockBadge } from '../../utils/modelBadges';
 import { WATER_CYCLE_STAGES, WATER_QUIZ, type WaterCycleStage } from '../../data/models/waterCycleData';
 
 export const WaterCycleDiorama: React.FC = () => {
@@ -66,6 +67,7 @@ export const WaterCycleDiorama: React.FC = () => {
     });
     if (correctCount >= 4) {
       triggerConfetti();
+      unlockBadge('badge-water-cycle');
     }
   };
 

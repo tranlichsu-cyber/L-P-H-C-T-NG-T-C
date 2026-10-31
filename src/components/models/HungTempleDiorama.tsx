@@ -27,6 +27,7 @@ import {
 } from '../../data/models/hungTempleData';
 import { triggerConfetti } from '../../utils/confetti';
 import { playCorrectSound } from '../../utils/audio';
+import { unlockBadge } from '../../utils/modelBadges';
 
 type ActiveTab = '3D_VIEW' | 'DIORAMA' | 'FESTIVAL' | 'QUIZ';
 
@@ -145,6 +146,7 @@ export const HungTempleDiorama: React.FC = () => {
     if (correctCount >= 3) {
       playCorrectSound();
       triggerConfetti(3500);
+      unlockBadge('badge-hung-temple');
     }
   };
 

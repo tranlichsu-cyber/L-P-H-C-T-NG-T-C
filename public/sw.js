@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v7-3d-offline-libs';
+const CACHE_NAME = 'lhtt-shell-v8-bach-dang-annotation';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

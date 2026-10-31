@@ -10,8 +10,10 @@ import {
   Clock,
   CheckCircle2,
   ExternalLink,
+  Lock,
 } from 'lucide-react';
 import { modelsCatalog } from '../../data/models/modelsCatalog';
+import { ALL_MODEL_BADGES, getUnlockedBadges } from '../../utils/modelBadges';
 import { SCHOOL_LOGO_SRC } from '../../assets/schoolLogo';
 import { useSchool } from '../../context/SchoolContext';
 
@@ -26,6 +28,8 @@ export const ModelHubPage: React.FC = () => {
   const [selectedSubject, setSelectedSubject] = useState<SubjectFilter>('ALL');
   const [selectedGrade, setSelectedGrade] = useState<number>(4);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const unlockedMap = useMemo(() => getUnlockedBadges(), []);
+  const unlockedCount = ALL_MODEL_BADGES.filter((b) => unlockedMap[b.id]).length;
 
   const filteredModels = useMemo(() => {
     return modelsCatalog.filter((item) => {
@@ -237,6 +241,65 @@ export const ModelHubPage: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* Badges Collection Section */}
+        <section className="bg-gradient-to-r from-slate-950 via-amber-950/30 to-slate-950 rounded-3xl p-5 border border-amber-500/30 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg border border-amber-500/30">
+                🏆
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-white flex items-center gap-2">
+                  Bộ Sưu Tập Huy Hiệu Thám Hiểm 3D
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+                    {unlockedCount}/{ALL_MODEL_BADGES.length} Đã mở
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Khám phá sa bàn và vượt qua thử thách trắc nghiệm để mở khóa huy hiệu danh dự
+                </p>
+              </div>
+            </div>
+            {/* Progress Bar */}
+            <div className="w-full sm:w-48 bg-slate-800 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.round((unlockedCount / ALL_MODEL_BADGES.length) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1">
+            {ALL_MODEL_BADGES.map((b) => {
+              const isUnlocked = Boolean(unlockedMap[b.id]);
+              return (
+                <div
+                  key={b.id}
+                  className={`p-3 rounded-2xl border transition flex flex-col items-center text-center gap-1.5 ${
+                    isUnlocked
+                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-200 shadow-md shadow-amber-500/10'
+                      : 'bg-slate-900/50 border-slate-800 text-slate-500 opacity-60'
+                  }`}
+                  title={b.description}
+                >
+                  <div className="text-2xl relative">
+                    {b.icon}
+                    {!isUnlocked && (
+                      <span className="absolute -top-1 -right-2 bg-slate-800 text-slate-400 rounded-full p-1 border border-slate-700">
+                        <Lock className="h-2.5 w-2.5" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] font-bold leading-tight">{b.title}</div>
+                  <span className="text-[9px] text-slate-400 font-medium">
+                    {isUnlocked ? 'Đã đạt' : 'Chưa mở'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Model Cards Grid */}
         <section className="space-y-4">

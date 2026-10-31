@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#991b1b">
+<title>Sa bàn 3D Trận chiến trên sông Bạch Đằng năm 938 – Lịch sử & Địa lí 4</title>
+<style>
+:root {
+  --primary: #991b1b;
+  --primary-dark: #7f1d1d;
+  --accent: #f59e0b;
+  --gold: #fbbf24;
+  --bg-dark: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.92);
+  --border: rgba(245, 158, 11, 0.3);
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --fs: 15px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  font-size: var(--fs);
+  background: var(--bg-dark);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+button:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+button.active {
+  background: linear-gradient(135deg, #991b1b, #dc2626);
+  color: #fff;
+  border-color: #fca5a5;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.5);
+}
+#app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+header {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 2px solid rgba(220, 38, 38, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.brand {
+  min-width: 0;
+  flex: 1;
+}
+.brand h1 {
+  font-size: clamp(16px, 2vw, 22px);
+  margin: 0;
+  color: #fca5a5;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#workspace {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 310px 1fr;
+}
+#side {
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  display: flex;
+  flex-col: column;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.stages-list {
+  display: grid;
+  gap: 8px;
+}
+.stage-btn {
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.stage-btn.active {
+  background: linear-gradient(135deg, rgba(153, 27, 27, 0.8), rgba(127, 29, 29, 0.9));
+  border-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+.stage-btn .badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.stage-btn.active .badge {
+  background: #ef4444;
+  color: #fff;
+}
+.stage-btn .title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.stage-btn .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.sim-controls {
+  display: grid;
+  gap: 10px;
+  background: rgba(30, 41, 59, 0.4);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+#stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+#canvas-container {
+  width: 100%;
+  height: 100%;
+}
+#info-card {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: min(380px, 92%);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+#info-card.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+#info-card h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #fca5a5;
+}
+#info-card p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+#info-card .tactics-box {
+  background: rgba(239, 68, 68, 0.12);
+  border-left: 3px solid #ef4444;
+  padding: 8px 10px;
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+  color: #fecaca;
+  margin-top: 8px;
+}
+#bottom-hud {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+#tide-gauge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #38bdf8;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+  #workspace { grid-template-columns: 1fr; }
+  #side { display: none; }
+  #info-card {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 48%;
+    border-radius: 20px 20px 0 0;
+  }
+  #bottom-hud {
+    bottom: 50%;
+    transform: translate(-50%, 50%);
+  }
+}
+</style>
+<script src="lib/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+  }
+</script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+  if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+  }
+</script>
+<link rel="stylesheet" href="lib/annotation-tool.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <button onclick="if(window.history.length>1){window.history.back();}else{window.location.href='/mo-hinh/bach-dang-938';}" style="background:#7f1d1d;color:#fff;">
+      ◀ Quay lại
+    </button>
+    <div class="brand">
+      <h1>⚔️ SA BÀN 3D CHIẾN THẮNG BẠCH ĐẰNG NĂM 938</h1>
+      <p>Lịch sử & Địa lí lớp 4 · Bài 5: Chiến thắng Bạch Đằng năm 938</p>
+    </div>
+    <div class="header-actions">
+      <button id="btn-toggle-tide" class="active">🌊 Thủy triều: Rút cạn</button>
+      <button id="btn-rotate-auto">🔄 Tự xoay</button>
+      <button id="btn-fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <div id="workspace">
+    <aside id="side">
+      <div class="section-title">4 Giai Đoạn Trận Chiến</div>
+      <div class="stages-list" id="stagesList">
+        <button class="stage-btn active" data-stage="0">
+          <div class="badge">1</div>
+          <div>
+            <div class="title">1. Bố trí bãi cọc ngầm</div>
+            <div class="sub">Đẵn gỗ lim vót nhọn bịt sắt</div>
+          </div>
+        </button>
+        <button class="stage-btn" data-stage="1">
+          <div class="badge">2</div>
+          <div>
+            <div class="title">2. Thủy triều lên & Nhử địch</div>
+            <div class="sub">Thuyền nhẹ khiêu chiến giả thua</div>
+          </div>
+        </button>
+        <button class="stage-btn" data-stage="2">
+          <div class="badge">3</div>
+          <div>
+            <div class="title">3. Thủy triều rút & Đắm thuyền</div>
+            <div class="sub">Cọc nhô lên – Đáy thuyền vỡ nát</div>
+          </div>
+        </button>
+        <button class="stage-btn" data-stage="3">
+          <div class="badge">4</div>
+          <div>
+            <div class="title">4. Đại thắng Bạch Đằng</div>
+            <div class="sub">Hoằng Tháo tử trận – Mở nền độc lập</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="section-title">Điều Khiển Trận Địa</div>
+      <div class="sim-controls">
+        <div class="ctrl-row">
+          <span>Mực nước sông:</span>
+          <button id="btnTideToggle" style="padding:4px 8px;font-size:11px;">Thủy triều rút cạn</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Góc nhìn Camera:</span>
+          <button id="btnResetCam" style="padding:4px 8px;font-size:11px;">Toàn cảnh bãi cọc</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:auto;">Ý Nghĩa Lịch Sử</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">
+        • Chấm dứt hơn 1.000 năm Bắc thuộc tối tăm.<br>
+        • Mùa xuân 939, Ngô Quyền xưng Vương, định đô ở Cổ Loa, mở ra kỷ nguyên độc lập tự chủ lâu dài cho dân tộc.
+      </div>
+    </aside>
+
+    <div id="stage">
+      <div id="canvas-container"></div>
+
+      <!-- Tide Gauge Indicator -->
+      <div id="tide-gauge">
+        <div>Trạng thái: <strong id="gauge-tide">Thủy triều rút (Bãi cọc nhô lên)</strong></div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Cọc nhọn cao 2.5m bịt sắt đâm thủng thuyền giặc</div>
+      </div>
+
+      <!-- Info Card Floating -->
+      <div id="info-card">
+        <button onclick="document.getElementById('info-card').classList.add('hidden')" style="float:right;padding:2px 8px;font-size:11px;border-radius:6px;">✕</button>
+        <div id="info-badge" style="font-size:11px;font-weight:800;color:#ef4444;text-transform:uppercase;">Giai đoạn 1</div>
+        <h2 id="info-title">Xây dựng Trận địa Cọc ngầm</h2>
+        <p id="info-desc">Ngô Quyền cho quân dân vào rừng đẵn hàng ngàn cây gỗ lim, táu to khỏe, vót nhọn đầu rồi bịt sắt sắc bén. Chờ khi triều rút, cắm cọc nghiêng xuôi dòng tại cửa sông Bạch Đằng.</p>
+        <div id="info-tactics" class="tactics-box">
+          ⚔️ <strong>Nghệ thuật quân sự:</strong> Lợi dụng quy luật thủy triều lên xuống chênh lệch tới 3-4m mỗi ngày tại vùng biển Đông Bắc.
+        </div>
+      </div>
+
+      <!-- Bottom HUD Quick -->
+      <div id="bottom-hud">
+        <button onclick="selectStage(0)">1. Cắm cọc</button>
+        <button onclick="selectStage(1)">2. Nhử giặc</button>
+        <button onclick="selectStage(2)">3. Triều rút</button>
+        <button onclick="selectStage(3)">4. Đại thắng</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STAGES = [
+  {
+    title: 'Xây dựng Trận địa Cọc ngầm',
+    badge: 'Giai đoạn 1: Chuẩn bị thế trận',
+    desc: 'Ngô Quyền huy động quân dân vào rừng đẵn hàng nghìn cây gỗ lim, táu to khỏe, vót nhọn một đầu rồi bịt sắt sắc bén. Chờ lúc thủy triều rút cạn, quân ta đóng cọc nghiêng theo dòng nước xuôi ra biển tại vùng cửa sông Bạch Đằng.',
+    tactics: 'Lợi dụng địa hình hiểm trở và con nước thủy triều lên xuống chênh lệch hàng mét mỗi ngày ở vùng biển Đông Bắc.',
+    tide: 'LOW',
+    camPos: { x: 0, y: 22, z: 50 },
+    camTarget: { x: 0, y: 0, z: 0 }
+  },
+  {
+    title: 'Thủy triều lên & Nhử địch vượt bãi cọc',
+    badge: 'Giai đoạn 2: Lấy yếu đánh mạnh',
+    desc: 'Khi nước thủy triều dâng cao ngập sâu toàn bộ bãi cọc ngầm, Ngô Quyền cử một đội thuyền nhẹ, cơ động ra khiêu chiến rồi giả vờ thua chạy. Tướng giặc Hoằng Tháo thúc toàn bộ đoàn thuyền chiến lớn đuổi theo vượt qua bãi cọc.',
+    tactics: 'Hoằng Tháo kiêu ngạo mắc mưu, hạm đội thuyền lớn của giặc lọt trọn vào bẫy cọc ngầm đang chìm sâu dưới làn nước.',
+    tide: 'HIGH',
+    camPos: { x: -28, y: 26, z: 38 },
+    camTarget: { x: 0, y: 5, z: 0 }
+  },
+  {
+    title: 'Thủy triều rút & Đắm thuyền giặc',
+    badge: 'Giai đoạn 3: Phục kích sấm sét',
+    desc: 'Khi nước thủy triều rút nhanh ra biển, Ngô Quyền hạ lệnh quay thuyền dốc toàn lực đánh quật lại. Thuyền chiến nặng nề của giặc tháo chạy thì va phải bãi cọc nhọn nhô lên, vỡ toang đáy thuyền, mắc kẹt và chìm đắm la liệt.',
+    tactics: 'Bãi cọc nhọn nhô lên như bức tường thành thép, nước triều rút xiết ép thuyền địch vào cọc nhọn không thể xoay xở.',
+    tide: 'LOW',
+    camPos: { x: 18, y: 16, z: 32 },
+    camTarget: { x: 0, y: 2, z: -5 }
+  },
+  {
+    title: 'Đại thắng Bạch Đằng – Mở nền độc lập',
+    badge: 'Giai đoạn 4: Non sông thái bình',
+    desc: 'Quân ta đồng loạt tấn công, tiêu diệt phần lớn quân Nam Hán. Chủ tướng Lưu Hoằng Tháo tử trận tại chỗ. Mùa xuân 939, Ngô Quyền xưng Vương, chấm dứt hơn 1.000 năm Bắc thuộc, mở ra kỷ nguyên độc lập muôn đời.',
+    tactics: 'Chiến thắng vang dội ghi dấu mốc son chói lọi trong lịch sử dựng nước và giữ nước vẻ vang của dân tộc Việt Nam.',
+    tide: 'LOW',
+    camPos: { x: 0, y: 35, z: 52 },
+    camTarget: { x: 0, y: 0, z: 0 }
+  }
+];
+
+let scene, camera, renderer, controls;
+let riverMesh, stakesGroup, fleetViet, fleetHan, smokeParticles;
+let isHighTide = false;
+let autoRotate = false;
+let currentStage = 0;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+  const width = container.clientWidth || window.innerWidth || 800;
+  const height = container.clientHeight || window.innerHeight || 600;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f172a);
+  scene.fog = new THREE.FogExp2(0x0f172a, 0.007);
+
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
+  camera.position.set(0, 25, 55);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  if (typeof THREE.OrbitControls === 'function') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.minDistance = 15;
+    controls.maxDistance = 140;
+    controls.target.set(0, 2, 0);
+  }
+
+  setupLighting();
+  createRiverTerrain();
+  createStakesField();
+  createVietnameseFleet();
+  createHanFleet();
+  createRiverWater();
+
+  window.addEventListener('resize', onWindowResize);
+  setupUI();
+  selectStage(0);
+  animate();
+}
+
+function setupLighting() {
+  const hemiLight = new THREE.HemisphereLight(0xffedd5, 0x0f172a, 0.7);
+  scene.add(hemiLight);
+
+  const sunLight = new THREE.DirectionalLight(0xffedd5, 1.3);
+  sunLight.position.set(-40, 50, 30);
+  sunLight.castShadow = true;
+  sunLight.shadow.mapSize.set(2048, 2048);
+  sunLight.shadow.bias = -0.0005;
+  scene.add(sunLight);
+
+  const ambient = new THREE.AmbientLight(0x38bdf8, 0.3);
+  scene.add(ambient);
+}
+
+function createRiverTerrain() {
+  const terrainGroup = new THREE.Group();
+
+  // Left riverbank (West bank - Hai Phong)
+  const leftBankGeo = new THREE.BoxGeometry(30, 8, 90);
+  const bankMat = new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.9 });
+  const leftBank = new THREE.Mesh(leftBankGeo, bankMat);
+  leftBank.position.set(-36, 0, 0);
+  leftBank.receiveShadow = true;
+  terrainGroup.add(leftBank);
+
+  // Right riverbank (East bank - Quang Ninh hills)
+  const rightBankGeo = new THREE.BoxGeometry(30, 8, 90);
+  const rightBank = new THREE.Mesh(rightBankGeo, bankMat);
+  rightBank.position.set(36, 0, 0);
+  rightBank.receiveShadow = true;
+  terrainGroup.add(rightBank);
+
+  // Riverbed (Deepest in middle)
+  const bedGeo = new THREE.BoxGeometry(45, 3, 90);
+  const bedMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.95 });
+  const bed = new THREE.Mesh(bedGeo, bedMat);
+  bed.position.set(0, -3.5, 0);
+  bed.receiveShadow = true;
+  terrainGroup.add(bed);
+
+  // Trees on banks
+  for (let i = 0; i < 30; i++) {
+    const treeTrunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 0.35, 1.8),
+      new THREE.MeshStandardMaterial({ color: 0x78350f })
+    );
+    const foliage = new THREE.Mesh(
+      new THREE.ConeGeometry(1.6, 3.2, 5),
+      new THREE.MeshStandardMaterial({ color: 0x166534, flatShading: true })
+    );
+    foliage.position.y = 2;
+    const tree = new THREE.Group();
+    tree.add(treeTrunk);
+    tree.add(foliage);
+
+    const side = i % 2 === 0 ? -1 : 1;
+    const tx = side * (26 + Math.random() * 14);
+    const tz = -40 + Math.random() * 80;
+    tree.position.set(tx, 4, tz);
+    terrainGroup.add(tree);
+  }
+
+  scene.add(terrainGroup);
+}
+
+function createRiverWater() {
+  const waterGeo = new THREE.PlaneGeometry(44, 90, 32, 32);
+  const waterMat = new THREE.MeshStandardMaterial({
+    color: 0x0369a1,
+    roughness: 0.2,
+    metalness: 0.4,
+    transparent: true,
+    opacity: 0.75,
+    flatShading: true
+  });
+  riverMesh = new THREE.Mesh(waterGeo, waterMat);
+  riverMesh.rotation.x = -Math.PI / 2;
+  riverMesh.position.set(0, 0.8, 0); // Low tide default
+  scene.add(riverMesh);
+}
+
+function createStakesField() {
+  stakesGroup = new THREE.Group();
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x5c3818, roughness: 0.8 });
+  const ironTipMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.3 });
+
+  // Hundreds of stakes arranged diagonally across river
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 12; c++) {
+      const stake = new THREE.Group();
+      // Main wooden body
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, 4.5, 6), woodMat);
+      post.castShadow = true;
+      stake.add(post);
+
+      // Iron tip on top
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.24, 0.9, 6), ironTipMat);
+      tip.position.y = 2.45;
+      stake.add(tip);
+
+      const px = -16 + c * 2.8 + (Math.random() - 0.5) * 0.8;
+      const pz = -12 + r * 3.2 + (Math.random() - 0.5) * 0.8;
+      stake.position.set(px, 0.6, pz);
+      // Tilt post forward toward the incoming enemy ships
+      stake.rotation.x = 0.25 + (Math.random() - 0.5) * 0.1;
+      stake.rotation.z = (Math.random() - 0.5) * 0.15;
+      stakesGroup.add(stake);
+    }
+  }
+
+  scene.add(stakesGroup);
+}
+
+function createVietnameseFleet() {
+  fleetViet = new THREE.Group();
+
+  function makeVietBoat(x, z, rotY) {
+    const boat = new THREE.Group();
+    // Hull
+    const hullMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.7 });
+    const hull = new THREE.Mesh(new THREE.ConeGeometry(1.2, 5, 4), hullMat);
+    hull.rotation.x = Math.PI / 2;
+    hull.rotation.z = Math.PI / 4;
+    hull.scale.set(0.7, 1.2, 0.5);
+    hull.castShadow = true;
+    boat.add(hull);
+
+    // Red banner (Dai Viet flag)
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.5), new THREE.MeshBasicMaterial({ color: 0x451a03 }));
+    mast.position.y = 1.2;
+    boat.add(mast);
+
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(0.8, 0.5), new THREE.MeshBasicMaterial({ color: 0xdc2626, side: THREE.DoubleSide }));
+    flag.position.set(0.4, 2, 0);
+    boat.add(flag);
+
+    boat.position.set(x, 1.2, z);
+    boat.rotation.y = rotY;
+    return boat;
+  }
+
+  // Agile boats ahead of the stakes
+  fleetViet.add(makeVietBoat(-5, -28, 0));
+  fleetViet.add(makeVietBoat(6, -32, 0.2));
+  fleetViet.add(makeVietBoat(-10, -35, -0.1));
+  scene.add(fleetViet);
+}
+
+function createHanFleet() {
+  fleetHan = new THREE.Group();
+
+  function makeHanWarship(x, z, rotY, isWrecked) {
+    const ship = new THREE.Group();
+    // Heavy wooden warship
+    const hullMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 });
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(3.5, 2.2, 8), hullMat);
+    hull.castShadow = true;
+    ship.add(hull);
+
+    // Multi-tier deck
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.4, 4), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+    deck.position.y = 1.6;
+    ship.add(deck);
+
+    // Han Sail (Large square)
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5.5), new THREE.MeshBasicMaterial({ color: 0x334155 }));
+    mast.position.y = 3.5;
+    ship.add(mast);
+
+    const sail = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 3.5), new THREE.MeshStandardMaterial({ color: 0xfef08a, side: THREE.DoubleSide }));
+    sail.position.set(0, 4, 0.2);
+    ship.add(sail);
+
+    ship.position.set(x, isWrecked ? 0.9 : 1.5, z);
+    ship.rotation.y = rotY;
+    if (isWrecked) {
+      ship.rotation.z = 0.35; // Tilted onto stakes!
+      ship.rotation.x = -0.2;
+    }
+    return ship;
+  }
+
+  // Han heavy warships hitting the stakes
+  fleetHan.add(makeHanWarship(0, 0, Math.PI, true));
+  fleetHan.add(makeHanWarship(9, 6, Math.PI + 0.2, true));
+  fleetHan.add(makeHanWarship(-8, 8, Math.PI - 0.2, true));
+  fleetHan.add(makeHanWarship(4, 25, Math.PI, false));
+  scene.add(fleetHan);
+}
+
+function setTideState(high) {
+  isHighTide = high;
+  const tideBtn = document.getElementById('btn-toggle-tide');
+  const simTideBtn = document.getElementById('btnTideToggle');
+  const gaugeText = document.getElementById('gauge-tide');
+
+  if (high) {
+    tideBtn.textContent = '🌊 Thủy triều: Dâng cao';
+    simTideBtn.textContent = 'Thủy triều dâng cao';
+    gaugeText.textContent = 'Thủy triều dâng (+4.2m ngập bãi cọc)';
+    gaugeText.parentElement.style.color = '#38bdf8';
+  } else {
+    tideBtn.textContent = '🌊 Thủy triều: Rút cạn';
+    simTideBtn.textContent = 'Thủy triều rút cạn';
+    gaugeText.textContent = 'Thủy triều rút (Bãi cọc nhô lên đâm thuyền)';
+    gaugeText.parentElement.style.color = '#ef4444';
+  }
+}
+
+function selectStage(index) {
+  currentStage = index;
+  const st = STAGES[index];
+
+  document.querySelectorAll('.stage-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === index);
+  });
+
+  const card = document.getElementById('info-card');
+  card.classList.remove('hidden');
+  document.getElementById('info-badge').textContent = st.badge;
+  document.getElementById('info-title').textContent = st.title;
+  document.getElementById('info-desc').textContent = st.desc;
+  document.getElementById('info-tactics').innerHTML = `⚔️ <strong>Nghệ thuật quân sự:</strong> ${st.tactics}`;
+
+  setTideState(st.tide === 'HIGH');
+  smoothMoveCamera(st.camPos, st.camTarget);
+}
+
+function smoothMoveCamera(targetPos, targetLookAt) {
+  const startPos = camera.position.clone();
+  const startTarget = controls ? controls.target.clone() : new THREE.Vector3(0, 2, 0);
+  const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
+  const endTarget = new THREE.Vector3(targetLookAt.x, targetLookAt.y, targetLookAt.z);
+
+  let progress = 0;
+  const duration = 40;
+
+  function step() {
+    progress++;
+    const t = Math.min(progress / duration, 1);
+    const ease = 0.5 - Math.cos(t * Math.PI) / 2;
+
+    camera.position.lerpVectors(startPos, endPos, ease);
+    if (controls) {
+      controls.target.lerpVectors(startTarget, endTarget, ease);
+    }
+
+    if (progress < duration) {
+      requestAnimationFrame(step);
+    }
+  }
+  step();
+}
+
+function setupUI() {
+  document.querySelectorAll('.stage-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      selectStage(parseInt(b.dataset.stage, 10));
+    });
+  });
+
+  document.getElementById('btn-toggle-tide').addEventListener('click', () => {
+    setTideState(!isHighTide);
+  });
+
+  document.getElementById('btnTideToggle').addEventListener('click', () => {
+    setTideState(!isHighTide);
+  });
+
+  document.getElementById('btnResetCam').addEventListener('click', () => {
+    smoothMoveCamera({ x: 0, y: 25, z: 55 }, { x: 0, y: 2, z: 0 });
+  });
+
+  const rotBtn = document.getElementById('btn-rotate-auto');
+  rotBtn.addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    rotBtn.classList.toggle('active', autoRotate);
+    if (controls) {
+      controls.autoRotate = autoRotate;
+      controls.autoRotateSpeed = 1.0;
+    }
+  });
+
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+}
+
+function onWindowResize() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const time = Date.now() * 0.001;
+
+  // Animate river waves
+  if (riverMesh) {
+    const targetY = isHighTide ? 4.2 : 0.8;
+    riverMesh.position.y += (targetY - riverMesh.position.y) * 0.04;
+
+    const pos = riverMesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const u = pos.getX(i);
+      const v = pos.getY(i);
+      pos.setZ(i, Math.sin(u * 0.2 + time * 2) * 0.25 + Math.cos(v * 0.2 + time * 1.5) * 0.2);
+    }
+    pos.needsUpdate = true;
+  }
+
+  // Slight boat bobbing
+  if (fleetViet) {
+    fleetViet.position.y = Math.sin(time * 2) * 0.15;
+  }
+  if (fleetHan) {
+    fleetHan.position.y = Math.cos(time * 1.8) * 0.12;
+  }
+
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="lib/annotation-tool.js"></script>
+</body>
+</html>

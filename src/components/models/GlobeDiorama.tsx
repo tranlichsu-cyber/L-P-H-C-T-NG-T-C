@@ -17,6 +17,7 @@ import {
   Layers
 } from 'lucide-react';
 import { triggerConfetti } from '../../utils/confetti';
+import { unlockBadge } from '../../utils/modelBadges';
 import { GLOBE_FEATURES, GLOBE_QUIZ, type GlobeFeature } from '../../data/models/globeData';
 
 export const GlobeDiorama: React.FC = () => {
@@ -65,6 +66,7 @@ export const GlobeDiorama: React.FC = () => {
     });
     if (correctCount >= 4) {
       triggerConfetti();
+      unlockBadge('badge-globe');
     }
   };
 

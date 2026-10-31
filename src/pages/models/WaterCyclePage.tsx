@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, BookOpen, Sparkles, Droplets, ExternalLink, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Home, BookOpen, Sparkles, Droplets, ExternalLink, ShieldCheck, Zap } from 'lucide-react';
 import { WaterCycleDiorama } from '../../components/models/WaterCycleDiorama';
 import { SCHOOL_LOGO_SRC } from '../../assets/schoolLogo';
 import { useSchool } from '../../context/SchoolContext';
@@ -111,6 +111,33 @@ export const WaterCyclePage: React.FC = () => {
             <p className="text-xs text-slate-400 leading-relaxed">
               Nhận thức tầm quan trọng sống còn của nước sạch, thực hành tiết kiệm nước hàng ngày và không xả rác, chất thải gây ô nhiễm sông ngòi, ao hồ.
             </p>
+          </div>
+        </section>
+
+        {/* Quick Links to QR Cards & Games */}
+        <section className="bg-gradient-to-r from-amber-950/60 to-slate-900/80 rounded-3xl p-5 sm:p-6 border border-amber-500/30 space-y-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Zap className="h-5 w-5 text-amber-400" />
+            <h3 className="text-sm font-black text-white tracking-tight">Tiếp theo: Củng cố bài học</h3>
+            <span className="text-xs text-slate-400">Chuyển ngay sang thực hành tương tác</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Button 1: QR Cards */}
+            <a href="/qr-bank" className="group flex items-center gap-4 p-4 rounded-2xl bg-slate-900/80 border border-slate-700 hover:border-amber-500/50 hover:bg-amber-950/30 transition-all duration-200">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-400 text-2xl shrink-0 group-hover:bg-amber-500/20 transition">🃏</div>
+              <div>
+                <div className="text-sm font-bold text-white">Thẻ QR bài học này</div>
+                <div className="text-xs text-slate-400 leading-snug">Câu hỏi trắc nghiệm chiếu lên màn hình lớp</div>
+              </div>
+            </a>
+            {/* Button 2: Rung chuong vang game */}
+            <a href="/teacher-games" className="group flex items-center gap-4 p-4 rounded-2xl bg-slate-900/80 border border-slate-700 hover:border-emerald-500/50 hover:bg-emerald-950/30 transition-all duration-200">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-2xl shrink-0 group-hover:bg-emerald-500/20 transition">🔔</div>
+              <div>
+                <div className="text-sm font-bold text-white">Trò chơi Rung chuông vàng</div>
+                <div className="text-xs text-slate-400 leading-snug">Cả lớp thi đua trả lời — chiếu trực tiếp</div>
+              </div>
+            </a>
           </div>
         </section>
       </main>

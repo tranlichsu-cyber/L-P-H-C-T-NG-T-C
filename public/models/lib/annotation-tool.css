@@ -1,0 +1,135 @@
+/* Annotation Toolbar CSS for 3D Educational Models */
+#annotationCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+  pointer-events: none;
+  cursor: crosshair;
+}
+
+#annotationToolbar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  user-select: none;
+  transition: all 0.25s ease;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#annotationToolbar.collapsed .annot-item:not(.annot-toggle-btn) {
+  display: none !important;
+}
+
+.annot-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.annot-btn:hover {
+  background: rgba(51, 65, 85, 0.95);
+  transform: translateY(-1px);
+}
+
+.annot-btn.active {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+  border-color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.annot-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.annot-color-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.annot-color-dot:hover {
+  transform: scale(1.15);
+}
+
+.annot-color-dot.selected {
+  border-color: #ffffff;
+  transform: scale(1.2);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.annot-sizes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.annot-size-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.annot-size-btn.selected {
+  background: #f59e0b;
+  color: #0f172a;
+  border-color: #fbbf24;
+  font-weight: 800;
+}
+
+@media (max-width: 768px) {
+  #annotationToolbar {
+    bottom: 12px;
+    right: 12px;
+    padding: 6px 10px;
+    border-radius: 30px;
+  }
+  .annot-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .annot-color-dot {
+    width: 18px;
+    height: 18px;
+  }
+}

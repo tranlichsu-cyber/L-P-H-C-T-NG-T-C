@@ -16,6 +16,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { triggerConfetti } from '../../utils/confetti';
+import { unlockBadge } from '../../utils/modelBadges';
 import { DIKE_STATIONS, DIKE_QUIZ, type DikeStation } from '../../data/models/redRiverDikeData';
 
 export const RedRiverDikeDiorama: React.FC = () => {
@@ -64,6 +65,7 @@ export const RedRiverDikeDiorama: React.FC = () => {
     });
     if (correctCount >= 4) {
       triggerConfetti();
+      unlockBadge('badge-red-river-dike');
     }
   };
 

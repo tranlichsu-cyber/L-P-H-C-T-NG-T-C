@@ -96,6 +96,7 @@ header{z-index:5;display:flex;align-items:center;gap:12px;padding:10px 16px;back
     document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
   }
 </script>
+<link rel="stylesheet" href="lib/annotation-tool.css">
 <script>
 (function(){
 'use strict';
@@ -144,7 +145,7 @@ function init3D(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0x8da99a);scene.fog=new THREE.Fog(0x8da99a,38,85);
  camera=new THREE.PerspectiveCamera(45,stage.clientWidth/stage.clientHeight,.1,180);camera.position.set(19,19,25);
  renderer=new THREE.WebGLRenderer({antialias:!(weak||isMobile),alpha:false});renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio((weak||isMobile)?1:Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=!(weak||isMobile);renderer.shadowMap.type=THREE.PCFSoftShadowMap;stage.appendChild(renderer.domElement);
- controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=8;controls.maxDistance=48;controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,5,0);
+ controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=8;controls.maxDistance=48;controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,5,0);window._activeControls=controls;
  scene.add(new THREE.HemisphereLight(0xfff1d4,0x425744,1.1));let sun=new THREE.DirectionalLight(0xffe2a8,1.05);sun.position.set(-12,24,10);sun.castShadow=renderer.shadowMap.enabled;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
  root=new THREE.Group();scene.add(root);raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();clock=new THREE.Clock();
  buildBase();buildMountain();buildPath();buildBuildings();buildForest();buildDecor();buildLabels();buildCarriage();renderer.domElement.addEventListener('pointerdown',onPick);window.addEventListener('resize',resize);animate();
@@ -301,5 +302,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(finding)endFind(
 init3D();selectPlace(0);
 })();
 </script>
+<script src="lib/annotation-tool.js"></script>
 </body>
 </html>
