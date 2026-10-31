@@ -342,8 +342,19 @@ header {
   }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+<!-- Three.js and OrbitControls (Local offline-ready with CDN fallback) -->
+<script src="lib/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+  }
+</script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+  if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+  }
+</script>
 </head>
 <body>
 <div id="app">
@@ -505,8 +516,8 @@ let autoRotate = false;
 
 function init() {
   const container = document.getElementById('canvas-container');
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+  const width = container.clientWidth || window.innerWidth || 800;
+  const height = container.clientHeight || window.innerHeight || 600;
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0c1322);
@@ -520,13 +531,17 @@ function init() {
   renderer.shadowMap.enabled = true;
   container.appendChild(renderer.domElement);
 
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.maxPolarAngle = Math.PI / 2 + 0.05;
-  controls.minDistance = 20;
-  controls.maxDistance = 150;
-  controls.target.set(0, 5, 0);
+  if (typeof THREE.OrbitControls === 'function') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.minDistance = 20;
+    controls.maxDistance = 150;
+    controls.target.set(0, 5, 0);
+  } else {
+    console.warn('THREE.OrbitControls not loaded, running without interactive camera controls.');
+  }
 
   setupLighting();
   createCrossSectionTerrain();
@@ -775,7 +790,7 @@ function selectStation(idx) {
 
 function smoothMoveCamera(targetPos, targetLookAt) {
   const startPos = camera.position.clone();
-  const startTarget = controls.target.clone();
+  const startTarget = controls ? controls.target.clone() : new THREE.Vector3(0, 5, 0);
   const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
   const endTarget = new THREE.Vector3(targetLookAt.x, targetLookAt.y, targetLookAt.z);
 
@@ -788,7 +803,9 @@ function smoothMoveCamera(targetPos, targetLookAt) {
     const ease = 0.5 - Math.cos(t * Math.PI) / 2;
 
     camera.position.lerpVectors(startPos, endPos, ease);
-    controls.target.lerpVectors(startTarget, endTarget, ease);
+    if (controls) {
+      controls.target.lerpVectors(startTarget, endTarget, ease);
+    }
 
     if (progress < duration) {
       requestAnimationFrame(step);
@@ -853,8 +870,10 @@ function setupUI() {
   rotBtn.addEventListener('click', () => {
     autoRotate = !autoRotate;
     rotBtn.classList.toggle('active', autoRotate);
-    controls.autoRotate = autoRotate;
-    controls.autoRotateSpeed = 1.0;
+    if (controls) {
+      controls.autoRotate = autoRotate;
+      controls.autoRotateSpeed = 1.0;
+    }
   });
 
   // Fullscreen
@@ -892,7 +911,7 @@ function animate() {
     pos.needsUpdate = true;
   }
 
-  controls.update();
+  if (controls) controls.update();
   renderer.render(scene, camera);
   updateMarkers();
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v6-3d-models-realistic';
+const CACHE_NAME = 'lhtt-shell-v7-3d-offline-libs';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

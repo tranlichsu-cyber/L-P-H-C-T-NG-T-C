@@ -323,8 +323,19 @@ header {
   }
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+<!-- Three.js and OrbitControls (Local offline-ready with CDN fallback) -->
+<script src="lib/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+  }
+</script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+  if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+  }
+</script>
 </head>
 <body>
 <div id="app">
@@ -504,8 +515,8 @@ let showMarkers = true;
 
 function init() {
   const container = document.getElementById('canvas-container');
-  const width = container.clientWidth;
-  const height = container.clientHeight;
+  const width = container.clientWidth || window.innerWidth || 800;
+  const height = container.clientHeight || window.innerHeight || 600;
 
   // Scene
   scene = new THREE.Scene();
@@ -522,12 +533,16 @@ function init() {
   container.appendChild(renderer.domElement);
 
   // Controls
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-  controls.minDistance = 20;
-  controls.maxDistance = 100;
-  controls.target.set(0, 0, 0);
+  if (typeof THREE.OrbitControls === 'function') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.minDistance = 20;
+    controls.maxDistance = 100;
+    controls.target.set(0, 0, 0);
+  } else {
+    console.warn('THREE.OrbitControls not loaded, running without interactive camera controls.');
+  }
 
   // Lighting
   setupLights();
@@ -945,7 +960,7 @@ function animate() {
     if (cloudsMesh) cloudsMesh.rotation.y += spinSpeed * 1.15;
   }
 
-  controls.update();
+  if (controls) controls.update();
   renderer.render(scene, camera);
   updateMarkers();
 }

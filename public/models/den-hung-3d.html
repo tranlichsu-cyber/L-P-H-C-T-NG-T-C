@@ -84,8 +84,18 @@ header{z-index:5;display:flex;align-items:center;gap:12px;padding:10px 16px;back
 <div class="overlay" id="teacherOverlay"><div class="dialog"><h2>CHẾ ĐỘ GIÁO VIÊN – BIÊN TẬP NỘI DUNG</h2><p style="font-size:14px">Chỉnh sửa nội dung cho tất cả địa điểm và câu hỏi. Dữ liệu được lưu trên trình duyệt của thiết bị này.</p><div id="teacherContent"></div><div class="dialog-actions"><button id="saveTeacher" class="primary">Lưu thay đổi</button><button id="exportJSON">Xuất JSON</button><button id="importJSON">Nhập JSON</button><input id="importFile" type="file" accept="application/json" hidden><button id="resetData">Khôi phục mặc định</button><button id="closeTeacher">Đóng</button></div></div></div>
 <div class="overlay" id="gameEndOverlay"><div class="dialog" id="gameEnd"><h2>HOÀN THÀNH HÀNH TRÌNH!</h2><p id="gameEndText"></p><button id="gameReplay" class="primary">Chơi lại</button><button id="gameEndClose">Đóng</button></div></div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="lib/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+  }
+</script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+  if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+  }
+</script>
 <script>
 (function(){
 'use strict';
