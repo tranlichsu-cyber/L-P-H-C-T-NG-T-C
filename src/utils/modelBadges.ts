@@ -49,6 +49,22 @@ export const ALL_MODEL_BADGES: ModelBadge[] = [
     description: 'Nắm vững nghệ thuật quân sự bãi cọc ngầm của Ngô Quyền đánh tan quân Nam Hán.',
     subject: 'Lịch sử và Địa lí',
   },
+  {
+    id: 'badge-vietnam-terrain',
+    modelId: 'dia-hinh-viet-nam',
+    title: 'Nhà Địa Lý Trẻ Tuổi',
+    icon: '🗺️',
+    description: 'Thấu hiểu tường tận địa hình các vùng miền hình chữ S và biển đảo quê hương.',
+    subject: 'Lịch sử và Địa lí',
+  },
+  {
+    id: 'badge-food-chain',
+    modelId: 'chuoi-thuc-an',
+    title: 'Hiệp Sĩ Cân Bằng Sinh Thái',
+    icon: '🌿',
+    description: 'Thành thạo 5 bậc dinh dưỡng và dòng năng lượng tuần hoàn trong tự nhiên.',
+    subject: 'Khoa học',
+  },
 ];
 
 const STORAGE_KEY = 'lhtt_unlocked_model_badges_v1';

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#047857">
+<title>Sa bàn 3D Địa hình các vùng miền Việt Nam – Lịch sử & Địa lí 4</title>
+<style>
+:root {
+  --primary: #059669;
+  --primary-dark: #047857;
+  --accent: #f59e0b;
+  --gold: #fbbf24;
+  --bg-dark: #09121d;
+  --card-bg: rgba(15, 23, 42, 0.92);
+  --border: rgba(16, 185, 129, 0.3);
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --fs: 15px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  font-size: var(--fs);
+  background: var(--bg-dark);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+button:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+button.active {
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #fff;
+  border-color: #6ee7b7;
+  box-shadow: 0 0 15px rgba(5, 150, 105, 0.5);
+}
+#app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+header {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 2px solid rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.brand {
+  min-width: 0;
+  flex: 1;
+}
+.brand h1 {
+  font-size: clamp(16px, 2vw, 22px);
+  margin: 0;
+  color: #6ee7b7;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+#workspace {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+}
+#side {
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.95);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #34d399;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.regions-list {
+  display: grid;
+  gap: 7px;
+}
+.region-btn {
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.region-btn.active {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.8), rgba(4, 120, 87, 0.9));
+  border-color: #34d399;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+.region-btn .icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.region-btn .title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+.region-btn .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.sim-controls {
+  display: grid;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.4);
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+}
+#stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+#canvas-container {
+  width: 100%;
+  height: 100%;
+}
+#info-card {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: min(390px, 92%);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 6;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+#info-card.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+#info-card h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  color: #6ee7b7;
+}
+#info-card p {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+.info-field {
+  background: rgba(6, 78, 59, 0.2);
+  border-left: 3px solid #10b981;
+  padding: 6px 10px;
+  border-radius: 0 8px 8px 0;
+  font-size: 11.5px;
+  color: #a7f3d0;
+  margin-top: 6px;
+}
+#bottom-hud {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  padding: 6px 14px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  max-width: 95%;
+}
+#bottom-hud button {
+  padding: 5px 10px;
+  font-size: 11.5px;
+  border-radius: 15px;
+}
+#compass-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #94a3b8;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 768px) {
+  #workspace { grid-template-columns: 1fr; }
+  #side { display: none; }
+  #info-card {
+    top: auto;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    max-height: 48%;
+    border-radius: 20px 20px 0 0;
+  }
+  #bottom-hud {
+    display: none;
+  }
+}
+</style>
+<script src="lib/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+  }
+</script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+  if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+  }
+</script>
+<link rel="stylesheet" href="lib/annotation-tool.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <button onclick="if(window.history.length>1){window.history.back();}else{window.location.href='/mo-hinh/dia-hinh-viet-nam';}" style="background:#047857;color:#fff;">
+      ◀ Quay lại
+    </button>
+    <div class="brand">
+      <h1>🗺️ SA BÀN 3D ĐỊA HÌNH CÁC VÙNG MIỀN VIỆT NAM</h1>
+      <p>Lịch sử & Địa lí lớp 4 · Khám phá các dạng địa hình hình chữ S & Biển đảo</p>
+    </div>
+    <div class="header-actions">
+      <button id="btn-toggle-relief" class="active">🏔️ Độ cao 3D: Nổi rõ</button>
+      <button id="btn-rotate-auto">🔄 Tự xoay</button>
+      <button id="btn-fullscreen">⛶</button>
+    </div>
+  </header>
+
+  <div id="workspace">
+    <aside id="side">
+      <div class="section-title">Các Vùng Địa Hình</div>
+      <div class="regions-list" id="regionsList">
+        <button class="region-btn active" data-region="0">
+          <span class="icon">⛰️</span>
+          <div>
+            <div class="title">1. Trung du & Miền núi Bắc Bộ</div>
+            <div class="sub">Đỉnh Fansipan 3.143m & Hoàng Liên Sơn</div>
+          </div>
+        </button>
+        <button class="region-btn" data-region="1">
+          <span class="icon">🌾</span>
+          <div>
+            <div class="title">2. Đồng bằng Bắc Bộ</div>
+            <div class="sub">Châu thổ sông Hồng & hệ thống đê</div>
+          </div>
+        </button>
+        <button class="region-btn" data-region="2">
+          <span class="icon">🌊</span>
+          <div>
+            <div class="title">3. Duyên hải Miền Trung</div>
+            <div class="sub">Đồng bằng hẹp ngang, cồn cát ven biển</div>
+          </div>
+        </button>
+        <button class="region-btn" data-region="3">
+          <span class="icon">☕</span>
+          <div>
+            <div class="title">4. Cao nguyên Tây Nguyên</div>
+            <div class="sub">Đất đỏ ba-dan, thủ phủ cà phê</div>
+          </div>
+        </button>
+        <button class="region-btn" data-region="4">
+          <span class="icon">🛶</span>
+          <div>
+            <div class="title">5. Vùng Nam Bộ</div>
+            <div class="sub">Đồng bằng sông Cửu Long & kênh rạch</div>
+          </div>
+        </button>
+        <button class="region-btn" data-region="5">
+          <span class="icon">⭐</span>
+          <div>
+            <div class="title">6. Biển đảo thiêng liêng</div>
+            <div class="sub">Hoàng Sa & Trường Sa của Việt Nam</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="section-title">Chế Độ Quan Sát</div>
+      <div class="sim-controls">
+        <div class="ctrl-row">
+          <span>Góc nhìn Camera:</span>
+          <button id="btnResetCam" style="padding:4px 8px;font-size:11px;">Toàn cảnh dải chữ S</button>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:auto;">Đặc Điểm Địa Hình Nước Ta</div>
+      <div style="font-size:11px;color:var(--text-muted);line-height:1.4;">
+        • Đồi núi chiếm 3/4 diện tích lãnh thổ, nhưng chủ yếu là đồi núi thấp dưới 1.000m.<br>
+        • Đồng bằng chỉ chiếm 1/4 diện tích nhưng là nơi tập trung dân cư đông đúc và vựa lúa nuôi sống đất nước.
+      </div>
+    </aside>
+
+    <div id="stage">
+      <div id="canvas-container"></div>
+
+      <!-- Compass & Scale Badge -->
+      <div id="compass-badge">
+        🧭 Hướng Bắc ⬆ | Hình chữ S uốn lượn ven Biển Đông
+      </div>
+
+      <!-- Info Card Floating -->
+      <div id="info-card">
+        <button onclick="document.getElementById('info-card').classList.add('hidden')" style="float:right;padding:2px 8px;font-size:11px;border-radius:6px;">✕</button>
+        <div id="info-badge" style="font-size:11px;font-weight:800;color:#34d399;text-transform:uppercase;">Vùng địa hình 1</div>
+        <h2 id="info-title">Vùng Trung du và Miền núi Bắc Bộ</h2>
+        <div id="info-elev" class="info-field">
+          ⛰️ <strong>Độ cao:</strong> Đỉnh Fansipan 3.143m (Cao nhất Việt Nam & Đông Dương)
+        </div>
+        <div id="info-feat" class="info-field">
+          🌲 <strong>Đặc điểm:</strong> Địa hình đồi núi hiểm trở, dãy Hoàng Liên Sơn, thung lũng sông và đồi bát úp.
+        </div>
+        <div id="info-clim" class="info-field">
+          ❄️ <strong>Khí hậu:</strong> Nhiệt đới gió mùa có mùa đông lạnh nhất nước, có sương muối và tuyết rơi.
+        </div>
+        <div id="info-econ" class="info-field">
+          ⚡ <strong>Kinh tế:</strong> Thủy điện Hòa Bình - Sơn La, mỏ khoáng sản, trồng chè và ruộng bậc thang.
+        </div>
+      </div>
+
+      <!-- Bottom HUD Quick -->
+      <div id="bottom-hud">
+        <button onclick="selectRegion(0)">1. Núi Bắc Bộ</button>
+        <button onclick="selectRegion(1)">2. ĐB Sông Hồng</button>
+        <button onclick="selectRegion(2)">3. Miền Trung</button>
+        <button onclick="selectRegion(3)">4. Tây Nguyên</button>
+        <button onclick="selectRegion(4)">5. Nam Bộ</button>
+        <button onclick="selectRegion(5)">6. Hoàng Sa - Trường Sa</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGIONS = [
+  {
+    title: 'Vùng Trung du và Miền núi Bắc Bộ',
+    badge: 'Khu vực 1: Địa hình đồi núi cao',
+    elevation: 'Đỉnh Fansipan 3.143m (Nóc nhà Đông Dương)',
+    features: 'Địa hình núi cao hiểm trở dãy Hoàng Liên Sơn, các cao nguyên đá vôi, đồi trung du hình bát úp và ruộng bậc thang kỳ vĩ.',
+    climate: 'Nhiệt đới gió mùa có mùa đông lạnh buốt nhất cả nước; các đỉnh núi cao có sương mù và tuyết rơi vào mùa đông.',
+    economic: 'Thế mạnh khai thác khoáng sản, đại công trình thủy điện Hòa Bình - Sơn La, trồng cây chè Shan Tuyết và cây ăn quả ôn đới.',
+    camPos: { x: -8, y: 35, z: 25 },
+    camTarget: { x: -6, y: 8, z: 8 },
+    beaconPos: { x: -6, y: 8.5, z: 8 }
+  },
+  {
+    title: 'Vùng Đồng bằng Bắc Bộ (Đồng bằng Sông Hồng)',
+    badge: 'Khu vực 2: Đồng bằng châu thổ',
+    elevation: 'Độ cao trung bình 2m – 10m so với mặt biển',
+    features: 'Đồng bằng tam giác châu phì nhiêu do sông Hồng và sông Thái Bình bồi đắp, địa hình bằng phẳng có hệ thống đê ngăn lũ kiên cố.',
+    climate: 'Khí hậu 4 mùa rõ rệt: Xuân ẩm, Hạ nóng mưa nhiều, Thu mát mẻ và Đông se lạnh.',
+    economic: 'Vựa lúa lớn thứ hai cả nước, trung tâm văn hóa ngàn năm Thăng Long - Hà Nội, mật độ dân cư đông đúc.',
+    camPos: { x: 4, y: 28, z: 22 },
+    camTarget: { x: 2, y: 3, z: 4 },
+    beaconPos: { x: 2, y: 3.5, z: 4 }
+  },
+  {
+    title: 'Vùng Duyên hải Miền Trung',
+    badge: 'Khu vực 3: Đồng bằng hẹp ven biển',
+    elevation: 'Dải đất hẹp ngang, phía tây là núi, phía đông là biển',
+    features: 'Các nhánh núi Trường Sơn đâm ngang ra biển chia cắt thành nhiều dải đồng bằng nhỏ hẹp, nhiều cồn cát trắng và bãi tắm đẹp.',
+    climate: 'Khắc nghiệt, nhiều nắng gió bão lũ, mùa khô kéo dài dễ gây hạn hán và cát bay lấn đồng ruộng.',
+    economic: 'Thế mạnh kinh tế biển: Cảng nước sâu, đánh bắt và chế biến thủy hải sản, nghề làm muối và du lịch biển.',
+    camPos: { x: 12, y: 26, z: 20 },
+    camTarget: { x: 4, y: 2, z: -2 },
+    beaconPos: { x: 4, y: 2.8, z: -2 }
+  },
+  {
+    title: 'Vùng Cao nguyên Tây Nguyên',
+    badge: 'Khu vực 4: Cao nguyên xếp tầng',
+    elevation: 'Mặt bằng cao nguyên độ cao từ 500m đến 1.500m',
+    features: 'Các cao nguyên rộng lớn (Kon Tum, Pleiku, Đắk Lắk, Lâm Viên) phủ lớp đất đỏ ba-dan màu mỡ phì nhiêu do núi lửa cổ.',
+    climate: 'Khí hậu cận xích đạo chia hai mùa mưa và khô rõ rệt, cao nguyên Lâm Viên quanh năm mát mẻ như mùa xuân.',
+    economic: 'Thủ phủ cây công nghiệp lâu năm số một cả nước: Cà phê, hồ tiêu, cao su, chè; rừng nguyên sinh và cồng chiêng UNESCO.',
+    camPos: { x: 14, y: 24, z: 15 },
+    camTarget: { x: 6, y: 4, z: -8 },
+    beaconPos: { x: 6, y: 4.8, z: -8 }
+  },
+  {
+    title: 'Vùng Nam Bộ (Đồng bằng Sông Cửu Long)',
+    badge: 'Khu vực 5: Vựa lúa Nam Bộ',
+    elevation: 'Địa hình trũng thấp, cao dưới 2m',
+    features: 'Châu thổ rộng lớn nhất nước do phù sa sông Mê Kông bồi đắp, hệ thống kênh rạch chằng chịt, rừng tràm U Minh và mùa nước nổi.',
+    climate: 'Nhiệt đới cận xích đạo nóng ẩm quanh năm, thuận lợi cho mùa màng và cây ăn trái tốt tươi suốt bốn mùa.',
+    economic: 'Vựa lúa, vựa trái cây và vựa thủy sản xuất khẩu lớn nhất Việt Nam; Đông Nam Bộ là đầu tàu công nghiệp năng động nhất.',
+    camPos: { x: 10, y: 25, z: 10 },
+    camTarget: { x: 4, y: 1, z: -16 },
+    beaconPos: { x: 4, y: 1.5, z: -16 }
+  },
+  {
+    title: 'Quần đảo Hoàng Sa & Quần đảo Trường Sa',
+    badge: 'Khu vực 6: Biển đảo thiêng liêng',
+    elevation: 'Các đảo san hô, đảo đá và bãi cạn giữa Biển Đông',
+    features: 'Hàng trăm đảo, đá ngầm phân bố ở trung tâm Biển Đông, giàu hệ sinh thái biển san hô rực rỡ sắc màu.',
+    climate: 'Nhiệt đới hải dương chan hòa ánh nắng và gió biển mặn mòi quanh năm.',
+    economic: 'Vị trí an ninh quốc phòng chiến lược, kiểm soát tuyến hàng hải quốc tế, tiềm năng dầu khí thềm lục địa và ngư trường lớn.',
+    camPos: { x: 26, y: 22, z: 12 },
+    camTarget: { x: 18, y: 1, z: -5 },
+    beaconPos: { x: 18, y: 2, z: -5 }
+  }
+];
+
+let scene, camera, renderer, controls;
+let terrainMesh, oceanMesh, beaconMesh;
+let isReliefBoosted = true;
+let autoRotate = false;
+let currentRegion = 0;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+  const width = container.clientWidth || window.innerWidth || 800;
+  const height = container.clientHeight || window.innerHeight || 600;
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x09121d);
+
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
+  camera.position.set(0, 38, 48);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  if (typeof THREE.OrbitControls === 'function') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.minDistance = 15;
+    controls.maxDistance = 150;
+    controls.target.set(3, 2, -3);
+  }
+
+  setupLighting();
+  createOcean();
+  createVietnamTerrain();
+  createIslandsHoangSaTruongSa();
+  createBeacon();
+
+  window.addEventListener('resize', onWindowResize);
+  setupUI();
+  selectRegion(0);
+  animate();
+}
+
+function setupLighting() {
+  const hemi = new THREE.HemisphereLight(0xe0f2fe, 0x09121d, 0.75);
+  scene.add(hemi);
+
+  const sun = new THREE.DirectionalLight(0xffedd5, 1.35);
+  sun.position.set(-35, 60, 35);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.bias = -0.0005;
+  scene.add(sun);
+
+  const ambient = new THREE.AmbientLight(0x38bdf8, 0.35);
+  scene.add(ambient);
+}
+
+function createOcean() {
+  const oceanGeo = new THREE.PlaneGeometry(80, 80, 24, 24);
+  const oceanMat = new THREE.MeshStandardMaterial({
+    color: 0x0369a1,
+    roughness: 0.15,
+    metalness: 0.6,
+    transparent: true,
+    opacity: 0.85,
+    flatShading: true
+  });
+  oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+  oceanMesh.rotation.x = -Math.PI / 2;
+  oceanMesh.position.set(6, -0.2, -4);
+  scene.add(oceanMesh);
+}
+
+function createVietnamTerrain() {
+  // Construct the S-shaped relief topography of Vietnam
+  const terrainGroup = new THREE.Group();
+
+  // 1. North Mountain Region (Fansipan & Hoang Lien Son)
+  const northMtnGeo = new THREE.ConeGeometry(9, 12, 7);
+  const northMtnMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.85, flatShading: true });
+  const northMtn = new THREE.Mesh(northMtnGeo, northMtnMat);
+  northMtn.position.set(-6, 6, 8);
+  northMtn.castShadow = true;
+  terrainGroup.add(northMtn);
+
+  // Snow on Fansipan peak
+  const snowGeo = new THREE.ConeGeometry(3.5, 4.5, 7);
+  const snowMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
+  const snow = new THREE.Mesh(snowGeo, snowMat);
+  snow.position.set(-6, 9.8, 8);
+  terrainGroup.add(snow);
+
+  // Surrounding northern hills
+  for (let i = 0; i < 8; i++) {
+    const hill = new THREE.Mesh(
+      new THREE.ConeGeometry(4 + Math.random() * 2, 6 + Math.random() * 3, 6),
+      new THREE.MeshStandardMaterial({ color: 0x166534, flatShading: true })
+    );
+    const hx = -11 + Math.random() * 8;
+    const hz = 5 + Math.random() * 8;
+    hill.position.set(hx, 3, hz);
+    hill.castShadow = true;
+    terrainGroup.add(hill);
+  }
+
+  // 2. Red River Delta (Flat green triangle)
+  const deltaNorthGeo = new THREE.CylinderGeometry(5.5, 6.5, 1.2, 5);
+  const deltaNorthMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.9 });
+  const deltaNorth = new THREE.Mesh(deltaNorthGeo, deltaNorthMat);
+  deltaNorth.position.set(2, 0.6, 4);
+  deltaNorth.receiveShadow = true;
+  terrainGroup.add(deltaNorth);
+
+  // 3. Central Vietnam (Narrow curve along Truong Son)
+  const centralSpineGeo = new THREE.CylinderGeometry(2.5, 3.5, 5.5, 6);
+  const centralSpineMat = new THREE.MeshStandardMaterial({ color: 0x15803d, flatShading: true });
+  const centralSpine = new THREE.Mesh(centralSpineGeo, centralSpineMat);
+  centralSpine.position.set(2.5, 2.7, -2);
+  centralSpine.rotation.z = -0.15;
+  centralSpine.castShadow = true;
+  terrainGroup.add(centralSpine);
+
+  // Central narrow coastal beach strip
+  const beachGeo = new THREE.BoxGeometry(2, 0.8, 12);
+  const beachMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.9 });
+  const beach = new THREE.Mesh(beachGeo, beachMat);
+  beach.position.set(5.2, 0.4, -2.5);
+  terrainGroup.add(beach);
+
+  // 4. Central Highlands (Tay Nguyen - Red Basalt Stepped Plateau)
+  const plateauGeo = new THREE.BoxGeometry(7, 3.5, 8);
+  const plateauMat = new THREE.MeshStandardMaterial({ color: 0x9a3412, roughness: 0.95 }); // Rich red-brown basalt
+  const plateau = new THREE.Mesh(plateauGeo, plateauMat);
+  plateau.position.set(5.5, 1.75, -8);
+  plateau.castShadow = true;
+  terrainGroup.add(plateau);
+
+  // Coffee plantation trees on plateau
+  for (let i = 0; i < 16; i++) {
+    const tree = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 5, 5),
+      new THREE.MeshStandardMaterial({ color: 0x14532d })
+    );
+    const tx = 3 + Math.random() * 5;
+    const tz = -11 + Math.random() * 6;
+    tree.position.set(tx, 3.8, tz);
+    terrainGroup.add(tree);
+  }
+
+  // 5. Southern Mekong Delta (Low fertile green with water veins)
+  const southDeltaGeo = new THREE.BoxGeometry(9, 1.2, 10);
+  const southDeltaMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.85 });
+  const southDelta = new THREE.Mesh(southDeltaGeo, southDeltaMat);
+  southDelta.position.set(4, 0.6, -16);
+  southDelta.receiveShadow = true;
+  terrainGroup.add(southDelta);
+
+  // River channels entering ocean
+  for (let c = 0; c < 4; c++) {
+    const channel = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.2, 7),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.5 })
+    );
+    channel.position.set(2 + c * 1.5, 1.25, -16);
+    channel.rotation.y = 0.15;
+    terrainGroup.add(channel);
+  }
+
+  terrainMesh = terrainGroup;
+  scene.add(terrainGroup);
+}
+
+function createIslandsHoangSaTruongSa() {
+  const islandsGroup = new THREE.Group();
+
+  function makeIslandCluster(x, z, name) {
+    const g = new THREE.Group();
+    // Coral sandy islet
+    const coralMat = new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.8 });
+    for (let i = 0; i < 4; i++) {
+      const rock = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 5), coralMat);
+      rock.position.set((Math.random() - 0.5) * 2, 0.4, (Math.random() - 0.5) * 2);
+      g.add(rock);
+    }
+    // Golden national star beacon
+    const star = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.7, 0),
+      new THREE.MeshBasicMaterial({ color: 0xffea00 })
+    );
+    star.position.y = 1.8;
+    g.add(star);
+
+    g.position.set(x, 0, z);
+    return g;
+  }
+
+  // Hoang Sa (Paracel)
+  const hoangSa = makeIslandCluster(16, 1, 'Hoang Sa');
+  islandsGroup.add(hoangSa);
+
+  // Truong Sa (Spratly)
+  const truongSa = makeIslandCluster(19, -10, 'Truong Sa');
+  islandsGroup.add(truongSa);
+
+  scene.add(islandsGroup);
+}
+
+function createBeacon() {
+  const beaconGeo = new THREE.RingGeometry(0.6, 1.2, 16);
+  const beaconMat = new THREE.MeshBasicMaterial({
+    color: 0x34d399,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.85
+  });
+  beaconMesh = new THREE.Mesh(beaconGeo, beaconMat);
+  beaconMesh.rotation.x = -Math.PI / 2;
+  beaconMesh.position.set(-6, 8.5, 8);
+  scene.add(beaconMesh);
+}
+
+function selectRegion(index) {
+  currentRegion = index;
+  const reg = REGIONS[index];
+
+  document.querySelectorAll('.region-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === index);
+  });
+
+  const card = document.getElementById('info-card');
+  card.classList.remove('hidden');
+  document.getElementById('info-badge').textContent = reg.badge;
+  document.getElementById('info-title').textContent = reg.title;
+  document.getElementById('info-elev').innerHTML = `⛰️ <strong>Độ cao:</strong> ${reg.elevation}`;
+  document.getElementById('info-feat').innerHTML = `🌲 <strong>Đặc điểm:</strong> ${reg.features}`;
+  document.getElementById('info-clim').innerHTML = `❄️ <strong>Khí hậu:</strong> ${reg.climate}`;
+  document.getElementById('info-econ').innerHTML = `⚡ <strong>Kinh tế:</strong> ${reg.economic}`;
+
+  if (beaconMesh && reg.beaconPos) {
+    beaconMesh.position.set(reg.beaconPos.x, reg.beaconPos.y, reg.beaconPos.z);
+  }
+
+  smoothMoveCamera(reg.camPos, reg.camTarget);
+}
+
+function smoothMoveCamera(targetPos, targetLookAt) {
+  const startPos = camera.position.clone();
+  const startTarget = controls ? controls.target.clone() : new THREE.Vector3(3, 2, -3);
+  const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
+  const endTarget = new THREE.Vector3(targetLookAt.x, targetLookAt.y, targetLookAt.z);
+
+  let progress = 0;
+  const duration = 40;
+
+  function step() {
+    progress++;
+    const t = Math.min(progress / duration, 1);
+    const ease = 0.5 - Math.cos(t * Math.PI) / 2;
+
+    camera.position.lerpVectors(startPos, endPos, ease);
+    if (controls) {
+      controls.target.lerpVectors(startTarget, endTarget, ease);
+    }
+
+    if (progress < duration) {
+      requestAnimationFrame(step);
+    }
+  }
+  step();
+}
+
+function setupUI() {
+  document.querySelectorAll('.region-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      selectRegion(parseInt(b.dataset.region, 10));
+    });
+  });
+
+  document.getElementById('btnResetCam').addEventListener('click', () => {
+    smoothMoveCamera({ x: 0, y: 38, z: 48 }, { x: 3, y: 2, z: -3 });
+  });
+
+  const rotBtn = document.getElementById('btn-rotate-auto');
+  rotBtn.addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    rotBtn.classList.toggle('active', autoRotate);
+    if (controls) {
+      controls.autoRotate = autoRotate;
+      controls.autoRotateSpeed = 1.0;
+    }
+  });
+
+  const reliefBtn = document.getElementById('btn-toggle-relief');
+  reliefBtn.addEventListener('click', () => {
+    isReliefBoosted = !isReliefBoosted;
+    reliefBtn.classList.toggle('active', isReliefBoosted);
+    reliefBtn.textContent = isReliefBoosted ? '🏔️ Độ cao 3D: Nổi rõ' : '🗺️ Độ cao 3D: Chuẩn';
+    if (terrainMesh) {
+      terrainMesh.scale.y = isReliefBoosted ? 1.0 : 0.45;
+    }
+  });
+
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+}
+
+function onWindowResize() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const time = Date.now() * 0.001;
+
+  // Gentle sea wave breathing
+  if (oceanMesh) {
+    const pos = oceanMesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const u = pos.getX(i);
+      const v = pos.getY(i);
+      pos.setZ(i, Math.sin(u * 0.15 + time * 1.5) * 0.15 + Math.cos(v * 0.15 + time * 1.2) * 0.1);
+    }
+    pos.needsUpdate = true;
+  }
+
+  // Pulsing focus beacon ring
+  if (beaconMesh) {
+    const scale = 1 + Math.sin(time * 4) * 0.25;
+    beaconMesh.scale.set(scale, scale, scale);
+  }
+
+  if (controls) controls.update();
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="lib/annotation-tool.js"></script>
+</body>
+</html>

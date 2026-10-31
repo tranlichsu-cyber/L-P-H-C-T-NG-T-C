@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#16a34a">
+<title>Sa bàn 3D Chuỗi thức ăn trong tự nhiên — Khoa học 4</title>
+<style>
+:root {
+  --primary: #16a34a;
+  --primary-dark: #15803d;
+  --accent: #4ade80;
+  --gold: #f59e0b;
+  --bg-dark: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.92);
+  --border: rgba(74, 222, 128, 0.25);
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --fs: 15px;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+  font-size: var(--fs);
+  background: var(--bg-dark);
+}
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.85);
+  color: var(--text);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+button:hover {
+  background: rgba(74, 222, 128, 0.25);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+button.active {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border-color: #86efac;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.5);
+}
+#app {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  position: relative;
+}
+header {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 2px solid rgba(74, 222, 128, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.brand {
+  min-width: 0;
+  flex: 1;
+}
+.brand h1 {
+  font-size: clamp(16px, 2vw, 22px);
+  margin: 0;
+  color: #4ade80;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brand p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.header-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#workspace {
+  position: relative;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 310px 1fr;
+}
+#side {
+  z-index: 5;
+  background: rgba(15, 23, 42, 0.9);
+  border-right: 1px solid var(--border);
+  padding: 14px;
+  overflow-y: auto;
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.chain-list {
+  display: grid;
+  gap: 8px;
+}
+.chain-btn {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.chain-btn .badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.chain-btn.active {
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.4), rgba(15, 23, 42, 0.8));
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.3);
+}
+.chain-btn .title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.chain-btn .sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.sim-controls {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+  border-radius: 14px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.ctrl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+#stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+#canvas-container {
+  position: absolute;
+  inset: 0;
+}
+#canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+/* Floating labels in 3D */
+#labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.marker-3d {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: rgba(15, 23, 42, 0.92);
+  border: 1.5px solid var(--accent);
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s, background 0.2s;
+}
+.marker-3d:hover {
+  transform: translate(-50%, -110%) scale(1.08);
+  background: var(--primary-dark);
+}
+.marker-3d::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--accent);
+}
+
+/* Floating Bottom Control Bar */
+.bottom-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  max-width: 95vw;
+  overflow-x: auto;
+}
+
+/* Info Modal Drawer */
+#info-drawer {
+  position: absolute;
+  bottom: 80px;
+  right: 20px;
+  width: 340px;
+  max-width: 90vw;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid var(--accent);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+  backdrop-filter: blur(16px);
+  z-index: 8;
+  display: none;
+  animation: slideIn 0.25s ease-out;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#info-drawer h3 {
+  margin: 0 0 6px;
+  color: var(--accent);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#info-drawer .role-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(74, 222, 128, 0.2);
+  color: #86efac;
+  margin-bottom: 8px;
+}
+#info-drawer p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+#info-drawer .fact-box {
+  background: rgba(22, 163, 74, 0.15);
+  border-left: 3px solid var(--accent);
+  padding: 8px 10px;
+  border-radius: 0 8px 8px 0;
+  font-size: 11px;
+  color: #a7f3d0;
+}
+
+@media (max-width: 768px) {
+  #workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 220px;
+  }
+  #side {
+    order: 2;
+    border-right: none;
+    border-top: 1px solid var(--border);
+  }
+  #stage {
+    order: 1;
+  }
+}
+</style>
+
+<!-- Three.js and OrbitControls (Local offline-ready with CDN fallback) -->
+<script src="lib/three.min.js"></script>
+<script>
+  if (typeof THREE === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+  }
+</script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+  if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+  }
+</script>
+<link rel="stylesheet" href="lib/annotation-tool.css">
+</head>
+
+<body>
+<div id="app">
+  <header>
+    <button id="btn-back" onclick="window.history.back()">◀ Quay lại</button>
+    <div class="brand">
+      <h1>🌿 CHUỖI THỨC ĂN TRONG TỰ NHIÊN</h1>
+      <p>Khoa học lớp 4 · Bài 29: Dòng năng lượng sinh thái từ Cây xanh đến Vi sinh vật phân giải</p>
+    </div>
+    <div class="header-actions">
+      <button id="btn-energy-glow" class="active" title="Bật/Tắt dòng năng lượng phát sáng">⚡ Dòng năng lượng</button>
+      <button id="btn-rotate-auto" class="active" title="Tự động xoay mô hình">🔄 Xoay</button>
+      <button id="btn-labels" class="active" title="Ẩn/Hiện nhãn 3D">🏷 Nhãn</button>
+      <button id="btn-fullscreen" title="Toàn màn hình">⛶</button>
+    </div>
+  </header>
+
+  <div id="workspace">
+    <!-- Sidebar: 5 Trophic Levels & Controls -->
+    <aside id="side">
+      <div class="section-title">5 Bậc dinh dưỡng sinh thái</div>
+      <div class="chain-list">
+        <button class="chain-btn active" data-node="0">
+          <div class="badge" style="background: rgba(34,197,94,0.2); color: #4ade80;">🌾</div>
+          <div>
+            <div class="title">1. Cây lúa / Cây cỏ</div>
+            <div class="sub">Sinh vật sản xuất (Quang hợp)</div>
+          </div>
+        </button>
+
+        <button class="chain-btn" data-node="1">
+          <div class="badge" style="background: rgba(132,204,22,0.2); color: #a3e635;">🦗</div>
+          <div>
+            <div class="title">2. Cào cào / Sâu bọ</div>
+            <div class="sub">Sinh vật tiêu thụ bậc 1 (Ăn cỏ)</div>
+          </div>
+        </button>
+
+        <button class="chain-btn" data-node="2">
+          <div class="badge" style="background: rgba(6,182,212,0.2); color: #22d3ee;">🐸</div>
+          <div>
+            <div class="title">3. Ếch đồng / Chim sâu</div>
+            <div class="sub">Sinh vật tiêu thụ bậc 2 (Ăn sâu)</div>
+          </div>
+        </button>
+
+        <button class="chain-btn" data-node="3">
+          <div class="badge" style="background: rgba(225,29,72,0.2); color: #fb7185;">🐍</div>
+          <div>
+            <div class="title">4. Rắn hổ mang / Đại bàng</div>
+            <div class="sub">Sinh vật tiêu thụ bậc 3 (Ăn thịt)</div>
+          </div>
+        </button>
+
+        <button class="chain-btn" data-node="4">
+          <div class="badge" style="background: rgba(168,85,247,0.2); color: #c084fc;">🍄</div>
+          <div>
+            <div class="title">5. Nấm & Vi khuẩn đất</div>
+            <div class="sub">Sinh vật phân giải (Nuôi đất)</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="section-title">Điều khiển chuỗi & Ánh sáng</div>
+      <div class="sim-controls">
+        <div class="ctrl-row">
+          <span>Tốc độ dòng năng lượng:</span>
+          <button id="btnSpeed" style="padding: 4px 8px; font-size: 11px;">Chuẩn 1x</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Ánh sáng Mặt Trời:</span>
+          <button id="btnSunLight" style="padding: 4px 8px; font-size: 11px;">☀️ Nắng vàng rực rỡ</button>
+        </div>
+        <div class="ctrl-row">
+          <span>Âm thanh đồng nội:</span>
+          <button id="btnSound" style="padding: 4px 8px; font-size: 11px;">🔇 Bật tiếng</button>
+        </div>
+      </div>
+
+      <div class="section-title">Ý nghĩa cốt lõi</div>
+      <div style="font-size: 12px; color: #94a3b8; line-height: 1.5; background: rgba(30,41,59,0.5); padding: 10px; border-radius: 12px;">
+        💡 <strong>Quy luật tự nhiên:</strong> Mỗi mắt xích trong chuỗi thức ăn đều đóng vai trò sinh thái không thể thay thế. Tiêu diệt một loài sẽ gây mất cân bằng toàn chuỗi!
+      </div>
+    </aside>
+
+    <!-- 3D Stage -->
+    <main id="stage">
+      <div id="canvas-container"></div>
+      <div id="labels-layer"></div>
+
+      <!-- Detail Info Drawer -->
+      <div id="info-drawer">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 id="drawer-title" style="margin:0;">Cây lúa / Cây cỏ xanh</h3>
+          <button id="drawer-close" style="padding:2px 8px; border-radius:8px; font-size:12px;">✕</button>
+        </div>
+        <div id="drawer-role" class="role-tag">Sinh vật sản xuất</div>
+        <p id="drawer-desc">Quang hợp từ ánh sáng Mặt Trời và nước, tạo chất hữu cơ cho muôn loài.</p>
+        <div class="fact-box" id="drawer-fact">🌾 Nền tảng của toàn bộ chuỗi thức ăn trên Trái Đất.</div>
+      </div>
+
+      <!-- Floating Bottom Preset Bar -->
+      <div class="bottom-bar">
+        <button id="cam-all" class="active">Toàn cảnh chuỗi</button>
+        <button id="cam-producer">1. Cây cỏ</button>
+        <button id="cam-herbivore">2. Cào cào</button>
+        <button id="cam-frog">3. Ếch</button>
+        <button id="cam-snake">4. Rắn</button>
+        <button id="cam-decomposer">5. Nấm vi khuẩn</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+// Data for the 5 trophic nodes
+const NODES_DATA = [
+  {
+    name: 'Cây lúa / Cây cỏ xanh',
+    role: 'Sinh vật sản xuất (Quang hợp)',
+    badge: '🌾',
+    color: 0x22c55e,
+    desc: 'Hấp thu năng lượng Mặt Trời, nước và khí CO2 để quang hợp tự chế tạo chất hữu cơ và nhả khí Ô-xi trong lành nuôi sống sinh quyển.',
+    fact: 'Mỗi ngày cây cỏ trên toàn cầu tạo ra hàng triệu tấn sinh khối nuôi sống con người và động vật!',
+    pos: [-30, 2, 0],
+    camTarget: [-30, 8, 0],
+    camPos: [-30, 20, 35]
+  },
+  {
+    name: 'Cào cào / Sâu bọ',
+    role: 'Sinh vật tiêu thụ bậc 1 (Ăn cỏ)',
+    badge: '🦗',
+    color: 0x84cc16,
+    desc: 'Động vật ăn thực vật trực tiếp. Sử dụng chất dinh dưỡng từ lá lúa để lớn lên, chuyển hóa năng lượng thực vật vào cơ thể.',
+    fact: 'Một đàn cào cào có thể bay xa hàng chục cây số để tìm kiếm đồng cỏ tươi mới!',
+    pos: [-10, 2, -25],
+    camTarget: [-10, 6, -25],
+    camPos: [-10, 16, 5]
+  },
+  {
+    name: 'Ếch đồng / Chim sâu',
+    role: 'Sinh vật tiêu thụ bậc 2 (Ăn sâu bọ)',
+    badge: '🐸',
+    color: 0x06b6d4,
+    desc: 'Thiên địch săn bắt cào cào, châu chấu và sâu hại lúa, bảo vệ mùa màng và ngăn ngừa bùng phát dịch bệnh sâu rầy.',
+    fact: 'Lưỡi của ếch phóng ra bắt dính côn trùng nhanh hơn cả cái chớp mắt (chưa tới 0,05 giây)!',
+    pos: [18, 2, -20],
+    camTarget: [18, 6, -20],
+    camPos: [18, 16, 10]
+  },
+  {
+    name: 'Rắn hổ mang / Đại bàng',
+    role: 'Sinh vật tiêu thụ bậc 3 (Động vật ăn thịt)',
+    badge: '🐍',
+    color: 0xe11d48,
+    desc: 'Động vật ăn thịt đỉnh cao. Săn ếch nhái, chuột đồng, khống chế mật độ quần thể các bậc dưới, duy trì cân bằng sinh thái.',
+    fact: 'Vì năng lượng thất thoát qua từng bậc dinh dưỡng, số lượng thú ăn thịt luôn ít nhất trong tự nhiên.',
+    pos: [30, 2, 10],
+    camTarget: [30, 6, 10],
+    camPos: [30, 18, 40]
+  },
+  {
+    name: 'Nấm & Vi khuẩn đất',
+    role: 'Sinh vật phân giải (Mùn khoáng)',
+    badge: '🍄',
+    color: 0xa855f7,
+    desc: 'Phân giải xác rắn chết, lá rụng khô mục thành chất mùn khoáng vô cơ ngấm vào đất, rễ cây lúa lại hút nuôi cây tươi tốt.',
+    fact: 'Khép kín vòng tuần hoàn vật chất: Đất sinh ra cây ➔ Động vật ăn cây ➔ Chết về lại với Đất!',
+    pos: [-2, 2, 25],
+    camTarget: [-2, 5, 25],
+    camPos: [-2, 16, 55]
+  }
+];
+
+let scene, camera, renderer, controls;
+let energyCurves = [];
+let energyParticles = [];
+let nodeMeshes = [];
+let sunMesh, sunLight;
+let autoRotate = true;
+let energyGlow = true;
+let speedFactor = 1.0;
+let audioCtx, soundBuffer, soundSource;
+let soundEnabled = false;
+
+function init() {
+  const container = document.getElementById('canvas-container');
+  const width = container.clientWidth || window.innerWidth || 800;
+  const height = container.clientHeight || window.innerHeight || 600;
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a1622);
+  scene.fog = new THREE.FogExp2(0x0a1622, 0.007);
+
+  // Camera
+  camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 800);
+  camera.position.set(0, 48, 85);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  container.appendChild(renderer.domElement);
+
+  // OrbitControls
+  if (typeof THREE.OrbitControls === 'function') {
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.minDistance = 20;
+    controls.maxDistance = 180;
+    controls.target.set(0, 5, 0);
+  }
+
+  // Lights
+  setupLighting();
+
+  // Ground and Environment
+  createEnvironment();
+
+  // Create 5 Nodes
+  createFoodChainNodes();
+
+  // Create Flow Beams (Spline curves with pulsing glowing particles)
+  createEnergyFlowSplines();
+
+  // UI and Events
+  setupUI();
+
+  // Window resize
+  window.addEventListener('resize', onWindowResize);
+
+  // Start Animation Loop
+  animate();
+}
+
+function setupLighting() {
+  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambient);
+
+  // Sun Light
+  sunLight = new THREE.DirectionalLight(0xfff3b0, 1.2);
+  sunLight.position.set(-45, 60, -30);
+  sunLight.castShadow = true;
+  sunLight.shadow.mapSize.width = 1024;
+  sunLight.shadow.mapSize.height = 1024;
+  scene.add(sunLight);
+
+  // Sun visual sphere
+  const sunGeo = new THREE.SphereGeometry(6, 24, 24);
+  const sunMat = new THREE.MeshBasicMaterial({ color: 0xffd166 });
+  sunMesh = new THREE.Mesh(sunGeo, sunMat);
+  sunMesh.position.copy(sunLight.position);
+  scene.add(sunMesh);
+
+  // Sun halo glow
+  const haloGeo = new THREE.SphereGeometry(8.5, 16, 16);
+  const haloMat = new THREE.MeshBasicMaterial({
+    color: 0xffaa00,
+    transparent: true,
+    opacity: 0.25,
+    wireframe: true
+  });
+  const halo = new THREE.Mesh(haloGeo, haloMat);
+  sunMesh.add(halo);
+
+  const fillLight = new THREE.DirectionalLight(0x86efac, 0.35);
+  fillLight.position.set(40, 20, 40);
+  scene.add(fillLight);
+}
+
+function createEnvironment() {
+  // Base Diorama Platform (Circular Island)
+  const islandGeo = new THREE.CylinderGeometry(52, 54, 4, 48);
+  const islandMat = new THREE.MeshStandardMaterial({
+    color: 0x2e1e14, // dark earth
+    roughness: 0.9,
+    metalness: 0.1
+  });
+  const island = new THREE.Mesh(islandGeo, islandMat);
+  island.position.y = -2;
+  island.receiveShadow = true;
+  scene.add(island);
+
+  // Lush Green Top Grass Layer
+  const grassGeo = new THREE.CylinderGeometry(51.8, 51.8, 0.6, 48);
+  const grassMat = new THREE.MeshStandardMaterial({
+    color: 0x2d6a4f,
+    roughness: 0.8
+  });
+  const grass = new THREE.Mesh(grassGeo, grassMat);
+  grass.position.y = 0.2;
+  grass.receiveShadow = true;
+  scene.add(grass);
+
+  // Small rolling mounds and stones
+  const moundMat = new THREE.MeshStandardMaterial({ color: 0x40916c, roughness: 0.9 });
+  const moundsData = [
+    [-30, 0, 0, 10],
+    [-10, 0, -25, 8],
+    [18, 0, -20, 9],
+    [30, 0, 10, 11],
+    [-2, 0, 25, 8]
+  ];
+  moundsData.forEach(([x, y, z, r]) => {
+    const geo = new THREE.SphereGeometry(r, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+    const m = new THREE.Mesh(geo, moundMat);
+    m.position.set(x, 0.2, z);
+    m.scale.set(1, 0.35, 1);
+    m.receiveShadow = true;
+    scene.add(m);
+  });
+}
+
+function createFoodChainNodes() {
+  const container = document.getElementById('labels-layer');
+
+  NODES_DATA.forEach((node, index) => {
+    const group = new THREE.Group();
+    group.position.set(node.pos[0], node.pos[1], node.pos[2]);
+
+    // Pedestal ring
+    const ringGeo = new THREE.RingGeometry(4, 5.2, 32);
+    ringGeo.rotateX(-Math.PI / 2);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: node.color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.7
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.y = 0.4;
+    group.add(ring);
+
+    // Glowing column pillar
+    const colGeo = new THREE.CylinderGeometry(3.5, 3.8, 2, 24);
+    const colMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.5,
+      metalness: 0.3
+    });
+    const col = new THREE.Mesh(colGeo, colMat);
+    col.position.y = 1;
+    col.castShadow = true;
+    col.receiveShadow = true;
+    group.add(col);
+
+    // Specific 3D Representative Object per node
+    if (index === 0) {
+      // Producer: Golden Rice Sheaves & Sunlight Beam
+      for (let i = 0; i < 9; i++) {
+        const stalkGeo = new THREE.CylinderGeometry(0.08, 0.15, 6 + Math.random() * 2, 8);
+        const stalkMat = new THREE.MeshStandardMaterial({ color: 0x22c55e });
+        const stalk = new THREE.Mesh(stalkGeo, stalkMat);
+        const ang = (i / 9) * Math.PI * 2;
+        stalk.position.set(Math.cos(ang) * 1.5, 4, Math.sin(ang) * 1.5);
+        stalk.rotation.z = (Math.random() - 0.5) * 0.3;
+        stalk.rotation.x = (Math.random() - 0.5) * 0.3;
+        group.add(stalk);
+
+        // Golden grain head
+        const grainGeo = new THREE.SphereGeometry(0.35, 8, 8);
+        grainGeo.scale(1, 2.5, 1);
+        const grainMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.3 });
+        const grain = new THREE.Mesh(grainGeo, grainMat);
+        grain.position.set(stalk.position.x, 7.5, stalk.position.z);
+        group.add(grain);
+      }
+    } else if (index === 1) {
+      // Herbivore: Grasshopper stylized model
+      const bodyGeo = new THREE.ConeGeometry(0.8, 4, 8);
+      bodyGeo.rotateX(Math.PI / 2);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x84cc16, roughness: 0.4 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.set(0, 3.2, 0);
+      group.add(body);
+
+      // Antennae
+      const antGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.5, 6);
+      const antMat = new THREE.MeshBasicMaterial({ color: 0xa3e635 });
+      const a1 = new THREE.Mesh(antGeo, antMat);
+      a1.position.set(-0.4, 4.5, 1.2);
+      a1.rotation.z = -0.5;
+      const a2 = new THREE.Mesh(antGeo, antMat);
+      a2.position.set(0.4, 4.5, 1.2);
+      a2.rotation.z = 0.5;
+      group.add(a1);
+      group.add(a2);
+    } else if (index === 2) {
+      // Frog sitting on a round lily pad
+      const padGeo = new THREE.CylinderGeometry(2.8, 2.8, 0.2, 24);
+      const padMat = new THREE.MeshStandardMaterial({ color: 0x059669 });
+      const pad = new THREE.Mesh(padGeo, padMat);
+      pad.position.y = 2.1;
+      group.add(pad);
+
+      // Frog body
+      const frogGeo = new THREE.SphereGeometry(1.4, 16, 12);
+      frogGeo.scale(1.2, 0.8, 1);
+      const frogMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.4 });
+      const frog = new THREE.Mesh(frogGeo, frogMat);
+      frog.position.set(0, 3.2, 0);
+      group.add(frog);
+
+      // Big frog eyes
+      const eyeGeo = new THREE.SphereGeometry(0.4, 8, 8);
+      const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+      const e1 = new THREE.Mesh(eyeGeo, eyeMat);
+      e1.position.set(-0.6, 4.0, 0.6);
+      const e2 = new THREE.Mesh(eyeGeo, eyeMat);
+      e2.position.set(0.6, 4.0, 0.6);
+      group.add(e1);
+      group.add(e2);
+    } else if (index === 3) {
+      // Snake coiled upward
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0, 2.2, 0),
+        new THREE.Vector3(1.2, 2.8, 0.8),
+        new THREE.Vector3(-1.0, 3.6, -0.6),
+        new THREE.Vector3(0.5, 4.5, 0.2),
+        new THREE.Vector3(0, 5.8, 0.8)
+      ]);
+      const snakeGeo = new THREE.TubeGeometry(curve, 32, 0.45, 8, false);
+      const snakeMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.5 });
+      const snake = new THREE.Mesh(snakeGeo, snakeMat);
+      group.add(snake);
+
+      // Snake hood / head
+      const headGeo = new THREE.SphereGeometry(0.7, 12, 12);
+      headGeo.scale(1.2, 0.6, 1.4);
+      const head = new THREE.Mesh(headGeo, snakeMat);
+      head.position.set(0, 5.8, 0.9);
+      group.add(head);
+    } else if (index === 4) {
+      // Decomposer: Red/Purple Mushrooms & Spores
+      for (let m = 0; m < 5; m++) {
+        const ang = (m / 5) * Math.PI * 2;
+        const dist = 1.2;
+        const stemGeo = new THREE.CylinderGeometry(0.2, 0.35, 2.2, 8);
+        const stemMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9 });
+        const stem = new THREE.Mesh(stemGeo, stemMat);
+        stem.position.set(Math.cos(ang) * dist, 3, Math.sin(ang) * dist);
+        group.add(stem);
+
+        const capGeo = new THREE.SphereGeometry(0.9, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+        const capMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, roughness: 0.3 });
+        const cap = new THREE.Mesh(capGeo, capMat);
+        cap.position.set(stem.position.x, 4.1, stem.position.z);
+        group.add(cap);
+      }
+    }
+
+    scene.add(group);
+    nodeMeshes.push(group);
+
+    // Create 2D Overlay HTML marker
+    const marker = document.createElement('div');
+    marker.className = 'marker-3d';
+    marker.id = 'marker-' + index;
+    marker.innerHTML = `<span>${node.badge}</span> <span>${node.name}</span>`;
+    marker.addEventListener('click', () => {
+      focusNode(index);
+    });
+    container.appendChild(marker);
+    node.markerEl = marker;
+  });
+}
+
+function createEnergyFlowSplines() {
+  // Define pathways connecting nodes in order: 0 -> 1 -> 2 -> 3 -> 4 -> 0
+  const connections = [
+    { from: 0, to: 1, color: 0x86efac },
+    { from: 1, to: 2, color: 0x38bdf8 },
+    { from: 2, to: 3, color: 0xf43f5e },
+    { from: 3, to: 4, color: 0xc084fc },
+    { from: 4, to: 0, color: 0x4ade80 }
+  ];
+
+  connections.forEach(conn => {
+    const p1 = NODES_DATA[conn.from].pos;
+    const p2 = NODES_DATA[conn.to].pos;
+
+    // Midpoint raised into arc
+    const midX = (p1[0] + p2[0]) / 2;
+    const midY = 12 + Math.random() * 3;
+    const midZ = (p1[2] + p2[2]) / 2;
+
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(p1[0], p1[1] + 3, p1[2]),
+      new THREE.Vector3(midX, midY, midZ),
+      new THREE.Vector3(p2[0], p2[1] + 3, p2[2])
+    ]);
+
+    // Tube path outline
+    const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.15, 8, false);
+    const tubeMat = new THREE.MeshBasicMaterial({
+      color: conn.color,
+      transparent: true,
+      opacity: 0.35
+    });
+    const tube = new THREE.Mesh(tubeGeo, tubeMat);
+    scene.add(tube);
+    energyCurves.push({ curve, color: conn.color });
+
+    // Moving particles along spline
+    const particleCount = 18;
+    const pGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const uvs = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      const u = i / particleCount;
+      uvs.push(u);
+      const pt = curve.getPoint(u);
+      positions[i * 3] = pt.x;
+      positions[i * 3 + 1] = pt.y;
+      positions[i * 3 + 2] = pt.z;
+    }
+
+    pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const pMat = new THREE.PointsMaterial({
+      color: conn.color,
+      size: 1.4,
+      transparent: true,
+      opacity: 0.95
+    });
+    const points = new THREE.Points(pGeo, pMat);
+    points.userData = { curve, uvs };
+    scene.add(points);
+    energyParticles.push(points);
+  });
+}
+
+function focusNode(idx) {
+  const node = NODES_DATA[idx];
+  smoothMoveCamera(
+    { x: node.camPos[0], y: node.camPos[1], z: node.camPos[2] },
+    { x: node.camTarget[0], y: node.camTarget[1], z: node.camTarget[2] }
+  );
+
+  // Update Sidebar active state
+  document.querySelectorAll('.chain-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+
+  // Open Drawer info
+  const drawer = document.getElementById('info-drawer');
+  drawer.style.display = 'block';
+  document.getElementById('drawer-title').textContent = `${node.badge} ${node.name}`;
+  document.getElementById('drawer-role').textContent = node.role;
+  document.getElementById('drawer-desc').textContent = node.desc;
+  document.getElementById('drawer-fact').textContent = '💡 ' + node.fact;
+}
+
+function smoothMoveCamera(targetPos, targetLookAt) {
+  const startPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+  const startTarget = controls ? { x: controls.target.x, y: controls.target.y, z: controls.target.z } : { x:0, y:5, z:0 };
+
+  const duration = 900;
+  const startTime = Date.now();
+
+  function update() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
+
+    camera.position.x = startPos.x + (targetPos.x - startPos.x) * ease;
+    camera.position.y = startPos.y + (targetPos.y - startPos.y) * ease;
+    camera.position.z = startPos.z + (targetPos.z - startPos.z) * ease;
+
+    if (controls) {
+      controls.target.x = startTarget.x + (targetLookAt.x - startTarget.x) * ease;
+      controls.target.y = startTarget.y + (targetLookAt.y - startTarget.y) * ease;
+      controls.target.z = startTarget.z + (targetLookAt.z - startTarget.z) * ease;
+      controls.update();
+    }
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    }
+  }
+  update();
+}
+
+function setupUI() {
+  // Sidebar node clicks
+  document.querySelectorAll('.chain-btn').forEach((btn, idx) => {
+    btn.addEventListener('click', () => {
+      focusNode(idx);
+    });
+  });
+
+  // Drawer close
+  document.getElementById('drawer-close').addEventListener('click', () => {
+    document.getElementById('info-drawer').style.display = 'none';
+  });
+
+  // Bottom preset buttons
+  document.getElementById('cam-all').addEventListener('click', () => {
+    document.querySelectorAll('.bottom-bar button').forEach(b => b.classList.remove('active'));
+    document.getElementById('cam-all').classList.add('active');
+    document.getElementById('info-drawer').style.display = 'none';
+    smoothMoveCamera({ x: 0, y: 48, z: 85 }, { x: 0, y: 5, z: 0 });
+  });
+
+  const presetIds = ['cam-producer', 'cam-herbivore', 'cam-frog', 'cam-snake', 'cam-decomposer'];
+  presetIds.forEach((id, idx) => {
+    document.getElementById(id).addEventListener('click', () => {
+      document.querySelectorAll('.bottom-bar button').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      focusNode(idx);
+    });
+  });
+
+  // Energy Glow toggle
+  const glowBtn = document.getElementById('btn-energy-glow');
+  glowBtn.addEventListener('click', () => {
+    energyGlow = !energyGlow;
+    glowBtn.classList.toggle('active', energyGlow);
+    energyParticles.forEach(pts => {
+      pts.visible = energyGlow;
+    });
+  });
+
+  // Rotate toggle
+  const rotBtn = document.getElementById('btn-rotate-auto');
+  rotBtn.addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    rotBtn.classList.toggle('active', autoRotate);
+    if (controls) {
+      controls.autoRotate = autoRotate;
+      controls.autoRotateSpeed = 1.0;
+    }
+  });
+
+  // Labels toggle
+  const lblBtn = document.getElementById('btn-labels');
+  lblBtn.addEventListener('click', () => {
+    const layer = document.getElementById('labels-layer');
+    const isVis = layer.style.display !== 'none';
+    layer.style.display = isVis ? 'none' : 'block';
+    lblBtn.classList.toggle('active', !isVis);
+  });
+
+  // Speed
+  const speedBtn = document.getElementById('btnSpeed');
+  speedBtn.addEventListener('click', () => {
+    if (speedFactor === 1.0) {
+      speedFactor = 2.0;
+      speedBtn.textContent = 'Nhanh 2x';
+    } else if (speedFactor === 2.0) {
+      speedFactor = 0.5;
+      speedBtn.textContent = 'Chậm 0.5x';
+    } else {
+      speedFactor = 1.0;
+      speedBtn.textContent = 'Chuẩn 1x';
+    }
+  });
+
+  // Fullscreen
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+
+  // Ambient Nature sound synthesizer
+  const sndBtn = document.getElementById('btnSound');
+  sndBtn.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    sndBtn.textContent = soundEnabled ? '🔊 Đang bật' : '🔇 Bật tiếng';
+    toggleNatureAudio(soundEnabled);
+  });
+}
+
+function toggleNatureAudio(play) {
+  if (!play) {
+    if (soundSource) {
+      soundSource.stop();
+      soundSource = null;
+    }
+    return;
+  }
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    // Gentle bird chirp & rustling breeze synthesizer
+    const bufferSize = audioCtx.sampleRate * 2;
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * 0.05;
+    }
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    noise.loop = true;
+
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1800;
+    filter.Q.value = 3;
+
+    noise.connect(filter);
+    filter.connect(audioCtx.destination);
+    noise.start();
+    soundSource = noise;
+  } catch (e) {
+    console.warn('Audio not initialized yet:', e);
+  }
+}
+
+function onWindowResize() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+function updateMarkersPosition() {
+  const container = document.getElementById('canvas-container');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+
+  NODES_DATA.forEach(node => {
+    if (!node.markerEl) return;
+    const v = new THREE.Vector3(node.pos[0], node.pos[1] + 6.5, node.pos[2]);
+    v.project(camera);
+
+    if (v.z > 1) {
+      node.markerEl.style.display = 'none';
+      return;
+    }
+    node.markerEl.style.display = 'flex';
+    const x = (v.x * 0.5 + 0.5) * w;
+    const y = (-v.y * 0.5 + 0.5) * h;
+    node.markerEl.style.left = `${x}px`;
+    node.markerEl.style.top = `${y}px`;
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  const time = Date.now() * 0.001;
+
+  // Animate Energy Flow Particles
+  if (energyGlow) {
+    energyParticles.forEach(pts => {
+      const uvs = pts.userData.uvs;
+      const curve = pts.userData.curve;
+      const pos = pts.geometry.attributes.position;
+
+      for (let i = 0; i < uvs.length; i++) {
+        uvs[i] = (uvs[i] + 0.006 * speedFactor) % 1.0;
+        const pt = curve.getPoint(uvs[i]);
+        pos.setXYZ(i, pt.x, pt.y, pt.z);
+      }
+      pos.needsUpdate = true;
+    });
+  }
+
+  // Gentle node floating / swaying
+  nodeMeshes.forEach((mesh, idx) => {
+    mesh.position.y = NODES_DATA[idx].pos[1] + Math.sin(time * 2 + idx) * 0.3;
+  });
+
+  // Controls update
+  if (controls) controls.update();
+
+  // Render scene
+  renderer.render(scene, camera);
+
+  // Update 2D Screen Markers
+  updateMarkersPosition();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="lib/annotation-tool.js"></script>
+</body>
+</html>

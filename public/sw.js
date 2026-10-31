@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v8-bach-dang-annotation';
+const CACHE_NAME = 'lhtt-shell-v9-vietnam-terrain-foodchain';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',
@@ -59,8 +59,18 @@ self.addEventListener('fetch', (event) => {
 
   // Vite chunks must always come from the network/browser HTTP cache.
   // Do NOT put hashed JS/CSS into the Service Worker cache.
-  if (
-    url.pathname.startsWith('/assets/') ||
+    // 3D Model HTML files must always be fetched fresh from network
+  if (url.pathname.startsWith('/models/')) {
+    event.respondWith(
+      fetch(request, { cache: 'no-cache' }).catch(async () => {
+        const cached = await caches.match(request);
+        return cached || new Response('Không có kết nối mạng tới mô hình 3D', { status: 503 });
+      })
+    );
+    return;
+  }
+
+  if (url.pathname.startsWith('/assets/') ||
     url.pathname.endsWith('.js') ||
     url.pathname.endsWith('.css') ||
     url.pathname.endsWith('.map')
