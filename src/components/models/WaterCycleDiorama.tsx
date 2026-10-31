@@ -295,6 +295,19 @@ export const WaterCycleDiorama: React.FC = () => {
                       <span className={selectedStage.order === 4 ? 'text-emerald-400' : ''}>4. Nước ngầm</span>
                     </div>
                   </div>
+
+                  {/* 3D Realistic Render Preview */}
+                  <div className="relative rounded-2xl overflow-hidden border border-sky-500/30 bg-slate-900 group shadow-xl">
+                    <img
+                      src="/images/models/vong-tuan-hoan-nuoc-3d.jpg"
+                      alt="Sa bàn 3D Vòng tuần hoàn của nước"
+                      className="w-full h-44 object-cover group-hover:scale-105 transition duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                    <div className="absolute bottom-2.5 left-3 right-3 text-xs font-bold text-sky-200">
+                      Sa bàn 3D chân thực: Bay hơi biển, mây ngưng tụ, mưa rơi và mạch nước ngầm
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

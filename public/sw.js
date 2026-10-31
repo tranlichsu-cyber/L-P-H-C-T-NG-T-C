@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v5-de-song-hong';
+const CACHE_NAME = 'lhtt-shell-v6-3d-models-realistic';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

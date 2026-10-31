@@ -278,6 +278,19 @@ export const GlobeDiorama: React.FC = () => {
                       <li>Tìm các đường vĩ tuyến để xác định Bán cầu Bắc (trên Xích đạo) hay Bán cầu Nam (dưới Xích đạo).</li>
                     </ul>
                   </div>
+
+                  {/* 3D Realistic Render Preview */}
+                  <div className="relative rounded-2xl overflow-hidden border border-indigo-500/30 bg-slate-900 group shadow-xl">
+                    <img
+                      src="/images/models/qua-dia-cau-3d.jpg"
+                      alt="Mô hình 3D Quả Địa Cầu Tương Tác"
+                      className="w-full h-44 object-cover group-hover:scale-105 transition duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                    <div className="absolute bottom-2.5 left-3 right-3 text-xs font-bold text-indigo-200">
+                      Quả địa cầu 3D chân thực: Trục nghiêng 23,5°, 6 châu lục và dải đất Việt Nam
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

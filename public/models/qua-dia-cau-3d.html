@@ -495,7 +495,7 @@ const MARKERS = [
 ];
 
 let scene, camera, renderer, controls;
-let globeGroup, earthMesh, equatorMesh, gridMesh, axisMesh, standGroup;
+let globeGroup, earthMesh, cloudsMesh, equatorMesh, gridMesh, axisMesh, standGroup;
 let isSpinning = true;
 let spinSpeed = 0.003;
 let showEquator = true;
@@ -548,16 +548,29 @@ function init() {
 }
 
 function setupLights() {
-  const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.95);
   scene.add(ambient);
 
   const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
   dirLight.position.set(40, 20, 30);
   scene.add(dirLight);
 
-  const backLight = new THREE.DirectionalLight(0x4338ca, 0.6);
+  const backLight = new THREE.DirectionalLight(0x4338ca, 0.7);
   backLight.position.set(-40, -20, -30);
   scene.add(backLight);
+
+  // Starfield in deep cosmic space
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 1000;
+  const starPos = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount * 3; i += 3) {
+    starPos[i] = (Math.random() - 0.5) * 500;
+    starPos[i + 1] = (Math.random() - 0.5) * 500;
+    starPos[i + 2] = (Math.random() - 0.5) * 500;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  const starMat = new THREE.PointsMaterial({ color: 0xcbd5e1, size: 0.9, transparent: true, opacity: 0.75 });
+  scene.add(new THREE.Points(starGeo, starMat));
 }
 
 function createProceduralEarthCanvas() {
@@ -566,15 +579,17 @@ function createProceduralEarthCanvas() {
   canvas.height = 1024;
   const ctx = canvas.getContext('2d');
 
-  // Deep ocean gradient
+  // Deep ocean gradient with realistic bathymetry shading
   const oceanGrad = ctx.createLinearGradient(0, 0, 0, 1024);
-  oceanGrad.addColorStop(0, '#0f2b46');
-  oceanGrad.addColorStop(0.5, '#1e4976');
-  oceanGrad.addColorStop(1, '#0f2b46');
+  oceanGrad.addColorStop(0, '#0c2238');
+  oceanGrad.addColorStop(0.3, '#10395c');
+  oceanGrad.addColorStop(0.5, '#194d7a');
+  oceanGrad.addColorStop(0.7, '#10395c');
+  oceanGrad.addColorStop(1, '#0c2238');
   ctx.fillStyle = oceanGrad;
   ctx.fillRect(0, 0, 2048, 1024);
 
-  // Continent shapes (Simplified aesthetic stylized continents)
+  // Realistic continent landmasses (Eurasia, Africa, Americas, Australia, Antarctica)
   ctx.fillStyle = '#2d6a4f';
 
   function drawContinent(cx, cy, rx, ry) {
@@ -583,31 +598,63 @@ function createProceduralEarthCanvas() {
     ctx.fill();
   }
 
-  // Asia & Europe
+  // Asia & Europe (Eurasia)
   drawContinent(1400, 320, 280, 160);
-  drawContinent(1100, 280, 120, 100);
+  drawContinent(1100, 280, 130, 100);
+  drawContinent(1550, 240, 140, 90);
+  // Mountain terrain shades (Himalayas & Tibetan Plateau)
+  ctx.fillStyle = '#92400e';
+  drawContinent(1380, 360, 120, 50);
+  ctx.fillStyle = '#2d6a4f';
+
   // Africa
   drawContinent(1150, 560, 150, 180);
+  ctx.fillStyle = '#d97706'; // Sahara Desert
+  drawContinent(1140, 460, 130, 70);
+  ctx.fillStyle = '#2d6a4f';
+
   // North America
-  drawContinent(500, 320, 200, 140);
+  drawContinent(500, 320, 220, 140);
+  drawContinent(350, 260, 100, 90);
   // South America
   drawContinent(680, 680, 130, 200);
-  // Australia / Oceania
-  drawContinent(1650, 720, 140, 100);
-  // Antarctica
-  ctx.fillStyle = '#e2e8f0';
-  ctx.fillRect(0, 950, 2048, 74);
 
-  // Draw Vietnam S-shape highlight
+  // Australia & Oceania
+  drawContinent(1650, 720, 140, 100);
+
+  // Greenland & Polar ice caps
+  ctx.fillStyle = '#f1f5f9';
+  drawContinent(780, 140, 90, 60);
+  // Antarctica
+  ctx.fillRect(0, 930, 2048, 94);
+  // Arctic ice
+  ctx.fillRect(0, 0, 2048, 60);
+
+  // Draw Vietnam S-shape with Golden Star
   ctx.strokeStyle = '#ef4444';
-  ctx.lineWidth = 10;
+  ctx.lineWidth = 12;
   ctx.beginPath();
-  ctx.moveTo(1480, 420);
-  ctx.bezierCurveTo(1470, 460, 1500, 500, 1485, 540);
+  ctx.moveTo(1480, 410);
+  ctx.bezierCurveTo(1465, 450, 1505, 490, 1485, 540);
   ctx.stroke();
 
-  // Draw Parallels & Meridians subtle lines on texture
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+  // Vietnam Golden border outline
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(1480, 410);
+  ctx.bezierCurveTo(1465, 450, 1505, 490, 1485, 540);
+  ctx.stroke();
+
+  // Paracel and Spratly Islands (Hoàng Sa & Trường Sa)
+  ctx.fillStyle = '#fbbf24';
+  ctx.beginPath();
+  ctx.arc(1530, 470, 7, 0, Math.PI * 2);
+  ctx.arc(1550, 520, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Subtle Parallels & Meridians
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
   ctx.lineWidth = 1;
   for (let lat = 0; lat <= 1024; lat += 1024 / 6) {
     ctx.beginPath();
@@ -631,23 +678,53 @@ function createGlobeAndStand() {
 
   const radius = 12;
 
-  // Earth Sphere
-  const texture = new THREE.CanvasTexture(createProceduralEarthCanvas());
+  // Earth Sphere with Photorealistic Texture + Procedural Fallback
+  const fallbackTexture = new THREE.CanvasTexture(createProceduralEarthCanvas());
   const earthGeo = new THREE.SphereGeometry(radius, 64, 64);
   const earthMat = new THREE.MeshStandardMaterial({
-    map: texture,
-    roughness: 0.6,
+    map: fallbackTexture,
+    roughness: 0.55,
     metalness: 0.1
   });
   earthMesh = new THREE.Mesh(earthGeo, earthMat);
   globeGroup.add(earthMesh);
 
+  // Load high-resolution realistic NASA Blue Marble texture from jsDelivr
+  const texLoader = new THREE.TextureLoader();
+  texLoader.crossOrigin = 'anonymous';
+  texLoader.load(
+    'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg',
+    (tex) => {
+      earthMat.map = tex;
+      earthMat.needsUpdate = true;
+    },
+    undefined,
+    () => { /* Keep procedural */ }
+  );
+
+  // Cloud Layer for 3D Atmospheric Depth
+  const cloudsGeo = new THREE.SphereGeometry(radius + 0.16, 64, 64);
+  const cloudsMat = new THREE.MeshStandardMaterial({
+    transparent: true,
+    opacity: 0.36,
+    blending: THREE.AdditiveBlending
+  });
+  texLoader.load(
+    'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png',
+    (cTex) => {
+      cloudsMat.map = cTex;
+      cloudsMat.needsUpdate = true;
+    }
+  );
+  cloudsMesh = new THREE.Mesh(cloudsGeo, cloudsMat);
+  globeGroup.add(cloudsMesh);
+
   // Glowing Atmosphere
-  const atmosGeo = new THREE.SphereGeometry(radius + 0.3, 32, 32);
+  const atmosGeo = new THREE.SphereGeometry(radius + 0.35, 32, 32);
   const atmosMat = new THREE.MeshBasicMaterial({
     color: 0x818cf8,
     transparent: true,
-    opacity: 0.15,
+    opacity: 0.16,
     side: THREE.BackSide
   });
   const atmos = new THREE.Mesh(atmosGeo, atmosMat);
@@ -863,8 +940,9 @@ function onWindowResize() {
 function animate() {
   requestAnimationFrame(animate);
 
-  if (isSpinning && earthMesh) {
-    earthMesh.rotation.y += spinSpeed;
+  if (isSpinning) {
+    if (earthMesh) earthMesh.rotation.y += spinSpeed;
+    if (cloudsMesh) cloudsMesh.rotation.y += spinSpeed * 1.15;
   }
 
   controls.update();
