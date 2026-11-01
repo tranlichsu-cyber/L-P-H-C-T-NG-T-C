@@ -82,6 +82,15 @@ export const ModelHubPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <a
+              href="#huy-hieu"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition"
+            >
+              <span>🏆 Huy hiệu</span>
+              <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[10px] font-black">
+                {unlockedCount}/{ALL_MODEL_BADGES.length}
+              </span>
+            </a>
             <img src={currentLogo} alt="Logo" className="h-8 w-8 object-contain" />
             <span className="text-xs font-black tracking-wide text-slate-300 hidden md:inline">
               {schoolName}
@@ -243,7 +252,7 @@ export const ModelHubPage: React.FC = () => {
         </div>
 
         {/* Badges Collection Section */}
-        <section className="bg-gradient-to-r from-slate-950 via-amber-950/30 to-slate-950 rounded-3xl p-5 border border-amber-500/30 space-y-4">
+        <section id="huy-hieu" className="scroll-mt-24 bg-gradient-to-r from-slate-950 via-amber-950/30 to-slate-950 rounded-3xl p-5 border border-amber-500/30 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-lg border border-amber-500/30">
@@ -274,14 +283,16 @@ export const ModelHubPage: React.FC = () => {
             {ALL_MODEL_BADGES.map((b) => {
               const isUnlocked = Boolean(unlockedMap[b.id]);
               return (
-                <div
+                <button
                   key={b.id}
-                  className={`p-3 rounded-2xl border transition flex flex-col items-center text-center gap-1.5 ${
+                  type="button"
+                  onClick={() => navigate(`/mo-hinh/${b.modelId}`)}
+                  className={`p-3 rounded-2xl border transition flex flex-col items-center text-center gap-1.5 cursor-pointer hover:scale-105 ${
                     isUnlocked
-                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-200 shadow-md shadow-amber-500/10'
-                      : 'bg-slate-900/50 border-slate-800 text-slate-500 opacity-60'
+                      ? 'bg-amber-500/10 border-amber-500/40 text-amber-200 shadow-md shadow-amber-500/10 hover:border-amber-400'
+                      : 'bg-slate-900/50 border-slate-800 text-slate-400 opacity-70 hover:opacity-100 hover:border-slate-700'
                   }`}
-                  title={b.description}
+                  title={`${b.title}: ${b.description} (Bấm để mở bài học)`}
                 >
                   <div className="text-2xl relative">
                     {b.icon}
@@ -293,9 +304,9 @@ export const ModelHubPage: React.FC = () => {
                   </div>
                   <div className="text-[11px] font-bold leading-tight">{b.title}</div>
                   <span className="text-[9px] text-slate-400 font-medium">
-                    {isUnlocked ? 'Đã đạt' : 'Chưa mở'}
+                    {isUnlocked ? '✨ Đã đạt' : 'Khám phá →'}
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
