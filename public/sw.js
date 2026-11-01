@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v20-remove-3d-brush';
+const CACHE_NAME = 'lhtt-shell-v21-interactive-badges';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',
