@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v12-den-hung-diorama-rebuild';
+const CACHE_NAME = 'lhtt-shell-v13-den-hung-panoramic-diorama';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

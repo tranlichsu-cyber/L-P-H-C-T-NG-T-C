@@ -9,7 +9,6 @@ import {
   Pause,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   Award,
   CheckCircle2,
   Landmark,
@@ -20,6 +19,11 @@ import {
   RotateCcw,
   ExternalLink,
   Eye,
+  ZoomIn,
+  ZoomOut,
+  ChevronDown,
+  ChevronUp,
+  Compass,
 } from 'lucide-react';
 import {
   hungTempleData,
@@ -29,22 +33,36 @@ import { triggerConfetti } from '../../utils/confetti';
 import { playCorrectSound } from '../../utils/audio';
 import { unlockBadge } from '../../utils/modelBadges';
 
-type ActiveTab = '3D_VIEW' | 'DIORAMA' | 'FESTIVAL' | 'QUIZ';
+type ActiveTab = 'DIORAMA' | '3D_VIEW' | 'FESTIVAL' | 'QUIZ';
+type DetailTab = 'CORE' | 'LEGEND' | 'ARCHITECTURE' | 'FUN_FACT';
 
 export const HungTempleDiorama: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('3D_VIEW');
-  const [selectedStation, setSelectedStation] = useState<HungTempleStation | null>(
+  // Sa bàn Toàn cảnh is active by default
+  const [activeTab, setActiveTab] = useState<ActiveTab>('DIORAMA');
+  const [selectedStation, setSelectedStation] = useState<HungTempleStation>(
     hungTempleData.stations[0]
   );
   const [isTourPlaying, setIsTourPlaying] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Diorama Zoom & Pan state
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [panOffset, setPanOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Station Detail Drawer state (allows collapsing so it never covers the sa bàn!)
+  const [isDetailCollapsed, setIsDetailCollapsed] = useState<boolean>(false);
+  const [activeDetailTab, setActiveDetailTab] = useState<DetailTab>('CORE');
+  const [showMeaningModal, setShowMeaningModal] = useState<boolean>(false);
+
   // Quiz state
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const dioramaViewportRef = useRef<HTMLDivElement>(null);
   const tourTimerRef = useRef<number | null>(null);
 
   // Auto-tour step timer
@@ -56,10 +74,10 @@ export const HungTempleDiorama: React.FC = () => {
 
     tourTimerRef.current = window.setInterval(() => {
       setSelectedStation((prev) => {
-        if (!prev) return hungTempleData.stations[0];
         const currentIndex = hungTempleData.stations.findIndex((s) => s.id === prev.id);
         const nextIndex = (currentIndex + 1) % hungTempleData.stations.length;
-        return hungTempleData.stations[nextIndex];
+        const nextStation = hungTempleData.stations[nextIndex];
+        return nextStation;
       });
     }, 4500);
 
@@ -87,7 +105,7 @@ export const HungTempleDiorama: React.FC = () => {
   }, []);
 
   // Text-To-Speech for historical storytelling
-  const speakStationText = (station: HungTempleStation) => {
+  const speakStationText = (station: HungTempleStation, mode: DetailTab = activeDetailTab) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
     if (isSpeaking) {
@@ -97,12 +115,21 @@ export const HungTempleDiorama: React.FC = () => {
     }
 
     window.speechSynthesis.cancel();
-    const textToRead = `${station.name}. ${station.subtitle}. ${station.highlight} ${station.legend}`;
+    let textToRead = `${station.name}. Độ cao ${station.altitude} mét. `;
+    if (mode === 'CORE') {
+      textToRead += station.highlight;
+    } else if (mode === 'LEGEND') {
+      textToRead += station.legend;
+    } else if (mode === 'ARCHITECTURE') {
+      textToRead += station.architecture;
+    } else if (mode === 'FUN_FACT') {
+      textToRead += station.funFact;
+    }
+
     const utterance = new SpeechSynthesisUtterance(textToRead);
     utterance.lang = 'vi-VN';
     utterance.rate = 0.95;
 
-    // Pick a Vietnamese voice if available
     const voices = window.speechSynthesis.getVoices();
     const viVoice = voices.find((v) => v.lang.includes('vi') || v.lang.includes('VN'));
     if (viVoice) utterance.voice = viVoice;
@@ -115,17 +142,52 @@ export const HungTempleDiorama: React.FC = () => {
   };
 
   const handlePrevStation = () => {
-    if (!selectedStation) return;
     const currentIndex = hungTempleData.stations.findIndex((s) => s.id === selectedStation.id);
     const prevIndex = (currentIndex - 1 + hungTempleData.stations.length) % hungTempleData.stations.length;
     setSelectedStation(hungTempleData.stations[prevIndex]);
   };
 
   const handleNextStation = () => {
-    if (!selectedStation) return;
     const currentIndex = hungTempleData.stations.findIndex((s) => s.id === selectedStation.id);
     const nextIndex = (currentIndex + 1) % hungTempleData.stations.length;
     setSelectedStation(hungTempleData.stations[nextIndex]);
+  };
+
+  // Zoom controls
+  const handleZoomIn = () => {
+    setZoomLevel((prev) => Math.min(2.5, +(prev + 0.35).toFixed(2)));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel((prev) => {
+      const next = Math.max(1, +(prev - 0.35).toFixed(2));
+      if (next === 1) setPanOffset({ x: 0, y: 0 });
+      return next;
+    });
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  // Drag to pan when zoomed in
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomLevel <= 1) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX - panOffset.x, y: e.clientY - panOffset.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || zoomLevel <= 1) return;
+    setPanOffset({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
 
   // Quiz evaluation
@@ -163,7 +225,7 @@ export const HungTempleDiorama: React.FC = () => {
       }`}
     >
       {/* Top Diorama Header */}
-      <header className="bg-slate-950/90 border-b border-slate-800 px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <header className="bg-slate-950/95 border-b border-slate-800 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-gradient-to-tr from-amber-600 to-red-600 flex items-center justify-center text-white shadow-md shadow-amber-600/30">
             <Landmark className="h-5 w-5" />
@@ -188,18 +250,6 @@ export const HungTempleDiorama: React.FC = () => {
           <div className="bg-slate-800/80 p-1 rounded-2xl border border-slate-700/80 flex items-center text-xs font-bold">
             <button
               type="button"
-              onClick={() => setActiveTab('3D_VIEW')}
-              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
-                activeTab === '3D_VIEW'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              <Eye className="h-3.5 w-3.5" />
-              <span>Sa bàn 3D (360°)</span>
-            </button>
-            <button
-              type="button"
               onClick={() => setActiveTab('DIORAMA')}
               className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
                 activeTab === 'DIORAMA'
@@ -208,7 +258,19 @@ export const HungTempleDiorama: React.FC = () => {
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>Sơ đồ & Tư liệu</span>
+              <span>🖼️ Sa bàn Toàn cảnh</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('3D_VIEW')}
+              className={`px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 ${
+                activeTab === '3D_VIEW'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>🌐 Mô hình 3D (360°)</span>
             </button>
             <button
               type="button"
@@ -220,7 +282,7 @@ export const HungTempleDiorama: React.FC = () => {
               }`}
             >
               <Flame className="h-3.5 w-3.5" />
-              <span>Lễ Hội Mùng 10/3</span>
+              <span>🔥 Lễ Hội Mùng 10/3</span>
             </button>
             <button
               type="button"
@@ -232,7 +294,7 @@ export const HungTempleDiorama: React.FC = () => {
               }`}
             >
               <Award className="h-3.5 w-3.5" />
-              <span>Thử Tài</span>
+              <span>🏆 Thử Tài</span>
             </button>
           </div>
 
@@ -261,116 +323,35 @@ export const HungTempleDiorama: React.FC = () => {
 
       {/* Main Content Areas */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        {/* TAB 0: SA BÀN 3D WEBGL TƯƠNG TÁC XOAY 360 ĐỘ */}
-        {activeTab === '3D_VIEW' && (
-          <div className="relative flex-1 w-full min-h-[620px] sm:min-h-[720px] h-[78vh] max-h-[860px] bg-slate-950 flex flex-col">
-            <iframe
-              src="/models/den-hung-3d.html?embed=1"
-              title="Sa bàn 3D Đền Hùng WebGL"
-              className="w-full flex-1 border-0 min-h-[620px] sm:min-h-[720px] h-full"
-              allow="fullscreen"
-            />
-          </div>
-        )}
-        {/* TAB 1: SA BÀN NÚI NGHĨA LĨNH */}
+        {/* TAB 1: SA BÀN TOÀN CẢNH ĐỀN HÙNG (IMAGE DIORAMA WITH INTERACTIVE HOTSPOTS) */}
         {activeTab === 'DIORAMA' && (
-          <div className="flex-1 flex flex-col lg:flex-row min-h-[580px]">
-            {/* Visual Diorama Landscape Canvas */}
-            <div className="relative flex-1 bg-gradient-to-b from-sky-950 via-slate-900 to-emerald-950 p-4 sm:p-6 overflow-hidden flex flex-col justify-between select-none">
-              {/* Background Atmospheric Visual Layers */}
-              <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-400 via-transparent to-transparent" />
-              
-              {/* Stylized Mountain Profile SVG Backdrop */}
-              <div className="absolute inset-x-0 bottom-0 top-12 pointer-events-none opacity-40">
-                <svg
-                  viewBox="0 0 1000 600"
-                  className="w-full h-full object-fill preserve-3d"
-                  preserveAspectRatio="none"
-                >
-                  <defs>
-                    <linearGradient id="mountGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#064e3b" stopOpacity="0.9" />
-                    </linearGradient>
-                    <linearGradient id="cloudGrad" x1="0" y1="0" x2="1" y2="0">
-                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.1" />
-                      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
+          <div className="flex-1 flex flex-col bg-slate-950 p-2 sm:p-4 gap-4">
+            {/* Diorama Canvas Viewport */}
+            <div
+              ref={dioramaViewportRef}
+              className="relative w-full aspect-[16/9] max-h-[72vh] rounded-2xl overflow-hidden bg-slate-950 border border-amber-900/50 shadow-2xl select-none group"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              style={{ cursor: zoomLevel > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
+            >
+              {/* Zoom & Pan Container */}
+              <div
+                className="w-full h-full relative transition-transform duration-200 ease-out origin-center"
+                style={{
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+                }}
+              >
+                {/* User's 2.5D Illustrated Panoramic Artwork */}
+                <img
+                  src="/images/models/den-hung-panoramic-diorama.jpg"
+                  alt="Sa bàn toàn cảnh Đền Hùng núi Nghĩa Lĩnh"
+                  className="w-full h-full object-cover pointer-events-none"
+                  draggable={false}
+                />
 
-                  {/* Distant Mountain Ridges */}
-                  <path
-                    d="M 0 450 Q 200 300 450 380 T 1000 360 L 1000 600 L 0 600 Z"
-                    fill="#0f3d32"
-                    opacity="0.6"
-                  />
-                  {/* Mount Nghia Linh (Summit 175m at center-right) */}
-                  <path
-                    d="M 0 580 C 150 560 220 400 320 340 C 420 280 540 120 620 90 C 720 130 850 380 1000 540 L 1000 600 L 0 600 Z"
-                    fill="url(#mountGrad)"
-                  />
-                  {/* Pilgrim Stone Path winding up the mountain */}
-                  <path
-                    d="M 120 500 Q 240 430 260 400 T 440 290 T 620 130 T 730 120 T 780 190 T 880 430"
-                    fill="none"
-                    stroke="#f59e0b"
-                    strokeWidth="3"
-                    strokeDasharray="6 6"
-                    className="opacity-70 animate-pulse"
-                  />
-                  {/* Summit Clouds */}
-                  <ellipse cx="620" cy="70" rx="140" ry="25" fill="url(#cloudGrad)" />
-                  <ellipse cx="500" cy="110" rx="90" ry="18" fill="url(#cloudGrad)" />
-                </svg>
-              </div>
-
-              {/* Top Banner inside Diorama */}
-              <div className="relative z-10 flex flex-wrap items-center justify-between gap-2">
-                <div className="bg-slate-900/80 backdrop-blur-md rounded-2xl px-4 py-2 border border-slate-700/80 shadow-lg">
-                  <div className="text-xs text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Lộ trình hành hương Núi Nghĩa Lĩnh</span>
-                  </div>
-                  <p className="text-sm font-semibold text-slate-200 mt-0.5">
-                    Chân núi (15m) <span className="text-amber-400">⟶</span> Đỉnh Kính Thiên (175m)
-                  </p>
-                </div>
-
-                {/* Tour Auto Play Controller */}
-                <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md rounded-2xl p-1.5 border border-slate-700/80 shadow-lg">
-                  <button
-                    type="button"
-                    onClick={handlePrevStation}
-                    title="Điểm trước"
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsTourPlaying(!isTourPlaying)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                      isTourPlaying
-                        ? 'bg-amber-500 text-slate-950 font-black animate-pulse'
-                        : 'bg-slate-800 hover:bg-slate-700 text-white'
-                    }`}
-                  >
-                    {isTourPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                    <span>{isTourPlaying ? 'Tạm dừng' : 'Tự động dẫn đường'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleNextStation}
-                    title="Điểm tiếp theo"
-                    className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Interactive Station Hotspots Placed on Mountain Canvas */}
-              <div className="relative z-10 w-full h-[360px] sm:h-[420px] my-auto">
+                {/* Interactive Station Hotspots positioned precisely on temples */}
                 {hungTempleData.stations.map((station) => {
                   const isSelected = selectedStation?.id === station.id;
                   return (
@@ -381,11 +362,11 @@ export const HungTempleDiorama: React.FC = () => {
                         top: `${station.yPercent}%`,
                         transform: 'translate(-50%, -50%)',
                       }}
-                      className="absolute group z-20"
+                      className="absolute group/pin z-20"
                     >
                       {/* Pulse Ring when selected */}
                       {isSelected && (
-                        <span className="absolute -inset-3 rounded-full bg-amber-400/40 animate-ping pointer-events-none" />
+                        <span className="absolute -inset-3.5 rounded-full bg-amber-400/50 animate-ping pointer-events-none" />
                       )}
 
                       <button
@@ -393,212 +374,398 @@ export const HungTempleDiorama: React.FC = () => {
                         onClick={() => {
                           setSelectedStation(station);
                           setIsTourPlaying(false);
+                          setIsDetailCollapsed(false);
                         }}
-                        className={`relative flex items-center gap-2 rounded-2xl px-2.5 py-1.5 transition-all duration-300 shadow-xl border ${
+                        className={`relative flex items-center gap-1.5 rounded-full px-2.5 py-1 transition-all duration-300 shadow-xl border ${
                           isSelected
-                            ? 'bg-amber-500 text-slate-950 border-amber-300 scale-110 ring-4 ring-amber-400/30 font-black'
-                            : 'bg-slate-900/90 hover:bg-slate-800 text-white border-slate-700 hover:scale-105'
+                            ? 'bg-amber-500 text-slate-950 border-white scale-110 ring-4 ring-amber-400/50 font-black shadow-amber-500/50'
+                            : 'bg-slate-900/90 hover:bg-slate-800 text-white border-amber-400/70 hover:scale-105'
                         }`}
+                        title={`${station.name} (${station.altitude}m)`}
                       >
                         <span
-                          className={`w-6 h-6 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                          className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
                             isSelected
-                              ? 'bg-slate-950 text-amber-400'
-                              : 'bg-amber-500 text-slate-950'
+                              ? 'bg-slate-950 text-amber-300'
+                              : 'bg-gradient-to-tr from-amber-500 to-red-500 text-white'
                           }`}
                         >
                           {station.badgeNumber}
                         </span>
-                        <span className="text-xs font-bold whitespace-nowrap hidden sm:inline-block">
-                          {station.name.split('(')[0]}
+                        <span className="text-[11px] font-extrabold whitespace-nowrap drop-shadow-sm">
+                          {station.name.split('(')[0].trim()}
                         </span>
                       </button>
 
                       {/* Tooltip on hover */}
-                      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-30">
-                        <div className="bg-slate-950/95 text-slate-200 text-[11px] rounded-xl px-2.5 py-1.5 whitespace-nowrap border border-slate-700 shadow-2xl">
-                          <p className="font-bold text-amber-400">{station.name}</p>
+                      <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/pin:flex flex-col items-center z-30">
+                        <div className="bg-slate-950/95 text-slate-200 text-[11px] rounded-xl px-2.5 py-1.5 whitespace-nowrap border border-amber-500/50 shadow-2xl backdrop-blur-md">
+                          <p className="font-bold text-amber-300">{station.name}</p>
                           <p className="text-[10px] text-slate-400 mt-0.5">
                             Độ cao: {station.altitude}m • {station.steps}
                           </p>
                         </div>
-                        <div className="w-2 h-2 bg-slate-950 rotate-45 -mt-1 border-r border-b border-slate-700" />
+                        <div className="w-2 h-2 bg-slate-950 rotate-45 -mt-1 border-r border-b border-amber-500/50" />
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Bottom Quick Elevation Progress Bar */}
-              <div className="relative z-10 bg-slate-950/80 backdrop-blur-md rounded-2xl p-3 border border-slate-800 flex flex-col gap-2">
-                <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
-                  <span className="flex items-center gap-1.5 text-amber-400 font-bold">
-                    <MapPin className="h-3.5 w-3.5" />
-                    Độ cao hiện tại: {selectedStation?.altitude} mét
+              {/* Top-Left Banner on Diorama Canvas */}
+              <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
+                <div className="bg-gradient-to-r from-amber-950/90 to-red-950/90 backdrop-blur-md rounded-2xl px-3.5 py-2 border border-amber-600/50 shadow-xl flex items-center gap-2.5">
+                  <div className="text-xl">🌸</div>
+                  <div>
+                    <h2 className="text-xs sm:text-sm font-black text-amber-200 tracking-wide">
+                      Khu di tích lịch sử ĐỀN HÙNG
+                    </h2>
+                    <p className="text-[10px] text-amber-300/80 font-bold">
+                      (Núi Nghĩa Lĩnh - Phú Thọ)
+                    </p>
+                  </div>
+                  <div className="text-xl">🌸</div>
+                </div>
+              </div>
+
+              {/* Top-Right Info & Fullscreen Buttons */}
+              <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDetailCollapsed(!isDetailCollapsed)}
+                  className="px-3 py-1.5 rounded-xl bg-amber-900/90 hover:bg-amber-800/90 text-amber-200 border border-amber-500/50 backdrop-blur-md text-xs font-bold flex items-center gap-1.5 shadow-lg transition"
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  <span>{isDetailCollapsed ? 'Mở bài học' : 'Ẩn bài học'}</span>
+                </button>
+              </div>
+
+              {/* Bottom On-Canvas Controls matching the artwork */}
+              <div className="absolute bottom-3 inset-x-3 z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+                {/* Button: Xoay 360° -> switches to 3D View */}
+                <div className="pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('3D_VIEW')}
+                    className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white text-xs font-black flex items-center gap-2 shadow-xl border border-blue-400/50 transition transform hover:scale-105"
+                  >
+                    <Compass className="h-4 w-4 animate-spin-slow" />
+                    <span>Xoay 360°</span>
+                  </button>
+                </div>
+
+                {/* Center Controls: Phóng to / Thu nhỏ & Tham quan tự động */}
+                <div className="pointer-events-auto flex items-center gap-2 bg-slate-950/85 backdrop-blur-md p-1.5 rounded-2xl border border-slate-700/80 shadow-2xl">
+                  {/* Zoom In */}
+                  <button
+                    type="button"
+                    onClick={handleZoomIn}
+                    title="Phóng to sa bàn"
+                    disabled={zoomLevel >= 2.5}
+                    className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 disabled:opacity-40 transition"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </button>
+                  <span className="text-[11px] font-bold text-slate-300 min-w-[36px] text-center">
+                    {Math.round(zoomLevel * 100)}%
                   </span>
-                  <span>Đỉnh Nghĩa Lĩnh: 175 mét (Cao nhất)</span>
-                </div>
-                <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden relative">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 transition-all duration-500 rounded-full"
-                    style={{
-                      width: `${Math.min(
-                        100,
-                        Math.max(8, ((selectedStation?.altitude || 15) / 175) * 100)
-                      )}%`,
-                    }}
-                  />
-                </div>
-                {/* Step indicators */}
-                <div className="flex justify-between items-center px-1">
-                  {hungTempleData.stations.map((s, idx) => (
+                  {/* Zoom Out */}
+                  <button
+                    type="button"
+                    onClick={handleZoomOut}
+                    title="Thu nhỏ sa bàn"
+                    disabled={zoomLevel <= 1}
+                    className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 disabled:opacity-40 transition"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </button>
+                  {zoomLevel > 1 && (
                     <button
-                      key={s.id}
                       type="button"
-                      onClick={() => {
-                        setSelectedStation(s);
-                        setIsTourPlaying(false);
-                      }}
-                      className={`text-[10px] font-bold transition ${
-                        selectedStation?.id === s.id
-                          ? 'text-amber-400 scale-125'
-                          : 'text-slate-500 hover:text-slate-300'
-                      }`}
+                      onClick={handleResetZoom}
+                      title="Đặt lại góc nhìn chuẩn"
+                      className="px-2 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-300 transition"
                     >
-                      {idx + 1}
+                      Đặt lại
                     </button>
-                  ))}
+                  )}
+
+                  <div className="h-4 w-px bg-slate-700 mx-0.5" />
+
+                  {/* Auto-tour button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsTourPlaying(!isTourPlaying)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-md ${
+                      isTourPlaying
+                        ? 'bg-amber-500 text-slate-950 animate-pulse'
+                        : 'bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white'
+                    }`}
+                  >
+                    {isTourPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    <span>{isTourPlaying ? 'Tạm dừng tour' : 'Tham quan tự động'}</span>
+                  </button>
                 </div>
+
+                {/* Right button: Ý nghĩa note card */}
+                <div className="pointer-events-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowMeaningModal(!showMeaningModal)}
+                    className="px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-900/90 to-red-950/90 hover:from-amber-800 hover:to-red-900 text-amber-200 border border-amber-600/60 backdrop-blur-md text-xs font-black flex items-center gap-1.5 shadow-xl transition transform hover:scale-105"
+                  >
+                    <span>📜 Ý nghĩa</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Collapsible Meaning Note Card Modal */}
+              {showMeaningModal && (
+                <div className="absolute inset-x-4 bottom-16 sm:bottom-14 max-w-lg mx-auto z-40 bg-gradient-to-br from-amber-950/95 via-slate-950/95 to-red-950/95 border-2 border-amber-500 rounded-2xl p-4 shadow-2xl backdrop-blur-lg animate-in fade-in slide-in-from-bottom-4">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-amber-600/40">
+                    <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                      🌸 Ý nghĩa Lịch sử & Tâm linh Đền Hùng
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowMeaningModal(false)}
+                      className="text-amber-400 hover:text-white text-xs font-bold px-1.5 py-0.5 rounded-lg bg-amber-950/80 border border-amber-700/60"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="text-xs sm:text-sm text-amber-100 font-semibold leading-relaxed">
+                    “Đền Hùng là nơi thờ các vua Hùng, biểu tượng của cội nguồn dân tộc Việt Nam. Nơi đây nhắc nhở muôn đời con cháu về truyền thống uống nước nhớ nguồn và tinh thần đại đoàn kết dân tộc.”
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Elevation & Step Route Bar */}
+            <div className="bg-slate-900/90 rounded-2xl p-3 border border-slate-800 flex flex-col gap-2">
+              <div className="flex items-center justify-between text-xs text-slate-300 font-semibold">
+                <span className="flex items-center gap-1.5 text-amber-400 font-bold">
+                  <MapPin className="h-3.5 w-3.5" />
+                  Độ cao hiện tại: {selectedStation.altitude} mét ({selectedStation.name.split('(')[0].trim()})
+                </span>
+                <span>Đỉnh Kính Thiên: 175 mét (Cao nhất)</span>
+              </div>
+              <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden relative">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 transition-all duration-500 rounded-full"
+                  style={{
+                    width: `${Math.min(100, Math.max(8, (selectedStation.altitude / 175) * 100))}%`,
+                  }}
+                />
+              </div>
+              <div className="flex justify-between items-center px-1">
+                {hungTempleData.stations.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedStation(s);
+                      setIsTourPlaying(false);
+                      setIsDetailCollapsed(false);
+                    }}
+                    className={`text-[10px] sm:text-xs font-bold transition flex items-center gap-1 ${
+                      selectedStation?.id === s.id
+                        ? 'text-amber-300 scale-110 font-black'
+                        : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                  >
+                    <span className="w-4 h-4 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px]">
+                      {idx + 1}
+                    </span>
+                    <span className="hidden md:inline">{s.name.split('(')[0].trim()}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Right Side Detail Panel for Selected Station */}
-            {selectedStation && (
-              <div className="w-full lg:w-[420px] bg-slate-950 border-t lg:border-t-0 lg:border-l border-slate-800 p-5 sm:p-6 flex flex-col justify-between shrink-0 overflow-y-auto">
-                <div className="space-y-4">
-                  {/* Station Badge & Elevation Header */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-lg bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center">
-                          {selectedStation.badgeNumber}
-                        </span>
-                        <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">
-                          {selectedStation.theme}
-                        </span>
-                      </div>
-                      <h2 className="text-xl font-black text-white leading-tight">
-                        {selectedStation.name}
-                      </h2>
-                      <p className="text-xs text-slate-400 font-medium">
-                        {selectedStation.subtitle}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => speakStationText(selectedStation)}
-                      title={isSpeaking ? 'Dừng đọc' : 'Nghe thuyết minh giọng đọc'}
-                      className={`p-2.5 rounded-2xl border transition flex items-center gap-1.5 ${
-                        isSpeaking
-                          ? 'bg-amber-500 text-slate-950 border-amber-400 animate-pulse'
-                          : 'bg-slate-900 hover:bg-slate-800 text-amber-400 border-slate-700'
-                      }`}
-                    >
-                      {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                      <span className="text-xs font-bold hidden sm:inline">
-                        {isSpeaking ? 'Dừng' : 'Nghe'}
+            {/* Pedagogical Station Detail Panel (Non-intrusive, collapsable) */}
+            <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden transition-all duration-300 shadow-xl">
+              {/* Header Bar of Detail Card */}
+              <div className="p-3 sm:p-4 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-red-500 text-slate-950 font-black text-sm flex items-center justify-center shrink-0 shadow-md">
+                    {selectedStation.badgeNumber}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
+                        {selectedStation.theme}
                       </span>
-                    </button>
-                  </div>
-
-                  {/* Station Location Info Cards */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-slate-900/90 rounded-2xl p-2.5 border border-slate-800">
-                      <span className="text-slate-400 block text-[10px]">Độ cao vị trí:</span>
-                      <strong className="text-amber-400 text-sm font-black">
-                        {selectedStation.altitude}m
-                      </strong>
+                      <span className="text-[11px] text-slate-400">
+                        • Độ cao: <strong className="text-amber-300">{selectedStation.altitude}m</strong>
+                      </span>
+                      <span className="text-[11px] text-slate-400 hidden sm:inline">
+                        • Bậc đá: <strong className="text-emerald-300">{selectedStation.steps}</strong>
+                      </span>
                     </div>
-                    <div className="bg-slate-900/90 rounded-2xl p-2.5 border border-slate-800">
-                      <span className="text-slate-400 block text-[10px]">Bậc đá hành hương:</span>
-                      <strong className="text-emerald-400 text-xs font-bold truncate block">
-                        {selectedStation.steps}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* Station Visual Card / Image */}
-                  <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-slate-900 group">
-                    <img
-                      src={selectedStation.imageUrl}
-                      alt={selectedStation.name}
-                      className="w-full h-44 object-cover group-hover:scale-105 transition duration-500"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
-                    <div className="absolute bottom-2 left-3 right-3 text-xs text-amber-200 font-semibold drop-shadow-md">
-                      {selectedStation.highlight}
-                    </div>
-                  </div>
-
-                  {/* Story & Legend Box */}
-                  <div className="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 space-y-2">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                      <BookOpen className="h-3.5 w-3.5" />
-                      Sự tích & Lịch sử
+                    <h3 className="text-base sm:text-lg font-black text-white">
+                      {selectedStation.name}
                     </h3>
-                    <p className="text-sm text-slate-300 leading-relaxed">
-                      {selectedStation.legend}
-                    </p>
-                  </div>
-
-                  {/* Historical Quote if any */}
-                  {selectedStation.historicalQuote && (
-                    <div className="bg-gradient-to-r from-red-950/60 to-amber-950/60 rounded-2xl p-3.5 border border-red-800/50">
-                      <p className="text-xs font-black text-amber-300 leading-relaxed italic">
-                        {selectedStation.historicalQuote}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Architecture & Fun Fact */}
-                  <div className="bg-emerald-950/30 rounded-2xl p-3.5 border border-emerald-800/40 space-y-1.5">
-                    <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Em có biết?
-                    </span>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      {selectedStation.funFact}
-                    </p>
                   </div>
                 </div>
 
-                {/* Bottom Navigation Buttons */}
-                <div className="pt-4 flex items-center justify-between gap-3 border-t border-slate-800 mt-4">
+                <div className="flex items-center gap-2">
+                  {/* TTS Voice Narrator */}
+                  <button
+                    type="button"
+                    onClick={() => speakStationText(selectedStation, activeDetailTab)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
+                      isSpeaking
+                        ? 'bg-amber-500 text-slate-950 border-amber-400 animate-pulse'
+                        : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border-slate-700'
+                    }`}
+                  >
+                    {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    <span>{isSpeaking ? 'Dừng đọc' : 'Nghe thuyết minh'}</span>
+                  </button>
+
+                  {/* Previous / Next Station */}
                   <button
                     type="button"
                     onClick={handlePrevStation}
-                    className="flex-1 py-2.5 px-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-200 border border-slate-700 flex items-center justify-center gap-1.5 transition"
+                    title="Điểm trước"
+                    className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    <span>Điểm trước</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleNextStation}
-                    className="flex-1 py-2.5 px-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-xs font-black text-slate-950 border border-amber-400 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition"
+                    title="Điểm kế tiếp"
+                    className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
                   >
-                    <span>Điểm kế tiếp</span>
                     <ChevronRight className="h-4 w-4" />
+                  </button>
+
+                  {/* Collapse / Expand Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setIsDetailCollapsed(!isDetailCollapsed)}
+                    title={isDetailCollapsed ? 'Mở rộng bảng bài học' : 'Thu nhỏ bảng bài học'}
+                    className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                  >
+                    {isDetailCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
-            )}
+
+              {/* Collapsible Body with 4 Pedagogical Tabs */}
+              {!isDetailCollapsed && (
+                <div className="p-4 sm:p-6 space-y-4">
+                  {/* 4 Tabs: Kiến thức cốt lõi, Truyền thuyết, Kiến trúc/Ghi nhớ, Em có biết? */}
+                  <div className="flex flex-wrap gap-2 border-b border-slate-800 pb-3">
+                    <button
+                      type="button"
+                      onClick={() => setActiveDetailTab('CORE')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                        activeDetailTab === 'CORE'
+                          ? 'bg-amber-600 text-white font-black shadow-md'
+                          : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                      }`}
+                    >
+                      <span>🌟 Kiến thức cốt lõi</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDetailTab('LEGEND')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                        activeDetailTab === 'LEGEND'
+                          ? 'bg-amber-600 text-white font-black shadow-md'
+                          : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                      }`}
+                    >
+                      <span>📜 Truyền thuyết</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDetailTab('ARCHITECTURE')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                        activeDetailTab === 'ARCHITECTURE'
+                          ? 'bg-amber-600 text-white font-black shadow-md'
+                          : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                      }`}
+                    >
+                      <span>🏛️ Kiến trúc & Ghi nhớ</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveDetailTab('FUN_FACT')}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                        activeDetailTab === 'FUN_FACT'
+                          ? 'bg-emerald-600 text-white font-black shadow-md'
+                          : 'bg-slate-900 text-slate-300 hover:text-white border border-slate-800'
+                      }`}
+                    >
+                      <span>💡 Em có biết?</span>
+                    </button>
+                  </div>
+
+                  {/* Tab Content Box */}
+                  <div className="bg-slate-900/80 rounded-2xl p-4 sm:p-5 border border-slate-800 min-h-[100px] flex flex-col justify-center">
+                    {activeDetailTab === 'CORE' && (
+                      <div className="space-y-2">
+                        <p className="text-sm sm:text-base text-amber-100 font-semibold leading-relaxed">
+                          {selectedStation.highlight}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {selectedStation.subtitle}
+                        </p>
+                      </div>
+                    )}
+
+                    {activeDetailTab === 'LEGEND' && (
+                      <div className="space-y-2">
+                        <p className="text-sm sm:text-base text-slate-200 leading-relaxed">
+                          {selectedStation.legend}
+                        </p>
+                      </div>
+                    )}
+
+                    {activeDetailTab === 'ARCHITECTURE' && (
+                      <div className="space-y-2">
+                        <p className="text-sm sm:text-base text-slate-200 leading-relaxed">
+                          {selectedStation.architecture}
+                        </p>
+                        {selectedStation.historicalQuote && (
+                          <div className="mt-3 p-3 rounded-xl bg-amber-950/50 border border-amber-700/50 text-xs font-bold text-amber-300 italic">
+                            {selectedStation.historicalQuote}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeDetailTab === 'FUN_FACT' && (
+                      <div className="space-y-2">
+                        <p className="text-sm sm:text-base text-emerald-200 leading-relaxed">
+                          {selectedStation.funFact}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* TAB 2: KHÔNG GIAN LỄ HỘI MÙNG 10 THÁNG 3 */}
+        {/* TAB 2: SA BÀN 3D WEBGL TƯƠNG TÁC XOAY 360 ĐỘ */}
+        {activeTab === '3D_VIEW' && (
+          <div className="relative flex-1 w-full min-h-[620px] sm:min-h-[720px] h-[78vh] max-h-[860px] bg-slate-950 flex flex-col">
+            <iframe
+              src="/models/den-hung-3d.html?embed=1"
+              title="Sa bàn 3D Đền Hùng WebGL"
+              className="w-full flex-1 border-0 min-h-[620px] sm:min-h-[720px] h-full"
+              allow="fullscreen"
+            />
+          </div>
+        )}
+
+        {/* TAB 3: KHÔNG GIAN LỄ HỘI MÙNG 10 THÁNG 3 */}
         {activeTab === 'FESTIVAL' && (
           <div className="p-5 sm:p-8 space-y-6 max-w-6xl mx-auto w-full">
             {/* Banner Ca Dao & Lời Bác Hồ */}
@@ -705,7 +872,7 @@ export const HungTempleDiorama: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 3: THỬ TÀI HIỂU BIẾT (QUIZ CỦNG CỐ) */}
+        {/* TAB 4: THỬ TÀI HIỂU BIẾT (QUIZ CỦNG CỐ) */}
         {activeTab === 'QUIZ' && (
           <div className="p-5 sm:p-8 max-w-3xl mx-auto w-full space-y-6">
             <div className="bg-slate-950/80 rounded-3xl p-6 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
