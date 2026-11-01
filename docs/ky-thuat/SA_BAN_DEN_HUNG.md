@@ -1,6 +1,6 @@
 # Sa bàn 3D Đền Hùng
 
-Mở `/mo-hinh/den-hung`. Thẻ **Sa bàn 3D tương tác** mở mặc định. Bản độc lập ở `/models/den-hung-3d.html` dùng cùng cảnh WebGL; thẻ **Ảnh tham khảo** giữ lại hình toàn cảnh cũ.
+Mở `/mo-hinh/den-hung`. Thẻ **Sa bàn 3D tương tác** mở mặc định. Bản độc lập ở `/models/den-hung-3d.html` dùng cùng cảnh WebGL. Thẻ ảnh tham khảo đã được gỡ khỏi giao diện.
 
 - Kéo chuột hoặc một ngón tay để xoay và nghiêng. Cuộn chuột, chụm hai ngón hoặc dùng nút +/− để thu phóng. Nút **Toàn cảnh** đưa camera về góc nhìn ban đầu.
 - Bấm công trình, nhãn nổi hoặc tên địa điểm để khám phá. Danh sách nút hỗ trợ bàn phím. Kéo camera không chọn nhầm công trình; chụm hai ngón cũng không kích hoạt điểm khám phá.

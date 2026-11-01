@@ -500,13 +500,28 @@ function buildCarriage(){
 }
 
 function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+function sizePlaceLabels(){
+ if(!camera||!stage.clientHeight)return;
+ const pixels=stage.clientWidth<600?50:64;
+ const worldPerPixel=2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))/stage.clientHeight;
+ labels.forEach(label=>label.scale.set(pixels*label.userData.aspect*worldPerPixel,pixels*worldPerPixel,1));
+}
 function makeLabelSprite(text,x,y,z,id=null){
- const c=document.createElement('canvas');c.width=512;c.height=128;const ctx=c.getContext('2d');
- ctx.fillStyle='rgba(255,248,230,.96)';ctx.strokeStyle='#a87b3f';ctx.lineWidth=5;roundRect(ctx,8,8,496,112,24);ctx.fill();ctx.stroke();
- ctx.fillStyle='#542d20';ctx.font='bold 40px Arial, "Segoe UI", sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,256,65);
- const tex=new THREE.CanvasTexture(c);if('colorSpace' in tex)tex.colorSpace=THREE.SRGBColorSpace;
- const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,toneMapped:false,fog:false}));
- sprite.position.set(x,y,z);sprite.scale.set(3.5,.875,1);sprite.userData={isLabel:true,placeId:id};scene.add(sprite);labels.push(sprite);clickable.push(sprite);return sprite;
+ const c=document.createElement('canvas'),ctx=c.getContext('2d');
+ const font='800 64px "Segoe UI", Arial, sans-serif';ctx.font=font;
+ c.width=Math.ceil(ctx.measureText(text).width)+96;c.height=184;
+ const w=c.width,gradient=ctx.createLinearGradient(0,10,0,126);
+ gradient.addColorStop(0,'#fffbee');gradient.addColorStop(1,'#f4dfab');
+ ctx.shadowColor='rgba(48,25,8,.42)';ctx.shadowBlur=10;ctx.shadowOffsetY=5;
+ ctx.fillStyle=gradient;ctx.strokeStyle='#9b6428';ctx.lineWidth=6;roundRect(ctx,8,8,w-16,120,20);ctx.fill();ctx.stroke();
+ ctx.shadowColor='transparent';ctx.strokeStyle='#e0b555';ctx.lineWidth=2;roundRect(ctx,15,15,w-30,106,14);ctx.stroke();
+ ctx.fillStyle='#7b2419';ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,w/2,71);
+ // Red, white-edged locator joins each sign to its own building, as in the reference.
+ ctx.fillStyle='#b93827';ctx.beginPath();ctx.moveTo(w/2-10,130);ctx.lineTo(w/2+10,130);ctx.lineTo(w/2,147);ctx.closePath();ctx.fill();
+ ctx.beginPath();ctx.arc(w/2,157,13,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff7df';ctx.lineWidth=5;ctx.stroke();
+ const tex=new THREE.CanvasTexture(c);if('colorSpace' in tex)tex.colorSpace=THREE.SRGBColorSpace;else tex.encoding=THREE.sRGBEncoding;
+ const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false,toneMapped:false,fog:false,sizeAttenuation:false}));
+ sprite.position.set(x,y,z);sprite.userData={isLabel:true,placeId:id,aspect:w/c.height};sprite.renderOrder=10;scene.add(sprite);labels.push(sprite);clickable.push(sprite);sizePlaceLabels();return sprite;
 }
 
 
@@ -536,7 +551,7 @@ function animate(){
  renderer.render(scene,camera);
 }
 
-function resize(){if(!camera||!renderer)return;camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio(lightMode?1:Math.min(devicePixelRatio,1.7))}
+function resize(){if(!camera||!renderer)return;camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio(lightMode?1:Math.min(devicePixelRatio,1.7));sizePlaceLabels()}
 
 function onPick(e){
  if(gameBusy)return;let r=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(mouse,camera);

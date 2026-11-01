@@ -259,3 +259,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 252: 2026-11-01: Phat hanh sa ban Den Hung WebGL mac dinh: dia hinh lien mach, kien truc mai ngoi cong va san den, duong bac da hanh huong, bam kham pha bon den, tour tu dong co tam dung/tiep tuc, can camera cho dien thoai va cache v14.
 
 253: 2026-11-01: Dung lai sa ban Den Hung theo anh tham khao: cong tam quan chinh dien, cac den len dan theo nui, lang ben phai, nha bat giac canh ho, cau thang va lan can da, cay xanh va bon hoa. Giu tuong tac WebGL va tour tu dong; cache v15.
+
+254: 2026-11-01: Phat hanh nhan ten den lon, chu nau do tren bang kem vien vang; giu co chu khi thu xa. Go the anh tham khao, giu sa ban WebGL, le hoi va on tap. Cache v16.
