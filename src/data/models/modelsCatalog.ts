@@ -107,7 +107,7 @@ export const modelsCatalog: LearningModelItem[] = [
     lessonCode: 'Bài 7',
     lessonName: 'Đền Hùng và lễ giỗ Tổ Hùng Vương',
     coverImage: '/images/models/den-hung-panoramic-diorama.jpg',
-    summary: 'Khám phá sa bàn hành hương núi Nghĩa Lĩnh qua 8 điểm di tích: Cổng Đền, Đền Hạ, Đền Trung, Đền Thượng, Lăng Vua Hùng, Đền Giếng và không gian Lễ hội Giỗ Tổ mùng 10/3.',
+    summary: 'Sa bàn 3D tương tác núi Nghĩa Lĩnh: xoay, nghiêng, thu phóng, khám phá các đền và đường hành hương. Có tham quan tự động để giáo viên trình chiếu trên lớp.',
     status: 'AVAILABLE',
     route: '/mo-hinh/den-hung',
     tags: ['Núi Nghĩa Lĩnh', 'Vua Hùng', 'Giỗ Tổ 10/3', 'Hát Xoan', 'Di sản UNESCO'],

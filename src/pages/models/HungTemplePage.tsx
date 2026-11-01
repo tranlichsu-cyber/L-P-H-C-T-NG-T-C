@@ -60,7 +60,7 @@ export const HungTemplePage: React.FC = () => {
               Sa bàn 3D Đền Hùng & Lễ Giỗ Tổ Hùng Vương
             </h1>
             <p className="text-sm text-slate-400 max-w-3xl leading-relaxed">
-              Trải nghiệm mô hình kiến trúc 3D xoay 360 độ các đền thờ (Cổng Đền, Đền Hạ, Đền Trung, Đền Thượng, Lăng Vua Hùng, Đền Giếng) trên núi Nghĩa Lĩnh cao 175m.
+              Kéo để xoay, nghiêng và thu phóng sa bàn núi Nghĩa Lĩnh. Nhấn vào từng ngôi đền để khám phá hoặc bật tham quan tự động khi trình chiếu trên lớp. Kiến trúc và địa hình được tái dựng minh họa, không theo tỉ lệ đo đạc.
             </p>
           </div>
 
@@ -87,7 +87,7 @@ export const HungTemplePage: React.FC = () => {
             </div>
             <h3 className="text-sm font-bold text-white">Núi Nghĩa Lĩnh (Phú Thọ)</h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Xác định được vị trí của núi Nghĩa Lĩnh và các công trình đền chính (Đền Hạ, Đền Trung, Đền Thượng, Đền Giếng) trên sa bàn thực tế.
+              Xác định được vị trí của núi Nghĩa Lĩnh và các công trình đền chính (Đền Hạ, Đền Trung, Đền Thượng, Đền Giếng) trên sa bàn 3D.
             </p>
           </div>
 

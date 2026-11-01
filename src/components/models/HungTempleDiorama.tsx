@@ -37,8 +37,8 @@ type ActiveTab = 'DIORAMA' | '3D_VIEW' | 'FESTIVAL' | 'QUIZ';
 type DetailTab = 'CORE' | 'LEGEND' | 'ARCHITECTURE' | 'FUN_FACT';
 
 export const HungTempleDiorama: React.FC = () => {
-  // Sa bàn Toàn cảnh is active by default
-  const [activeTab, setActiveTab] = useState<ActiveTab>('DIORAMA');
+  // Open the real WebGL diorama first; the illustrated overview remains a reference.
+  const [activeTab, setActiveTab] = useState<ActiveTab>('3D_VIEW');
   const [selectedStation, setSelectedStation] = useState<HungTempleStation>(
     hungTempleData.stations[0]
   );
@@ -67,7 +67,7 @@ export const HungTempleDiorama: React.FC = () => {
 
   // Auto-tour step timer
   useEffect(() => {
-    if (!isTourPlaying) {
+    if (!isTourPlaying || activeTab !== 'DIORAMA') {
       if (tourTimerRef.current) clearInterval(tourTimerRef.current);
       return;
     }
@@ -84,7 +84,7 @@ export const HungTempleDiorama: React.FC = () => {
     return () => {
       if (tourTimerRef.current) clearInterval(tourTimerRef.current);
     };
-  }, [isTourPlaying]);
+  }, [isTourPlaying, activeTab]);
 
   // Handle Fullscreen toggle
   const toggleFullscreen = () => {
@@ -258,7 +258,7 @@ export const HungTempleDiorama: React.FC = () => {
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
-              <span>🖼️ Sa bàn Toàn cảnh</span>
+              <span>🖼️ Ảnh tham khảo</span>
             </button>
             <button
               type="button"
@@ -270,7 +270,7 @@ export const HungTempleDiorama: React.FC = () => {
               }`}
             >
               <Eye className="h-3.5 w-3.5" />
-              <span>🌐 Mô hình 3D (360°)</span>
+              <span>🌐 Sa bàn 3D tương tác</span>
             </button>
             <button
               type="button"

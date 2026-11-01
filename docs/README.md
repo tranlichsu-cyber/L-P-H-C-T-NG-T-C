@@ -48,6 +48,7 @@ Các báo cáo có ngày và tài liệu phiên bản cũ được giữ làm l�
 
 ## Kỹ thuật và vận hành
 
+- [Sa bàn 3D Đền Hùng: sử dụng và kiểm tra](ky-thuat/SA_BAN_DEN_HUNG.md)
 - [Triển khai Firebase DEV từ GitHub](ky-thuat/FIREBASE_GITHUB_DEPLOY.md)
 - [OFFICIAL FIRESTORE SCHEMA & DOCUMENTATION (v1.0.0)](ky-thuat/FIRESTORE_SCHEMA.md)
 - [Giảm lượt đọc dữ liệu — 15/10/2026](ky-thuat/GIAM_LUOT_DOC_DU_LIEU.md)
