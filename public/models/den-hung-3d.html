@@ -195,7 +195,7 @@ const DEFAULT={
  {q:"Khi tham quan di tích lịch sử, học sinh nên làm gì?",a:["Vẽ lên tường","Chen lấn, đùa nghịch","Giữ gìn vệ sinh, tôn nghiêm","Bẻ cành cây"],c:2,e:"Cần ứng xử văn minh, giữ gìn cảnh quan và tôn trọng di tích.",id:"mountain"}
  ]
 };
-let data=structuredCloneSafe(DEFAULT), current=0, activeTab='core', labelsVisible=true, lightMode=false, rotating=false, caravan=true, drum=false, finding=false, journey=false, journeyPaused=false, journeyTimer=null, findIndex=0, findTries=0, findScore=0, findOrder=[], quizOrder=[], quizIndex=0, quizScore=0, quizWrong=[], quizAnswered=false, infoCollapsed=false, infoHidden=false;
+let data=structuredCloneSafe(DEFAULT), current=0, activeTab='core', labelsVisible=true, lightMode=false, rotating=false, caravan=true, drum=false, finding=false, journey=false, journeyPaused=false, journeyTimer=null, findIndex=0, findTries=0, findScore=0, findOrder=[], quizOrder=[], quizIndex=0, quizScore=0, quizWrong=[], quizAnswered=false, infoCollapsed=false, infoHidden=true;
 function structuredCloneSafe(o){return JSON.parse(JSON.stringify(o))}
 function loadData(){try{const s=localStorage.getItem('denhung3d_v1');if(s){const d=JSON.parse(s);if(d&&Array.isArray(d.places)&&d.places.length===7)data=d}}catch(e){console.warn('Không đọc được dữ liệu đã lưu:',e)}}
 function saveData(){try{localStorage.setItem('denhung3d_v1',JSON.stringify(data));toast('Đã lưu nội dung trên thiết bị này.')}catch(e){toast('Không thể lưu: trình duyệt đang chặn bộ nhớ.');console.warn(e)}}
@@ -204,14 +204,16 @@ loadData(); $('appTitle').textContent=data.title;
 let scene,camera,renderer,controls,raycaster,mouse,clock,root,objects={},clickable=[],labels=[],labelEls={},clouds=[],flags=[],carriage=null,fireworks=[],treeGroup=new THREE.Group(),hillGroup=new THREE.Group(),pilgrimageCurve=null,selectedBuildingMesh=null;
 const stage=$('scene');let isMobile=matchMedia('(max-width:800px)').matches;const weak=navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4;
 const mat=(c,r=.85,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
-const grass=mat(0x71984d),grass2=mat(0x8cac5d),soil=mat(0x98734d),stone=mat(0xb7aa91),stoneDark=mat(0x827966),brick=mat(0xa95d3e),wall=mat(0xd9c6a0),wood=mat(0x633d25),wood2=mat(0x8a5833),roof=mat(0x9e3024),roofLight=mat(0xb74731),gold=mat(0xc99c48),water=mat(0x78b9bd,.22,.1),leafMats=[mat(0x315d37),mat(0x477742),mat(0x668b43),mat(0x78984d)];
+const grass=mat(0x71984d),grass2=mat(0x8cac5d),soil=mat(0x98734d),stone=mat(0xb7aa91),stoneDark=mat(0x827966),brick=mat(0xa95d3e),wall=mat(0xd9c6a0),wood=mat(0x633d25),wood2=mat(0x8a5833),roof=mat(0x9e3024),roofLight=mat(0xb74731),gold=mat(0xc99c48),water=mat(0x78b9bd,.22,.1),leafMats=[mat(0x244e20),mat(0x387326),mat(0x50922e),mat(0x6ca940)];
+
+leafMats.forEach(material=>material.color.convertSRGBToLinear());
 
 function mesh(geo,material,x,y,z,parent=root){let m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=renderer?renderer.shadowMap.enabled:true;m.receiveShadow=true;parent.add(m);return m}
 
 function init3D(){
  if(!window.THREE||!THREE.OrbitControls){throw new Error('Không tải được thư viện 3D')}
- scene=new THREE.Scene();scene.background=new THREE.Color(0xc9dfdc);scene.fog=new THREE.Fog(0xc9dfdc,100,220);
- camera=new THREE.PerspectiveCamera(42,stage.clientWidth/stage.clientHeight,.1,300);camera.position.set(26,25,34);
+ scene=new THREE.Scene();scene.background=new THREE.Color(0xc2dded);scene.fog=new THREE.Fog(0xc2dded,100,220);
+ camera=new THREE.PerspectiveCamera(42,stage.clientWidth/stage.clientHeight,.1,300);camera.position.set(0,25,43);
  renderer=new THREE.WebGLRenderer({antialias:!(weak||isMobile),alpha:false});renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio((weak||isMobile)?1:Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=!(weak||isMobile);renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  if('outputColorSpace' in renderer)renderer.outputColorSpace=THREE.SRGBColorSpace;
  else if('outputEncoding' in renderer&&THREE.sRGBEncoding)renderer.outputEncoding=THREE.sRGBEncoding;
@@ -238,67 +240,103 @@ function buildSurfaceTextures(){
  surface(stone,'#c6c0af',true);surface(stoneDark,'#a49f90',true);surface(wall,'#dfd3b5',false);surface(brick,'#ba795b',true);surface(wood,'#7b5840',false);
 }
 
+
 function buildBase(){
- mesh(new THREE.BoxGeometry(36,.8,28),mat(0xb68c50),0,-.55,0);
- mesh(new THREE.BoxGeometry(34,.35,26),mat(0xd7bd82),0,-.08,0);
- const ringGeo=new THREE.TorusGeometry(.22,.035,6,18);
- for(let x=-16.2;x<=16.2;x+=1.08)for(let z of [-12.6,12.6]){let r=mesh(ringGeo,gold,x,.1,z);r.rotation.x=Math.PI/2}
- for(let z=-12;z<=12;z+=1.08)for(let x of [-16.6,16.6]){let r=mesh(ringGeo,gold,x,.1,z);r.rotation.x=Math.PI/2}
+ const plinth=mesh(new THREE.CylinderGeometry(1,1,.7,128),stoneDark,0,-.35,0);plinth.scale.set(18.8,1,14.6);
+ const road=mesh(new THREE.RingGeometry(17.35,18.6,144),mat(0x68716e),0,.04,0);road.rotation.x=-Math.PI/2;road.scale.y=.78;
+ const rim=mesh(new THREE.TorusGeometry(17.25,.13,6,144),stone,0,.08,0);rim.rotation.x=Math.PI/2;rim.scale.y=.78;
+ for(let i=0;i<64;i++){const a=i/64*Math.PI*2;const dash=mesh(new THREE.BoxGeometry(.43,.012,.055),mat(0xd9d8c1),Math.sin(a)*18,.07,Math.cos(a)*14.04);dash.rotation.y=a;}
 }
 
+// The reference image is the composition guide, not a measured survey.
+// Centre-front gate; left Hạ; central Trung/Thượng; right tomb and pond pavilion.
+const terraces={gate:[0,.42,10,4.2,2],ha:[-9,4.3,2,3.8,3.7],trung:[-2.5,8,-4,3.6,3.7],thuong:[.6,11.8,-8.8,3.8,3.5],lang:[10,7,-4.3,3.2,2.8],gieng:[9,2,5.4,4,4]};
 
-// One continuous relief, with level terraces supporting the architectural compounds.
-const terraces={gate:[-12,.28,8,2.8,2],ha:[-7.4,2.2,4.4,3.1,3.7],trung:[-1.5,5.6,-1.8,2.9,3.6],thuong:[1,9.1,-6,3.1,3.8],lang:[6,8.2,-6,2.1,2],gieng:[8,.9,5,3.5,4.1]};
+
 function terrainHeight(x,z){
- let h=.16+10*Math.exp(-Math.hypot(x-1,z+7)/8);
- for(const [tx,ty,tz,rx,rz] of Object.values(terraces)){
-  const d=Math.max(Math.abs(x-tx)/rx,Math.abs(z-tz)/rz);
-  if(d<1.5){let t=Math.max(0,Math.min(1,(1.5-d)/.5));t=t*t*(3-2*t);h=h*(1-t)+ty*t;}
- }
+ let h=.2+12.7*Math.exp(-((x+.4)**2/165+(z+7)**2/120));
+ const edge=Math.sqrt((x/17.2)**2+(z/13.4)**2);h=.1+(h-.1)*Math.max(0,Math.min(1,(1-edge)/.14));
+ const pads=Object.values(terraces).map(([tx,ty,tz,rx,rz])=>({y:ty,d:Math.max(Math.abs(x-tx)/rx,Math.abs(z-tz)/rz)})).sort((a,b)=>a.d-b.d);
+ if(pads[0].d<=1)return pads[0].y;
+ let total=1,weighted=h;
+ for(const pad of pads){if(pad.d>=1.7)continue;const weight=((1.7-pad.d)/(pad.d-1))**2;total+=weight;weighted+=pad.y*weight;}
+ h=weighted/total;
  return h;
 }
+
 function buildMountain(){
- root.add(hillGroup);
- const geo=new THREE.PlaneGeometry(34,26,136,104);geo.rotateX(-Math.PI/2);
- const pos=geo.attributes.position,colors=[];const color=new THREE.Color();
- for(let i=0;i<pos.count;i++){
-  const x=pos.getX(i),z=pos.getZ(i),h=terrainHeight(x,z);pos.setY(i,h);
-  color.setHSL(.23+(Math.sin(x*1.9+z*2.7)+Math.cos(z*3.1))*.008,.24,.24+h*.006+Math.sin(x*3+z)*.012);
-  colors.push(color.r,color.g,color.b);
+ root.add(hillGroup);const vertices=[],colors=[],indices=[],segments=144,rings=64,color=new THREE.Color();
+ for(let j=0;j<=rings;j++)for(let i=0;i<=segments;i++){
+  const r=j/rings,a=i/segments*Math.PI*2,x=Math.cos(a)*17.2*r,z=Math.sin(a)*13.4*r;
+  const h=terrainHeight(x,z);vertices.push(x,h,z);
+  color.setHSL(.245+Math.sin(x+z)*.014,.42,.22+h*.003+Math.sin(x*3+z*2)*.014);colors.push(color.r,color.g,color.b);
  }
- geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.computeVertexNormals();
- const relief=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1}));relief.receiveShadow=true;hillGroup.add(relief);
+ for(let j=0;j<rings;j++)for(let i=0;i<segments;i++){const a=j*(segments+1)+i;indices.push(a,a+1,a+segments+1,a+1,a+segments+2,a+segments+1);}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.setIndex(indices);geo.computeVertexNormals();
+ const relief=mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,side:THREE.DoubleSide}),0,0,0,hillGroup);relief.receiveShadow=true;
  hillGroup.userData.placeId='mountain';objects.mountain=hillGroup;
 }
-function buildPath(){
- // Ascend to the summit, pass the tomb, then descend on the eastern side to Đền Giếng.
- const points=[[-12,10.4],[-12,8],[-10,7],[-8,7.3],[-7.4,6.5],[-5,6.7],[-4.2,3],[-4,1],[-1.5,1],[-1.5,.6],[2,.6],[4,-2],[4,-3.5],[1,-3.5],[1,-4.5],[4,-4.5],[6,-4.5],[9,-3],[11,0],[11,4],[8,7.6],[8,5.4],[8,8.8],[4,10],[-3,11],[-12,10.4]];
- const flatCurve=new THREE.CatmullRomCurve3(points.map(([x,z])=>new THREE.Vector3(x,0,z)),false,'centripetal');
- const samples=flatCurve.getSpacedPoints(420).map(p=>new THREE.Vector3(p.x,terrainHeight(p.x,p.z)+.13,p.z));
- pilgrimageCurve=new THREE.CatmullRomCurve3(samples);
- const slabGeo=new THREE.BoxGeometry(.92,.12,.31),slabs=new THREE.InstancedMesh(slabGeo,stone,samples.length-1),dummy=new THREE.Object3D();
- samples.slice(0,-1).forEach((p,i)=>{const rise=Math.max(.12,Math.abs(samples[i+1].y-p.y)+.12);dummy.position.set(p.x,p.y-rise/2+.06,p.z);dummy.scale.set(1,rise/.12,1);dummy.rotation.y=Math.atan2(samples[i+1].x-p.x,samples[i+1].z-p.z);dummy.updateMatrix();slabs.setMatrixAt(i,dummy.matrix)});
- slabs.receiveShadow=true;root.add(slabs);
+
+function rail(parent,x1,z1,x2,z2,y=0){
+ const length=Math.hypot(x2-x1,z2-z1),g=new THREE.Group();g.position.set(x1,y,z1);g.rotation.y=Math.atan2(x2-x1,z2-z1);parent.add(g);
+ for(let i=0;i<=Math.ceil(length/.65);i++){
+  const z=length*i/Math.ceil(length/.65);mesh(new THREE.BoxGeometry(.12,.62,.12),stone,0,.4,z,g);mesh(new THREE.SphereGeometry(.095,6,5),stone,0,.74,z,g);
+ }
+ for(const h of [.2,.57])mesh(new THREE.BoxGeometry(.09,.07,length),stone,0,h,length/2,g);
 }
+
+const pathRoutes=[
+ [[0,12.8],[0,10],[0,7.7],[1.5,6.3],[1.5,3.6],[.2,2.3],[.2,.5],[-2.5,-.3],[-2.5,-2]],
+ [[-2.5,-.5],[-4,-.7],[-4,-3.7],[-3.5,-6],[-1,-6.5],[.6,-6.5],[.6,-8]],
+ [[0,7.7],[-4,7.7],[-6,6.3],[-9,6.3],[-9,4.1]],
+ [[.6,-7.2],[5,-7.2],[6,-3],[10,-1.2],[10,-2.5]],
+ [[10,-1.2],[13,1],[13,5.7],[11,8.2],[9,8.2],[9,6]],
+ [[0,12.8],[6,11.8],[10,10],[11,8.2]],
+];
+function buildPath(){
+ const railings=new THREE.Group();root.add(railings);
+ pathRoutes.forEach((route,routeIndex)=>{
+  const curve=new THREE.CatmullRomCurve3(route.map(([x,z])=>new THREE.Vector3(x,0,z)),false,'centripetal');
+  const count=Math.ceil(curve.getLength()/.19),samples=curve.getSpacedPoints(count).map(p=>new THREE.Vector3(p.x,terrainHeight(p.x,p.z)+.16,p.z));
+  const width=routeIndex<3?1.65:1.25,slabs=new THREE.InstancedMesh(new THREE.BoxGeometry(width,1,.23),stone,count),dummy=new THREE.Object3D();
+  samples.slice(0,-1).forEach((p,i)=>{const q=samples[i+1],rise=Math.max(.13,Math.abs(q.y-p.y)+.13);dummy.position.set(p.x,p.y-rise/2+.05,p.z);dummy.scale.set(1,rise,1);dummy.rotation.y=Math.atan2(q.x-p.x,q.z-p.z);dummy.updateMatrix();slabs.setMatrixAt(i,dummy.matrix);
+   if(i%4===0)for(const side of [-1,1]){
+    const n=new THREE.Vector3(q.z-p.z,0,p.x-q.x).normalize().multiplyScalar(width*.55*side),post=mesh(new THREE.BoxGeometry(.12,.63,.12),stone,p.x+n.x,p.y+.31,p.z+n.z,railings);post.castShadow=false;
+    mesh(new THREE.SphereGeometry(.09,6,5),stone,p.x+n.x,p.y+.68,p.z+n.z,railings);
+   }
+  });slabs.receiveShadow=true;root.add(slabs);
+  for(const side of [-1,1]){
+   const handrail=samples.map((p,i)=>{const q=samples[Math.min(i+1,samples.length-1)],r=samples[Math.max(0,i-1)];const n=new THREE.Vector3(q.z-r.z,0,r.x-q.x).normalize().multiplyScalar(width*.55*side);return new THREE.Vector3(p.x+n.x,p.y+.67,p.z+n.z);});
+   mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(handrail),count,.04,5,false),stone,0,0,0,railings);
+  }
+ });
+ batchDecoration(railings);
+ // A continuous ceremonial route through every major compound.
+ const procession=[[0,12.8],[0,8],[-4,7.7],[-9,6.3],[-9,4.1],[-9,6.3],[-4,7.7],[1.5,6.3],[1.5,3.6],[.2,.5],[-2.5,-.3],[-2.5,-2],[-4,-.7],[-4,-3.7],[-3.5,-6],[.6,-6.5],[.6,-8],[.6,-7.2],[5,-7.2],[6,-3],[10,-1.2],[10,-2.5],[10,-1.2],[13,1],[13,5.7],[11,8.2],[9,8.2],[9,6]];
+ const flat=new THREE.CatmullRomCurve3(procession.map(([x,z])=>new THREE.Vector3(x,0,z)),false,'centripetal');
+ pilgrimageCurve=new THREE.CatmullRomCurve3(flat.getSpacedPoints(700).map(p=>new THREE.Vector3(p.x,terrainHeight(p.x,p.z)+.2,p.z)));
+}
+
 
 
 function tree(x,z,s=1,variant=0){
- const g=new THREE.Group();g.position.set(x,terrainHeight(x,z),z);g.scale.setScalar(s);const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.12,.22,1.45,9),wood2);trunk.position.y=.72;trunk.castShadow=true;g.add(trunk);
- if(variant%3===0){for(let j=0;j<3;j++){const c=new THREE.Mesh(new THREE.SphereGeometry(.72-j*.1,12,10),leafMats[(variant+j)%4]);c.position.set((j-1)*.42,1.65+(j%2)*.3,((j%2)-.5)*.3);c.scale.set(1,.85,1);c.castShadow=true;g.add(c)}}
- else if(variant%3===1){const c=new THREE.Mesh(new THREE.SphereGeometry(.95,14,12),leafMats[variant%4]);c.position.y=1.9;c.scale.set(1,.8,1);c.castShadow=true;g.add(c)}
- else {for(let j=0;j<3;j++){const c=new THREE.Mesh(new THREE.ConeGeometry(.85-j*.12,1.35,9),leafMats[(variant+j)%4]);c.position.y=1.55+j*.52;c.castShadow=true;g.add(c)}}
+ const g=new THREE.Group();g.position.set(x,terrainHeight(x,z),z);g.scale.setScalar(s);
+ mesh(new THREE.CylinderGeometry(.07,.16,2,7),wood2,0,1,0,g);
+ for(let j=0;j<7;j++){
+  const a=j*2.399+variant;const crown=mesh(new THREE.IcosahedronGeometry(.66+(j%3)*.1,2),leafMats[(j+variant)%4],Math.cos(a)*.55,1.9+(j%3)*.3,Math.sin(a)*.55,g);crown.scale.set(1,.9,1);
+ }
  treeGroup.add(g);
 }
 
 
 function buildForest(){
  root.add(treeGroup);let seed=23;function rnd(){seed=(seed*9301+49297)%233280;return seed/233280}
- const road=pilgrimageCurve.getPoints(350);
- for(let i=0;i<360;i++){
-  let x=(rnd()-.5)*30,z=(rnd()-.5)*23;
-  if(Object.values(terraces).some(([tx,,tz,rx,rz])=>Math.abs(x-tx)<rx+.3&&Math.abs(z-tz)<rz+.3))continue;
+ const road=pathRoutes.flatMap(route=>new THREE.CatmullRomCurve3(route.map(([x,z])=>new THREE.Vector3(x,0,z))).getPoints(180));
+ for(let i=0;i<820;i++){
+  let x=(rnd()-.5)*33,z=(rnd()-.5)*25;if((x/16.8)**2+(z/13)**2>1)continue;
+  if(Object.values(terraces).some(([tx,,tz,rx,rz])=>Math.abs(x-tx)<rx+.1&&Math.abs(z-tz)<rz+.1))continue;
   if(road.some(p=>Math.hypot(p.x-x,p.z-z)<.9))continue;
-  tree(x,z,.45+rnd()*.45,i);
+  tree(x,z,.48+rnd()*.52,i);
  }
  // Render repeated vegetation in batches to keep classroom laptops responsive.
  treeGroup.updateMatrixWorld(true);const batches=new Map(),unused=new Set();
@@ -341,7 +379,7 @@ function hall(id,name,x,y,z,scale=1,kind='temple'){
  // Brick courtyard, stone perimeter and ceremonial entrance.
  mesh(new THREE.BoxGeometry(5.8,.2,6.8),stone,0,.05,.5,g);
  mesh(new THREE.BoxGeometry(5.5,.05,6.5),brick,0,.17,.5,g);
- for(let side of [-1,1])mesh(new THREE.BoxGeometry(.16,.65,6.7),wall,side*2.8,.5,.5,g);
+ for(let side of [-1,1])rail(g,side*2.8,-2.8,side*2.8,3.8,.2);rail(g,-2.8,3.8,-1,3.8,.2);rail(g,1,3.8,2.8,3.8,.2);
  for(let j=0;j<4;j++)mesh(new THREE.BoxGeometry(1.8,.12,.45),stone,0,.08+j*.12,4-j*.35,g);
  for(let xx of [-1.15,1.15]){mesh(new THREE.BoxGeometry(.22,1.5,.22),stoneDark,xx,.9,3.7,g);mesh(new THREE.SphereGeometry(.15,8,8),stone,xx,1.7,3.7,g);}
  for(let xx of [-1.1,0,1.1]){mesh(new THREE.BoxGeometry(.78,1.5,.12),wood,xx,1.6,.85,g);for(let k=0;k<5;k++)mesh(new THREE.BoxGeometry(.035,1.2,.05),wood2,xx-.3+k*.15,1.7,.94,g);}
@@ -353,7 +391,7 @@ function hall(id,name,x,y,z,scale=1,kind='temple'){
  for(const [xx,zz,ww,dd] of [[0,-1.28,3.55,.16],[-1.78,0,.16,2.55],[1.78,0,.16,2.55]]){const w=new THREE.Mesh(new THREE.BoxGeometry(ww,1.55,dd),wall);w.position.set(xx,1.48,zz);w.castShadow=true;g.add(w)}
  for(let xx of [-1.55,-.52,.52,1.55]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.105,.13,1.95,12),wood);c.position.set(xx,1.62,1.18);c.castShadow=true;g.add(c);const foot=new THREE.Mesh(new THREE.BoxGeometry(.34,.16,.34),stoneDark);foot.position.set(xx,.78,1.18);g.add(foot)}
  const beam=new THREE.Mesh(new THREE.BoxGeometry(3.9,.22,.22),wood2);beam.position.set(0,2.55,1.15);g.add(beam);
- roofPart(g,0,2.6,0,4.8,3.8,1.15);
+ roofPart(g,0,2.6,0,5.25,3.8,.86);
  // Rear sanctuary creates depth behind the open front hall.
  mesh(new THREE.BoxGeometry(2.3,1.8,1.4),wall,0,1.35,-2,g);roofPart(g,0,2.35,-2,2.9,2,.85);
  const badge=new THREE.Mesh(new THREE.SphereGeometry(.18,16,12),gold);badge.position.set(0,3.55,0);g.add(badge);
@@ -361,62 +399,98 @@ function hall(id,name,x,y,z,scale=1,kind='temple'){
  hit.userData={name,placeId:id,kind};clickable.push(hit);g.userData.placeId=id;objects[id]=g;return g;
 }
 
+
+function smallPavilion(parent,x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,.2,z);g.scale.setScalar(scale);parent.add(g);
+ mesh(new THREE.BoxGeometry(1.5,.25,1.5),stone,0,.12,0,g);
+ for(const xx of [-.55,.55])for(const zz of [-.55,.55])mesh(new THREE.CylinderGeometry(.07,.09,1.5,8),stone,xx,1,zz,g);
+ roofPart(g,0,1.7,0,2,2,.5);
+}
+function registerPlace(g,id,w,h,d){
+ const hit=mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}),0,h/2,0,g);hit.userData={placeId:id};clickable.push(hit);g.userData.placeId=id;objects[id]=g;
+}
+function stoneStair(x,y,z,width,count,parent=root){
+ for(let i=0;i<count;i++)mesh(new THREE.BoxGeometry(width,.12*(i+1),.28),stone,x,y+.06*(i+1),z-i*.28,parent);
+}
 function buildBuildings(){
- // 1. Cổng Đền
- const gateGroup=new THREE.Group();gateGroup.position.set(-12,.2,8);root.add(gateGroup);
- const p=new THREE.Mesh(new THREE.BoxGeometry(4.5,.4,2.5),stone);p.position.y=.2;gateGroup.add(p);
- for(let xx of [-1.35,1.35]){const col=new THREE.Mesh(new THREE.BoxGeometry(.48,2.8,.5),brick);col.position.set(xx,1.6,0);col.castShadow=true;gateGroup.add(col)}
- const arch=new THREE.Shape();arch.moveTo(-1.1,0);arch.lineTo(-1.1,2.75);arch.lineTo(1.1,2.75);arch.lineTo(1.1,0);arch.lineTo(.78,0);arch.lineTo(.78,1.5);arch.absarc(0,1.5,.78,0,Math.PI,false);arch.lineTo(-.78,0);arch.closePath();mesh(new THREE.ExtrudeGeometry(arch,{depth:.5,bevelEnabled:false}),wall,0,.4,-.25,gateGroup);
- mesh(new THREE.BoxGeometry(2.5,.8,.8),wall,0,3.3,0,gateGroup);roofPart(gateGroup,0,3.65,0,3.1,1.7,.7);
- const lintel=new THREE.Mesh(new THREE.BoxGeometry(4.3,.48,.65),roof);lintel.position.y=3.05;gateGroup.add(lintel);
- roofPart(gateGroup,0,2.65,0,4.8,2.2,.65);
- const sign=new THREE.Mesh(new THREE.BoxGeometry(1.8,.48,.12),gold);sign.position.set(0,2.65,.34);gateGroup.add(sign);
- const gateHit=new THREE.Mesh(new THREE.BoxGeometry(5,4.7,3),new THREE.MeshBasicMaterial({transparent:true,opacity:0}));gateHit.position.y=1.9;gateGroup.add(gateHit);
- gateHit.userData={name:'Cổng Đền',placeId:'gate',kind:'gate'};clickable.push(gateHit);gateGroup.userData.placeId='gate';objects.gate=gateGroup;
-
- // 2. Đền Hạ
- hall('ha','Đền Hạ',-7.4,2.2,4.4,1.0,'temple');
-
- // 2b. Chùa Thiên Quang
- const pagGroup=new THREE.Group();pagGroup.position.set(-9,2.2,2.6);root.add(pagGroup);
- const pagB=new THREE.Mesh(new THREE.BoxGeometry(2.6,.35,2.2),stone);pagB.position.y=.18;pagGroup.add(pagB);
- for(let xx of [-.8,.8])for(let zz of [-.65,.65]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.08,.1,1.45,10),wood);c.position.set(xx,.95,zz);pagGroup.add(c)}
- roofPart(pagGroup,0,1.8,0,3.2,2.8,.9);
- const pagHit=new THREE.Mesh(new THREE.BoxGeometry(3.6,3,3),new THREE.MeshBasicMaterial({transparent:true,opacity:0}));pagHit.position.y=1.2;pagGroup.add(pagHit);
- pagHit.userData={name:'Chùa Thiên Quang',placeId:'ha',kind:'temple'};clickable.push(pagHit);
-
- // 3. Đền Trung
- hall('trung','Đền Trung',-1.5,5.6,-1.8,1.0,'temple');
-
- // 4. Đền Thượng
- const upper=hall('thuong','Đền Thượng',1.0,9.1,-6.0,1.02,'temple');
- const upperCourt=mesh(new THREE.BoxGeometry(4.6,.16,1.3),brick,0,.28,-3,upper);upperCourt.receiveShadow=true;
- for(let x of [-1.1,1.1])mesh(new THREE.CylinderGeometry(.09,.11,1.7,10),wood,x,1.2,-3.4,upper);
- roofPart(upper,0,2.5,-3.4,3.3,1.6,.8);
-
- // 5. Lăng Hùng Vương
- const tombGroup=new THREE.Group();tombGroup.position.set(6,8.2,-6.0);root.add(tombGroup);
- const tPl=new THREE.Mesh(new THREE.BoxGeometry(3.2,.55,2.6),stone);tPl.position.y=.27;tombGroup.add(tPl);
- const tBody=new THREE.Mesh(new THREE.BoxGeometry(2.1,1.25,1.65),wall);tBody.position.y=1.1;tombGroup.add(tBody);
- roofPart(tombGroup,0,1.4,0,2.8,2.2,.85);
- const tombHit=new THREE.Mesh(new THREE.BoxGeometry(3.8,3.8,3.2),new THREE.MeshBasicMaterial({transparent:true,opacity:0}));tombHit.position.y=1.6;tombGroup.add(tombHit);
- tombHit.userData={name:'Lăng Hùng Vương',placeId:'lang',kind:'tomb'};clickable.push(tombHit);tombGroup.userData.placeId='lang';objects.lang=tombGroup;
-
- // 6. Đền Giếng
- hall('gieng','Đền Giếng',8,.9,5,.94,'temple');
-
- // 6b. Giếng nước
- const wellGroup=new THREE.Group();wellGroup.position.set(9.3,1.3,7);root.add(wellGroup);
- const wellM=new THREE.Mesh(new THREE.CylinderGeometry(.55,.62,.55,24),stoneDark);wellM.castShadow=true;wellGroup.add(wellM);
- const wtop=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.08,24),water);wtop.position.y=.31;wellGroup.add(wtop);
- const wellHit=new THREE.Mesh(new THREE.BoxGeometry(1.8,1.8,1.8),new THREE.MeshBasicMaterial({transparent:true,opacity:0}));wellGroup.add(wellHit);
- wellHit.userData={name:'Giếng',placeId:'gieng',kind:'well'};clickable.push(wellHit);
+ const gate=new THREE.Group();gate.position.set(...terraces.gate.slice(0,3));root.add(gate);
+ mesh(new THREE.BoxGeometry(8.8,.3,2.8),stone,0,.15,.2,gate);
+ for(const [x,w,height] of [[0,2.5,2.8],[-2.6,1.7,1.9],[2.6,1.7,1.9]]){
+  const arch=new THREE.Shape();const half=w/2,opening=w*.32;
+  arch.moveTo(-half,0);arch.lineTo(-half,height);arch.lineTo(half,height);arch.lineTo(half,0);arch.lineTo(opening,0);arch.lineTo(opening,height*.45);arch.absarc(0,height*.45,opening,0,Math.PI,false);arch.lineTo(-opening,0);arch.closePath();
+  mesh(new THREE.ExtrudeGeometry(arch,{depth:.7,bevelEnabled:false}),stone,x,.3,-.35,gate);
+  roofPart(gate,x,height+.25,0,w+1,1.8,.55);
+  if(x===0){mesh(new THREE.BoxGeometry(2.3,.65,.7),wall,0,3.5,0,gate);roofPart(gate,0,3.85,0,3.3,1.8,.6);}
+  mesh(new THREE.BoxGeometry(w*.72,.23,.08),gold,x,height-.12,.4,gate);
+ }
+ for(const x of [-4.1,-1.6,1.6,4.1]){mesh(new THREE.BoxGeometry(.3,3.1,.35),stone,x,1.8,0,gate);mesh(new THREE.SphereGeometry(.22,8,6),stone,x,3.6,0,gate);}
+ registerPlace(gate,'gate',9,4.9,3);stoneStair(0,0,13.2,7,9);
+ for(const id of ['ha','trung','thuong']){
+  const [x,y,z]=terraces[id],g=hall(id,data.places.find(p=>p.id===id).name,x,y,z,1);
+  g.scale.set(1.15,.86,1);smallPavilion(g,-3.35,1,.65);smallPavilion(g,3.35,1,.65);
+  mesh(new THREE.BoxGeometry(1.35,.35,.1),gold,0,2.25,1.36,g);
+  if(id==='thuong'){mesh(new THREE.BoxGeometry(3.4,.25,1.8),stone,0,.25,-3.4,g);roofPart(g,0,2.3,-3.1,3.6,2,.7);}
+ }
+ const pagoda=new THREE.Group();pagoda.position.set(-12,4.3,.3);root.add(pagoda);smallPavilion(pagoda,0,0,.9);
+ const pg=mesh(new THREE.BoxGeometry(2.2,2.6,2.2),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}),0,1.3,0,pagoda);pg.userData.placeId='ha';clickable.push(pg);
+ const tomb=new THREE.Group();tomb.position.set(...terraces.lang.slice(0,3));root.add(tomb);
+ mesh(new THREE.BoxGeometry(6,.35,4.7),stone,0,.18,.3,tomb);mesh(new THREE.BoxGeometry(5,.3,2.8),stoneDark,0,.5,-.3,tomb);
+ for(let x of [-2,-.7,.7,2])for(let z of [-1.1,.8])mesh(new THREE.BoxGeometry(.19,2,.19),stone,x,1.55,z,tomb);
+ for(let y of [2.55,2.75,2.9])mesh(new THREE.BoxGeometry(5.4-(y-2.55)*2,.15,2.7),stone,0,y,-.15,tomb);
+ mesh(new THREE.BoxGeometry(1.4,1.1,1.3),stoneDark,0,1.05,-.3,tomb);mesh(new THREE.BoxGeometry(.7,.7,.12),stone,0,1.75,.38,tomb);
+ rail(tomb,-2.9,-2,-2.9,2.6,.4);rail(tomb,2.9,-2,2.9,2.6,.4);registerPlace(tomb,'lang',6.3,3.6,5);
+ const well=new THREE.Group();well.position.set(...terraces.gieng.slice(0,3));root.add(well);
+ const pond=mesh(new THREE.CylinderGeometry(2.8,2.8,.15,64),mat(0x315c4f,.2,.18),0,.12,1.3,well);pond.scale.z=.82;
+ const rim=mesh(new THREE.TorusGeometry(2.95,.18,8,64),stone,0,.17,1.3,well);rim.rotation.x=Math.PI/2;rim.scale.y=.82;
+ mesh(new THREE.CylinderGeometry(1.65,1.8,.45,8),stone,0,.4,-.4,well);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;mesh(new THREE.CylinderGeometry(.085,.12,1.8,9),stone,Math.cos(a)*1.24,1.5,Math.sin(a)*1.24-.4,well);}
+ // Eight-sided pavilion and water garden from the reference composition.
+ const vertices=[],indices=[],segments=64,rings=12;
+ function pavilionHeight(r){return 2.55+.8*(1-r)**1.3+.19*r**7;}
+ for(let j=0;j<=rings;j++)for(let i=0;i<=segments;i++){
+  const t=i/segments*Math.PI*2,r=j/rings;const polygonRadius=1/Math.cos((t%(Math.PI/4))-Math.PI/8)*Math.cos(Math.PI/8);
+  vertices.push(Math.cos(t)*2.15*r*polygonRadius,pavilionHeight(r),Math.sin(t)*2.15*r*polygonRadius-.4);
+ }
+ for(let j=0;j<rings;j++)for(let i=0;i<segments;i++){const k=j*(segments+1)+i;indices.push(k,k+1,k+segments+1,k+1,k+segments+2,k+segments+1);}
+ const pavilionGeometry=new THREE.BufferGeometry();pavilionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));pavilionGeometry.setIndex(indices);pavilionGeometry.computeVertexNormals();
+ const pavilionMaterial=roof.clone();pavilionMaterial.side=THREE.DoubleSide;mesh(pavilionGeometry,pavilionMaterial,0,0,0,well);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;const points=[];for(let j=0;j<=12;j++){let r=j/12;points.push(new THREE.Vector3(Math.cos(a)*2.15*r,pavilionHeight(r)+.045,Math.sin(a)*2.15*r-.4));}mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),16,.045,5,false),roofLight,0,0,0,well);}
+ mesh(new THREE.SphereGeometry(.12,8,8),gold,0,3.48,-.4,well);
+ const wellRim=mesh(new THREE.TorusGeometry(.4,.09,8,24),stoneDark,0,.72,-.4,well);wellRim.rotation.x=Math.PI/2;
+ mesh(new THREE.CylinderGeometry(.34,.34,.06,24),water,0,.68,-.4,well);
+ registerPlace(well,'gieng',6.3,3.8,6.6);
+ for(let i=0;i<32;i++){const a=i/32*Math.PI*2,x=Math.cos(a)*3.4,z=Math.sin(a)*2.9+1.3;mesh(new THREE.BoxGeometry(.1,.65,.1),stone,x,.5,z,well);}
+ const ring=mesh(new THREE.TorusGeometry(3.4,.055,6,64),stone,0,.8,1.3,well);ring.rotation.x=Math.PI/2;ring.scale.y=.85;
 }
 
+
+function batchDecoration(group){
+ group.updateMatrixWorld(true);const batches=new Map(),unused=new Set();
+ group.traverse(o=>{if(!o.isMesh)return;const key=o.geometry.type+JSON.stringify(o.geometry.parameters)+o.material.uuid;
+  if(!batches.has(key))batches.set(key,{geometry:o.geometry,material:o.material,matrices:[]});const batch=batches.get(key);batch.matrices.push(o.matrixWorld.clone());if(batch.geometry!==o.geometry)unused.add(o.geometry);
+ });group.clear();unused.forEach(g=>g.dispose());
+ batches.forEach(({geometry,material,matrices})=>{const m=new THREE.InstancedMesh(geometry,material,matrices.length);matrices.forEach((v,i)=>m.setMatrixAt(i,v));m.castShadow=true;m.receiveShadow=true;m.frustumCulled=false;group.add(m);});
+}
+function buildGardens(){
+ const garden=new THREE.Group();root.add(garden);const pink=mat(0xc95b87),yellow=mat(0xe8bf39),red=mat(0xa82c2a),skin=mat(0xc69b75),navy=mat(0x344c5a),shirts=[mat(0xf2ebe0),mat(0x679ca0),mat(0x94473e),mat(0xc9a84d)];
+ for(const [x,z] of [[-5,9],[-7,7],[-12,7],[5,9],[13,8],[-6,-2],[7,-.6],[4,-5]]){
+  const y=terrainHeight(x,z);mesh(new THREE.BoxGeometry(1.2,.24,.65),stone,x,y+.12,z,garden);
+  for(let i=0;i<9;i++){const px=x+(i%3-1)*.32,pz=z+(Math.floor(i/3)-1)*.19;mesh(new THREE.IcosahedronGeometry(.23,1),leafMats[i%4],px,y+.4,pz,garden);for(let j=0;j<3;j++)mesh(new THREE.IcosahedronGeometry(.07,1),i%2?pink:yellow,px+Math.cos(j*2.1)*.1,y+.59,pz+Math.sin(j*2.1)*.1,garden);}
+ }
+ for(let i=0;i<28;i++){
+  const route=pathRoutes[i%pathRoutes.length],a=route[i%route.length],x=a[0]+((i%3)-1)*.32,z=a[1]+(i%2)*.35,y=terrainHeight(x,z)+.23;
+  mesh(new THREE.CylinderGeometry(.06,.075,.25,7),shirts[i%4],x,y+.25,z,garden);mesh(new THREE.SphereGeometry(.065,8,6),skin,x,y+.44,z,garden);
+  for(const side of [-1,1])mesh(new THREE.CylinderGeometry(.023,.023,.19,5),navy,x+side*.04,y+.08,z,garden);
+ }
+ // Ceremonial standards flank the central entrance.
+ for(const x of [-4.8,4.8]){const y=terrainHeight(x,9);mesh(new THREE.CylinderGeometry(.035,.045,2.2,6),wood,x,y+1.1,9,garden);mesh(new THREE.BoxGeometry(.65,.85,.04),red,x+.32,y+1.65,9,garden);mesh(new THREE.BoxGeometry(.46,.65,.05),yellow,x+.32,y+1.65,9.03,garden);}
+ batchDecoration(garden);
+}
 function buildDecor(){
- for(let i=0;i<5;i++){let g=new THREE.Group();scene.add(g);for(let j=0;j<4;j++)mesh(new THREE.SphereGeometry(.55,12,10),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.6}),j*.6,Math.random()*.25,0,g);g.position.set(-18+i*8,15+(i%2)*2,-14+i*6);clouds.push(g)}
+ buildGardens();
+ for(let i=0;i<5;i++){let g=new THREE.Group();scene.add(g);for(let j=0;j<4;j++)mesh(new THREE.SphereGeometry(.55,12,10),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.6}),j*.6,Math.random()*.25,0,g);g.position.set(-65+i*32,26+(i%2)*9,-70-i*6);g.scale.setScalar(3);clouds.push(g)}
  const flagCols=[0xc12b23,0xe0ad36,0x226b80,0x3d7e3c];
- for(let i=0;i<5;i++){let g=new THREE.Group();root.add(g);mesh(new THREE.CylinderGeometry(.04,.04,1.8,6),mat(0x68442b),0,.9,0,g);let f=mesh(new THREE.PlaneGeometry(.7,.42),mat(flagCols[i%4]),.35,1.5,0,g);f.material.side=THREE.DoubleSide;g.position.set(-9+i*3.8,1.8+i*1.1,5-i*2.2);flags.push(f)}
+ for(let i=0;i<5;i++){let g=new THREE.Group();root.add(g);mesh(new THREE.CylinderGeometry(.04,.04,1.8,6),mat(0x68442b),0,.9,0,g);let f=mesh(new THREE.PlaneGeometry(.7,.42),mat(flagCols[i%4]),.35,1.5,0,g);f.material.side=THREE.DoubleSide;g.position.set(-4+i*2,terrainHeight(-4+i*2,8)+.15,8);flags.push(f)}
 }
 
 function buildCarriage(){
@@ -435,19 +509,15 @@ function makeLabelSprite(text,x,y,z,id=null){
  sprite.position.set(x,y,z);sprite.scale.set(3.5,.875,1);sprite.userData={isLabel:true,placeId:id};scene.add(sprite);labels.push(sprite);clickable.push(sprite);return sprite;
 }
 
+
 function buildLabels(){
- labels.forEach(l=>{scene.remove(l);if(l.material){l.material.map?.dispose();l.material.dispose()}});labels=[];
- clickable=clickable.filter(c=>!c.userData||!c.userData.isLabel);
- makeLabelSprite('Cổng Đền',-12,4.7,8,'gate');
- makeLabelSprite('Đền Hạ',-7.4,7.3,4.4,'ha');
- makeLabelSprite('Chùa Thiên Quang',-9,6.3,2.6,'ha');
- makeLabelSprite('Đền Trung',-1.5,10.7,-1.8,'trung');
- makeLabelSprite('Đền Thượng',1,14.3,-6,'thuong');
- makeLabelSprite('Lăng Hùng Vương',6,12.3,-6,'lang');
- makeLabelSprite('Đền Giếng',8,6,5,'gieng');
- makeLabelSprite('Giếng Ngọc',9.3,3.3,7,'gieng');
+ labels.forEach(l=>{scene.remove(l);l.material.map?.dispose();l.material.dispose()});labels=[];clickable=clickable.filter(c=>!c.userData.isLabel);
+ for(const [id,title] of [['gate','Cổng Đền'],['ha','Đền Hạ'],['trung','Đền Trung'],['thuong','Đền Thượng'],['lang','Lăng Hùng Vương'],['gieng','Đền Giếng']]){
+  const [x,y,z]=terraces[id];makeLabelSprite(title,x,y+(id==='gate'?5.4:4.3),z,id);
+ }
  renderPlaceLists();
 }
+
 
 function renderPlaceLists(){
  $('placeList').textContent='';$('mobilePlaces').textContent='';
@@ -459,7 +529,7 @@ function updateLabels(){/* 3D Sprites are billboarded automatically */}
 
 function animate(){
  requestAnimationFrame(animate);if(!renderer)return;let dt=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
- controls.update();clouds.forEach(c=>{c.position.x+=dt*.25;if(c.position.x>22)c.position.x=-22});
+ controls.update();clouds.forEach(c=>{c.position.x+=dt*.25;if(c.position.x>90)c.position.x=-90});
  flags.forEach((f,i)=>{f.rotation.y=Math.sin(t*2.5+i)*.22});
  if(carriage&&caravan&&pilgrimageCurve){let u=(t*.02)%1;let p=pilgrimageCurve.getPoint(u);carriage.position.set(p.x,p.y+.3,p.z);carriage.rotation.y=Math.atan2(pilgrimageCurve.getTangent(u).x,pilgrimageCurve.getTangent(u).z)}
  controls.autoRotate=rotating&&!finding&&!journey;controls.autoRotateSpeed=.65;
@@ -477,7 +547,7 @@ function onPick(e){
 
 const targets=Object.fromEntries(Object.entries(terraces).map(([id,[x,y,z]])=>[id,[x,y+1.7,z]]));targets.mountain=[0,5,0];
 
-function overviewPosition(){return new THREE.Vector3(26,21,34).multiplyScalar(Math.max(1,.95/camera.aspect)).add(new THREE.Vector3(0,4,0));}
+function overviewPosition(){return new THREE.Vector3(0,20,43).multiplyScalar(Math.max(1,.95/camera.aspect)).add(new THREE.Vector3(0,4,0));}
 let flightId=0;
 function flyTo(id){
  const flight=++flightId;
@@ -555,8 +625,9 @@ function initInfoDrag(){
 function selectPlace(i){
  if(i<0||i>=data.places.length)return;
  current=i;let p=data.places[i];
+ if(p.id!=='mountain'){infoHidden=false;infoCollapsed=false;updateInfoVisibilityUI();}
  $('infoTitle').textContent=p.name;if($('reopenPlaceName'))$('reopenPlaceName').textContent=p.name;
- $('infoSub').textContent='Khu di tích lịch sử Đền Hùng · Phú Thọ';
+ $('infoSub').textContent='Tái dựng theo ảnh tham khảo · Phú Thọ';
  document.querySelectorAll('.place-btn').forEach((b,j)=>b.classList.toggle('active',i===j));
  document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('selected',b.dataset.tab===activeTab));
  showTab(activeTab);

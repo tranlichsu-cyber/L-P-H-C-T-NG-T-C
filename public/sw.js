@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v14-den-hung-interactive-webgl';
+const CACHE_NAME = 'lhtt-shell-v15-den-hung-reference-layout';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',
