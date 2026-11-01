@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v19-six-new-models';
+const CACHE_NAME = 'lhtt-shell-v20-remove-3d-brush';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

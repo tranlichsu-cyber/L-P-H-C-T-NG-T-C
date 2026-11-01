@@ -230,7 +230,7 @@ export const FoodChainDiorama: React.FC = () => {
             {/* Overlay hint banner */}
             <div className="absolute top-4 left-4 pointer-events-none bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-700 text-slate-300 text-xs flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Chạm / Kéo chuột để xoay 360° · Cuộn để phóng to · Bút vẽ ghi chú ở góc phải</span>
+              <span>Chạm / Kéo chuột để xoay 360° · Cuộn để phóng to</span>
             </div>
           </div>
         )}

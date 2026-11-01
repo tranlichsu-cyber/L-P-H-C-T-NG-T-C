@@ -267,3 +267,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 256: 2026-11-01: Phat hanh ra soat mo hinh 3D: dia cau dung anh local, dia hinh Viet Nam theo Natural Earth, thuyen theo muc nuoc, mua va tang chua nuoc, sinh vat va dong nang luong, vat lieu anh sang va giao dien dien thoai. Cache v18.
 
 257: 2026-11-01: Mo sau mo hinh 3D moi: thap dinh duong va ghep bua an; tim va hai vong tuan hoan; trong dong; Van Mieu voi 82 bia; nha Rong va cong chieng; mat cat Dia dao Cu Chi. 36 diem kham pha, 18 cau hoi, tour tu dong, mobile va anh xem truoc tu WebGL. Kho co 13 mo hinh. Cache v19.
+
+258: 2026-11-01: Xoa toan bo muc but ve trong cac mo hinh 3D: (1) Go bo thanh cong cu but ve chu thich (Annotation Toolbar) va overlay canvas tren toan bo cac mo hinh 3D con lai (Bach Dang, Chuoi thuc an, De song Hong, Dia hinh Viet Nam, Qua dia cau, Vong tuan hoan nuoc); (2) Cap nhat huong dan thao tac khong con nhac but ve; (3) Nang cap Service Worker len v20 (lhtt-shell-v20-remove-3d-brush) lam moi cache trinh duyet.
