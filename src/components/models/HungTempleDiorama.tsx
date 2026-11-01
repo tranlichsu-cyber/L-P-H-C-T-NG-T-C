@@ -263,11 +263,11 @@ export const HungTempleDiorama: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* TAB 0: SA BÀN 3D WEBGL TƯƠNG TÁC XOAY 360 ĐỘ */}
         {activeTab === '3D_VIEW' && (
-          <div className="relative flex-1 w-full min-h-[620px] sm:min-h-[700px] bg-slate-950 flex flex-col">
+          <div className="relative flex-1 w-full min-h-[620px] sm:min-h-[720px] h-[78vh] max-h-[860px] bg-slate-950 flex flex-col">
             <iframe
-              src="/models/den-hung-3d.html"
+              src="/models/den-hung-3d.html?embed=1"
               title="Sa bàn 3D Đền Hùng WebGL"
-              className="w-full flex-1 border-0 min-h-[620px] sm:min-h-[700px]"
+              className="w-full flex-1 border-0 min-h-[620px] sm:min-h-[720px] h-full"
               allow="fullscreen"
             />
           </div>

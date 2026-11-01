@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v10-den-hung-zoom-info-toggle';
+const CACHE_NAME = 'lhtt-shell-v11-den-hung-layout-fix';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',
