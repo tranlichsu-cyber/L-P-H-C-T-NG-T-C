@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v9-vietnam-terrain-foodchain';
+const CACHE_NAME = 'lhtt-shell-v10-den-hung-zoom-info-toggle';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

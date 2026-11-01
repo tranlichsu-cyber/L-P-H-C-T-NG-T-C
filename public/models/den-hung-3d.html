@@ -24,11 +24,31 @@ header{z-index:5;display:flex;align-items:center;gap:12px;padding:10px 16px;back
 #stage{position:relative;min-width:0;min-height:0;overflow:hidden}#scene{position:absolute;inset:0}#scene canvas{display:block;width:100%;height:100%;touch-action:none}
 #hint{position:absolute;left:14px;bottom:12px;color:#fff5d9;text-shadow:0 2px 4px #000;background:#18231dbb;padding:7px 10px;border-radius:8px;font-size:13px;pointer-events:none}
 #disclaimer{position:absolute;right:14px;bottom:12px;background:#fff0cddd;color:#642018;padding:7px 10px;border:1px solid #d9b65e;border-radius:8px;font-size:13px;font-weight:800}
-#info{position:absolute;z-index:4;right:14px;top:14px;width:min(390px,40%);max-height:calc(100% - 28px);overflow:auto;background:#fff9ebee;border:2px solid #c69b4e;border-radius:14px;box-shadow:0 8px 30px #0005;padding:15px;backdrop-filter:blur(6px)}
-#info h2{margin:0 0 8px;color:#781e19;font-size:22px}#info .sub{font-size:13px;color:#765f48;margin-bottom:10px}
-.tabbar{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0}.tabbar button{font-size:13px;padding:7px 9px}.tabbar button.selected{background:#7b1d1b;color:#fff1ce}
-.info-content{line-height:1.48;white-space:pre-wrap}.info-content p{margin:0 0 9px}.info-content h3{font-size:16px;color:#7a211b;margin:12px 0 5px}
-.info-nav{display:flex;gap:7px;margin-top:12px}.info-nav button{flex:1}
+.zoom-controls{position:absolute;z-index:4;left:14px;top:14px;display:flex;flex-direction:column;gap:5px;background:#18231dee;border:1.5px solid #d9b65e;border-radius:12px;padding:5px;box-shadow:0 6px 20px #0007;backdrop-filter:blur(6px)}
+.zoom-btn{width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#fff9ec,#ebd7ad);border:1px solid #b58a43;border-radius:8px;color:#4b2118;font-size:19px;font-weight:900;cursor:pointer;transition:transform .15s,background .15s;user-select:none;line-height:1}
+.zoom-btn:hover{background:#781e19;color:#fff4d7;border-color:#e7bd62;transform:scale(1.06)}
+.zoom-btn:active{transform:scale(0.94)}
+.reopen-pill{display:none;position:absolute;z-index:5;right:14px;top:14px;align-items:center;gap:7px;padding:8px 14px;background:linear-gradient(135deg,#731919,#9c2621);color:#fff5dc;border:1.5px solid #e7bd62;border-radius:24px;box-shadow:0 6px 20px rgba(0,0,0,0.5);font-size:13px;font-weight:700;cursor:pointer;backdrop-filter:blur(6px);transition:transform .2s,filter .2s}
+.reopen-pill:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.reopen-pill .pill-badge{background:#fff1cb;color:#611815;font-size:11px;padding:2px 7px;border-radius:10px;font-weight:800;margin-left:3px}
+#info{position:absolute;z-index:4;right:14px;top:14px;width:min(340px,35%);max-height:calc(100% - 28px);overflow-y:auto;overflow-x:hidden;background:#fff9ebee;border:2px solid #c69b4e;border-radius:14px;box-shadow:0 8px 30px #0005;padding:12px 14px;backdrop-filter:blur(8px);transition:max-height .25s ease,opacity .2s ease}
+#info.hidden{display:none!important}
+#info.collapsed{max-height:48px!important;overflow:hidden!important;padding:8px 12px!important;width:auto!important;min-width:210px;max-width:min(340px,50%)}
+#info.collapsed #infoBody{display:none!important}
+#info.collapsed .sub{display:none!important}
+#info.collapsed h2{font-size:15px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.info-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;cursor:grab;user-select:none;border-bottom:1px solid #ebd7b2;padding-bottom:6px;margin-bottom:6px}
+.info-header:active{cursor:grabbing}
+#info.collapsed .info-header{border-bottom:none;padding-bottom:0;margin-bottom:0}
+.info-title-wrap{min-width:0;flex:1}
+#info h2{margin:0 0 3px;color:#781e19;font-size:19px;font-weight:800;line-height:1.25}
+#info .sub{font-size:12px;color:#765f48;margin-bottom:0}
+.info-ctrls{display:flex;gap:4px;flex-shrink:0}
+.ctrl-btn{width:26px;height:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:#faebd7;border:1px solid #cfa666;border-radius:7px;color:#6a241b;font-weight:900;font-size:13px;line-height:1;cursor:pointer;transition:background .15s,color .15s}
+.ctrl-btn:hover{background:#781e19;color:#fff2d2;border-color:#781e19}
+.tabbar{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.tabbar button{font-size:12px;padding:6px 8px}.tabbar button.selected{background:#7b1d1b;color:#fff1ce}
+.info-content{line-height:1.48;white-space:pre-wrap;font-size:14px}.info-content p{margin:0 0 8px}.info-content h3{font-size:15px;color:#7a211b;margin:10px 0 4px}
+.info-nav{display:flex;gap:7px;margin-top:10px}.info-nav button{flex:1;padding:7px 10px;font-size:13px}
 #labelLayer{position:absolute;inset:0;pointer-events:none;z-index:2}.map-label{position:absolute;transform:translate(-50%,-100%);background:#fff1c9eF;color:#5d1c17;border:1px solid #c5963e;border-radius:7px;padding:4px 8px;font-size:13px;font-weight:800;white-space:nowrap;box-shadow:0 2px 7px #0005;pointer-events:auto;cursor:pointer}
 #toast{position:absolute;z-index:9;top:15px;left:50%;transform:translateX(-50%);background:#54201a;color:#fff3d4;border:1px solid #e8c16d;border-radius:10px;padding:10px 16px;display:none;box-shadow:0 4px 16px #0006;text-align:center;max-width:90%}
 .overlay{position:absolute;inset:0;z-index:8;background:#120e0bd9;display:none;align-items:center;justify-content:center;padding:16px}.dialog{background:#fff7e7;border:3px solid #c99a47;border-radius:15px;padding:20px;max-width:760px;width:min(100%,760px);max-height:90%;overflow:auto}.dialog h2{margin:0 0 12px;color:#7a1d18}.dialog label{display:block;font-weight:700;margin:9px 0 4px}.dialog input,.dialog textarea,.dialog select{width:100%;border:1px solid #b99a68;border-radius:7px;padding:8px;background:white;color:#33251c}.dialog textarea{min-height:80px;resize:vertical}.dialog .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.dialog-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
@@ -40,7 +60,7 @@ header{z-index:5;display:flex;align-items:center;gap:12px;padding:10px 16px;back
 #teacherContent{display:grid;gap:12px}.editor-place{border:1px solid #d0b47e;padding:10px;border-radius:9px;background:#fffdf7}.editor-place h3{margin:0 0 7px;color:#761c18}
 #journeyBar{position:absolute;z-index:6;left:50%;bottom:50px;transform:translateX(-50%);display:none;gap:7px;background:#fff7e8ed;padding:8px;border-radius:12px;border:1px solid #c69b4e}
 #mobilePlaces{display:none}
-@media(max-width:800px){header{padding:8px 10px;align-items:flex-start}.brand p{display:none}.header-actions{max-width:55%}.header-actions button{font-size:12px;padding:6px 7px}#workspace{display:block}#side{display:none}#info{top:auto;bottom:0;right:0;width:100%;height:40%;max-height:55%;border-radius:16px 16px 0 0;border-bottom:0;padding:11px 13px}#info h2{font-size:19px}.info-content{font-size:15px}#mobilePlaces{display:flex;position:absolute;z-index:4;left:0;right:0;top:8px;gap:6px;overflow-x:auto;padding:4px 8px;pointer-events:auto}#mobilePlaces button{white-space:nowrap;font-size:13px;padding:7px 10px}#hint{bottom:calc(40% + 10px);font-size:11px}#disclaimer{bottom:calc(40% + 10px);font-size:11px}#journeyBar{bottom:calc(40% + 45px)}#gameHud{top:55px}#info.collapsed{height:44px;overflow:hidden}#info.collapsed .tabbar,#info.collapsed .info-content,#info.collapsed .info-nav{display:none}}
+@media(max-width:800px){header{padding:8px 10px;align-items:flex-start}.brand p{display:none}.header-actions{max-width:55%}.header-actions button{font-size:12px;padding:6px 7px}#workspace{display:block}#side{display:none}#info{top:auto!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;max-height:50%!important;border-radius:16px 16px 0 0;border-bottom:0;padding:10px 12px}#info h2{font-size:18px}.info-content{font-size:14px}#info.collapsed{max-height:46px!important;height:46px!important;overflow:hidden!important}#info.collapsed #infoBody{display:none!important}.zoom-controls{top:50px;left:10px}.zoom-btn{width:32px;height:32px;font-size:17px}.reopen-pill{top:auto;bottom:14px;right:14px;font-size:12px;padding:6px 11px}#mobilePlaces{display:flex;position:absolute;z-index:4;left:0;right:0;top:8px;gap:6px;overflow-x:auto;padding:4px 8px;pointer-events:auto}#mobilePlaces button{white-space:nowrap;font-size:13px;padding:7px 10px}#hint{bottom:calc(50% + 10px);font-size:11px}#disclaimer{bottom:calc(50% + 10px);font-size:11px}#journeyBar{bottom:calc(50% + 45px)}#gameHud{top:55px}}
 @media(max-width:460px){.header-actions button[data-wide="1"]{display:none}.brand h1{font-size:17px}.header-actions{gap:4px}#info{height:42%}.dialog .grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -51,7 +71,7 @@ header{z-index:5;display:flex;align-items:center;gap:12px;padding:10px 16px;back
  <div class="brand"><h1 id="appTitle">SA BÀN 3D – ĐỀN HÙNG</h1><p>Lịch sử và Địa lí lớp 4 · Bài 7: Đền Hùng và lễ giỗ Tổ Hùng Vương</p></div>
  <div class="header-actions">
   <button id="btnOverview" aria-label="Xem toàn cảnh">Toàn cảnh</button><button id="btnRotate" aria-label="Tự xoay 360 độ">Tự xoay</button>
-  <button id="btnLabels" aria-label="Ẩn hoặc hiện nhãn">Ẩn nhãn</button><button id="btnJourney" class="primary">Hành trình dâng hương</button>
+  <button id="btnLabels" aria-label="Ẩn hoặc hiện nhãn">Ẩn nhãn</button><button id="btnToggleInfo" aria-label="Ẩn hoặc hiện bảng thông tin">Ẩn thông tin</button><button id="btnJourney" class="primary">Hành trình dâng hương</button>
   <button id="btnFind">Tìm địa điểm</button><button id="btnQuiz">Ôn tập</button><button id="btnTeacher" data-wide="1">Giáo viên</button>
   <button id="btnLight">Nhẹ</button><button id="btnFullscreen" aria-label="Toàn màn hình">⛶</button>
  </div>
@@ -61,6 +81,7 @@ header{z-index:5;display:flex;align-items:center;gap:12px;padding:10px 16px;back
   <div class="section-title">HÀNH TRÌNH KHÁM PHÁ</div><div id="placeList"></div>
   <div class="side-tools">
    <button id="prevPlace">◀ Trước</button><button id="nextPlace">Tiếp theo ▶</button>
+   <button id="btnSideZoomIn">🔍+ Phóng to</button><button id="btnSideZoomOut">🔍− Thu nhỏ</button>
    <button id="btnSpeak">🔊 Nghe thuyết minh</button><button id="btnStopSpeak">■ Dừng đọc</button>
    <button id="btnDrum">🥁 Trống đồng: Tắt</button><button id="btnCaravan">🚩 Đoàn rước: Bật</button>
    <button id="fontDown">A− Cỡ chữ</button><button id="fontUp">A+ Cỡ chữ</button>
@@ -70,14 +91,34 @@ header{z-index:5;display:flex;align-items:center;gap:12px;padding:10px 16px;back
  <main id="stage">
   <div id="scene"></div><div id="labelLayer"></div>
   <div id="mobilePlaces"></div>
+  <div id="zoomControls" class="zoom-controls" aria-label="Điều khiển phóng to thu nhỏ sa bàn">
+   <button id="btnZoomIn" class="zoom-btn" title="Phóng to (+)" aria-label="Phóng to">+</button>
+   <button id="btnZoomReset" class="zoom-btn" title="Đặt lại góc nhìn toàn cảnh (0)" aria-label="Góc nhìn toàn cảnh">⟲</button>
+   <button id="btnZoomOut" class="zoom-btn" title="Thu nhỏ ra xa (-)" aria-label="Thu nhỏ">−</button>
+  </div>
   <div id="hint">Kéo để xoay 3D · Cuộn / chụm hai ngón để phóng to · Bấm công trình để xem chi tiết</div>
   <div id="disclaimer">Mô hình kiến trúc 3D minh họa trực quan</div>
   <div id="toast" role="status"></div>
+  <button id="btnReopenInfo" class="reopen-pill" aria-label="Xem bảng giới thiệu">
+   <span>📖 Giới thiệu: <strong id="reopenPlaceName">Cổng Đền</strong></span>
+   <span class="pill-badge">Mở xem ▲</span>
+  </button>
   <section id="info" aria-live="polite">
-   <h2 id="infoTitle">Khu di tích lịch sử Đền Hùng</h2><div class="sub" id="infoSub">Núi Nghĩa Lĩnh · Phú Thọ</div>
-   <div class="tabbar"><button class="selected" data-tab="core">Kiến thức cốt lõi</button><button data-tab="legend">Truyền thuyết</button><button data-tab="remember">Ghi nhớ</button><button data-tab="extra">Em có biết?</button></div>
-   <div id="infoContent" class="info-content"></div>
-   <div class="info-nav"><button id="infoPrev">◀ Trước</button><button id="infoNext">Tiếp theo ▶</button></div>
+   <div class="info-header" id="infoHeader" title="Kéo để di chuyển bảng giới thiệu">
+    <div class="info-title-wrap">
+     <h2 id="infoTitle">Khu di tích lịch sử Đền Hùng</h2>
+     <div class="sub" id="infoSub">Núi Nghĩa Lĩnh · Phú Thọ</div>
+    </div>
+    <div class="info-ctrls">
+     <button id="btnMinimizeInfo" class="ctrl-btn" title="Thu gọn / Mở rộng" aria-label="Thu gọn hoặc mở rộng">—</button>
+     <button id="btnCloseInfo" class="ctrl-btn" title="Ẩn bảng giới thiệu (không che sa bàn)" aria-label="Ẩn bảng giới thiệu">✕</button>
+    </div>
+   </div>
+   <div id="infoBody">
+    <div class="tabbar"><button class="selected" data-tab="core">Kiến thức cốt lõi</button><button data-tab="legend">Truyền thuyết</button><button data-tab="remember">Ghi nhớ</button><button data-tab="extra">Em có biết?</button></div>
+    <div id="infoContent" class="info-content"></div>
+    <div class="info-nav"><button id="infoPrev">◀ Trước</button><button id="infoNext">Tiếp theo ▶</button></div>
+   </div>
   </section>
   <div id="gameHud"><strong>THỬ TÀI KHÁM PHÁ</strong><div id="gameQuestion"></div><div id="gameStatus"></div><div style="display:flex;gap:7px;margin-top:7px"><button id="gameExit">Thoát</button><button id="gameSkip" class="primary">Bỏ qua</button></div></div>
   <div id="quizPanel"><h2 id="quizTitle">ÔN TẬP KIẾN THỨC</h2><div id="quizProgress"></div><div id="quizQuestion"></div><div id="quizChoices"></div><div id="quizFeedback"></div><div class="dialog-actions"><button id="quizNext" class="primary" disabled>Tiếp câu</button><button id="quizClose">Thoát ôn tập</button></div><div id="quizEnd" style="display:none"><h2>KẾT QUẢ ÔN TẬP</h2><div id="quizResult"></div><div id="wrongReview"></div><button id="quizAgain" class="primary">Làm lại</button></div></div>
@@ -135,7 +176,7 @@ const DEFAULT={
  {q:"Khi tham quan di tích lịch sử, học sinh nên làm gì?",a:["Vẽ lên tường","Chen lấn, đùa nghịch","Giữ gìn vệ sinh, tôn nghiêm","Bẻ cành cây"],c:2,e:"Cần ứng xử văn minh, giữ gìn cảnh quan và tôn trọng di tích.",id:"mountain"}
  ]
 };
-let data=structuredCloneSafe(DEFAULT), current=0, activeTab='core', labelsVisible=true, lightMode=false, rotating=false, caravan=true, drum=false, finding=false, journey=false, journeyPaused=false, journeyTimer=null, findIndex=0, findTries=0, findScore=0, findOrder=[], quizOrder=[], quizIndex=0, quizScore=0, quizWrong=[], quizAnswered=false;
+let data=structuredCloneSafe(DEFAULT), current=0, activeTab='core', labelsVisible=true, lightMode=false, rotating=false, caravan=true, drum=false, finding=false, journey=false, journeyPaused=false, journeyTimer=null, findIndex=0, findTries=0, findScore=0, findOrder=[], quizOrder=[], quizIndex=0, quizScore=0, quizWrong=[], quizAnswered=false, infoCollapsed=false, infoHidden=false;
 function structuredCloneSafe(o){return JSON.parse(JSON.stringify(o))}
 function loadData(){try{const s=localStorage.getItem('denhung3d_v1');if(s){const d=JSON.parse(s);if(d&&Array.isArray(d.places)&&d.places.length===7)data=d}}catch(e){console.warn('Không đọc được dữ liệu đã lưu:',e)}}
 function saveData(){try{localStorage.setItem('denhung3d_v1',JSON.stringify(data));toast('Đã lưu nội dung trên thiết bị này.')}catch(e){toast('Không thể lưu: trình duyệt đang chặn bộ nhớ.');console.warn(e)}}
@@ -148,7 +189,7 @@ function init3D(){
  scene=new THREE.Scene();scene.background=new THREE.Color(0x8da99a);scene.fog=new THREE.Fog(0x8da99a,38,85);
  camera=new THREE.PerspectiveCamera(45,stage.clientWidth/stage.clientHeight,.1,180);camera.position.set(19,19,25);
  renderer=new THREE.WebGLRenderer({antialias:!(weak||isMobile),alpha:false});renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio((weak||isMobile)?1:Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=!(weak||isMobile);renderer.shadowMap.type=THREE.PCFSoftShadowMap;stage.appendChild(renderer.domElement);
- controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=8;controls.maxDistance=48;controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,5,0);window._activeControls=controls;
+ controls=new THREE.OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.06;controls.minDistance=3.5;controls.maxDistance=65;controls.maxPolarAngle=Math.PI*.48;controls.target.set(0,5,0);window._activeControls=controls;
  scene.add(new THREE.HemisphereLight(0xfff1d4,0x425744,1.1));let sun=new THREE.DirectionalLight(0xffe2a8,1.05);sun.position.set(-12,24,10);sun.castShadow=renderer.shadowMap.enabled;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
  root=new THREE.Group();scene.add(root);raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();clock=new THREE.Clock();
  buildBase();buildMountain();buildPath();buildBuildings();buildForest();buildDecor();buildLabels();buildCarriage();renderer.domElement.addEventListener('pointerdown',onPick);window.addEventListener('resize',resize);animate();
@@ -254,11 +295,99 @@ const targets={gate:[-10,3,7.3],ha:[-7.3,5,5.5],trung:[-4.2,6,2.1],thuong:[2.1,1
 function flyTo(id){if(!camera)return;let target=targets[id]||[0,6,0],to=new THREE.Vector3(...target),offset=new THREE.Vector3(5,4,7);if(id==='mountain')offset.set(17,14,20);else if(id==='thuong')offset.set(4,3,5);else offset.set(3.7,2.8,4.8);
  let fromC=camera.position.clone(),fromT=controls.target.clone(),toC=to.clone().add(offset),start=performance.now(),dur=950;
  function step(now){let k=Math.min(1,(now-start)/dur),s=k*k*(3-2*k);camera.position.lerpVectors(fromC,toC,s);controls.target.lerpVectors(fromT,to,s);if(k<1)requestAnimationFrame(step)}requestAnimationFrame(step)}
-function selectPlace(i){if(i<0||i>=data.places.length)return;current=i;let p=data.places[i];$('infoTitle').textContent=p.name;$('infoSub').textContent='Khu di tích lịch sử Đền Hùng · Phú Thọ';document.querySelectorAll('.place-btn').forEach((b,j)=>b.classList.toggle('active',i===j));document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('selected',b.dataset.tab===activeTab));showTab(activeTab);if(p.id!=='mountain')flyTo(p.id);else flyTo('mountain');}
+function updateInfoVisibilityUI(){
+ const infoEl=$('info'), reopenBtn=$('btnReopenInfo'), toggleBtn=$('btnToggleInfo'), minBtn=$('btnMinimizeInfo');
+ if(infoHidden){
+  infoEl.classList.add('hidden');
+  if(reopenBtn) reopenBtn.style.display='inline-flex';
+  if(toggleBtn) toggleBtn.textContent='Hiện thông tin';
+ } else {
+  infoEl.classList.remove('hidden');
+  if(reopenBtn) reopenBtn.style.display='none';
+  if(toggleBtn) toggleBtn.textContent=infoCollapsed?'Mở rộng TT':'Ẩn thông tin';
+ }
+ if(infoCollapsed){
+  infoEl.classList.add('collapsed');
+  if(minBtn){ minBtn.textContent='▢'; minBtn.title='Mở rộng bảng giới thiệu'; }
+ } else {
+  infoEl.classList.remove('collapsed');
+  if(minBtn){ minBtn.textContent='—'; minBtn.title='Thu gọn bảng giới thiệu'; }
+ }
+}
+function toggleMinimizeInfo(e){if(e)e.stopPropagation();infoCollapsed=!infoCollapsed;if(infoHidden)infoHidden=false;updateInfoVisibilityUI()}
+function closeInfo(e){if(e)e.stopPropagation();infoHidden=true;updateInfoVisibilityUI()}
+function openInfo(e){if(e)e.stopPropagation();infoHidden=false;infoCollapsed=false;updateInfoVisibilityUI()}
+function toggleInfo(){if(infoHidden){openInfo()}else{closeInfo()}}
+let isDragging=false, dragStartX=0, dragStartY=0, panelStartX=0, panelStartY=0;
+function initInfoDrag(){
+ const panel=$('info'), header=$('infoHeader');
+ if(!panel||!header) return;
+ function startDrag(e){
+  if(e.target.closest('.info-ctrls')) return;
+  isDragging=true;
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  dragStartX=clientX; dragStartY=clientY;
+  const rect=panel.getBoundingClientRect(), stageRect=$('stage').getBoundingClientRect();
+  panelStartX=rect.left-stageRect.left;
+  panelStartY=rect.top-stageRect.top;
+  panel.style.right='auto'; panel.style.bottom='auto';
+  panel.style.left=panelStartX+'px'; panel.style.top=panelStartY+'px';
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', endDrag);
+  document.addEventListener('touchmove', onDrag, {passive:false});
+  document.addEventListener('touchend', endDrag);
+ }
+ function onDrag(e){
+  if(!isDragging) return;
+  if(e.cancelable) e.preventDefault();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  const dx=clientX-dragStartX, dy=clientY-dragStartY;
+  const stageRect=$('stage').getBoundingClientRect();
+  const maxLeft=Math.max(0, stageRect.width-panel.offsetWidth);
+  const maxTop=Math.max(0, stageRect.height-panel.offsetHeight);
+  panel.style.left=Math.min(Math.max(0, panelStartX+dx), maxLeft)+'px';
+  panel.style.top=Math.min(Math.max(0, panelStartY+dy), maxTop)+'px';
+ }
+ function endDrag(){
+  isDragging=false;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', endDrag);
+  document.removeEventListener('touchmove', onDrag);
+  document.removeEventListener('touchend', endDrag);
+ }
+ header.addEventListener('mousedown', startDrag);
+ header.addEventListener('touchstart', startDrag, {passive:true});
+}
+function selectPlace(i){if(i<0||i>=data.places.length)return;current=i;let p=data.places[i];$('infoTitle').textContent=p.name;if($('reopenPlaceName'))$('reopenPlaceName').textContent=p.name;$('infoSub').textContent='Khu di tích lịch sử Đền Hùng · Phú Thọ';document.querySelectorAll('.place-btn').forEach((b,j)=>b.classList.toggle('active',i===j));document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('selected',b.dataset.tab===activeTab));showTab(activeTab);if(p.id!=='mountain')flyTo(p.id);else flyTo('mountain');}
 function showTab(tab){activeTab=tab;document.querySelectorAll('.tabbar button').forEach(b=>b.classList.toggle('selected',b.dataset.tab===tab));let p=data.places[current];let map={core:'core',legend:'legend',remember:'remember',extra:'extra'};$('infoContent').textContent=p[map[tab]]||''}
 document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
 $('infoPrev').onclick=$('prevPlace').onclick=()=>selectPlace((current+data.places.length-1)%data.places.length);
 $('infoNext').onclick=$('nextPlace').onclick=()=>selectPlace((current+1)%data.places.length);
+$('btnMinimizeInfo').onclick=toggleMinimizeInfo;
+$('btnCloseInfo').onclick=closeInfo;
+$('btnReopenInfo').onclick=openInfo;
+if($('btnToggleInfo')) $('btnToggleInfo').onclick=toggleInfo;
+function smoothZoom(factor){
+ if(!camera||!controls)return;
+ let targetDist=camera.position.distanceTo(controls.target);
+ let newDist=Math.max(controls.minDistance,Math.min(controls.maxDistance,targetDist*factor));
+ let dir=new THREE.Vector3().subVectors(camera.position,controls.target).normalize();
+ let fromC=camera.position.clone(),toC=controls.target.clone().add(dir.multiplyScalar(newDist)),start=performance.now(),dur=260;
+ function step(now){
+  let k=Math.min(1,(now-start)/dur),s=k*k*(3-2*k);
+  camera.position.lerpVectors(fromC,toC,s);
+  controls.update();
+  if(k<1)requestAnimationFrame(step);
+ }
+ requestAnimationFrame(step);
+}
+$('btnZoomIn').onclick=()=>smoothZoom(0.72);
+$('btnZoomOut').onclick=()=>smoothZoom(1.35);
+$('btnZoomReset').onclick=()=>flyOverview();
+if($('btnSideZoomIn')) $('btnSideZoomIn').onclick=()=>smoothZoom(0.72);
+if($('btnSideZoomOut')) $('btnSideZoomOut').onclick=()=>smoothZoom(1.35);
 $('btnOverview').onclick=()=>{finding?null:flyOverview()};function flyOverview(){rotating=false;let from=camera.position.clone(),to=new THREE.Vector3(19,19,25),ft=controls.target.clone(),tt=new THREE.Vector3(0,5,0),st=performance.now();function f(n){let k=Math.min(1,(n-st)/850),s=k*k*(3-2*k);camera.position.lerpVectors(from,to,s);controls.target.lerpVectors(ft,tt,s);if(k<1)requestAnimationFrame(f)}requestAnimationFrame(f)}
 $('btnRotate').onclick=()=>{rotating=!rotating;$('btnRotate').textContent=rotating?'Dừng xoay':'Tự xoay'};
 $('btnLabels').onclick=()=>{if(finding)return;labelsVisible=!labelsVisible;$('btnLabels').textContent=labelsVisible?'Ẩn nhãn':'Hiện nhãn'};
@@ -276,8 +405,8 @@ function journeyStart(){finding=false;journey=true;journeyPaused=false;rotating=
 let journeyNextFn=()=>{};function journeyStop(){journey=false;journeyPaused=false;clearTimeout(journeyTimer);speechSynthesis?.cancel();$('journeyBar').style.display='none';$('btnJourney').disabled=false}
 $('btnJourney').onclick=journeyStart;$('journeyPause').onclick=()=>{journeyPaused=!journeyPaused;if(journeyPaused){clearTimeout(journeyTimer);speechSynthesis?.pause();$('journeyPause').textContent='Tiếp tục'}else{speechSynthesis?.resume();$('journeyPause').textContent='Tạm dừng';journeyNextFn()}};$('journeyNext').onclick=()=>journeyNextFn();$('journeyExit').onclick=journeyStop;
 let gameBusy=false,gameTimer=null;
-function startFind(){journeyStop();speechSynthesis?.cancel();finding=true;rotating=false;labelsVisible=false;$('btnLabels').disabled=true;$('btnFind').textContent='Thoát tìm';$('btnFind').classList.add('primary');$('info').style.display='none';$('placeList').style.visibility='hidden';$('mobilePlaces').style.display='none';$('gameHud').style.display='block';findOrder=data.findQuestions.map((_,i)=>i).sort(()=>Math.random()-.5);findIndex=0;findScore=0;showFindQuestion()}
-function endFind(){finding=false;gameBusy=false;clearTimeout(gameTimer);$('gameHud').style.display='none';$('btnLabels').disabled=false;$('btnFind').textContent='Tìm địa điểm';$('btnFind').classList.remove('primary');$('info').style.display='block';$('placeList').style.visibility='visible';$('mobilePlaces').style.display='';labelsVisible=true;updateLabels();$('gameEndOverlay').style.display='flex';$('gameEnd').style.display='block';$('gameEndText').textContent='Em đạt '+findScore+' điểm. Hãy tiếp tục quan sát mô hình và ôn lại những địa điểm cần nhớ.'}
+function startFind(){journeyStop();speechSynthesis?.cancel();finding=true;rotating=false;labelsVisible=false;$('btnLabels').disabled=true;if($('btnToggleInfo'))$('btnToggleInfo').disabled=true;$('btnFind').textContent='Thoát tìm';$('btnFind').classList.add('primary');$('info').style.display='none';$('btnReopenInfo').style.display='none';$('placeList').style.visibility='hidden';$('mobilePlaces').style.display='none';$('gameHud').style.display='block';findOrder=data.findQuestions.map((_,i)=>i).sort(()=>Math.random()-.5);findIndex=0;findScore=0;showFindQuestion()}
+function endFind(){finding=false;gameBusy=false;clearTimeout(gameTimer);$('gameHud').style.display='none';$('btnLabels').disabled=false;if($('btnToggleInfo'))$('btnToggleInfo').disabled=false;$('btnFind').textContent='Tìm địa điểm';$('btnFind').classList.remove('primary');$('info').style.display='';updateInfoVisibilityUI();$('placeList').style.visibility='visible';$('mobilePlaces').style.display='';labelsVisible=true;updateLabels();$('gameEndOverlay').style.display='flex';$('gameEnd').style.display='block';$('gameEndText').textContent='Em đạt '+findScore+' điểm. Hãy tiếp tục quan sát mô hình và ôn lại những địa điểm cần nhớ.'}
 function showFindQuestion(){if(findIndex>=findOrder.length){endFind();return}gameBusy=false;findTries=0;let q=data.findQuestions[findOrder[findIndex]];$('gameQuestion').textContent='Câu '+(findIndex+1)+'/'+findOrder.length+': '+q.q;$('gameStatus').textContent='Điểm: '+findScore+' · Hãy bấm vào công trình phù hợp trên mô hình.'}
 function answerFind(idx){if(!finding||gameBusy)return;let q=data.findQuestions[findOrder[findIndex]];findTries++;if(data.places[idx].id===q.id){let pts=findTries===1?10:findTries===2?7:findTries===3?5:3;findScore+=pts;gameBusy=true;$('gameStatus').textContent='Chính xác! +'+pts+' điểm. '+q.hint;celebrate();playSuccess();gameTimer=setTimeout(()=>{findIndex++;showFindQuestion()},1500)}else{if(findTries===2)$('gameStatus').textContent='Chưa đúng. Gợi ý: '+q.hint;else if(findTries>=4){$('gameStatus').textContent='Đáp án là '+data.places.find(p=>p.id===q.id).name+'. Hãy quan sát vị trí.';gameBusy=true;flyTo(q.id);gameTimer=setTimeout(()=>{findIndex++;showFindQuestion()},2600)}else $('gameStatus').textContent='Chưa đúng, em hãy thử lại. Số lần thử: '+findTries}}
 function playSuccess(){try{let c=new(window.AudioContext||window.webkitAudioContext)();[660,880,1100].forEach((f,i)=>{let o=c.createOscillator(),g=c.createGain();o.frequency.value=f;g.gain.setValueAtTime(.12,c.currentTime+i*.09);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+i*.09+.18);o.connect(g);g.connect(c.destination);o.start(c.currentTime+i*.09);o.stop(c.currentTime+i*.09+.2)})}catch(e){}}
@@ -301,8 +430,8 @@ function buildLabelRefresh(){Object.values(labelEls).forEach(el=>el.remove());la
 $('exportJSON').onclick=()=>{let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='noi-dung-sa-ban-den-hung.json';a.click();URL.revokeObjectURL(url)};
 $('importJSON').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let d=JSON.parse(await f.text());if(!Array.isArray(d.places)||d.places.length!==7||!Array.isArray(d.quiz)||!Array.isArray(d.findQuestions))throw Error('Cấu trúc JSON không hợp lệ');data=d;saveData();$('appTitle').textContent=data.title;renderPlaceLists();buildLabelRefresh();selectPlace(0);toast('Đã nhập dữ liệu JSON.')}catch(err){toast('Không thể nhập: '+err.message)}e.target.value=''};
 $('resetData').onclick=()=>{if(confirm('Khôi phục toàn bộ nội dung mặc định? Dữ liệu đã chỉnh sửa sẽ bị thay thế.')){data=structuredCloneSafe(DEFAULT);saveData();$('appTitle').textContent=data.title;openTeacher();toast('Đã khôi phục nội dung mặc định.')}};
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(finding)endFind();if(journey)journeyStop();$('teacherOverlay').style.display='none';$('quizPanel').style.display='none'}if(e.key==='ArrowRight'&&!finding&&!journey)selectPlace((current+1)%data.places.length);if(e.key==='ArrowLeft'&&!finding&&!journey)selectPlace((current+data.places.length-1)%data.places.length)});
-init3D();selectPlace(0);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(finding)endFind();if(journey)journeyStop();$('teacherOverlay').style.display='none';$('quizPanel').style.display='none'}if((e.key==='i'||e.key==='I')&&!finding&&!journey)toggleInfo();if(e.key==='+'||e.key==='=')smoothZoom(0.72);if(e.key==='-'||e.key==='_')smoothZoom(1.35);if(e.key==='0')flyOverview();if(e.key==='ArrowRight'&&!finding&&!journey)selectPlace((current+1)%data.places.length);if(e.key==='ArrowLeft'&&!finding&&!journey)selectPlace((current+data.places.length-1)%data.places.length)});
+init3D();selectPlace(0);initInfoDrag();updateInfoVisibilityUI();
 })();
 </script>
 <script src="lib/annotation-tool.js"></script>
