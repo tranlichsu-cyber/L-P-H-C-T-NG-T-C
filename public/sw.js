@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v17-den-hung-clean-stage';
+const CACHE_NAME = 'lhtt-shell-v18-models-realism';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

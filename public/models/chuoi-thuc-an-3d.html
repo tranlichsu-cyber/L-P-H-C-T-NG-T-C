@@ -336,6 +336,8 @@ header {
   }
 </script>
 <link rel="stylesheet" href="lib/annotation-tool.css">
+<script src="lib/scene-realism.js"></script>
+<link rel="stylesheet" href="lib/scene-realism.css">
 </head>
 
 <body>
@@ -386,7 +388,7 @@ header {
         <button class="chain-btn" data-node="3">
           <div class="badge" style="background: rgba(225,29,72,0.2); color: #fb7185;">🐍</div>
           <div>
-            <div class="title">4. Rắn hổ mang / Đại bàng</div>
+            <div class="title">4. Rắn săn ếch</div>
             <div class="sub">Sinh vật tiêu thụ bậc 3 (Ăn thịt)</div>
           </div>
         </button>
@@ -418,7 +420,7 @@ header {
 
       <div class="section-title">Ý nghĩa cốt lõi</div>
       <div style="font-size: 12px; color: #94a3b8; line-height: 1.5; background: rgba(30,41,59,0.5); padding: 10px; border-radius: 12px;">
-        💡 <strong>Quy luật tự nhiên:</strong> Mỗi mắt xích trong chuỗi thức ăn đều đóng vai trò sinh thái không thể thay thế. Tiêu diệt một loài sẽ gây mất cân bằng toàn chuỗi!
+        <span>Các sinh vật được phóng đại để quan sát.</span><br><strong>Năng lượng truyền một chiều, không quay lại cây. Chất khoáng được tái sử dụng qua phân giải.</strong><br>💡 <strong>Quy luật tự nhiên:</strong> Mỗi mắt xích trong chuỗi thức ăn đều đóng vai trò sinh thái không thể thay thế. Tiêu diệt một loài sẽ gây mất cân bằng toàn chuỗi!
       </div>
     </aside>
 
@@ -458,7 +460,7 @@ const NODES_DATA = [
     name: 'Cây lúa / Cây cỏ xanh',
     role: 'Sinh vật sản xuất (Quang hợp)',
     badge: '🌾',
-    color: 0x22c55e,
+    color: 0x66864a,
     desc: 'Hấp thu năng lượng Mặt Trời, nước và khí CO2 để quang hợp tự chế tạo chất hữu cơ và nhả khí Ô-xi trong lành nuôi sống sinh quyển.',
     fact: 'Mỗi ngày cây cỏ trên toàn cầu tạo ra hàng triệu tấn sinh khối nuôi sống con người và động vật!',
     pos: [-30, 2, 0],
@@ -469,7 +471,7 @@ const NODES_DATA = [
     name: 'Cào cào / Sâu bọ',
     role: 'Sinh vật tiêu thụ bậc 1 (Ăn cỏ)',
     badge: '🦗',
-    color: 0x84cc16,
+    color: 0x8b9d43,
     desc: 'Động vật ăn thực vật trực tiếp. Sử dụng chất dinh dưỡng từ lá lúa để lớn lên, chuyển hóa năng lượng thực vật vào cơ thể.',
     fact: 'Một đàn cào cào có thể bay xa hàng chục cây số để tìm kiếm đồng cỏ tươi mới!',
     pos: [-10, 2, -25],
@@ -480,7 +482,7 @@ const NODES_DATA = [
     name: 'Ếch đồng / Chim sâu',
     role: 'Sinh vật tiêu thụ bậc 2 (Ăn sâu bọ)',
     badge: '🐸',
-    color: 0x06b6d4,
+    color: 0x527447,
     desc: 'Thiên địch săn bắt cào cào, châu chấu và sâu hại lúa, bảo vệ mùa màng và ngăn ngừa bùng phát dịch bệnh sâu rầy.',
     fact: 'Lưỡi của ếch phóng ra bắt dính côn trùng nhanh hơn cả cái chớp mắt (chưa tới 0,05 giây)!',
     pos: [18, 2, -20],
@@ -488,12 +490,12 @@ const NODES_DATA = [
     camPos: [18, 16, 10]
   },
   {
-    name: 'Rắn hổ mang / Đại bàng',
+    name: 'Rắn săn ếch',
     role: 'Sinh vật tiêu thụ bậc 3 (Động vật ăn thịt)',
     badge: '🐍',
-    color: 0xe11d48,
+    color: 0x74654a,
     desc: 'Động vật ăn thịt đỉnh cao. Săn ếch nhái, chuột đồng, khống chế mật độ quần thể các bậc dưới, duy trì cân bằng sinh thái.',
-    fact: 'Vì năng lượng thất thoát qua từng bậc dinh dưỡng, số lượng thú ăn thịt luôn ít nhất trong tự nhiên.',
+    fact: 'Vì năng lượng thất thoát qua từng bậc dinh dưỡng, sinh khối sinh vật tiêu thụ bậc cao thường thấp hơn các bậc bên dưới.',
     pos: [30, 2, 10],
     camTarget: [30, 6, 10],
     camPos: [30, 18, 40]
@@ -502,7 +504,7 @@ const NODES_DATA = [
     name: 'Nấm & Vi khuẩn đất',
     role: 'Sinh vật phân giải (Mùn khoáng)',
     badge: '🍄',
-    color: 0xa855f7,
+    color: 0x8d6948,
     desc: 'Phân giải xác rắn chết, lá rụng khô mục thành chất mùn khoáng vô cơ ngấm vào đất, rễ cây lúa lại hút nuôi cây tươi tốt.',
     fact: 'Khép kín vòng tuần hoàn vật chất: Đất sinh ra cây ➔ Động vật ăn cây ➔ Chết về lại với Đất!',
     pos: [-2, 2, 25],
@@ -529,8 +531,8 @@ function init() {
 
   // Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a1622);
-  scene.fog = new THREE.FogExp2(0x0a1622, 0.007);
+  scene.background = new THREE.Color(0xc6dbe3);
+  scene.fog = new THREE.FogExp2(0xc6dbe3, 0.007);
 
   // Camera
   camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 800);
@@ -542,6 +544,7 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  ModelRealism.configure(renderer);
   container.appendChild(renderer.domElement);
 
   // OrbitControls
@@ -549,13 +552,14 @@ function init() {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.maxPolarAngle = Math.PI * .49;
     controls.minDistance = 20;
     controls.maxDistance = 180;
     controls.target.set(0, 5, 0);
   }
 
   // Lights
+  ModelRealism.cameraControls(camera,controls);
   setupLighting();
 
   // Ground and Environment
@@ -574,6 +578,7 @@ function init() {
   window.addEventListener('resize', onWindowResize);
 
   // Start Animation Loop
+  ModelRealism.naturalize(scene);
   animate();
 }
 
@@ -669,18 +674,18 @@ function createFoodChainNodes() {
       color: node.color,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.7
+      opacity: 0.22
     });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.position.y = 0.4;
     group.add(ring);
 
-    // Glowing column pillar
+    // Low earth display base; organisms remain grounded.
     const colGeo = new THREE.CylinderGeometry(3.5, 3.8, 2, 24);
     const colMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      roughness: 0.5,
-      metalness: 0.3
+      color: 0x73664e,
+      roughness: 1,
+      metalness: 0
     });
     const col = new THREE.Mesh(colGeo, colMat);
     col.position.y = 1;
@@ -693,7 +698,7 @@ function createFoodChainNodes() {
       // Producer: Golden Rice Sheaves & Sunlight Beam
       for (let i = 0; i < 9; i++) {
         const stalkGeo = new THREE.CylinderGeometry(0.08, 0.15, 6 + Math.random() * 2, 8);
-        const stalkMat = new THREE.MeshStandardMaterial({ color: 0x22c55e });
+        const stalkMat = new THREE.MeshStandardMaterial({ color: 0x66864a });
         const stalk = new THREE.Mesh(stalkGeo, stalkMat);
         const ang = (i / 9) * Math.PI * 2;
         stalk.position.set(Math.cos(ang) * 1.5, 4, Math.sin(ang) * 1.5);
@@ -702,22 +707,29 @@ function createFoodChainNodes() {
         group.add(stalk);
 
         // Golden grain head
-        const grainGeo = new THREE.SphereGeometry(0.35, 8, 8);
+        const grainGeo = new THREE.SphereGeometry(0.22, 10, 8);
         grainGeo.scale(1, 2.5, 1);
         const grainMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.3 });
         const grain = new THREE.Mesh(grainGeo, grainMat);
-        grain.position.set(stalk.position.x, 7.5, stalk.position.z);
+        grain.position.set(stalk.position.x,4+stalkGeo.parameters.height/2,stalk.position.z);
         group.add(grain);
       }
     } else if (index === 1) {
       // Herbivore: Grasshopper stylized model
       const bodyGeo = new THREE.ConeGeometry(0.8, 4, 8);
       bodyGeo.rotateX(Math.PI / 2);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x84cc16, roughness: 0.4 });
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8b9d43, roughness: 0.4 });
       const body = new THREE.Mesh(bodyGeo, bodyMat);
       body.position.set(0, 3.2, 0);
       group.add(body);
 
+      // Six jointed legs, including enlarged hind legs of a grasshopper.
+      for(const side of [-1,1])for(let leg=0;leg<3;leg++){
+        const z=-1.2+leg*1.1,knee=[side*(leg===0?1.8:1.2),leg===0?4:2.8,z-.4];
+        ModelRealism.limb(group,[side*.4,3.2,z],knee,leg===0?.16:.07,bodyMat);
+        ModelRealism.limb(group,knee,[side*1.7,2.05,z+.6],.06,bodyMat);
+      }
+      const head=new THREE.Mesh(new THREE.SphereGeometry(.65,16,12),bodyMat);head.position.set(0,3.5,1.5);group.add(head);
       // Antennae
       const antGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.5, 6);
       const antMat = new THREE.MeshBasicMaterial({ color: 0xa3e635 });
@@ -740,7 +752,7 @@ function createFoodChainNodes() {
       // Frog body
       const frogGeo = new THREE.SphereGeometry(1.4, 16, 12);
       frogGeo.scale(1.2, 0.8, 1);
-      const frogMat = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.4 });
+      const frogMat = new THREE.MeshStandardMaterial({ color: 0x527447, roughness: 0.4 });
       const frog = new THREE.Mesh(frogGeo, frogMat);
       frog.position.set(0, 3.2, 0);
       group.add(frog);
@@ -754,6 +766,12 @@ function createFoodChainNodes() {
       e2.position.set(0.6, 4.0, 0.6);
       group.add(e1);
       group.add(e2);
+      for(const side of [-1,1]){
+        const pupil=new THREE.Mesh(new THREE.SphereGeometry(.21,12,10),ModelRealism.material(0x171b12));pupil.position.set(side*.6,4.02,.9);group.add(pupil);
+        ModelRealism.limb(group,[side*.9,3.1,-.5],[side*1.8,2.8,-.9],.32,frogMat);
+        ModelRealism.limb(group,[side*1.8,2.8,-.9],[side*1.3,2.2,.7],.14,frogMat);
+        ModelRealism.limb(group,[side*.8,3.1,.6],[side*1.1,2.2,1.2],.12,frogMat);
+      }
     } else if (index === 3) {
       // Snake coiled upward
       const curve = new THREE.CatmullRomCurve3([
@@ -764,7 +782,7 @@ function createFoodChainNodes() {
         new THREE.Vector3(0, 5.8, 0.8)
       ]);
       const snakeGeo = new THREE.TubeGeometry(curve, 32, 0.45, 8, false);
-      const snakeMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.5 });
+      const snakeMat = new THREE.MeshStandardMaterial({ color: 0x74654a, roughness: 0.5 });
       const snake = new THREE.Mesh(snakeGeo, snakeMat);
       group.add(snake);
 
@@ -774,19 +792,21 @@ function createFoodChainNodes() {
       const head = new THREE.Mesh(headGeo, snakeMat);
       head.position.set(0, 5.8, 0.9);
       group.add(head);
+      for(const side of [-1,1]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.08,8,8),ModelRealism.material(0x181a10));eye.position.set(side*.48,5.95,1.4);group.add(eye);}
+      for(let i=0;i<24;i++){const p=curve.getPoint(i/24),band=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),ModelRealism.material(i%2?0x423b2b:0xa49a73));band.position.copy(p);band.position.y+=.38;group.add(band);}
     } else if (index === 4) {
       // Decomposer: Red/Purple Mushrooms & Spores
       for (let m = 0; m < 5; m++) {
         const ang = (m / 5) * Math.PI * 2;
         const dist = 1.2;
         const stemGeo = new THREE.CylinderGeometry(0.2, 0.35, 2.2, 8);
-        const stemMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9 });
+        const stemMat = new THREE.MeshStandardMaterial({ color: 0xc7b89a });
         const stem = new THREE.Mesh(stemGeo, stemMat);
         stem.position.set(Math.cos(ang) * dist, 3, Math.sin(ang) * dist);
         group.add(stem);
 
         const capGeo = new THREE.SphereGeometry(0.9, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-        const capMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, roughness: 0.3 });
+        const capMat = new THREE.MeshStandardMaterial({ color: 0x8d6948, roughness: 0.3 });
         const cap = new THREE.Mesh(capGeo, capMat);
         cap.position.set(stem.position.x, 4.1, stem.position.z);
         group.add(cap);
@@ -810,13 +830,15 @@ function createFoodChainNodes() {
 }
 
 function createEnergyFlowSplines() {
+  const nutrientCurve=new THREE.CatmullRomCurve3([new THREE.Vector3(-2,3,25),new THREE.Vector3(-20,1.2,20),new THREE.Vector3(-30,3,0)]);
+  const nutrientLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints(nutrientCurve.getPoints(80)),new THREE.LineDashedMaterial({color:0xb9a16b,dashSize:.8,gapSize:.5}));nutrientLine.computeLineDistances();scene.add(nutrientLine);
+
   // Define pathways connecting nodes in order: 0 -> 1 -> 2 -> 3 -> 4 -> 0
   const connections = [
     { from: 0, to: 1, color: 0x86efac },
     { from: 1, to: 2, color: 0x38bdf8 },
     { from: 2, to: 3, color: 0xf43f5e },
-    { from: 3, to: 4, color: 0xc084fc },
-    { from: 4, to: 0, color: 0x4ade80 }
+    { from: 3, to: 4, color: 0xa79070 }
   ];
 
   connections.forEach(conn => {
@@ -825,7 +847,7 @@ function createEnergyFlowSplines() {
 
     // Midpoint raised into arc
     const midX = (p1[0] + p2[0]) / 2;
-    const midY = 12 + Math.random() * 3;
+    const midY = 13;
     const midZ = (p1[2] + p2[2]) / 2;
 
     const curve = new THREE.CatmullRomCurve3([
@@ -895,35 +917,7 @@ function focusNode(idx) {
   document.getElementById('drawer-fact').textContent = '💡 ' + node.fact;
 }
 
-function smoothMoveCamera(targetPos, targetLookAt) {
-  const startPos = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
-  const startTarget = controls ? { x: controls.target.x, y: controls.target.y, z: controls.target.z } : { x:0, y:5, z:0 };
-
-  const duration = 900;
-  const startTime = Date.now();
-
-  function update() {
-    const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = progress < 0.5 ? 2 * progress * progress : -1 + (4 - 2 * progress) * progress;
-
-    camera.position.x = startPos.x + (targetPos.x - startPos.x) * ease;
-    camera.position.y = startPos.y + (targetPos.y - startPos.y) * ease;
-    camera.position.z = startPos.z + (targetPos.z - startPos.z) * ease;
-
-    if (controls) {
-      controls.target.x = startTarget.x + (targetLookAt.x - startTarget.x) * ease;
-      controls.target.y = startTarget.y + (targetLookAt.y - startTarget.y) * ease;
-      controls.target.z = startTarget.z + (targetLookAt.z - startTarget.z) * ease;
-      controls.update();
-    }
-
-    if (progress < 1) {
-      requestAnimationFrame(update);
-    }
-  }
-  update();
-}
+function smoothMoveCamera(targetPos,targetLookAt){ModelRealism.fly(camera,controls,targetPos,targetLookAt);}
 
 function setupUI() {
   // Sidebar node clicks
@@ -1062,7 +1056,7 @@ function onWindowResize() {
   const w = container.clientWidth;
   const h = container.clientHeight;
   camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  ModelRealism.resizeCamera(camera);
   renderer.setSize(w, h);
 }
 
@@ -1092,6 +1086,7 @@ function animate() {
   requestAnimationFrame(animate);
 
   const time = Date.now() * 0.001;
+  const dt=ModelRealism.delta('simulation');
 
   // Animate Energy Flow Particles
   if (energyGlow) {
@@ -1101,7 +1096,7 @@ function animate() {
       const pos = pts.geometry.attributes.position;
 
       for (let i = 0; i < uvs.length; i++) {
-        uvs[i] = (uvs[i] + 0.006 * speedFactor) % 1.0;
+        uvs[i] = (uvs[i] + 0.36 * speedFactor*dt) % 1.0;
         const pt = curve.getPoint(uvs[i]);
         pos.setXYZ(i, pt.x, pt.y, pt.z);
       }
@@ -1109,10 +1104,7 @@ function animate() {
     });
   }
 
-  // Gentle node floating / swaying
-  nodeMeshes.forEach((mesh, idx) => {
-    mesh.position.y = NODES_DATA[idx].pos[1] + Math.sin(time * 2 + idx) * 0.3;
-  });
+  // Display bases are stationary; animals do not levitate above the ground.
 
   // Controls update
   if (controls) controls.update();

@@ -339,6 +339,8 @@ header {
   }
 </script>
 <link rel="stylesheet" href="lib/annotation-tool.css">
+<script src="lib/scene-realism.js"></script>
+<link rel="stylesheet" href="lib/scene-realism.css">
 </head>
 <body>
 <div id="app">
@@ -388,7 +390,7 @@ header {
           <div class="badge">4</div>
           <div>
             <div class="title">Dòng chảy & Nước ngầm</div>
-            <div class="sub">Thấm vào đất & đổ về biển</div>
+            <div class="sub">Thấm vào đất, chứa trong lỗ rỗng đá và chảy về biển</div>
           </div>
         </button>
       </div>
@@ -482,11 +484,11 @@ const STAGES = [
 
 // Markers definitions
 const MARKERS = [
-  { id: 'm1', name: '1. Biển bốc hơi', pos: new THREE.Vector3(-45, 12, 10), stageIndex: 0 },
+  { id: 'm1', name: '1. Bay hơi (hạt chỉ hướng minh họa)', pos: new THREE.Vector3(-45, 12, 10), stageIndex: 0 },
   { id: 'm2', name: '2. Mây ngưng tụ', pos: new THREE.Vector3(-10, 48, -5), stageIndex: 1 },
   { id: 'm3', name: '3. Mưa tưới núi rừng', pos: new THREE.Vector3(30, 32, -10), stageIndex: 2 },
   { id: 'm4', name: '4. Dòng sông hồi hương', pos: new THREE.Vector3(5, 7, 15), stageIndex: 3 },
-  { id: 'm5', name: '5. Mạch nước ngầm', pos: new THREE.Vector3(20, -5, 20), stageIndex: 3 }
+  { id: 'm5', name: '5. Tầng chứa nước (mặt cắt minh họa)', pos: new THREE.Vector3(20,-12,5), stageIndex: 3 }
 ];
 
 let scene, camera, renderer, controls;
@@ -507,8 +509,8 @@ function init() {
 
   // Scene
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0c192c);
-  scene.fog = new THREE.FogExp2(0x0c192c, 0.005);
+  scene.background = new THREE.Color(0xc6dbe3);
+  scene.fog = new THREE.FogExp2(0xc6dbe3, 0.005);
 
   // Camera
   camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
@@ -520,6 +522,7 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  ModelRealism.configure(renderer);
   container.appendChild(renderer.domElement);
 
   // Controls
@@ -536,6 +539,7 @@ function init() {
   }
 
   // Lights
+  ModelRealism.cameraControls(camera,controls);
   setupLighting();
 
   // World Elements
@@ -554,8 +558,10 @@ function init() {
 
   // Default Stage
   setStage(0);
+  smoothMoveCamera({x:0,y:62,z:145},{x:0,y:12,z:0});
 
   // Animation Loop
+  ModelRealism.naturalize(scene);
   animate();
 }
 
@@ -615,45 +621,34 @@ function createTerrainAndMountains() {
   const terrainGroup = new THREE.Group();
 
   // Mountain range on the right side
-  const mtnGeo = new THREE.ConeGeometry(28, 48, 7);
+  const mtnGeo = ModelRealism.mound(28,44);
   const mtnMat = new THREE.MeshStandardMaterial({
     color: 0x334155,
     roughness: 0.8,
     flatShading: true
   });
   const peak = new THREE.Mesh(mtnGeo, mtnMat);
-  peak.position.set(45, 24, -15);
+  peak.position.set(45,0,-15);
   peak.castShadow = true;
   peak.receiveShadow = true;
   terrainGroup.add(peak);
 
-  // Snow cap on peak
-  const snowGeo = new THREE.ConeGeometry(12, 18, 7);
-  const snowMat = new THREE.MeshStandardMaterial({
-    color: 0xf8fafc,
-    roughness: 0.4,
-    flatShading: true
-  });
-  const snowCap = new THREE.Mesh(snowGeo, snowMat);
-  snowCap.position.set(45, 39, -15);
-  terrainGroup.add(snowCap);
-
   // Secondary hill
-  const hillGeo = new THREE.ConeGeometry(20, 32, 6);
+  const hillGeo = ModelRealism.mound(20,27);
   const hillMat = new THREE.MeshStandardMaterial({
     color: 0x166534,
     roughness: 0.9,
     flatShading: true
   });
   const hill = new THREE.Mesh(hillGeo, hillMat);
-  hill.position.set(30, 16, 20);
+  hill.position.set(30,0,20);
   hill.castShadow = true;
   terrainGroup.add(hill);
 
   // Coastal plain and riverbank
   const plainGeo = new THREE.BoxGeometry(60, 4, 90);
   const plainMat = new THREE.MeshStandardMaterial({
-    color: 0x15803d,
+    color: 0x466c3c,
     roughness: 0.9
   });
   const plain = new THREE.Mesh(plainGeo, plainMat);
@@ -670,9 +665,9 @@ function createTerrainAndMountains() {
   ]);
   const riverTubeGeo = new THREE.TubeGeometry(riverCurve, 30, 2.8, 8, false);
   const riverMat = new THREE.MeshStandardMaterial({
-    color: 0x38bdf8,
+    color: 0x4d929e,
     roughness: 0.1,
-    metalness: 0.8
+    metalness: 0.02
   });
   const river = new THREE.Mesh(riverTubeGeo, riverMat);
   river.scale.set(1, 0.3, 1);
@@ -696,7 +691,7 @@ function createTerrainAndMountains() {
 
     const tx = 10 + Math.random() * 35;
     const tz = -35 + Math.random() * 70;
-    tree.position.set(tx, 0, tz);
+    tree.position.set(tx,waterLandHeight(tx,tz),tz);
     terrainGroup.add(tree);
   }
 
@@ -716,22 +711,10 @@ function createUndergroundAquifer() {
   strata.position.set(15, -12, 0);
   scene.add(strata);
 
-  // Underground water vein (Aquifer)
-  const aquaCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(35, -12, -5),
-    new THREE.Vector3(15, -14, 5),
-    new THREE.Vector3(-5, -15, 0),
-    new THREE.Vector3(-15, -14, -5)
-  ]);
-  const aquaGeo = new THREE.TubeGeometry(aquaCurve, 20, 2.2, 8, false);
-  const aquaMat = new THREE.MeshStandardMaterial({
-    color: 0x0ea5e9,
-    roughness: 0.2,
-    emissive: 0x0284c7,
-    emissiveIntensity: 0.4
-  });
-  const aquifer = new THREE.Mesh(aquaGeo, aquaMat);
-  scene.add(aquifer);
+  // Groundwater occupies connected pores in a permeable stratum, not a giant pipe.
+  strataMat.depthWrite=false;
+  const aquifer=new THREE.Mesh(new THREE.BoxGeometry(58,3.2,86),new THREE.MeshStandardMaterial({color:0x3b8798,roughness:.9,transparent:true,opacity:.55,depthWrite:false}));aquifer.position.set(15,-12,0);scene.add(aquifer);
+
 }
 
 function createClouds() {
@@ -741,7 +724,7 @@ function createClouds() {
     const puffMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.9,
-      flatShading: true
+      flatShading: false
     });
     const c = new THREE.Group();
     const positions = [
@@ -752,7 +735,7 @@ function createClouds() {
       [-2, 2.5, 1, 4]
     ];
     positions.forEach(([px, py, pz, r]) => {
-      const puff = new THREE.Mesh(new THREE.SphereGeometry(r, 7, 7), puffMat);
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), puffMat);
       puff.position.set(px, py, pz);
       c.add(puff);
     });
@@ -770,6 +753,7 @@ function createClouds() {
 }
 
 function createVaporParticles() {
+  // Symbolic tracers: real water vapour is invisible.
   const count = 350;
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(count * 3);
@@ -788,10 +772,11 @@ function createVaporParticles() {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
   const material = new THREE.PointsMaterial({
+    map:ModelRealism.particleTexture(),depthWrite:false,
     color: 0x7dd3fc,
-    size: 1.5,
+    size: .8,
     transparent: true,
-    opacity: 0.7,
+    opacity: .3,
     blending: THREE.AdditiveBlending
   });
 
@@ -800,31 +785,15 @@ function createVaporParticles() {
   scene.add(vaporParticles);
 }
 
-function createRainParticles() {
-  const count = 1200;
-  const geometry = new THREE.BufferGeometry();
-  const positions = new Float32Array(count * 3);
-  const velocities = [];
-
-  for (let i = 0; i < count; i++) {
-    positions[i * 3] = 5 + Math.random() * 50;
-    positions[i * 3 + 1] = 5 + Math.random() * 40;
-    positions[i * 3 + 2] = -35 + Math.random() * 70;
-    velocities.push(0.8 + Math.random() * 0.6);
-  }
-
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-  const material = new THREE.PointsMaterial({
-    color: 0x38bdf8,
-    size: 0.8,
-    transparent: true,
-    opacity: 0.6
-  });
-
-  rainParticles = new THREE.Points(geometry, material);
-  rainParticles.userData.velocities = velocities;
-  scene.add(rainParticles);
+function waterLandHeight(x,z){
+ const hill=(cx,cz,r,h)=>Math.max(0,1-((x-cx)**2+(z-cz)**2)/(r*r))**1.7*h;
+ return Math.max(hill(45,-15,28,44),hill(30,20,20,27));
+}
+function createRainParticles(){
+ const count=700,positions=new Float32Array(count*6),velocities=[];
+ for(let i=0;i<count;i++){const x=5+Math.random()*50,y=45+Math.random()*10,z=-35+Math.random()*70;positions.set([x,y,z,x,y-1.1,z],i*6);velocities.push(18+Math.random()*9);}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+ rainParticles=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0x9dbbc8,transparent:true,opacity:.55}));rainParticles.userData.velocities=velocities;rainParticles.visible=isRaining;scene.add(rainParticles);
 }
 
 function createMarkersHtml() {
@@ -886,31 +855,7 @@ function setStage(index) {
   smoothMoveCamera(stage.camPos, stage.camTarget);
 }
 
-function smoothMoveCamera(targetPos, targetLookAt) {
-  const startPos = camera.position.clone();
-  const startTarget = controls ? controls.target.clone() : new THREE.Vector3(0, 10, 0);
-  const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
-  const endTarget = new THREE.Vector3(targetLookAt.x, targetLookAt.y, targetLookAt.z);
-
-  let progress = 0;
-  const duration = 40; // frames
-
-  function step() {
-    progress++;
-    const t = Math.min(progress / duration, 1);
-    const ease = 0.5 - Math.cos(t * Math.PI) / 2;
-
-    camera.position.lerpVectors(startPos, endPos, ease);
-    if (controls) {
-      controls.target.lerpVectors(startTarget, endTarget, ease);
-    }
-
-    if (progress < duration) {
-      requestAnimationFrame(step);
-    }
-  }
-  step();
-}
+function smoothMoveCamera(targetPos,targetLookAt){ModelRealism.fly(camera,controls,targetPos,targetLookAt);}
 
 function setupUIEvents() {
   // Stage click list
@@ -1048,7 +993,7 @@ function onWindowResize() {
   const w = container.clientWidth;
   const h = container.clientHeight;
   camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  ModelRealism.resizeCamera(camera);
   renderer.setSize(w, h);
 }
 
@@ -1056,6 +1001,7 @@ function animate() {
   requestAnimationFrame(animate);
 
   const time = Date.now() * 0.001;
+  const dt=ModelRealism.delta('simulation');
 
   // Ocean wave simulation
   if (oceanMesh) {
@@ -1066,6 +1012,7 @@ function animate() {
       pos.setZ(i, Math.sin(u * 0.15 + time * 1.5) * 0.6 + Math.cos(v * 0.15 + time * 1.2) * 0.5);
     }
     pos.needsUpdate = true;
+    oceanMesh.geometry.computeVertexNormals();
   }
 
   // Animate Vapor Particles (Rising up and drifting toward clouds)
@@ -1073,8 +1020,8 @@ function animate() {
     const pos = vaporParticles.geometry.attributes.position;
     const vels = vaporParticles.userData.velocities;
     for (let i = 0; i < pos.count; i++) {
-      let y = pos.getY(i) + vels[i].vy * vaporSpeed;
-      let x = pos.getX(i) + vels[i].vx * vaporSpeed;
+      let y = pos.getY(i) + vels[i].vy * vaporSpeed*dt*60;
+      let x = pos.getX(i) + vels[i].vx * vaporSpeed*dt*60;
 
       if (y > 48) {
         y = 1 + Math.random() * 3;
@@ -1090,12 +1037,10 @@ function animate() {
   if (rainParticles && isRaining) {
     const pos = rainParticles.geometry.attributes.position;
     const vels = rainParticles.userData.velocities;
-    for (let i = 0; i < pos.count; i++) {
-      let y = pos.getY(i) - vels[i] * 1.4;
-      if (y < 0) {
-        y = 48 + Math.random() * 6;
-      }
-      pos.setY(i, y);
+    for(let i=0;i<vels.length;i++){
+      const vertex=i*2,x=pos.getX(vertex),z=pos.getZ(vertex);let y=pos.getY(vertex)-vels[i]*dt;
+      if(y<waterLandHeight(x,z)+.1)y=48+Math.random()*6;
+      pos.setY(vertex,y);pos.setY(vertex+1,y-1.1);
     }
     pos.needsUpdate = true;
   }

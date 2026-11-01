@@ -263,3 +263,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 254: 2026-11-01: Phat hanh nhan ten den lon, chu nau do tren bang kem vien vang; giu co chu khi thu xa. Go the anh tham khao, giu sa ban WebGL, le hoi va on tap. Cache v16.
 
 255: 2026-11-01: Go cong cu but ve va dong huong dan KEO DE XOAY 3D o sa ban Den Hung, giu cac dieu khien va diem kham pha. Cache v17.
+
+256: 2026-11-01: Phat hanh ra soat mo hinh 3D: dia cau dung anh local, dia hinh Viet Nam theo Natural Earth, thuyen theo muc nuoc, mua va tang chua nuoc, sinh vat va dong nang luong, vat lieu anh sang va giao dien dien thoai. Cache v18.

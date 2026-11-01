@@ -281,6 +281,8 @@ header {
   }
 </script>
 <link rel="stylesheet" href="lib/annotation-tool.css">
+<script src="lib/scene-realism.js"></script>
+<link rel="stylesheet" href="lib/scene-realism.css">
 </head>
 <body>
 <div id="app">
@@ -367,7 +369,7 @@ header {
 
       <!-- Compass & Scale Badge -->
       <div id="compass-badge">
-        🧭 Hướng Bắc ⬆ | Hình chữ S uốn lượn ven Biển Đông
+        🧭 Bắc ở phía trên khi đặt lại góc nhìn · Độ cao phóng đại minh họa
       </div>
 
       <!-- Info Card Floating -->
@@ -409,7 +411,7 @@ const REGIONS = [
     badge: 'Khu vực 1: Địa hình đồi núi cao',
     elevation: 'Đỉnh Fansipan 3.143m (Nóc nhà Đông Dương)',
     features: 'Địa hình núi cao hiểm trở dãy Hoàng Liên Sơn, các cao nguyên đá vôi, đồi trung du hình bát úp và ruộng bậc thang kỳ vĩ.',
-    climate: 'Nhiệt đới gió mùa có mùa đông lạnh buốt nhất cả nước; các đỉnh núi cao có sương mù và tuyết rơi vào mùa đông.',
+    climate: 'Nhiệt đới gió mùa có mùa đông lạnh buốt nhất cả nước; các đỉnh núi cao thường có sương mù; băng tuyết chỉ xuất hiện trong một số đợt rét đặc biệt.',
     economic: 'Thế mạnh khai thác khoáng sản, đại công trình thủy điện Hòa Bình - Sơn La, trồng cây chè Shan Tuyết và cây ăn quả ôn đới.',
     camPos: { x: -8, y: 35, z: 25 },
     camTarget: { x: -6, y: 8, z: 8 },
@@ -478,7 +480,7 @@ let isReliefBoosted = true;
 let autoRotate = false;
 let currentRegion = 0;
 
-function init() {
+async function init() {
   const container = document.getElementById('canvas-container');
   const width = container.clientWidth || window.innerWidth || 800;
   const height = container.clientHeight || window.innerHeight || 600;
@@ -494,27 +496,31 @@ function init() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  ModelRealism.configure(renderer);
   container.appendChild(renderer.domElement);
 
   if (typeof THREE.OrbitControls === 'function') {
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 + 0.05;
+    controls.maxPolarAngle = Math.PI * .49;
     controls.minDistance = 15;
     controls.maxDistance = 150;
-    controls.target.set(3, 2, -3);
+    controls.target.set(2,2,0);
   }
 
+  ModelRealism.cameraControls(camera,controls);
   setupLighting();
   createOcean();
-  createVietnamTerrain();
+  await createVietnamTerrain();
   createIslandsHoangSaTruongSa();
   createBeacon();
 
   window.addEventListener('resize', onWindowResize);
   setupUI();
   selectRegion(0);
+  smoothMoveCamera({x:4,y:57,z:43},{x:4,y:1,z:0});
+  ModelRealism.naturalize(scene);
   animate();
 }
 
@@ -549,103 +555,33 @@ function createOcean() {
   scene.add(oceanMesh);
 }
 
-function createVietnamTerrain() {
-  // Construct the S-shaped relief topography of Vietnam
-  const terrainGroup = new THREE.Group();
-
-  // 1. North Mountain Region (Fansipan & Hoang Lien Son)
-  const northMtnGeo = new THREE.ConeGeometry(9, 12, 7);
-  const northMtnMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.85, flatShading: true });
-  const northMtn = new THREE.Mesh(northMtnGeo, northMtnMat);
-  northMtn.position.set(-6, 6, 8);
-  northMtn.castShadow = true;
-  terrainGroup.add(northMtn);
-
-  // Snow on Fansipan peak
-  const snowGeo = new THREE.ConeGeometry(3.5, 4.5, 7);
-  const snowMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
-  const snow = new THREE.Mesh(snowGeo, snowMat);
-  snow.position.set(-6, 9.8, 8);
-  terrainGroup.add(snow);
-
-  // Surrounding northern hills
-  for (let i = 0; i < 8; i++) {
-    const hill = new THREE.Mesh(
-      new THREE.ConeGeometry(4 + Math.random() * 2, 6 + Math.random() * 3, 6),
-      new THREE.MeshStandardMaterial({ color: 0x166534, flatShading: true })
-    );
-    const hx = -11 + Math.random() * 8;
-    const hz = 5 + Math.random() * 8;
-    hill.position.set(hx, 3, hz);
-    hill.castShadow = true;
-    terrainGroup.add(hill);
+function projectVietnam(lon,lat){return new THREE.Vector2((lon-106.4)*3.6,(lat-15.9)*3.6);}
+function reliefHeight(lon,lat){
+  const bump=(x,y,sx,sy,h)=>h*Math.exp(-(((lon-x)/sx)**2)-((lat-y)/sy)**2);
+  let h=.22+bump(103.8,22,1.3,1.3,6)+bump(105,21.5,1.4,1,2.5)+bump(105.5,18,.55,2.2,3.4)+bump(107.4,14.2,.8,1.5,3.2)+bump(108.2,12,.65,.65,2.4);
+  if(lat<11.3)h=.2+bump(107.2,11,.55,.65,.7);
+  return h>1.5?h*(1+.13*Math.sin(lon*24+lat*9)*Math.cos(lat*29)) : h;
+}
+async function createVietnamTerrain() {
+  const response=await fetch('data/vietnam-coastline.json');if(!response.ok)throw new Error('Không tải được đường bờ Việt Nam');
+  const geometry=await response.json(),ring=geometry.coordinates[0];
+  const shape=new THREE.Shape(ring.map(([lon,lat])=>projectVietnam(lon,lat)));
+  const geo=new THREE.ShapeGeometry(shape,1);
+  // Subdivide triangles so relief follows ridges rather than isolated primitives.
+  let points=Array.from(geo.attributes.position.array),triangles=Array.from(geo.index.array);
+  for(let pass=0;pass<3;pass++){
+    const next=[],cache=new Map();
+    function mid(a,b){const key=[Math.min(a,b),Math.max(a,b)].join(':');if(cache.has(key))return cache.get(key);const i=points.length/3;points.push((points[a*3]+points[b*3])/2,(points[a*3+1]+points[b*3+1])/2,0);cache.set(key,i);return i;}
+    for(let i=0;i<triangles.length;i+=3){const [a,b,c]=triangles.slice(i,i+3),ab=mid(a,b),bc=mid(b,c),ca=mid(c,a);next.push(a,ab,ca,ab,b,bc,ca,bc,c,ab,bc,ca);}triangles=next;
   }
-
-  // 2. Red River Delta (Flat green triangle)
-  const deltaNorthGeo = new THREE.CylinderGeometry(5.5, 6.5, 1.2, 5);
-  const deltaNorthMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.9 });
-  const deltaNorth = new THREE.Mesh(deltaNorthGeo, deltaNorthMat);
-  deltaNorth.position.set(2, 0.6, 4);
-  deltaNorth.receiveShadow = true;
-  terrainGroup.add(deltaNorth);
-
-  // 3. Central Vietnam (Narrow curve along Truong Son)
-  const centralSpineGeo = new THREE.CylinderGeometry(2.5, 3.5, 5.5, 6);
-  const centralSpineMat = new THREE.MeshStandardMaterial({ color: 0x15803d, flatShading: true });
-  const centralSpine = new THREE.Mesh(centralSpineGeo, centralSpineMat);
-  centralSpine.position.set(2.5, 2.7, -2);
-  centralSpine.rotation.z = -0.15;
-  centralSpine.castShadow = true;
-  terrainGroup.add(centralSpine);
-
-  // Central narrow coastal beach strip
-  const beachGeo = new THREE.BoxGeometry(2, 0.8, 12);
-  const beachMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.9 });
-  const beach = new THREE.Mesh(beachGeo, beachMat);
-  beach.position.set(5.2, 0.4, -2.5);
-  terrainGroup.add(beach);
-
-  // 4. Central Highlands (Tay Nguyen - Red Basalt Stepped Plateau)
-  const plateauGeo = new THREE.BoxGeometry(7, 3.5, 8);
-  const plateauMat = new THREE.MeshStandardMaterial({ color: 0x9a3412, roughness: 0.95 }); // Rich red-brown basalt
-  const plateau = new THREE.Mesh(plateauGeo, plateauMat);
-  plateau.position.set(5.5, 1.75, -8);
-  plateau.castShadow = true;
-  terrainGroup.add(plateau);
-
-  // Coffee plantation trees on plateau
-  for (let i = 0; i < 16; i++) {
-    const tree = new THREE.Mesh(
-      new THREE.SphereGeometry(0.35, 5, 5),
-      new THREE.MeshStandardMaterial({ color: 0x14532d })
-    );
-    const tx = 3 + Math.random() * 5;
-    const tz = -11 + Math.random() * 6;
-    tree.position.set(tx, 3.8, tz);
-    terrainGroup.add(tree);
-  }
-
-  // 5. Southern Mekong Delta (Low fertile green with water veins)
-  const southDeltaGeo = new THREE.BoxGeometry(9, 1.2, 10);
-  const southDeltaMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.85 });
-  const southDelta = new THREE.Mesh(southDeltaGeo, southDeltaMat);
-  southDelta.position.set(4, 0.6, -16);
-  southDelta.receiveShadow = true;
-  terrainGroup.add(southDelta);
-
-  // River channels entering ocean
-  for (let c = 0; c < 4; c++) {
-    const channel = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.2, 7),
-      new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.5 })
-    );
-    channel.position.set(2 + c * 1.5, 1.25, -16);
-    channel.rotation.y = 0.15;
-    terrainGroup.add(channel);
-  }
-
-  terrainMesh = terrainGroup;
-  scene.add(terrainGroup);
+  const vertices=[],colors=[],color=new THREE.Color();
+  for(let i=0;i<points.length;i+=3){const lon=points[i]/3.6+106.4,lat=points[i+1]/3.6+15.9,h=reliefHeight(lon,lat);vertices.push(points[i],h,-points[i+1]);color.setHSL(h>3?.12:.25,h>3?.18:.32,.3+h*.018);color.convertSRGBToLinear();colors.push(color.r,color.g,color.b);}
+  const relief=new THREE.BufferGeometry();relief.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));relief.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));relief.setIndex(triangles);relief.computeVertexNormals();
+  terrainMesh=new THREE.Mesh(relief,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,side:THREE.DoubleSide}));terrainMesh.receiveShadow=true;terrainMesh.castShadow=true;scene.add(terrainMesh);
+  const coastline=ring.map(([lon,lat])=>{const p=projectVietnam(lon,lat);return new THREE.Vector3(p.x,.18,-p.y);});
+  scene.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(coastline),new THREE.LineBasicMaterial({color:0xc9bd8d})));
+  const centres=[[103.8,22],[105.8,20.7],[108,16],[107.7,13.5],[105.5,10],[113,14]];
+  centres.forEach(([lon,lat],i)=>{const p=projectVietnam(lon,lat),y=i===5?.8:reliefHeight(lon,lat);REGIONS[i].camTarget={x:p.x,y,z:-p.y};REGIONS[i].camPos={x:p.x+15,y:26,z:-p.y+25};REGIONS[i].beaconPos={x:p.x,y:y+1,z:-p.y};});
 }
 
 function createIslandsHoangSaTruongSa() {
@@ -656,16 +592,16 @@ function createIslandsHoangSaTruongSa() {
     // Coral sandy islet
     const coralMat = new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.8 });
     for (let i = 0; i < 4; i++) {
-      const rock = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 5), coralMat);
-      rock.position.set((Math.random() - 0.5) * 2, 0.4, (Math.random() - 0.5) * 2);
+      const rock = new THREE.Mesh(new THREE.SphereGeometry(.3,10,6), coralMat);
+      rock.scale.set(1.5,.2,1);rock.position.set((i%2)*.7,.12,Math.floor(i/2)*.5);
       g.add(rock);
     }
     // Golden national star beacon
     const star = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.7, 0),
+      new THREE.SphereGeometry(.15,8,6),
       new THREE.MeshBasicMaterial({ color: 0xffea00 })
     );
-    star.position.y = 1.8;
+    star.position.y = .5;
     g.add(star);
 
     g.position.set(x, 0, z);
@@ -673,11 +609,11 @@ function createIslandsHoangSaTruongSa() {
   }
 
   // Hoang Sa (Paracel)
-  const hoangSa = makeIslandCluster(16, 1, 'Hoang Sa');
+  const hoangSa = makeIslandCluster(20,-3,'Hoang Sa');
   islandsGroup.add(hoangSa);
 
   // Truong Sa (Spratly)
-  const truongSa = makeIslandCluster(19, -10, 'Truong Sa');
+  const truongSa = makeIslandCluster(27,15,'Truong Sa');
   islandsGroup.add(truongSa);
 
   scene.add(islandsGroup);
@@ -715,37 +651,13 @@ function selectRegion(index) {
   document.getElementById('info-econ').innerHTML = `⚡ <strong>Kinh tế:</strong> ${reg.economic}`;
 
   if (beaconMesh && reg.beaconPos) {
-    beaconMesh.position.set(reg.beaconPos.x, reg.beaconPos.y, reg.beaconPos.z);
+    beaconMesh.position.set(reg.beaconPos.x,(reg.beaconPos.y-1)*terrainMesh.scale.y+1,reg.beaconPos.z);
   }
 
-  smoothMoveCamera(reg.camPos, reg.camTarget);
+  smoothMoveCamera(reg.camPos,{...reg.camTarget,y:reg.camTarget.y*terrainMesh.scale.y});
 }
 
-function smoothMoveCamera(targetPos, targetLookAt) {
-  const startPos = camera.position.clone();
-  const startTarget = controls ? controls.target.clone() : new THREE.Vector3(3, 2, -3);
-  const endPos = new THREE.Vector3(targetPos.x, targetPos.y, targetPos.z);
-  const endTarget = new THREE.Vector3(targetLookAt.x, targetLookAt.y, targetLookAt.z);
-
-  let progress = 0;
-  const duration = 40;
-
-  function step() {
-    progress++;
-    const t = Math.min(progress / duration, 1);
-    const ease = 0.5 - Math.cos(t * Math.PI) / 2;
-
-    camera.position.lerpVectors(startPos, endPos, ease);
-    if (controls) {
-      controls.target.lerpVectors(startTarget, endTarget, ease);
-    }
-
-    if (progress < duration) {
-      requestAnimationFrame(step);
-    }
-  }
-  step();
-}
+function smoothMoveCamera(targetPos,targetLookAt){ModelRealism.fly(camera,controls,targetPos,targetLookAt);}
 
 function setupUI() {
   document.querySelectorAll('.region-btn').forEach((b) => {
@@ -755,7 +667,7 @@ function setupUI() {
   });
 
   document.getElementById('btnResetCam').addEventListener('click', () => {
-    smoothMoveCamera({ x: 0, y: 38, z: 48 }, { x: 3, y: 2, z: -3 });
+    smoothMoveCamera({x:4,y:57,z:43},{x:4,y:1,z:0});
   });
 
   const rotBtn = document.getElementById('btn-rotate-auto');
@@ -772,9 +684,10 @@ function setupUI() {
   reliefBtn.addEventListener('click', () => {
     isReliefBoosted = !isReliefBoosted;
     reliefBtn.classList.toggle('active', isReliefBoosted);
-    reliefBtn.textContent = isReliefBoosted ? '🏔️ Độ cao 3D: Nổi rõ' : '🗺️ Độ cao 3D: Chuẩn';
+    reliefBtn.textContent = isReliefBoosted ? '🏔️ Độ cao 3D: Nổi rõ' : '🗺️ Độ cao 3D: Giảm phóng đại';
     if (terrainMesh) {
       terrainMesh.scale.y = isReliefBoosted ? 1.0 : 0.45;
+      const p=REGIONS[currentRegion].beaconPos;beaconMesh.position.y=(p.y-1)*terrainMesh.scale.y+1;
     }
   });
 
@@ -792,7 +705,7 @@ function onWindowResize() {
   const w = container.clientWidth;
   const h = container.clientHeight;
   camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  ModelRealism.resizeCamera(camera);
   renderer.setSize(w, h);
 }
 

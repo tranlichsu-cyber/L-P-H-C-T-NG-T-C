@@ -59,6 +59,7 @@
 
     function setAnnotationMode(active) {
       isAnnotMode = active;
+      if(active){document.getElementById('annotationToolbar')?.classList.remove('collapsed');const collapse=document.getElementById('annotCollapseBtn');if(collapse)collapse.textContent='✕';}
       const ctrl = getOrbitControls();
       if (ctrl) {
         ctrl.enabled = !active;
@@ -133,6 +134,7 @@
     // 4. Create Toolbar HTML
     const toolbar = document.createElement('div');
     toolbar.id = 'annotationToolbar';
+    toolbar.classList.add('collapsed');
     toolbar.innerHTML = `
       <button type="button" class="annot-btn annot-toggle-btn" id="annotToggleBtn" title="Bật/Tắt bút vẽ chú thích trên màn hình">
         ✏️ Bút vẽ

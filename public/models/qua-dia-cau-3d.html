@@ -340,6 +340,8 @@ header {
   }
 </script>
 <link rel="stylesheet" href="lib/annotation-tool.css">
+<script src="lib/scene-realism.js"></script>
+<link rel="stylesheet" href="lib/scene-realism.css">
 </head>
 <body>
 <div id="app">
@@ -517,7 +519,7 @@ let showEquator = true;
 let showGrid = true;
 let showMarkers = true;
 
-function init() {
+async function init() {
   const container = document.getElementById('canvas-container');
   const width = container.clientWidth || window.innerWidth || 800;
   const height = container.clientHeight || window.innerHeight || 600;
@@ -534,6 +536,7 @@ function init() {
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(width, height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  ModelRealism.configure(renderer);
   container.appendChild(renderer.domElement);
 
   // Controls
@@ -549,10 +552,11 @@ function init() {
   }
 
   // Lighting
+  ModelRealism.cameraControls(camera,controls);
   setupLights();
 
   // Create Globe with stand
-  createGlobeAndStand();
+  await createGlobeAndStand();
   createHtmlMarkers();
 
   // Resize
@@ -563,18 +567,19 @@ function init() {
   selectFeature(0);
 
   // Loop
+  ModelRealism.naturalize(scene);
   animate();
 }
 
 function setupLights() {
-  const ambient = new THREE.AmbientLight(0xffffff, 0.95);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.3);
   scene.add(ambient);
 
-  const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.8);
+  const dirLight = new THREE.DirectionalLight(0xfffbeb, 1.0);
   dirLight.position.set(40, 20, 30);
   scene.add(dirLight);
 
-  const backLight = new THREE.DirectionalLight(0x4338ca, 0.7);
+  const backLight = new THREE.DirectionalLight(0x8ca9c4, 0.15);
   backLight.position.set(-40, -20, -30);
   scene.add(backLight);
 
@@ -592,113 +597,29 @@ function setupLights() {
   scene.add(new THREE.Points(starGeo, starMat));
 }
 
-function createProceduralEarthCanvas() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 2048;
-  canvas.height = 1024;
-  const ctx = canvas.getContext('2d');
-
-  // Deep ocean gradient with realistic bathymetry shading
-  const oceanGrad = ctx.createLinearGradient(0, 0, 0, 1024);
-  oceanGrad.addColorStop(0, '#0c2238');
-  oceanGrad.addColorStop(0.3, '#10395c');
-  oceanGrad.addColorStop(0.5, '#194d7a');
-  oceanGrad.addColorStop(0.7, '#10395c');
-  oceanGrad.addColorStop(1, '#0c2238');
-  ctx.fillStyle = oceanGrad;
-  ctx.fillRect(0, 0, 2048, 1024);
-
-  // Realistic continent landmasses (Eurasia, Africa, Americas, Australia, Antarctica)
-  ctx.fillStyle = '#2d6a4f';
-
-  function drawContinent(cx, cy, rx, ry) {
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fill();
+async function createProceduralEarthCanvas() {
+  const canvas=document.createElement('canvas');canvas.width=2048;canvas.height=1024;
+  const ctx=canvas.getContext('2d');ctx.fillStyle='#183e60';ctx.fillRect(0,0,2048,1024);
+  const response=await fetch('data/world-land.json');if(!response.ok)throw new Error('Không tải được đường bờ lục địa');
+  const land=await response.json();ctx.fillStyle='#637a4d';
+  for(const feature of land.features){
+    const polygons=feature.geometry.type==='Polygon'?[feature.geometry.coordinates]:feature.geometry.coordinates;
+    for(const polygon of polygons)for(const shift of [-2048,0,2048]){
+      ctx.beginPath();for(const ring of polygon){let previous=null,offset=0;ring.forEach(([lon,lat],i)=>{let x=(lon+180)/360*2048;if(previous!==null){if(x+offset-previous>1024)offset-=2048;if(x+offset-previous< -1024)offset+=2048;}x+=offset;previous=x;const y=(90-lat)/180*1024;i?ctx.lineTo(x+shift,y):ctx.moveTo(x+shift,y);});ctx.closePath();}ctx.fill('evenodd');
+    }
   }
-
-  // Asia & Europe (Eurasia)
-  drawContinent(1400, 320, 280, 160);
-  drawContinent(1100, 280, 130, 100);
-  drawContinent(1550, 240, 140, 90);
-  // Mountain terrain shades (Himalayas & Tibetan Plateau)
-  ctx.fillStyle = '#92400e';
-  drawContinent(1380, 360, 120, 50);
-  ctx.fillStyle = '#2d6a4f';
-
-  // Africa
-  drawContinent(1150, 560, 150, 180);
-  ctx.fillStyle = '#d97706'; // Sahara Desert
-  drawContinent(1140, 460, 130, 70);
-  ctx.fillStyle = '#2d6a4f';
-
-  // North America
-  drawContinent(500, 320, 220, 140);
-  drawContinent(350, 260, 100, 90);
-  // South America
-  drawContinent(680, 680, 130, 200);
-
-  // Australia & Oceania
-  drawContinent(1650, 720, 140, 100);
-
-  // Greenland & Polar ice caps
-  ctx.fillStyle = '#f1f5f9';
-  drawContinent(780, 140, 90, 60);
-  // Antarctica
-  ctx.fillRect(0, 930, 2048, 94);
-  // Arctic ice
-  ctx.fillRect(0, 0, 2048, 60);
-
-  // Draw Vietnam S-shape with Golden Star
-  ctx.strokeStyle = '#ef4444';
-  ctx.lineWidth = 12;
-  ctx.beginPath();
-  ctx.moveTo(1480, 410);
-  ctx.bezierCurveTo(1465, 450, 1505, 490, 1485, 540);
-  ctx.stroke();
-
-  // Vietnam Golden border outline
-  ctx.strokeStyle = '#fbbf24';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(1480, 410);
-  ctx.bezierCurveTo(1465, 450, 1505, 490, 1485, 540);
-  ctx.stroke();
-
-  // Paracel and Spratly Islands (Hoàng Sa & Trường Sa)
-  ctx.fillStyle = '#fbbf24';
-  ctx.beginPath();
-  ctx.arc(1530, 470, 7, 0, Math.PI * 2);
-  ctx.arc(1550, 520, 7, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Subtle Parallels & Meridians
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  ctx.lineWidth = 1;
-  for (let lat = 0; lat <= 1024; lat += 1024 / 6) {
-    ctx.beginPath();
-    ctx.moveTo(0, lat);
-    ctx.lineTo(2048, lat);
-    ctx.stroke();
-  }
-  for (let lon = 0; lon <= 2048; lon += 2048 / 12) {
-    ctx.beginPath();
-    ctx.moveTo(lon, 0);
-    ctx.lineTo(lon, 1024);
-    ctx.stroke();
-  }
-
   return canvas;
 }
 
-function createGlobeAndStand() {
+async function createGlobeAndStand() {
   globeGroup = new THREE.Group();
   globeGroup.rotation.z = -23.5 * Math.PI / 180; // 23.5 degree axial tilt!
 
   const radius = 12;
 
   // Earth Sphere with Photorealistic Texture + Procedural Fallback
-  const fallbackTexture = new THREE.CanvasTexture(createProceduralEarthCanvas());
+  const fallbackTexture = new THREE.CanvasTexture(await createProceduralEarthCanvas());
+  fallbackTexture.encoding=THREE.sRGBEncoding;
   const earthGeo = new THREE.SphereGeometry(radius, 64, 64);
   const earthMat = new THREE.MeshStandardMaterial({
     map: fallbackTexture,
@@ -712,8 +633,9 @@ function createGlobeAndStand() {
   const texLoader = new THREE.TextureLoader();
   texLoader.crossOrigin = 'anonymous';
   texLoader.load(
-    'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg',
+    'textures/earth-blue-marble.jpg',
     (tex) => {
+      tex.encoding=THREE.sRGBEncoding;fallbackTexture.dispose();
       earthMat.map = tex;
       earthMat.needsUpdate = true;
     },
@@ -729,13 +651,15 @@ function createGlobeAndStand() {
     blending: THREE.AdditiveBlending
   });
   texLoader.load(
-    'https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png',
+    'textures/earth-clouds.png',
     (cTex) => {
       cloudsMat.map = cTex;
+      cloudsMesh.visible=true;
       cloudsMat.needsUpdate = true;
     }
   );
   cloudsMesh = new THREE.Mesh(cloudsGeo, cloudsMat);
+  cloudsMesh.visible=false;
   globeGroup.add(cloudsMesh);
 
   // Glowing Atmosphere
@@ -889,6 +813,13 @@ function selectFeature(index) {
 
   // Rotate Earth to highlight
   earthMesh.rotation.y = f.targetRotY;
+  if(index===0){
+    const localCamera=camera.position.clone().applyAxisAngle(new THREE.Vector3(0,0,1),-globeGroup.rotation.z);
+    const vietnam=latLonToVector3(16,106,12);
+    earthMesh.rotation.y=Math.atan2(localCamera.x,localCamera.z)-Math.atan2(vietnam.x,vietnam.z);
+    isSpinning=false;document.getElementById('btn-toggle-spin').classList.remove('active');
+  }
+  if(cloudsMesh)cloudsMesh.rotation.y=earthMesh.rotation.y;
 }
 
 function focusVietnam() {
@@ -952,20 +883,24 @@ function onWindowResize() {
   const w = container.clientWidth;
   const h = container.clientHeight;
   camera.aspect = w / h;
-  camera.updateProjectionMatrix();
+  ModelRealism.resizeCamera(camera);
   renderer.setSize(w, h);
 }
 
+let lastGlobeTime=performance.now();
+function clockDelta(){const now=performance.now(),dt=(now-lastGlobeTime)/1000;lastGlobeTime=now;return dt;}
 function animate() {
   requestAnimationFrame(animate);
 
+  const dt=Math.min(.1,clockDelta());
   if (isSpinning) {
-    if (earthMesh) earthMesh.rotation.y += spinSpeed;
-    if (cloudsMesh) cloudsMesh.rotation.y += spinSpeed * 1.15;
+    if (earthMesh) earthMesh.rotation.y += spinSpeed*dt*60;
+    if (cloudsMesh) cloudsMesh.rotation.y += spinSpeed * 1.15*dt*60;
   }
 
   if (controls) controls.update();
   renderer.render(scene, camera);
+  if(gridMesh)gridMesh.rotation.y=earthMesh.rotation.y;
   updateMarkers();
 }
 
