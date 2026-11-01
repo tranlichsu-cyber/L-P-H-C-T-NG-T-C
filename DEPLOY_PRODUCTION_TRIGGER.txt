@@ -265,3 +265,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 255: 2026-11-01: Go cong cu but ve va dong huong dan KEO DE XOAY 3D o sa ban Den Hung, giu cac dieu khien va diem kham pha. Cache v17.
 
 256: 2026-11-01: Phat hanh ra soat mo hinh 3D: dia cau dung anh local, dia hinh Viet Nam theo Natural Earth, thuyen theo muc nuoc, mua va tang chua nuoc, sinh vat va dong nang luong, vat lieu anh sang va giao dien dien thoai. Cache v18.
+
+257: 2026-11-01: Mo sau mo hinh 3D moi: thap dinh duong va ghep bua an; tim va hai vong tuan hoan; trong dong; Van Mieu voi 82 bia; nha Rong va cong chieng; mat cat Dia dao Cu Chi. 36 diem kham pha, 18 cau hoi, tour tu dong, mobile va anh xem truoc tu WebGL. Kho co 13 mo hinh. Cache v19.

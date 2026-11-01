@@ -1,0 +1,416 @@
+{
+  "thap-dinh-duong": {
+    "title": "Tháp dinh dưỡng & Bữa ăn cân bằng",
+    "intro": "Khám phá các nhóm thực phẩm và tự ghép một bữa ăn đa dạng.",
+    "notice": "Sơ đồ nhóm thực phẩm minh họa; nhu cầu và khẩu phần phụ thuộc tuổi, hoạt động và tình trạng sức khỏe.",
+    "features": [
+      {
+        "id": "grain",
+        "name": "Lương thực",
+        "text": "Cơm, ngô, khoai và các loại ngũ cốc cung cấp chất bột đường, là nguồn năng lượng quan trọng cho hoạt động hằng ngày."
+      },
+      {
+        "id": "greens",
+        "name": "Rau và quả",
+        "text": "Rau xanh và quả chín cung cấp chất xơ, nhiều vitamin và khoáng chất. Nên lựa chọn đa dạng và rửa sạch trước khi ăn."
+      },
+      {
+        "id": "protein",
+        "name": "Thực phẩm giàu đạm",
+        "text": "Cá, trứng, thịt, đậu và các loại hạt giúp cơ thể xây dựng và sửa chữa các mô. Có thể phối hợp nguồn đạm động vật và thực vật."
+      },
+      {
+        "id": "milk",
+        "name": "Sữa và thực phẩm thay thế",
+        "text": "Sữa và một số thực phẩm thay thế phù hợp góp phần cung cấp đạm và canxi. Cần lựa chọn phù hợp với khả năng dung nạp của mỗi người."
+      },
+      {
+        "id": "fat",
+        "name": "Chất béo",
+        "text": "Chất béo cung cấp năng lượng và giúp hấp thu một số vitamin. Sử dụng lượng phù hợp, không có nghĩa là phải loại bỏ hoàn toàn chất béo."
+      },
+      {
+        "id": "limit",
+        "name": "Hạn chế đường và muối",
+        "text": "Ăn ít đồ quá mặn và thực phẩm nhiều đường bổ sung. Uống đủ nước sạch; nước không nằm trong các tầng thực phẩm của sơ đồ."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "Một bữa ăn nên như thế nào?",
+        "options": [
+          "Đa dạng các nhóm thực phẩm",
+          "Chỉ có bánh kẹo",
+          "Chỉ ăn một món yêu thích"
+        ],
+        "answer": 0,
+        "explanation": "Ăn đa dạng giúp cơ thể nhận nhiều loại chất dinh dưỡng."
+      },
+      {
+        "question": "Rau và quả thường cung cấp gì?",
+        "options": [
+          "Chất xơ, vitamin và khoáng chất",
+          "Chỉ chất béo",
+          "Không có chất dinh dưỡng"
+        ],
+        "answer": 0,
+        "explanation": "Rau và quả cung cấp nhiều chất xơ, vitamin và khoáng chất."
+      },
+      {
+        "question": "Với đường và muối, nên làm gì?",
+        "options": [
+          "Ăn càng nhiều càng tốt",
+          "Sử dụng hạn chế, phù hợp",
+          "Thay thế hoàn toàn nước uống"
+        ],
+        "answer": 1,
+        "explanation": "Nên hạn chế thực phẩm quá mặn và nhiều đường bổ sung."
+      }
+    ]
+  },
+  "co-the-nguoi-tuan-hoan": {
+    "title": "Tim & Hai vòng tuần hoàn",
+    "intro": "Theo dõi đường đi của máu qua tim, phổi và cơ thể.",
+    "notice": "Mô hình giải phẫu giản lược để học tập. Màu xanh chỉ máu ít ô-xi; máu thật không có màu xanh. Khi nhìn trước, bên phải tim nằm bên trái màn hình.",
+    "features": [
+      {
+        "id": "right-atrium",
+        "name": "Tâm nhĩ phải",
+        "text": "Tâm nhĩ phải nhận máu ít ô-xi từ cơ thể qua các tĩnh mạch chủ, rồi đưa máu xuống tâm thất phải."
+      },
+      {
+        "id": "right-ventricle",
+        "name": "Tâm thất phải",
+        "text": "Tâm thất phải bơm máu ít ô-xi theo động mạch phổi đến phổi. Vì vậy không phải mọi động mạch đều mang máu giàu ô-xi."
+      },
+      {
+        "id": "lungs",
+        "name": "Phổi và vòng tuần hoàn nhỏ",
+        "text": "Tại phổi, máu nhận ô-xi và thải khí các-bô-níc. Máu giàu ô-xi trở về tâm nhĩ trái qua các tĩnh mạch phổi."
+      },
+      {
+        "id": "left-atrium",
+        "name": "Tâm nhĩ trái",
+        "text": "Tâm nhĩ trái nhận máu giàu ô-xi từ phổi và chuyển xuống tâm thất trái."
+      },
+      {
+        "id": "left-ventricle",
+        "name": "Tâm thất trái",
+        "text": "Tâm thất trái có thành cơ dày, bơm máu theo động mạch chủ đến các cơ quan trong cơ thể."
+      },
+      {
+        "id": "body",
+        "name": "Cơ thể và vòng tuần hoàn lớn",
+        "text": "Máu từ tim đến các cơ quan để trao đổi chất rồi trở về tim. Van tim giúp máu lưu thông theo một chiều."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "Máu ít ô-xi từ cơ thể về buồng tim nào trước?",
+        "options": [
+          "Tâm nhĩ phải",
+          "Tâm thất trái",
+          "Tâm nhĩ trái"
+        ],
+        "answer": 0,
+        "explanation": "Máu từ cơ thể trở về tâm nhĩ phải qua các tĩnh mạch chủ."
+      },
+      {
+        "question": "Máu nhận thêm ô-xi chủ yếu ở đâu?",
+        "options": [
+          "Ở phổi",
+          "Ở xương",
+          "Ở tóc"
+        ],
+        "answer": 0,
+        "explanation": "Trao đổi khí xảy ra tại phổi."
+      },
+      {
+        "question": "Màu xanh trong sa bàn biểu thị gì?",
+        "options": [
+          "Máu thật có màu xanh",
+          "Máu ít ô-xi trong sơ đồ",
+          "Máu không lưu thông"
+        ],
+        "answer": 1,
+        "explanation": "Máu thật luôn có sắc đỏ; xanh là quy ước minh họa."
+      }
+    ]
+  },
+  "trong-dong-dong-son": {
+    "title": "Trống đồng Đông Sơn",
+    "intro": "Xoay hiện vật để khám phá mặt trống, hoa văn và cấu tạo thân trống.",
+    "notice": "Tái dựng hình học minh họa theo dáng trống Ngọc Lũ; không phải bản quét hay bản sao từng hoa văn của hiện vật. Số tia và hoa văn thay đổi giữa các trống.",
+    "features": [
+      {
+        "id": "sun",
+        "name": "Ngôi sao 14 tia",
+        "text": "Tâm mặt trống minh họa ngôi sao 14 tia theo đặc điểm của trống Ngọc Lũ. Không phải mọi trống Đông Sơn đều có 14 tia."
+      },
+      {
+        "id": "birds",
+        "name": "Chim và các vành hoa văn",
+        "text": "Các vành hoa văn có chim, hình học và nhiều mô típ phong phú. Hình chim thường được gọi là chim Lạc trong cách diễn giải phổ biến."
+      },
+      {
+        "id": "life",
+        "name": "Dấu ấn đời sống",
+        "text": "Hoa văn trên nhiều trống thể hiện con người, thuyền và sinh hoạt cộng đồng, góp phần tìm hiểu đời sống cư dân thời cổ."
+      },
+      {
+        "id": "body",
+        "name": "Tang, thân và chân trống",
+        "text": "Trống đồng có mặt rộng, tang phình, thân và phần chân loe. Dáng và tỉ lệ trong sa bàn giúp quan sát cấu tạo từ nhiều phía."
+      },
+      {
+        "id": "handles",
+        "name": "Quai trống",
+        "text": "Các cặp quai nằm hai bên thân. Đồ đồng có thể bị ô-xi hóa theo thời gian, tạo lớp gỉ màu xanh nâu trên bề mặt."
+      },
+      {
+        "id": "heritage",
+        "name": "Giá trị di sản",
+        "text": "Trống đồng là hiện vật tiêu biểu của văn hóa Đông Sơn, phản ánh trình độ đúc đồng và đời sống tinh thần. Âm gõ ở đây chỉ là âm tổng hợp minh họa."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "Mô hình này minh họa ngôi sao bao nhiêu tia?",
+        "options": [
+          "14 tia",
+          "3 tia",
+          "8 tia"
+        ],
+        "answer": 0,
+        "explanation": "Mặt trống minh họa 14 tia theo trống Ngọc Lũ."
+      },
+      {
+        "question": "Có phải mọi trống Đông Sơn giống hệt nhau?",
+        "options": [
+          "Có",
+          "Không, hình dáng và hoa văn có khác nhau",
+          "Tất cả đều không có hoa văn"
+        ],
+        "answer": 1,
+        "explanation": "Các hiện vật có nhiều khác biệt về kích thước, hình dáng và hoa văn."
+      },
+      {
+        "question": "Đặc điểm nào cho thấy trình độ kỹ thuật?",
+        "options": [
+          "Kỹ thuật đúc đồng",
+          "Màu của giá trưng bày",
+          "Tên nút trên màn hình"
+        ],
+        "answer": 0,
+        "explanation": "Trống đồng phản ánh trình độ chế tác và đúc đồng của người xưa."
+      }
+    ]
+  },
+  "van-mieu-quoc-tu-giam": {
+    "title": "Văn Miếu – Quốc Tử Giám",
+    "intro": "Đi dọc trục sân vườn để khám phá kiến trúc và truyền thống hiếu học.",
+    "notice": "Sa bàn giản lược bố cục và tỉ lệ; các bia có ký hiệu hoa văn thay cho bản khắc chữ chính xác.",
+    "features": [
+      {
+        "id": "gate",
+        "name": "Văn Miếu Môn",
+        "text": "Cổng ngoài mở đầu trục kiến trúc của khu di tích tại Hà Nội. Các khoảng sân và công trình được tổ chức nối tiếp nhau."
+      },
+      {
+        "id": "middle",
+        "name": "Đại Trung Môn",
+        "text": "Đại Trung Môn là một cổng trên trục chính, nối các khu sân và cây xanh trong không gian Văn Miếu."
+      },
+      {
+        "id": "khue",
+        "name": "Khuê Văn Các",
+        "text": "Khuê Văn Các có tầng trên bằng gỗ với ô cửa tròn, dựng trên các trụ. Đây là biểu tượng quen thuộc của truyền thống văn hiến Hà Nội."
+      },
+      {
+        "id": "well",
+        "name": "Giếng Thiên Quang",
+        "text": "Giếng Thiên Quang có dạng vuông, tạo điểm nhấn cảnh quan và không gian yên tĩnh trong quần thể."
+      },
+      {
+        "id": "steles",
+        "name": "82 bia tiến sĩ",
+        "text": "82 bia đá đặt trên lưng rùa ghi danh các khoa thi tiến sĩ thời Lê – Mạc. Sa bàn có đủ 82 cụm bia, hoa văn khắc chỉ mang tính minh họa."
+      },
+      {
+        "id": "study",
+        "name": "Đại Thành và khu Thái Học",
+        "text": "Các công trình thờ tự và khu Thái Học góp phần thể hiện truyền thống tôn sư trọng đạo, coi trọng giáo dục và người hiền tài."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "Bia tiến sĩ thường đặt trên con vật nào?",
+        "options": [
+          "Rùa",
+          "Voi",
+          "Hổ"
+        ],
+        "answer": 0,
+        "explanation": "Bia đặt trên lưng rùa đá."
+      },
+      {
+        "question": "Giếng Thiên Quang có dạng gì?",
+        "options": [
+          "Vuông",
+          "Tam giác",
+          "Hình ngôi sao"
+        ],
+        "answer": 0,
+        "explanation": "Giếng Thiên Quang có dạng vuông."
+      },
+      {
+        "question": "Khu di tích gợi nhắc truyền thống nào?",
+        "options": [
+          "Hiếu học và tôn sư trọng đạo",
+          "Chỉ thi đấu thể thao",
+          "Chỉ buôn bán"
+        ],
+        "answer": 0,
+        "explanation": "Văn Miếu – Quốc Tử Giám gắn với truyền thống hiếu học và trọng người tài."
+      }
+    ]
+  },
+  "nha-rong-tay-nguyen": {
+    "title": "Nhà Rông & Không gian cồng chiêng",
+    "intro": "Khám phá nhà sàn mái cao và không gian sinh hoạt cộng đồng.",
+    "notice": "Kiến trúc minh họa một dạng nhà Rông; các dân tộc và địa phương có hình thức khác nhau. Âm cồng ở đây là âm tổng hợp, không phải bản thu diễn tấu di sản.",
+    "features": [
+      {
+        "id": "roof",
+        "name": "Mái nhà vươn cao",
+        "text": "Mái nhà Rông cao và dốc, thường lợp bằng vật liệu tự nhiên. Kiểu dáng và trang trí có sự khác nhau giữa các cộng đồng."
+      },
+      {
+        "id": "floor",
+        "name": "Sàn và hệ cột",
+        "text": "Sàn nhà được nâng khỏi mặt đất bằng hệ cột. Gỗ, tre và vật liệu địa phương tạo nên không gian sinh hoạt rộng."
+      },
+      {
+        "id": "ladder",
+        "name": "Cầu thang lên nhà",
+        "text": "Cầu thang nối mặt đất với sàn. Một số nhà dùng thân cây đục bậc, một số dùng kết cấu thang gỗ khác."
+      },
+      {
+        "id": "gongs",
+        "name": "Dàn cồng chiêng",
+        "text": "Cồng chiêng là nhạc cụ bằng kim loại, gồm các chiếc khác nhau về kích cỡ và âm thanh. Không gian văn hóa cồng chiêng Tây Nguyên được UNESCO ghi danh."
+      },
+      {
+        "id": "hearth",
+        "name": "Bếp lửa cộng đồng",
+        "text": "Bếp lửa có thể gắn với những buổi kể chuyện và sinh hoạt cộng đồng. Cách bố trí và sử dụng tùy phong tục địa phương."
+      },
+      {
+        "id": "community",
+        "name": "Sân làng và sinh hoạt chung",
+        "text": "Nhà Rông là không gian cộng đồng quan trọng ở nhiều làng tại Bắc Tây Nguyên, gắn với hội họp, lễ hội và truyền dạy văn hóa."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "Đặc điểm dễ nhận ra của nhiều nhà Rông là gì?",
+        "options": [
+          "Mái cao và sàn nâng trên cột",
+          "Nằm hoàn toàn dưới lòng đất",
+          "Không có mái"
+        ],
+        "answer": 0,
+        "explanation": "Mái cao và sàn nâng là những đặc điểm nổi bật."
+      },
+      {
+        "question": "Cồng chiêng thường được chế tác từ vật liệu nào?",
+        "options": [
+          "Kim loại",
+          "Giấy",
+          "Bông"
+        ],
+        "answer": 0,
+        "explanation": "Cồng chiêng là nhạc cụ bằng kim loại."
+      },
+      {
+        "question": "Nhà Rông có vai trò nào?",
+        "options": [
+          "Nơi sinh hoạt cộng đồng",
+          "Chỉ để đỗ xe",
+          "Chỉ là kho đồ hiện đại"
+        ],
+        "answer": 0,
+        "explanation": "Nhà Rông gắn với hội họp, lễ hội và truyền dạy văn hóa."
+      }
+    ]
+  },
+  "dia-dao-cu-chi": {
+    "title": "Mặt cắt Địa đạo Củ Chi",
+    "intro": "Mở lớp đất để khám phá đường hầm, các phòng và hệ thống thông khí.",
+    "notice": "Sơ đồ mặt cắt ba tầng minh họa, không phải sơ đồ đo đạc hay chỉ dẫn thực địa; độ sâu và cách nối khác nhau theo khu vực.",
+    "features": [
+      {
+        "id": "entry",
+        "name": "Cửa vào được ngụy trang",
+        "text": "Cửa nhỏ được ngụy trang bằng đất, lá và cảnh quan. Sa bàn mở cửa để người học dễ quan sát đường xuống."
+      },
+      {
+        "id": "level1",
+        "name": "Tầng đường hầm thứ nhất",
+        "text": "Các đoạn hầm gần mặt đất nối cửa vào và những khu chức năng. Người học có thể xoay sa bàn để nhìn đường hầm theo nhiều hướng."
+      },
+      {
+        "id": "level2",
+        "name": "Tầng đường hầm thứ hai",
+        "text": "Hệ thống hầm có nhiều nhánh và một số khu vực có nhiều tầng. Cấu trúc phụ thuộc địa hình và yêu cầu sử dụng."
+      },
+      {
+        "id": "level3",
+        "name": "Tầng đường hầm sâu",
+        "text": "Tầng sâu trong sơ đồ giúp minh họa khả năng tổ chức không gian dưới lòng đất; không đại diện cho độ sâu cố định của toàn bộ di tích."
+      },
+      {
+        "id": "kitchen",
+        "name": "Bếp và đường phân tán khói",
+        "text": "Bếp Hoàng Cầm sử dụng hệ thống dẫn, làm nguội và phân tán khói để giảm khả năng bị phát hiện. Các vệt khói trong sa bàn được phóng đại để nhìn rõ."
+      },
+      {
+        "id": "air",
+        "name": "Lỗ thông hơi và phòng chức năng",
+        "text": "Các lỗ thông hơi kết nối hầm với mặt đất. Hệ thống còn có những khu chức năng như nơi ở, kho và phòng cứu thương."
+      }
+    ],
+    "quiz": [
+      {
+        "question": "Vì sao cửa vào cần được ngụy trang?",
+        "options": [
+          "Để khó bị phát hiện",
+          "Để trở thành biển quảng cáo",
+          "Để không có lối xuống"
+        ],
+        "answer": 0,
+        "explanation": "Ngụy trang giúp cửa vào hòa vào cảnh quan."
+      },
+      {
+        "question": "Hệ thống bếp có đường dẫn khói để làm gì?",
+        "options": [
+          "Phân tán, giảm dấu hiệu khói",
+          "Tạo cột khói thật cao",
+          "Thay thế toàn bộ đường hầm"
+        ],
+        "answer": 0,
+        "explanation": "Đường dẫn giúp làm nguội và phân tán khói."
+      },
+      {
+        "question": "Sa bàn này có phải bản đo thực địa không?",
+        "options": [
+          "Có, đúng mọi kích thước",
+          "Không, đây là mặt cắt minh họa",
+          "Là một ảnh phẳng"
+        ],
+        "answer": 1,
+        "explanation": "Đây là mô hình minh họa để học tập, không phải sơ đồ đo đạc."
+      }
+    ]
+  }
+}

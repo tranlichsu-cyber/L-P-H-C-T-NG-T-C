@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v18-models-realism';
+const CACHE_NAME = 'lhtt-shell-v19-six-new-models';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

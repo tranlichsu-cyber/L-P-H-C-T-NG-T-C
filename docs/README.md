@@ -48,6 +48,7 @@ Các báo cáo có ngày và tài liệu phiên bản cũ được giữ làm l�
 
 ## Kỹ thuật và vận hành
 
+- [Sáu mô hình 3D mới: tương tác và kiểm tra](ky-thuat/SAU_MO_HINH_3D_MOI.md)
 - [Rà soát hình dáng, vật liệu và chuyển động của các mô hình 3D](ky-thuat/RA_SOAT_MO_HINH_3D.md)
 - [Sa bàn 3D Đền Hùng: sử dụng và kiểm tra](ky-thuat/SA_BAN_DEN_HUNG.md)
 - [Triển khai Firebase DEV từ GitHub](ky-thuat/FIREBASE_GITHUB_DEPLOY.md)

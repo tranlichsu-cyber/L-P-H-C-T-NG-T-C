@@ -99,6 +99,7 @@ const TraditionPage = lazy(()=>import('./pages/TraditionPage').then(m=>({default
 const SelfPracticePage = lazy(()=>import('./pages/SelfPracticePage').then(m=>({default:m.SelfPracticePage})));
 const SelfPracticeManagerPage = lazy(()=>import('./pages/teacher/SelfPracticeManagerPage').then(m=>({default:m.SelfPracticeManagerPage})));
 const TraditionManagerPage = lazy(()=>import('./pages/teacher/TraditionManagerPage').then(m=>({default:m.TraditionManagerPage})));
+const WorkshopModelPage = lazy(() => import('./pages/models/WorkshopModelPage').then(m => ({ default: m.WorkshopModelPage })));
 const ModelHubPage = lazy(() => import('./pages/models/ModelHubPage').then(m => ({ default: m.ModelHubPage })));
 const HungTemplePage = lazy(() => import('./pages/models/HungTemplePage').then(m => ({ default: m.HungTemplePage })));
 const WaterCyclePage = lazy(() => import('./pages/models/WaterCyclePage').then(m => ({ default: m.WaterCyclePage })));
@@ -150,6 +151,7 @@ export const App: React.FC = () => {
                   <Route path="/mo-hinh/bach-dang-938" element={<BachDangPage />} />
                   <Route path="/mo-hinh/dia-hinh-viet-nam" element={<VietnamTerrainPage />} />
                   <Route path="/mo-hinh/chuoi-thuc-an" element={<FoodChainPage />} />
+                  <Route path="/mo-hinh/:modelId" element={<WorkshopModelPage />} />
 
                   {/* Teacher Auth */}
                   <Route path="/login" element={<LoginPage />} />
