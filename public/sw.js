@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v16-den-hung-large-labels';
+const CACHE_NAME = 'lhtt-shell-v17-den-hung-clean-stage';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

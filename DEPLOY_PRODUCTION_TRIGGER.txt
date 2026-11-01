@@ -261,3 +261,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 253: 2026-11-01: Dung lai sa ban Den Hung theo anh tham khao: cong tam quan chinh dien, cac den len dan theo nui, lang ben phai, nha bat giac canh ho, cau thang va lan can da, cay xanh va bon hoa. Giu tuong tac WebGL va tour tu dong; cache v15.
 
 254: 2026-11-01: Phat hanh nhan ten den lon, chu nau do tren bang kem vien vang; giu co chu khi thu xa. Go the anh tham khao, giu sa ban WebGL, le hoi va on tap. Cache v16.
+
+255: 2026-11-01: Go cong cu but ve va dong huong dan KEO DE XOAY 3D o sa ban Den Hung, giu cac dieu khien va diem kham pha. Cache v17.

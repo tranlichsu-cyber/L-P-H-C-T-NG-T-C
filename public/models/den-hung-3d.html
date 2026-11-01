@@ -40,7 +40,7 @@ body.is-embedded .brand h1{font-size:14.5px}
 #placeList{display:grid;gap:6px}.place-btn{text-align:left;display:flex;align-items:center;gap:8px;padding:9px 10px;background:#fffaf0;border-color:#d7bd8d}.place-btn.active{background:#7b1d1b;color:#fff1ce;border-color:#dcae52}.place-btn .num{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#e5c77e;color:#562019;font-size:13px;flex:none}
 .side-tools{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.side-tools button{font-size:13px;padding:8px 5px}
 #stage{position:relative;min-width:0;min-height:0;overflow:hidden}#scene{position:absolute;inset:0}#scene canvas{display:block;width:100%;height:100%;touch-action:none}
-#hint{position:absolute;left:14px;bottom:12px;color:#fff5d9;text-shadow:0 2px 4px #000;background:#18231dbb;padding:7px 10px;border-radius:8px;font-size:13px;pointer-events:none}
+
 #disclaimer{position:absolute;right:14px;bottom:12px;background:#fff0cddd;color:#642018;padding:7px 10px;border:1px solid #d9b65e;border-radius:8px;font-size:13px;font-weight:800}
 .zoom-controls{position:absolute;z-index:4;left:14px;top:14px;display:flex;flex-direction:column;gap:5px;background:#18231dee;border:1.5px solid #d9b65e;border-radius:12px;padding:5px;box-shadow:0 6px 20px #0007;backdrop-filter:blur(6px)}
 .zoom-btn{width:36px;height:36px;padding:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(#fff9ec,#ebd7ad);border:1px solid #b58a43;border-radius:8px;color:#4b2118;font-size:19px;font-weight:900;cursor:pointer;transition:transform .15s,background .15s;user-select:none;line-height:1}
@@ -79,7 +79,7 @@ body.is-embedded .brand h1{font-size:14.5px}
 #journeyBar{align-items:center;flex-wrap:wrap;justify-content:center;width:max-content;max-width:95%;font-size:14px;position:absolute;z-index:6;left:50%;bottom:50px;transform:translateX(-50%);display:none;gap:7px;background:#fff7e8ed;padding:8px;border-radius:12px;border:1px solid #c69b4e}
 #mobilePlaces{display:none}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-@media(max-width:800px){header{padding:4px 8px;min-height:42px;max-height:44px;align-items:center}.brand p{display:none}.brand h1{font-size:13.5px}.header-actions button{font-size:11.5px;padding:4px 6px;height:29px}#workspace{display:block}#stage{height:100%}#side{display:none}#info{top:auto!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;max-height:50%!important;border-radius:16px 16px 0 0;border-bottom:0;padding:10px 12px}#info h2{font-size:18px}.info-content{font-size:14px}#info.collapsed{max-height:46px!important;height:46px!important;overflow:hidden!important}#info.collapsed #infoBody{display:none!important}.zoom-controls{top:50px;left:10px}.zoom-btn{width:32px;height:32px;font-size:17px}.reopen-pill{top:auto;bottom:14px;right:14px;font-size:12px;padding:6px 11px}#mobilePlaces{display:flex;position:absolute;z-index:4;left:0;right:0;top:8px;gap:6px;overflow-x:auto;padding:4px 8px;pointer-events:auto}#mobilePlaces button{white-space:nowrap;font-size:13px;padding:7px 10px}#hint{left:8px;right:8px;bottom:calc(42% + 48px);font-size:10px}#disclaimer{right:8px;bottom:calc(42% + 12px);font-size:10px}#journeyBar{bottom:calc(50% + 45px)}#gameHud{top:55px}}
+@media(max-width:800px){header{padding:4px 8px;min-height:42px;max-height:44px;align-items:center}.brand p{display:none}.brand h1{font-size:13.5px}.header-actions button{font-size:11.5px;padding:4px 6px;height:29px}#workspace{display:block}#stage{height:100%}#side{display:none}#info{top:auto!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;max-height:50%!important;border-radius:16px 16px 0 0;border-bottom:0;padding:10px 12px}#info h2{font-size:18px}.info-content{font-size:14px}#info.collapsed{max-height:46px!important;height:46px!important;overflow:hidden!important}#info.collapsed #infoBody{display:none!important}.zoom-controls{top:50px;left:10px}.zoom-btn{width:32px;height:32px;font-size:17px}.reopen-pill{top:auto;bottom:14px;right:14px;font-size:12px;padding:6px 11px}#mobilePlaces{display:flex;position:absolute;z-index:4;left:0;right:0;top:8px;gap:6px;overflow-x:auto;padding:4px 8px;pointer-events:auto}#mobilePlaces button{white-space:nowrap;font-size:13px;padding:7px 10px}#disclaimer{right:8px;bottom:calc(42% + 12px);font-size:10px}#journeyBar{bottom:calc(50% + 45px)}#gameHud{top:55px}}
 @media(max-width:460px){.header-actions button[data-wide="1"]{display:none}.brand h1{font-size:12.5px}.header-actions{gap:3px}#info{height:42%}.dialog .grid2{grid-template-columns:1fr}}
 </style>
 </head>
@@ -115,7 +115,6 @@ body.is-embedded .brand h1{font-size:14.5px}
    <button id="btnZoomReset" class="zoom-btn" title="Đặt lại góc nhìn toàn cảnh (0)" aria-label="Góc nhìn toàn cảnh">⟲</button>
    <button id="btnZoomOut" class="zoom-btn" title="Thu nhỏ ra xa (-)" aria-label="Thu nhỏ">−</button>
   </div>
-  <div id="hint">Kéo để xoay 3D · Cuộn / chụm hai ngón để phóng to · Bấm công trình để xem chi tiết</div>
   <div id="disclaimer">Sa bàn tái dựng · Không theo tỉ lệ đo đạc</div>
   <div id="toast" role="status"></div>
   <button id="btnReopenInfo" class="reopen-pill" aria-label="Xem bảng giới thiệu">
@@ -159,7 +158,6 @@ body.is-embedded .brand h1{font-size:14.5px}
     document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
   }
 </script>
-<link rel="stylesheet" href="lib/annotation-tool.css">
 <script>
 (function(){
 'use strict';
@@ -759,6 +757,5 @@ if((window.self!==window.top)||new URLSearchParams(window.location.search).has('
 try{init3D();selectPlace(6);flyOverview();initInfoDrag();updateInfoVisibilityUI();}catch(error){console.error(error);stage.textContent='Không thể khởi tạo WebGL. Hãy bật tăng tốc đồ họa hoặc thử trình duyệt khác.';}
 })();
 </script>
-<script src="lib/annotation-tool.js"></script>
 </body>
 </html>
