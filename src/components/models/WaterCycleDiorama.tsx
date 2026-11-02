@@ -23,6 +23,7 @@ import { WATER_CYCLE_STAGES, WATER_QUIZ, type WaterCycleStage } from '../../data
 
 export const WaterCycleDiorama: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'3d' | 'stages' | 'states' | 'quiz'>('3d');
+  const [load3D, setLoad3D] = useState(false);
   const [selectedStage, setSelectedStage] = useState<WaterCycleStage>(WATER_CYCLE_STAGES[0]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -49,6 +50,14 @@ export const WaterCycleDiorama: React.FC = () => {
     };
     document.addEventListener('fullscreenchange', handleFsChange);
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setIsFullscreen(false); };
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    };
   }, []);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
@@ -112,7 +121,7 @@ export const WaterCycleDiorama: React.FC = () => {
       {/* Diorama Control Bar */}
       <div className="bg-slate-950/80 px-4 sm:px-6 py-3 border-b border-sky-900/40 flex flex-wrap items-center justify-between gap-3">
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-900 rounded-2xl border border-slate-800">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-900 rounded-2xl border border-slate-800">
           <button
             type="button"
             onClick={() => { stopSpeaking(); setActiveTab('3d'); }}
@@ -128,7 +137,7 @@ export const WaterCycleDiorama: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => { stopSpeaking(); setActiveTab('stages'); }}
+            onClick={() => { stopSpeaking(); setActiveTab('stages'); setLoad3D(false); }}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
               activeTab === 'stages'
                 ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
@@ -136,12 +145,12 @@ export const WaterCycleDiorama: React.FC = () => {
             }`}
           >
             <CloudRain className="h-4 w-4" />
-            <span>4 Giai đoạn Tuần hoàn</span>
+            <span>Các quá trình</span>
           </button>
 
           <button
             type="button"
-            onClick={() => { stopSpeaking(); setActiveTab('states'); }}
+            onClick={() => { stopSpeaking(); setActiveTab('states'); setLoad3D(false); }}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
               activeTab === 'states'
                 ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
@@ -154,7 +163,7 @@ export const WaterCycleDiorama: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => { stopSpeaking(); setActiveTab('quiz'); }}
+            onClick={() => { stopSpeaking(); setActiveTab('quiz'); setLoad3D(false); }}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
               activeTab === 'quiz'
                 ? 'bg-sky-600 text-white shadow-lg shadow-sky-600/30'
@@ -217,11 +226,21 @@ export const WaterCycleDiorama: React.FC = () => {
         {/* TAB 1: 3D THREE.JS SIMULATION */}
         {activeTab === '3d' && (
           <div className="w-full flex-1 min-h-[580px] relative bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex flex-col">
-            <iframe src="/models/vong-tuan-hoan-nuoc-3d.html"
+            {load3D ? <iframe src="/models/vong-tuan-hoan-nuoc-3d.html"
               title="Mô hình 3D Vòng tuần hoàn của nước"
               className="w-full h-full flex-1 border-0"
-              allow="fullscreen; accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowFullScreen
-            />
+              allow="fullscreen" allowFullScreen
+            /> : <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-4">
+              <Droplets className="h-12 w-12 text-sky-300" aria-hidden="true" />
+              <h2 className="text-xl font-bold">Sẵn sàng khám phá vòng tuần hoàn nước?</h2>
+              <p className="max-w-xl text-slate-200 leading-relaxed">Mô hình 3D chỉ tải khi em chọn bắt đầu. Nếu máy chạy chậm, em có thể học bằng phần văn bản “Các quá trình”.</p>
+              <button type="button" onClick={() => setLoad3D(true)} className="min-h-11 px-5 py-3 bg-sky-600 hover:bg-sky-500 rounded-xl font-bold">Bắt đầu mô hình 3D</button>
+              <button type="button" onClick={() => { stopSpeaking(); setActiveTab('stages'); }} className="min-h-11 px-5 py-3 border border-slate-500 rounded-xl">Học bằng văn bản</button>
+            </div>}
+            {load3D && <div className="p-3 bg-slate-900 flex flex-wrap gap-3 items-center text-sm">
+              <span>Không hiển thị hoặc máy chạy chậm?</span>
+              <button type="button" onClick={() => { setLoad3D(false); setActiveTab('stages'); }} className="min-h-11 px-3 underline text-sky-200">Dừng 3D và học bằng văn bản</button>
+            </div>}
           </div>
         )}
 

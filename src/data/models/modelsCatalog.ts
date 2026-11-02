@@ -5,6 +5,7 @@ export interface LearningModelItem {
   grade: number;
   lessonCode: string;
   lessonName: string;
+  curriculumNote?: string;
   coverImage: string;
   summary: string;
   status: 'AVAILABLE' | 'UPCOMING';
@@ -45,6 +46,7 @@ export const modelsCatalog: LearningModelItem[] = [
   },
   {
     id: 'co-the-nguoi-tuan-hoan',
+    curriculumNote: 'Học liệu mở rộng về cơ thể người; giáo viên lựa chọn mức độ phù hợp, không xem nội dung giải phẫu là yêu cầu bắt buộc của bài dinh dưỡng.',
     title: 'Mô hình 3D Quả tim & Vòng tuần hoàn máu',
     subject: 'Khoa học',
     grade: 4,
@@ -81,7 +83,7 @@ export const modelsCatalog: LearningModelItem[] = [
     lessonCode: 'Bài 1',
     lessonName: 'Làm quen với phương tiện học tập môn Lịch sử và Địa lí',
     coverImage: '/images/models/qua-dia-cau-3d.jpg',
-    summary: 'Quả địa cầu xoay 360 độ trên trục nghiêng 23,5°: Quan sát đường Xích đạo, kinh vĩ tuyến, 6 châu lục, 4 đại dương và định vị dải đất hình chữ S của Việt Nam.',
+    summary: 'Quả địa cầu xoay 360 độ trên trục nghiêng 23,5°: Quan sát đường Xích đạo, kinh vĩ tuyến, các châu lục, đại dương và định vị dải đất hình chữ S của Việt Nam.',
     status: 'AVAILABLE',
     route: '/mo-hinh/qua-dia-cau',
     tags: ['Quả Địa Cầu', 'Xích đạo', 'Kinh vĩ tuyến', 'Bán cầu Bắc', 'Việt Nam'],

@@ -497,6 +497,7 @@ let isSunBoosted = false;
 let autoRotate = false;
 let vaporSpeed = 1.0;
 let showLabels = true;
+let animationFrameId = null;
 let soundEnabled = false;
 let audioCtx = null;
 let rainAudioNode = null;
@@ -518,10 +519,10 @@ function init() {
   // Renderer
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(width, height);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   ModelRealism.configure(renderer);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1 : 1.5));
   container.appendChild(renderer.domElement);
 
   // Controls
@@ -997,7 +998,9 @@ function onWindowResize() {
 }
 
 function animate() {
-  requestAnimationFrame(animate);
+  animationFrameId = null;
+  if (document.hidden) return;
+  animationFrameId = requestAnimationFrame(animate);
 
   const time = Date.now() * 0.001;
   const dt=ModelRealism.delta('simulation');
@@ -1060,6 +1063,17 @@ function animate() {
   updateMarkersPosition();
 }
 
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+    if (audioCtx && audioCtx.state === 'running') audioCtx.suspend();
+  } else if (renderer && animationFrameId === null) {
+    ModelRealism.delta('simulation');
+    animate();
+    if (soundEnabled && audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  }
+});
 window.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
