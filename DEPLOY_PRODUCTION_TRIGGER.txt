@@ -273,3 +273,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 259: 2026-11-01: Cap nhat Bo Suu Tap Huy Hieu Tham Hiem 3D: (1) Them nut shortcut '🏆 Huy hieu' tren thanh tieu de trang Kho mo hinh 3D giup nhay nhanh den bo suu tap; (2) Tich hop neo #huy-hieu va cho phep nhap chuot truc tiep vao tung huy hieu de mo bai hoc sa ban 3D tuong ung; (3) Nang cap Service Worker len v21 (lhtt-shell-v21-interactive-badges) lam moi cache trinh duyet.
 
 2026-11-02: Deploy PR #3 — model discovery and guided water-cycle learning (b4c4d5e591fcba3f3df8d93c2ce46e2a83bb0aae).
+
+2026-11-02: Deploy PR #4 — model-specific realism and quality controls (a6c634b185131ebb5a347270e1dd682af7323634).
