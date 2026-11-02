@@ -279,3 +279,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-11-02: Version model realism assets to prevent mixed cached script versions.
 
 2026-11-02: Deploy PR #5 — inspection views, motion pause and transparent roofs (643905b767d400ea308e7904f8016a20d9de5894).
+
+2026-11-02: Deploy PR #6 — remove floating inspection panel and reduce default rendering cost (4ec602359493123cd1c4ef94b631e02e3d6489b9).
