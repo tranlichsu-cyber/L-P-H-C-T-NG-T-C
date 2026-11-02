@@ -277,3 +277,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-11-02: Deploy PR #4 — model-specific realism and quality controls (a6c634b185131ebb5a347270e1dd682af7323634).
 
 2026-11-02: Version model realism assets to prevent mixed cached script versions.
+
+2026-11-02: Deploy PR #5 — inspection views, motion pause and transparent roofs (643905b767d400ea308e7904f8016a20d9de5894).
