@@ -21,6 +21,7 @@ function canvasTexture(draw,w=1024,h=1024){const c=document.createElement('canva
 function ground(w,d){box(w,.5,d,0,-.3,0,palette.soil);box(w,.12,d,0,0,0,palette.grass);}
 function tree(x,z,s=1){const g=group(x,0,z);mesh(new THREE.CylinderGeometry(.1,.17,1.9,8),palette.wood,0,.95,0,g);for(let i=0;i<4;i++)ellipsoid(.85,.8,.75,Math.cos(i*2.4)*.4,2+i*.16,Math.sin(i*2.4)*.4,mat(i%2?0x4e733e:0x557b40),g);g.scale.setScalar(s);}
 function roof(parent,w,d,y,h=.9){
+ const shell=new THREE.Group();shell.userData.inspectionRole='roof';parent.add(shell);parent=shell;
  const vertices=[],indices=[],nx=18,nz=12;
  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){const x=(i/nx-.5)*w,z=(j/nz-.5)*d;vertices.push(x,y+h*(1-Math.abs(z/(d/2))*.9)+.2*Math.abs(x/(w/2))**8+.15*Math.abs(z/(d/2))**6,z);}
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i;indices.push(a,a+nx+1,a+1,a+1,a+nx+1,a+nx+2);}
@@ -124,7 +125,7 @@ function rong(){
  box(8,.22,5.6,0,2.5,0,palette.lightWood,floor);for(let x=-3.8;x<4;x+=.35)box(.025,.03,5.5,x,2.63,0,palette.wood,floor);
  const woven=ModelRealism.detail(palette.lightWood.clone(),'thatch',4,.035);
  for(const side of [-1,1])box(.15,1.8,5,side*3.9,3.5,0,woven,floor);box(8,1.8,.14,0,3.5,-2.45,woven,floor);for(const x of [-2.6,2.6])box(2.5,1.8,.14,x,3.5,2.45,woven,floor);register('floor',floor,[-4,3,-2]);
- const roofGroup=group(0,0,0,house),vertices=[],indices=[],nx=36,nz=16;
+ const roofGroup=group(0,0,0,house);roofGroup.userData.inspectionRole='roof';const vertices=[],indices=[],nx=36,nz=16;
  const height=x=>4.1+8.4*(1-Math.abs(x)/5.5)**1.65;
  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){const x=(i/nx-.5)*11,z=(j/nz-.5)*7.2;vertices.push(x,height(x),z);}
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i;indices.push(a,a+nx+1,a+1,a+1,a+nx+1,a+nx+2);}
@@ -238,7 +239,7 @@ function installUI(){
 function zoom(factor){if(tourActive&&!tourPaused)pauseTour();const direction=camera.position.clone().sub(controls.target),distance=Math.max(controls.minDistance,Math.min(controls.maxDistance,direction.length()*factor));direction.setLength(distance);ModelRealism.fly(camera,controls,controls.target.clone().add(direction),controls.target);}
 function resize(){if(!renderer)return;const w=$('scene').clientWidth,h=$('scene').clientHeight;if(w<1||h<1)return;camera.aspect=w/h;ModelRealism.resizeCamera(camera);renderer.setSize(w,h);projectLabels();}
 function animate(now){
- frameId=requestAnimationFrame(animate);const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;elapsed+=dt;
+ frameId=requestAnimationFrame(animate);if(ModelRealism.pausedFrame(renderer,scene,camera,controls,projectLabels)){lastTime=now;return;}const dt=Math.min(.05,(now-lastTime)/1000);lastTime=now;elapsed+=dt;
  const phase=elapsed*pulseSpeed/60*Math.PI*2,beat=pulse ? .5+.5*Math.sin(phase) : 0;
  for(const item of animated){
   if(item.type==='heart')item.group.scale.setScalar(1+beat*.025);
@@ -259,7 +260,7 @@ async function init(){
   renderer=new THREE.WebGLRenderer({antialias:!weak,alpha:false});ModelRealism.configure(renderer);renderer.shadowMap.enabled=!weak;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.localClippingEnabled=true;$('scene').appendChild(renderer.domElement);
   camera=new THREE.PerspectiveCamera(43,1,.1,500);camera.position.copy(new THREE.Vector3(...Object.values(presets[modelId].position)));controls=new THREE.OrbitControls(camera,renderer.domElement);controls.target.copy(new THREE.Vector3(...Object.values(presets[modelId].target)));controls.enableDamping=true;controls.minDistance=4;controls.maxDistance=150;controls.maxPolarAngle=modelId==='dia-dao-cu-chi'?Math.PI*.66:Math.PI*.49;controls.autoRotateSpeed=.6;ModelRealism.cameraControls(camera,controls);controls.addEventListener('start',()=>{if(tourActive&&!tourPaused)pauseTour();});
   scene.add(new THREE.HemisphereLight(0xf0f5ff,0x655742,.65));const sun=new THREE.DirectionalLight(0xffedcf,1.2);sun.position.set(-18,30,25);sun.castShadow=!weak;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-32,right:32,top:32,bottom:-32,far:100});sun.shadow.bias=-.0002;scene.add(sun);root=new THREE.Group();scene.add(root);
-  const builders={'thap-dinh-duong':nutrition,'co-the-nguoi-tuan-hoan':heart,'trong-dong-dong-son':drum,'van-mieu-quoc-tu-giam':temple,'nha-rong-tay-nguyen':rong,'dia-dao-cu-chi':tunnels};builders[modelId]();ModelRealism.naturalize(scene);ModelRealism.finish(scene,renderer,{model:modelId});buildLabels();installUI();resize();selectFeature(data.features[0].id,false,false);$('loading').hidden=true;
+  const builders={'thap-dinh-duong':nutrition,'co-the-nguoi-tuan-hoan':heart,'trong-dong-dong-son':drum,'van-mieu-quoc-tu-giam':temple,'nha-rong-tay-nguyen':rong,'dia-dao-cu-chi':tunnels};builders[modelId]();ModelRealism.naturalize(scene);ModelRealism.finish(scene,renderer,{model:modelId,camera,controls,onInspect:()=>{if(tourActive&&!tourPaused)pauseTour();$('rotate').setAttribute('aria-pressed','false');}});buildLabels();installUI();resize();selectFeature(data.features[0].id,false,false);$('loading').hidden=true;
   observer=new ResizeObserver(resize);observer.observe($('stage'));
   const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();let pointerStart=null,multi=false;const pointers=new Set();
   renderer.domElement.addEventListener('pointerdown',e=>{pointers.add(e.pointerId);if(pointers.size===1){pointerStart={x:e.clientX,y:e.clientY};multi=false;}else multi=true;});

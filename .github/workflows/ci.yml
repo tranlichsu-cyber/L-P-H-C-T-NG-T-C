@@ -30,6 +30,7 @@ jobs:
       - name: Check model learning and render lifecycle
         run: |
           node scripts/check-model-learning.mjs
+          node scripts/check-model-inspection.mjs
           node scripts/check-realism-upgrade.mjs
           node scripts/check-new-models.mjs
           node scripts/check-model-realism.mjs
