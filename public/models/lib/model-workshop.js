@@ -10,6 +10,7 @@ let quizIndex=0,quizScore=0,quizAnswered=false;
 const meal=new Set();
 const mat=(color,roughness=.85,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
 const palette={stone:mat(0xc5bda8),wood:mat(0x68442c),lightWood:mat(0xa67c4d),roof:mat(0xa14b32),grass:mat(0x607b47),soil:mat(0x93714e),bronze:mat(0xac8543,.6,.65),water:mat(0x487b78,.25,.02)};
+for(const [key,kind,repeat] of [['stone','stone',2],['wood','wood',2],['lightWood','wood',3],['roof','roof',3],['grass','leaf',8],['soil','soil',5],['bronze','bronze',2],['water','water',3]])ModelRealism.detail(palette[key],kind,repeat,key==='water'?.08:.035);
 function mesh(geometry,material,x=0,y=0,z=0,parent=root){const m=new THREE.Mesh(geometry,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
 const box=(w,h,d,x,y,z,material,parent=root)=>mesh(new THREE.BoxGeometry(w,h,d),material,x,y,z,parent);
 function ellipsoid(rx,ry,rz,x,y,z,material,parent=root){const m=mesh(new THREE.SphereGeometry(1,24,16),material,x,y,z,parent);m.scale.set(rx,ry,rz);return m;}
@@ -23,13 +24,17 @@ function roof(parent,w,d,y,h=.9){
  const vertices=[],indices=[],nx=18,nz=12;
  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){const x=(i/nx-.5)*w,z=(j/nz-.5)*d;vertices.push(x,y+h*(1-Math.abs(z/(d/2))*.9)+.2*Math.abs(x/(w/2))**8+.15*Math.abs(z/(d/2))**6,z);}
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i;indices.push(a,a+nx+1,a+1,a+1,a+nx+1,a+nx+2);}
- const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();const material=palette.roof.clone();material.side=THREE.DoubleSide;mesh(geo,material,0,0,0,parent);
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();ModelRealism.planarUV(geo,['x','z'],3);const material=palette.roof.clone();material.side=THREE.DoubleSide;mesh(geo,material,0,0,0,parent);
  const tileMat=mat(0xb66645),tileGeo=new THREE.CylinderGeometry(.025,.025,d/nz,5),tiles=new THREE.InstancedMesh(tileGeo,tileMat,nx*nz),dummy=new THREE.Object3D();
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const x=((i+.5)/nx-.5)*w,z=((j+.5)/nz-.5)*d,yv=y+h*(1-Math.abs(z/(d/2))*.9)+.2*Math.abs(x/(w/2))**8+.15*Math.abs(z/(d/2))**6;dummy.position.set(x,yv+.025,z);dummy.rotation.x=Math.PI/2+(z<0?-.3:.3);dummy.updateMatrix();tiles.setMatrixAt(j*nx+i,dummy.matrix);}parent.add(tiles);
  box(w,.12,.13,0,y+h+.08,0,tileMat,parent);
  for(const side of [-1,1])line([[side*w*.42,y+h,0],[side*w*.5,y+h+.1,0],[side*w*.55,y+h+.42,0]],.045,tileMat,parent);
 }
-function hall(x,z,w=6,d=4){const g=group(x,.2,z);box(w+.7,.35,d+.7,0,.18,0,palette.stone,g);box(w,.15,d,0,.45,0,palette.lightWood,g);box(w,2,.15,0,1.5,-d*.45,palette.wood,g);for(let i=0;i<5;i++){const xx=(i/4-.5)*w*.9;mesh(new THREE.CylinderGeometry(.09,.13,2.6,10),palette.wood,xx,1.7,d*.4,g);}roof(g,w+1,d+1,3,.9);return g;}
+function hall(x,z,w=6,d=4){const g=group(x,.2,z);box(w+.7,.35,d+.7,0,.18,0,palette.stone,g);box(w,.15,d,0,.45,0,palette.lightWood,g);box(w,2,.15,0,1.5,-d*.45,palette.wood,g);
+ for(const side of [-1,1]){box(.18,2.1,d*.8,side*w*.48,1.6,0,palette.lightWood,g);box(.24,.18,d*.88,side*w*.42,2.8,0,palette.wood,g);}
+ for(let i=0;i<5;i++){const x=(i/4-.5)*w*.9;mesh(new THREE.CylinderGeometry(.19,.23,.15,12),palette.stone,x,.58,d*.4,g);box(.35,.15,.7,x,2.85,d*.3,palette.lightWood,g);}
+ for(const side of [-1,1])for(let i=0;i<5;i++)box(.025,1.1,.03,side*w*.25+(i-2)*.12,1.7,-d*.35,palette.lightWood,g);
+for(let i=0;i<5;i++){const xx=(i/4-.5)*w*.9;mesh(new THREE.CylinderGeometry(.09,.13,2.6,10),palette.wood,xx,1.7,d*.4,g);}roof(g,w+1,d+1,3,.9);return g;}
 function nutrition(){
  ground(18,14);pyramidGroup=group();const materials=[0xc9a66a,0x71994f,0xb5855c,0xc8d5cd,0xcda64d,0xd5c7a8],ids=['grain','greens','protein','milk','fat','limit'];
  for(let i=0;i<6;i++){
@@ -39,6 +44,10 @@ function nutrition(){
   const label=canvasTexture((ctx,W,H)=>{ctx.fillStyle='#fff4d7';ctx.fillRect(0,0,W,H);ctx.fillStyle='#513a24';ctx.font='bold 42px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(data.features[i].name,W/2,H/2,W-25);},768,128);
   const sign=mesh(new THREE.PlaneGeometry(Math.min(w-.3,5.5),.55),new THREE.MeshBasicMaterial({map:label}),0,.48,(d+td)/4+.03,g);sign.rotation.x=-.26;register(ids[i],g,[0,1+i*1.05,d/2+.3]);
  }
+ const display=group(0,0,0,pyramidGroup);
+ for(let i=0;i<7;i++){const x=-3.2+i*.4;ellipsoid(.13,.08,.06,x,.45,2,mat(0xd4b46b),display);}
+ for(let i=0;i<4;i++){const leaf=ellipsoid(.32,.1,.5,-2+i*.28,1.52,1.65,ModelRealism.detail(mat(0x5b833f),'leaf',1,.025),display);leaf.rotation.y=i*.7;}
+ ellipsoid(.55,.2,.22,1.5,2.55,1.25,mat(0xaa9575),display);ellipsoid(.22,.27,.22,2.1,2.6,1.2,mat(0xd3c6a6),display);
  plateGroup=group(0,0,1);plateGroup.visible=false;
  mesh(new THREE.CylinderGeometry(5,4.7,.25,64),mat(0xe1dfd2),0,.3,0,plateGroup);
  const rim=mesh(new THREE.TorusGeometry(4.7,.14,8,64),mat(0xcac5b3),0,.5,0,plateGroup);rim.rotation.x=Math.PI/2;
@@ -46,16 +55,16 @@ function nutrition(){
 function addFood(id){
  const angle=['grain','greens','protein','fruit','milk','water'].indexOf(id)/6*Math.PI*2,x=Math.cos(angle)*2.7,z=Math.sin(angle)*2.7,g=group(x,.5,z,plateGroup);g.userData.food=id;
  if(id==='grain'){mesh(new THREE.CylinderGeometry(.9,.6,.5,24),mat(0xe5e0ca),0,.25,0,g);for(let i=0;i<22;i++)ellipsoid(.12,.07,.055,Math.sin(i*2.4)*.65,.57+(i%3)*.025,Math.cos(i*2.4)*.65,mat(0xf2e4bd),g);}
- if(id==='greens')for(let i=0;i<9;i++){const leaf=ellipsoid(.4,.12,.7,Math.sin(i)*.4,.15+i*.06,Math.cos(i)*.3,mat(i%2?0x608442:0x436e37),g);leaf.rotation.y=i;}
+ if(id==='greens')for(let i=0;i<9;i++){const leaf=ellipsoid(.4,.12,.7,Math.sin(i)*.4,.15+i*.06,Math.cos(i)*.3,ModelRealism.detail(mat(i%2?0x608442:0x436e37),'leaf',1,.025),g);leaf.rotation.y=i;}
  if(id==='protein'){ellipsoid(.95,.2,.4,0,.25,0,mat(0xa8997c),g);const tail=mesh(new THREE.ConeGeometry(.4,.6,3),mat(0x8d806a),-1,.25,0,g);tail.rotation.z=Math.PI/2;ellipsoid(.08,.06,.05,.7,.35,.28,mat(0x20241c),g);}
- if(id==='fruit'){ellipsoid(.5,.48,.5,-.3,.5,0,mat(0xd59a35),g);ellipsoid(.4,.4,.4,.5,.4,.3,mat(0xb86443),g);}
+ if(id==='fruit'){ellipsoid(.5,.48,.5,-.3,.5,0,ModelRealism.detail(mat(0xd59a35),'tissue',2,.018),g);ellipsoid(.4,.4,.4,.5,.4,.3,mat(0xb86443),g);line([[-.3,.95,0],[-.25,1.1,0]],.025,palette.wood,g);const leaf=ellipsoid(.22,.035,.1,-.1,1.01,0,palette.grass,g);leaf.rotation.z=.3;}
  if(id==='milk'){box(.8,1.3,.7,0,.7,0,mat(0xdde6d8),g);box(.85,.3,.75,0,1.5,0,mat(0x688d9b),g);}
  if(id==='water'){const glass=mat(0x9dc8d2,.15);glass.transparent=true;glass.opacity=.45;mesh(new THREE.CylinderGeometry(.46,.4,1.25,24),glass,0,.7,0,g);mesh(new THREE.CylinderGeometry(.4,.35,.85,24),palette.water,0,.5,0,g);}
  ModelRealism.naturalize(g);
 }
 function heart(){
  const heartGroup=group();heartGroup.userData.kind='heart';
- const blue=mat(0x416b9d,.6),red=mat(0xb64d4a,.65),wall=mat(0xa65147,.65);wall.transparent=true;wall.opacity=.22;wall.depthWrite=false;
+ const blue=ModelRealism.detail(mat(0x416b9d,.6),'tissue',2,.018),red=ModelRealism.detail(mat(0xb64d4a,.65),'tissue',2,.018),wall=ModelRealism.detail(mat(0xa65147,.65),'tissue',2,.025);wall.transparent=true;wall.opacity=.22;wall.depthWrite=false;
  heartShell=ellipsoid(2.7,3.3,1.55,.1,5.5,0,wall,heartGroup);heartShell.rotation.z=-.18;
  const specs=[['right-atrium',-1.4,7.2,.95,1.05,blue],['right-ventricle',-1.2,4.7,1.15,1.9,blue],['left-atrium',1.2,7.3,.85,1,red],['left-ventricle',1.3,4.5,1.25,2.2,red]];
  for(const [id,x,y,rx,ry,material] of specs){const g=group(0,0,0,heartGroup),chamber=ellipsoid(rx,ry,.95,x,y,.05,material,g);chamber.rotation.z=x>0?-.12:.16;register(id,g,[x<0?-3.4:3.4,y+ry*.7,.8]);}
@@ -75,7 +84,7 @@ function heart(){
 }
 function drum(){
  ground(16,14);const g=group();const points=[[4.7,.4],[4.65,.8],[3.6,2.2],[3.4,3.4],[4.5,4.5],[5.2,5.3],[5.35,6.35],[5.2,6.8]].map(([r,y])=>new THREE.Vector2(r,y));
- const bronze=palette.bronze.clone();bronze.bumpMap=ModelRealism.surface('stone');bronze.bumpScale=.035;const shell=mesh(new THREE.LatheGeometry(points,128),bronze,0,0,0,g);register('body',g,[4,3,0]);
+ const bronze=ModelRealism.detail(palette.bronze.clone(),'bronze',3,.035);const shell=mesh(new THREE.LatheGeometry(points,128),bronze,0,0,0,g);register('body',g,[4,3,0]);
  const face=group(),faceMap=canvasTexture((ctx,W,H)=>{
   ctx.fillStyle='#bda061';ctx.fillRect(0,0,W,H);const c=W/2;ctx.strokeStyle='#68502b';ctx.lineWidth=3;
   for(const r of [180,205,220,270,300,335,355,385,415,445,475]){ctx.beginPath();ctx.arc(c,c,r,0,Math.PI*2);ctx.stroke();}
@@ -85,6 +94,10 @@ function drum(){
  },1024,1024);
  const topMat=bronze.clone();topMat.map=faceMap;mesh(new THREE.CylinderGeometry(5.23,5.23,.12,128),topMat,0,6.83,0,face);register('birds',face,[3.7,7.1,0]);
  const sun=group();const star=new THREE.Shape();for(let i=0;i<28;i++){const a=i*Math.PI/14,r=i%2?.7:1.65;const x=Math.cos(a)*r,y=Math.sin(a)*r;i?star.lineTo(x,y):star.moveTo(x,y);}star.closePath();const starMesh=mesh(new THREE.ExtrudeGeometry(star,{depth:.035,bevelEnabled:false}),mat(0xd7b363,.65,.65),0,6.93,0,sun);starMesh.rotation.x=-Math.PI/2;register('sun',sun,[0,7.7,0]);
+ // Low-relief concentric mouldings, distinct from the illustrative painted motifs.
+ for(const r of [1.85,2.12,3.18,4.32,4.74,5.12]){const ring=mesh(new THREE.TorusGeometry(r,.018,5,96),bronze,0,6.91,0,face);ring.rotation.x=Math.PI/2;}
+ const beads=new THREE.InstancedMesh(new THREE.SphereGeometry(.023,5,4),bronze,96),bead=new THREE.Object3D();for(let i=0;i<96;i++){const a=i*Math.PI/48;bead.position.set(Math.cos(a)*4.93,6.92,Math.sin(a)*4.93);bead.updateMatrix();beads.setMatrixAt(i,bead.matrix);}face.add(beads);
+
  const handles=group();for(const x of [-4.4,4.4])for(const z of [-.65,.65]){const h=mesh(new THREE.TorusGeometry(.62,.13,10,32,Math.PI*1.6),bronze,x,3.9,z,handles);h.rotation.y=Math.PI/2;}register('handles',handles,[-4.7,4.7,0]);
  const life=group();for(let i=0;i<16;i++){const a=i*Math.PI/8;const x=Math.cos(a)*4.7,z=Math.sin(a)*4.7;ellipsoid(.12,.13,.12,x,5.25,z,bronze,life);ModelRealism.limb(life,[x,5.1,z],[x,4.6,z],.06,bronze);for(const sign of [-1,1])ModelRealism.limb(life,[x,4.65,z],[x+Math.cos(a+Math.PI/2)*sign*.25,4.3,z+Math.sin(a+Math.PI/2)*sign*.25],.045,bronze);}register('life',life,[-3,5.3,3]);
  const base=group();box(11.5,.25,11.5,0,.1,0,palette.wood,base);register('heritage',base,[0,.3,5.7]);
@@ -109,17 +122,20 @@ function rong(){
  ground(29,27);const house=group(0,0,-2);const floor=group(0,0,0,house);
  for(const x of [-3.4,0,3.4])for(const z of [-2.2,2.2])mesh(new THREE.CylinderGeometry(.17,.22,2.5,10),palette.wood,x,1.25,z,floor);
  box(8,.22,5.6,0,2.5,0,palette.lightWood,floor);for(let x=-3.8;x<4;x+=.35)box(.025,.03,5.5,x,2.63,0,palette.wood,floor);
- const woven=palette.lightWood.clone();woven.bumpMap=ModelRealism.surface('wood');woven.bumpScale=.04;
+ const woven=ModelRealism.detail(palette.lightWood.clone(),'thatch',4,.035);
  for(const side of [-1,1])box(.15,1.8,5,side*3.9,3.5,0,woven,floor);box(8,1.8,.14,0,3.5,-2.45,woven,floor);for(const x of [-2.6,2.6])box(2.5,1.8,.14,x,3.5,2.45,woven,floor);register('floor',floor,[-4,3,-2]);
  const roofGroup=group(0,0,0,house),vertices=[],indices=[],nx=36,nz=16;
  const height=x=>4.1+8.4*(1-Math.abs(x)/5.5)**1.65;
  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){const x=(i/nx-.5)*11,z=(j/nz-.5)*7.2;vertices.push(x,height(x),z);}
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){const a=j*(nx+1)+i;indices.push(a,a+nx+1,a+1,a+1,a+nx+1,a+nx+2);}
- const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();const thatch=mat(0x8c6b3f);thatch.side=THREE.DoubleSide;thatch.bumpMap=ModelRealism.surface('wood');thatch.bumpMap.repeat.set(10,7);thatch.bumpScale=.1;mesh(geo,thatch,0,0,0,roofGroup);
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();ModelRealism.planarUV(geo,['x','z'],5);const thatch=ModelRealism.detail(mat(0x8c6b3f),'thatch',6,.07);thatch.side=THREE.DoubleSide;mesh(geo,thatch,0,0,0,roofGroup);
  for(let i=0;i<34;i++){const x=(i/33-.5)*10.8;line([[x,height(x)+.04,-3.6],[x,height(x)+.04,3.6]],.015,palette.lightWood,roofGroup);}box(.15,.2,7.5,0,12.55,0,palette.wood,roofGroup);const gableShape=new THREE.Shape();gableShape.moveTo(-5.5,4.1);for(let i=0;i<=36;i++){const x=(i/36-.5)*11;gableShape.lineTo(x,height(x));}gableShape.lineTo(5.5,4.1);gableShape.closePath();
- const gableMaterial=palette.lightWood.clone();gableMaterial.side=THREE.DoubleSide;gableMaterial.bumpMap=ModelRealism.surface('wood');gableMaterial.bumpScale=.05;
+ const gableMaterial=palette.lightWood.clone();gableMaterial.side=THREE.DoubleSide;gableMaterial.bumpMap=ModelRealism.surface('wood');gableMaterial.bumpScale=.05;ModelRealism.detail(gableMaterial,'thatch',5,.035);
  for(const z of [-3.59,3.59])mesh(new THREE.ShapeGeometry(gableShape),gableMaterial,0,0,z,roofGroup);
  register('roof',roofGroup,[0,13.5,-2]);
+ for(const z of [-2.1,0,2.1]){box(7.8,.17,.18,0,4.4,z,palette.wood,house);ModelRealism.limb(house,[-3.5,4.4,z],[0,11.7,z],.085,palette.wood);ModelRealism.limb(house,[3.5,4.4,z],[0,11.7,z],.085,palette.wood);}
+ const ties=new THREE.InstancedMesh(new THREE.TorusGeometry(.22,.025,5,12),palette.lightWood,12),tie=new THREE.Object3D();let ti=0;for(const x of [-3.4,0,3.4])for(const z of [-2.2,2.2])for(const y of [2.12,2.32]){tie.position.set(x,y,z);tie.rotation.x=Math.PI/2;tie.updateMatrix();ties.setMatrixAt(ti++,tie.matrix);}floor.add(ties);
+
  const ladder=group();ModelRealism.limb(ladder,[-.8,0,5],[-.8,2.6,.8],.12,palette.wood);ModelRealism.limb(ladder,[.8,0,5],[.8,2.6,.8],.12,palette.wood);for(let i=0;i<8;i++)box(1.6,.12,.3,0,.15+i*.32,4.8-i*.52,palette.lightWood,ladder);register('ladder',ladder,[0,2.5,3]);
  const gongs=group(-7,0,5);for(const x of [-2.5,2.5])mesh(new THREE.CylinderGeometry(.09,.13,3.7,8),palette.wood,x,1.85,0,gongs);box(5.4,.18,.18,0,3.7,0,palette.wood,gongs);
  for(let i=0;i<7;i++){const r=.65-i*.055,x=-2+i*.66,gong=mesh(new THREE.CylinderGeometry(r,r,.07,40),palette.bronze,x,2.2,0,gongs);gong.rotation.x=Math.PI/2;ellipsoid(r*.22,r*.22,.12,x,2.2,.1,palette.bronze,gongs);ModelRealism.limb(gongs,[x,3.6,0],[x,2.8,0],.018,palette.wood);}register('gongs',gongs,[-7,4.5,5]);
@@ -128,7 +144,7 @@ function rong(){
  const community=group();for(let i=0;i<9;i++){const a=i*Math.PI*2/9,x=Math.cos(a)*3+4.5,z=Math.sin(a)*3+6.5;ellipsoid(.15,.15,.15,x,1.45,z,mat(0xa67f60),community);box(.35,.7,.23,x,.95,z,mat(i%2?0x59382d:0x343c36),community);for(const side of [-1,1])ModelRealism.limb(community,[x+side*.09,.6,z],[x+side*.12,.1,z],.07,palette.wood);}register('community',community,[8,2.4,7]);for(let i=0;i<10;i++)tree((i%2?1:-1)*(10+i%3),-10+Math.floor(i/2)*4,1.2);
 }
 function tunnels(){
- const soil=mat(0x9e7b52),dark=mat(0x6b5038),floorMat=mat(0xc2a077);box(24,.4,18,0,-13.7,0,dark);
+ const soil=ModelRealism.detail(mat(0x9e7b52),'strata',3,.04),dark=ModelRealism.detail(mat(0x6b5038),'soil',3,.04),floorMat=ModelRealism.detail(mat(0xc2a077),'soil',3,.025);box(24,.4,18,0,-13.7,0,dark);
  box(24,.13,8,0,.12,-5,palette.grass);
  const back=box(24,13.5,8,0,-6.7,-5,soil);back.material=soil.clone();back.material.transparent=true;back.material.opacity=.25;back.material.depthWrite=false;
  soilCover=group();box(24,13.5,18,0,-6.7,0,soil,soilCover);box(24,.15,18,0,.13,0,palette.grass,soilCover);soilCover.visible=false;mode='cutaway';
@@ -231,7 +247,7 @@ function animate(now){
   if(item.type==='smoke'){const u=(elapsed*.12+item.phase)%1;item.mesh.position.set(Math.sin(u*4)*.3,u*2.3,0);item.mesh.material.opacity=(1-u)*.28;}
  }
  animated=animated.filter(item=>item.type!=='strike'||elapsed-item.start<.8);
- controls.update();if(outline)outline.update();renderer.render(scene,camera);projectLabels();
+ controls.update();if(outline)outline.update();ModelRealism.updateMaterials();renderer.render(scene,camera);projectLabels();
 }
 function dispose(){cancelAnimationFrame(frameId);clearTimeout(tourTimer);observer?.disconnect();controls?.dispose();audio?.close();const geometries=new Set(),materials=new Set(),textures=new Set();scene?.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:[o.material])if(m){materials.add(m);for(const key of ['map','bumpMap'])if(m[key])textures.add(m[key]);}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());disposables.forEach(t=>t.dispose());renderer?.dispose();}
 let observer;
@@ -243,7 +259,7 @@ async function init(){
   renderer=new THREE.WebGLRenderer({antialias:!weak,alpha:false});ModelRealism.configure(renderer);renderer.shadowMap.enabled=!weak;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.localClippingEnabled=true;$('scene').appendChild(renderer.domElement);
   camera=new THREE.PerspectiveCamera(43,1,.1,500);camera.position.copy(new THREE.Vector3(...Object.values(presets[modelId].position)));controls=new THREE.OrbitControls(camera,renderer.domElement);controls.target.copy(new THREE.Vector3(...Object.values(presets[modelId].target)));controls.enableDamping=true;controls.minDistance=4;controls.maxDistance=150;controls.maxPolarAngle=modelId==='dia-dao-cu-chi'?Math.PI*.66:Math.PI*.49;controls.autoRotateSpeed=.6;ModelRealism.cameraControls(camera,controls);controls.addEventListener('start',()=>{if(tourActive&&!tourPaused)pauseTour();});
   scene.add(new THREE.HemisphereLight(0xf0f5ff,0x655742,.65));const sun=new THREE.DirectionalLight(0xffedcf,1.2);sun.position.set(-18,30,25);sun.castShadow=!weak;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-32,right:32,top:32,bottom:-32,far:100});sun.shadow.bias=-.0002;scene.add(sun);root=new THREE.Group();scene.add(root);
-  const builders={'thap-dinh-duong':nutrition,'co-the-nguoi-tuan-hoan':heart,'trong-dong-dong-son':drum,'van-mieu-quoc-tu-giam':temple,'nha-rong-tay-nguyen':rong,'dia-dao-cu-chi':tunnels};builders[modelId]();ModelRealism.naturalize(scene);buildLabels();installUI();resize();selectFeature(data.features[0].id,false,false);$('loading').hidden=true;
+  const builders={'thap-dinh-duong':nutrition,'co-the-nguoi-tuan-hoan':heart,'trong-dong-dong-son':drum,'van-mieu-quoc-tu-giam':temple,'nha-rong-tay-nguyen':rong,'dia-dao-cu-chi':tunnels};builders[modelId]();ModelRealism.naturalize(scene);ModelRealism.finish(scene,renderer,{model:modelId});buildLabels();installUI();resize();selectFeature(data.features[0].id,false,false);$('loading').hidden=true;
   observer=new ResizeObserver(resize);observer.observe($('stage'));
   const raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2();let pointerStart=null,multi=false;const pointers=new Set();
   renderer.domElement.addEventListener('pointerdown',e=>{pointers.add(e.pointerId);if(pointers.size===1){pointerStart={x:e.clientX,y:e.clientY};multi=false;}else multi=true;});

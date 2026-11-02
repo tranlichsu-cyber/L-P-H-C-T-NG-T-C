@@ -82,7 +82,7 @@ body.is-embedded .brand h1{font-size:14.5px}
 @media(max-width:800px){header{padding:4px 8px;min-height:42px;max-height:44px;align-items:center}.brand p{display:none}.brand h1{font-size:13.5px}.header-actions button{font-size:11.5px;padding:4px 6px;height:29px}#workspace{display:block}#stage{height:100%}#side{display:none}#info{top:auto!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;max-height:50%!important;border-radius:16px 16px 0 0;border-bottom:0;padding:10px 12px}#info h2{font-size:18px}.info-content{font-size:14px}#info.collapsed{max-height:46px!important;height:46px!important;overflow:hidden!important}#info.collapsed #infoBody{display:none!important}.zoom-controls{top:50px;left:10px}.zoom-btn{width:32px;height:32px;font-size:17px}.reopen-pill{top:auto;bottom:14px;right:14px;font-size:12px;padding:6px 11px}#mobilePlaces{display:flex;position:absolute;z-index:4;left:0;right:0;top:8px;gap:6px;overflow-x:auto;padding:4px 8px;pointer-events:auto}#mobilePlaces button{white-space:nowrap;font-size:13px;padding:7px 10px}#disclaimer{right:8px;bottom:calc(42% + 12px);font-size:10px}#journeyBar{bottom:calc(50% + 45px)}#gameHud{top:55px}}
 @media(max-width:460px){.header-actions button[data-wide="1"]{display:none}.brand h1{font-size:12.5px}.header-actions{gap:3px}#info{height:42%}.dialog .grid2{grid-template-columns:1fr}}
 </style>
-</head>
+<link rel="stylesheet" href="lib/realism-quality.css"></head>
 <body>
 <div id="app">
 <header>
@@ -158,6 +158,7 @@ body.is-embedded .brand h1{font-size:14.5px}
     document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
   }
 </script>
+<script src="lib/scene-realism.js"></script>
 <script>
 (function(){
 'use strict';
@@ -221,7 +222,7 @@ function init3D(){
  scene.add(new THREE.HemisphereLight(0xeaf7ff,0x617047,.65));
  let sun=new THREE.DirectionalLight(0xffedcf,1.25);sun.position.set(-15,28,18);sun.castShadow=renderer.shadowMap.enabled;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-28;sun.shadow.camera.right=28;sun.shadow.camera.top=28;sun.shadow.camera.bottom=-28;scene.add(sun);
  root=new THREE.Group();scene.add(root);raycaster=new THREE.Raycaster();mouse=new THREE.Vector2();clock=new THREE.Clock();
- buildSurfaceTextures();buildBase();buildMountain();buildPath();buildBuildings();buildForest();buildRocks();buildDecor();buildLabels();buildCarriage();
+ buildSurfaceTextures();buildBase();buildMountain();buildPath();buildBuildings();buildForest();buildRocks();buildDecor();buildLabels();buildCarriage();ModelRealism.finish(scene,renderer,{model:"den-hung"});
  const pointers=new Set();let pointerStart=null,multiTouch=false;renderer.domElement.addEventListener('pointerdown',e=>{pointers.add(e.pointerId);if(pointers.size===1){pointerStart={x:e.clientX,y:e.clientY};multiTouch=false;}else multiTouch=true;});renderer.domElement.addEventListener('pointerup',e=>{if(!multiTouch&&pointerStart&&Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)<6)onPick(e);pointers.delete(e.pointerId);if(!pointers.size)pointerStart=null;});renderer.domElement.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);pointerStart=null;});
  controls.addEventListener('start',()=>{flightId++;if(journey&&!journeyPaused)pauseJourney();});window.addEventListener('resize',resize);animate();
 }
@@ -236,6 +237,7 @@ function buildSurfaceTextures(){
   const texture=new THREE.CanvasTexture(c);texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(2,2);texture.encoding=THREE.sRGBEncoding;material.map=texture;material.needsUpdate=true;
  }
  surface(stone,'#c6c0af',true);surface(stoneDark,'#a49f90',true);surface(wall,'#dfd3b5',false);surface(brick,'#ba795b',true);surface(wood,'#7b5840',false);
+ for(const [m,k] of [[wood,'wood'],[wood2,'wood'],[stone,'stone'],[stoneDark,'stone'],[brick,'brick'],[roof,'roof'],[roofLight,'roof']])ModelRealism.detail(m,k,2,.025);ModelRealism.detail(water,'water',3,.04);
 }
 
 
@@ -359,7 +361,7 @@ function roofPart(parent,x,y,z,w,d,h){
  function roofY(xx,zz){return h*(1-Math.abs(zz/(d/2))*.8)+Math.pow(Math.abs(xx/(w/2)),8)*.22+Math.pow(Math.abs(zz/(d/2)),6)*.2;}
  for(let j=0;j<=nz;j++)for(let i=0;i<=nx;i++){const xx=(i/nx-.5)*w,zz=(j/nz-.5)*d;vertices.push(xx,roofY(xx,zz),zz);}
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){let a=j*(nx+1)+i;indices.push(a,a+nx+1,a+1,a+1,a+nx+1,a+nx+2)}
- const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setIndex(indices);geo.computeVertexNormals();ModelRealism.planarUV(geo,['x','z'],3);
  const material=roof.clone();material.side=THREE.DoubleSide;const shell=mesh(geo,material,0,0,0,g);shell.castShadow=true;
  const tiles=new THREE.InstancedMesh(new THREE.CylinderGeometry(.033,.033,d/nz*1.12,5),roofLight,nx*nz),dummy=new THREE.Object3D();
  for(let j=0;j<nz;j++)for(let i=0;i<nx;i++){let xx=((i+.5)/nx-.5)*w,zz=((j+.5)/nz-.5)*d;dummy.position.set(xx,roofY(xx,zz)+.025,zz);dummy.rotation.x=Math.PI/2+(zz<0?-.35:.35);dummy.updateMatrix();tiles.setMatrixAt(j*nx+i,dummy.matrix)}g.add(tiles);
@@ -388,6 +390,7 @@ function hall(id,name,x,y,z,scale=1,kind='temple'){
  const floor=new THREE.Mesh(new THREE.BoxGeometry(3.7,.16,2.75),brick);floor.position.y=.65;g.add(floor);
  for(const [xx,zz,ww,dd] of [[0,-1.28,3.55,.16],[-1.78,0,.16,2.55],[1.78,0,.16,2.55]]){const w=new THREE.Mesh(new THREE.BoxGeometry(ww,1.55,dd),wall);w.position.set(xx,1.48,zz);w.castShadow=true;g.add(w)}
  for(let xx of [-1.55,-.52,.52,1.55]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.105,.13,1.95,12),wood);c.position.set(xx,1.62,1.18);c.castShadow=true;g.add(c);const foot=new THREE.Mesh(new THREE.BoxGeometry(.34,.16,.34),stoneDark);foot.position.set(xx,.78,1.18);g.add(foot)}
+ for(const xx of [-1.55,-.52,.52,1.55]){mesh(new THREE.BoxGeometry(.32,.12,.6),wood2,xx,2.4,1.18,g);for(const zz of [-.8,.1,.8])mesh(new THREE.BoxGeometry(3.75,.09,.09),wood2,0,2.48,zz,g);}
  const beam=new THREE.Mesh(new THREE.BoxGeometry(3.9,.22,.22),wood2);beam.position.set(0,2.55,1.15);g.add(beam);
  roofPart(g,0,2.6,0,5.25,3.8,.86);
  // Rear sanctuary creates depth behind the open front hall.
@@ -450,12 +453,13 @@ function buildBuildings(){
   vertices.push(Math.cos(t)*2.15*r*polygonRadius,pavilionHeight(r),Math.sin(t)*2.15*r*polygonRadius-.4);
  }
  for(let j=0;j<rings;j++)for(let i=0;i<segments;i++){const k=j*(segments+1)+i;indices.push(k,k+1,k+segments+1,k+1,k+segments+2,k+segments+1);}
- const pavilionGeometry=new THREE.BufferGeometry();pavilionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));pavilionGeometry.setIndex(indices);pavilionGeometry.computeVertexNormals();
+ const pavilionGeometry=new THREE.BufferGeometry();pavilionGeometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));pavilionGeometry.setIndex(indices);pavilionGeometry.computeVertexNormals();ModelRealism.planarUV(pavilionGeometry,['x','z'],2);
  const pavilionMaterial=roof.clone();pavilionMaterial.side=THREE.DoubleSide;mesh(pavilionGeometry,pavilionMaterial,0,0,0,well);
  for(let i=0;i<8;i++){const a=i*Math.PI/4;const points=[];for(let j=0;j<=12;j++){let r=j/12;points.push(new THREE.Vector3(Math.cos(a)*2.15*r,pavilionHeight(r)+.045,Math.sin(a)*2.15*r-.4));}mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),16,.045,5,false),roofLight,0,0,0,well);}
  mesh(new THREE.SphereGeometry(.12,8,8),gold,0,3.48,-.4,well);
  const wellRim=mesh(new THREE.TorusGeometry(.4,.09,8,24),stoneDark,0,.72,-.4,well);wellRim.rotation.x=Math.PI/2;
  mesh(new THREE.CylinderGeometry(.34,.34,.06,24),water,0,.68,-.4,well);
+ ModelRealism.detail(pond.material,'water',2,.05);
  registerPlace(well,'gieng',6.3,3.8,6.6);
  for(let i=0;i<32;i++){const a=i/32*Math.PI*2,x=Math.cos(a)*3.4,z=Math.sin(a)*2.9+1.3;mesh(new THREE.BoxGeometry(.1,.65,.1),stone,x,.5,z,well);}
  const ring=mesh(new THREE.TorusGeometry(3.4,.055,6,64),stone,0,.8,1.3,well);ring.rotation.x=Math.PI/2;ring.scale.y=.85;
@@ -546,10 +550,10 @@ function animate(){
  flags.forEach((f,i)=>{f.rotation.y=Math.sin(t*2.5+i)*.22});
  if(carriage&&caravan&&pilgrimageCurve){let u=(t*.02)%1;let p=pilgrimageCurve.getPoint(u);carriage.position.set(p.x,p.y+.3,p.z);carriage.rotation.y=Math.atan2(pilgrimageCurve.getTangent(u).x,pilgrimageCurve.getTangent(u).z)}
  controls.autoRotate=rotating&&!finding&&!journey;controls.autoRotateSpeed=.65;
- renderer.render(scene,camera);
+ ModelRealism.updateMaterials();renderer.render(scene,camera);
 }
 
-function resize(){if(!camera||!renderer)return;camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio(lightMode?1:Math.min(devicePixelRatio,1.7));sizePlaceLabels()}
+function resize(){if(!camera||!renderer)return;camera.aspect=stage.clientWidth/stage.clientHeight;camera.updateProjectionMatrix();renderer.setSize(stage.clientWidth,stage.clientHeight);sizePlaceLabels()}
 
 function onPick(e){
  if(gameBusy)return;let r=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(mouse,camera);
@@ -681,7 +685,7 @@ $('btnOverview').onclick=()=>{finding?null:flyOverview()};function flyOverview()
 $('btnRotate').onclick=()=>{flightId++;rotating=!rotating;$('btnRotate').textContent=rotating?'Dừng xoay':'Tự xoay'};
 $('btnLabels').onclick=()=>{if(finding)return;labelsVisible=!labelsVisible;labels.forEach(l=>l.visible=labelsVisible);$('btnLabels').textContent=labelsVisible?'Ẩn nhãn':'Hiện nhãn'};
 if($('btnForest')) $('btnForest').onclick=()=>{treeGroup.visible=!treeGroup.visible;$('btnForest').textContent=treeGroup.visible?'Cây xanh':'Ẩn cây';$('btnForest').classList.toggle('primary',!treeGroup.visible);};
-$('btnLight').onclick=()=>{lightMode=!lightMode;renderer.shadowMap.enabled=!lightMode;renderer.setPixelRatio(lightMode?1:Math.min(devicePixelRatio,1.7));renderer.shadowMap.needsUpdate=true;$('btnLight').textContent=lightMode?'Chế độ thường':'Nhẹ'};
+$('btnLight').onclick=()=>{lightMode=!lightMode;ModelRealism.setQuality(scene,lightMode?'low':'auto');renderer.shadowMap.needsUpdate=true;$('btnLight').textContent=lightMode?'Chế độ thường':'Nhẹ'};
 $('btnFullscreen').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen?.();else document.exitFullscreen?.()};
 $('btnCaravan').onclick=()=>{caravan=!caravan;carriage.visible=caravan;$('btnCaravan').textContent=caravan?'🚩 Đoàn rước: Bật':'🚩 Đoàn rước: Tắt'};
 $('fontUp').onclick=()=>{let n=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs'))||17;document.documentElement.style.setProperty('--fs',Math.min(23,n+1)+'px')};

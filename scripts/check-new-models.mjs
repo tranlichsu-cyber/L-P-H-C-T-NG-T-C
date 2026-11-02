@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 const content=JSON.parse(fs.readFileSync('public/models/data/new-models.json','utf8'));
 const ids=['thap-dinh-duong','co-the-nguoi-tuan-hoan','trong-dong-dong-son','van-mieu-quoc-tu-giam','nha-rong-tay-nguyen','dia-dao-cu-chi'];
-const ctx2d=new Proxy({measureText:t=>({width:t.length*30}),createLinearGradient:()=>({addColorStop(){}})}, {get:(o,k)=>k in o?o[k]:()=>{}});
+const ctx2d=new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),measureText:t=>({width:t.length*30}),createLinearGradient:()=>({addColorStop(){}})}, {get:(o,k)=>k in o?o[k]:()=>{}});
 const context=vm.createContext({console,performance,devicePixelRatio:1,document:{body:{dataset:{model:ids[0]}},createElement:()=>({width:1024,height:1024,getContext:()=>ctx2d})}});context.window=context;
 vm.runInContext(fs.readFileSync('public/models/lib/three.min.js','utf8'),context);
 vm.runInContext(fs.readFileSync('public/models/lib/scene-realism.js','utf8'),context);

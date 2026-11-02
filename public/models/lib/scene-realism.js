@@ -66,5 +66,98 @@
   }
   for(let i=0;i<4;i++){const seat=new THREE.Mesh(new THREE.BoxGeometry(width*.68,.1,.26),wood);seat.position.set(0,-.05,(i-1.5)*length*.17);group.add(seat);}
  }
- global.ModelRealism={configure,material,mound,hull,limb,surface,delta,naturalize,particleTexture,fly,cameraControls,boatDetail,resizeCamera};
+ // Small deterministic surface atlases; no remote textures or per-object downloads.
+ const detailTextures=new Map(),waterMaps=new Set(),roundedBoxes=new Map(),qualityControllers=new WeakMap();
+ function detailTexture(kind,repeat=2){
+  const key=kind+':'+repeat;if(detailTextures.has(key))return detailTextures.get(key);
+  const c=document.createElement('canvas');c.width=c.height=256;const ctx=c.getContext('2d');
+  ctx.fillStyle='#eeeae1';ctx.fillRect(0,0,256,256);let seed=137;
+  const rnd=()=>{seed=(seed*16807)%2147483647;return (seed-1)/2147483646;};
+  for(let i=0;i<4200;i++){const x=rnd()*256,y=rnd()*256,v=Math.floor(140+rnd()*100);ctx.fillStyle=`rgba(${v},${v},${v},${kind==='tissue'?.09:.24})`;ctx.fillRect(x,y,1+rnd()*2,1+rnd()*2);}
+  if(kind==='wood'||kind==='thatch'||kind==='cloth'){
+   ctx.lineWidth=kind==='thatch'?1.5:.65;
+   for(let x=0;x<256;x+=kind==='cloth'?5:3){ctx.beginPath();ctx.strokeStyle=`rgba(60,49,34,${.07+rnd()*.16})`;for(let y=0;y<=256;y+=4){const px=x+(kind==='cloth'?0:Math.sin(y*.035+x)*1.8);y?ctx.lineTo(px,y):ctx.moveTo(px,y);}ctx.stroke();}
+   if(kind==='cloth')for(let y=0;y<256;y+=5){ctx.fillStyle='rgba(70,60,40,.14)';ctx.fillRect(0,y,256,1);}
+   if(kind==='wood'){ctx.strokeStyle='rgba(55,38,18,.19)';for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(40+i*60,70+(i%2)*115,3+i%2,13,0,0,Math.PI*2);ctx.stroke();}}
+  }
+  if(kind==='stone'||kind==='brick'||kind==='roof'){
+   const row=kind==='roof'?32:64;ctx.lineWidth=kind==='stone'?1.5:2;
+   for(let y=0;y<256;y+=row){ctx.fillStyle='rgba(40,30,20,.22)';ctx.fillRect(0,y,256,2);for(let x=(y/row%2)*32;x<256;x+=64){ctx.fillRect(x,y,2,row);ctx.fillStyle=`rgba(255,255,255,${.04+rnd()*.12})`;ctx.fillRect(x+3,y+3,59,row-5);ctx.fillStyle='rgba(40,30,20,.22)';}}
+  }
+  if(kind==='strata'){for(let y=0;y<256;y+=24){ctx.beginPath();ctx.strokeStyle='rgba(84,58,31,.24)';ctx.lineWidth=3;for(let x=0;x<=256;x+=8){const yy=y+Math.sin(x*.035+y)*2;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy);}ctx.stroke();}}
+  if(kind==='bronze'){for(let i=0;i<320;i++){ctx.fillStyle='rgba(47,110,91,.15)';ctx.beginPath();ctx.arc(rnd()*256,rnd()*256,.5+rnd()*3,0,Math.PI*2);ctx.fill();}}
+  if(kind==='scales'){for(let y=0;y<256;y+=12)for(let x=(y/12%2)*8;x<256;x+=16){ctx.beginPath();ctx.strokeStyle='rgba(55,63,36,.32)';ctx.ellipse(x,y,8,6,0,0,Math.PI);ctx.stroke();}}
+  if(kind==='leaf'){ctx.strokeStyle='rgba(55,85,42,.24)';ctx.lineWidth=1;for(let y=0;y<256;y+=28){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(256,y+90);ctx.stroke();}}
+  if(kind==='water'){
+   const image=ctx.createImageData(256,256);for(let y=0;y<256;y++)for(let x=0;x<256;x++){const n=(Math.sin(x*.2+Math.sin(y*.09)*2)+Math.cos(y*.17+x*.05)+Math.sin(x*.43-y*.31)*.2)*27+155,i=(y*256+x)*4;image.data[i]=image.data[i+1]=image.data[i+2]=n;image.data[i+3]=255;}ctx.putImageData(image,0,0);
+  }
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(repeat,repeat);t.anisotropy=4;
+  detailTextures.set(key,t);return t;
+ }
+ function detail(material,kind,repeat=2,bump=.04){
+  if(!material||!material.isMeshStandardMaterial)return material;
+  const t=detailTexture(kind,repeat);material.bumpMap=t;material.bumpScale=bump;
+  if(kind==='water'){material.metalness=.02;material.roughness=.24;material.flatShading=false;waterMaps.add(t);}
+  else if(!material.map){const key=kind+':'+repeat+':color';if(!detailTextures.has(key)){const color=t.clone();color.encoding=THREE.sRGBEncoding;detailTextures.set(key,color);}material.map=detailTextures.get(key);}
+  material.userData.surfaceKind=kind;material.needsUpdate=true;return material;
+ }
+ function updateMaterials(){
+  if(typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const time=performance.now()*.000025;waterMaps.forEach(t=>t.offset.set(time%1,time*.43%1));
+ }
+ function planarUV(geo,axes=['x','z'],scale=1){
+  const pos=geo.attributes.position,uv=[];for(let i=0;i<pos.count;i++)uv.push(pos['get'+axes[0].toUpperCase()](i)/scale,pos['get'+axes[1].toUpperCase()](i)/scale);geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));return geo;
+ }
+ function softenEdges(scene){
+  scene.traverse(o=>{
+   if(!o.isMesh||o.isInstancedMesh||o.geometry.type!=='BoxGeometry'||Array.isArray(o.material)||o.material.opacity===0)return;
+   const {width:w,height:h,depth:d}=o.geometry.parameters,min=Math.min(w,h,d),max=Math.max(w,h,d);
+   if(min<.16||max/min>35)return;const r=Math.min(.045,min*.12),key=[w,h,d,r].join(':');
+   if(!roundedBoxes.has(key)){
+    const shape=new THREE.Shape();shape.moveTo(-w/2+r,-h/2+r);shape.lineTo(w/2-r,-h/2+r);shape.lineTo(w/2-r,h/2-r);shape.lineTo(-w/2+r,h/2-r);shape.closePath();
+    const geo=new THREE.ExtrudeGeometry(shape,{depth:d-2*r,bevelEnabled:true,bevelSize:r,bevelThickness:r,bevelSegments:2,steps:1,curveSegments:1});geo.translate(0,0,-d/2+r);geo.computeVertexNormals();roundedBoxes.set(key,geo);
+   }
+   const old=o.geometry;o.geometry=roundedBoxes.get(key);old.dispose();
+  });
+ }
+ function finish(scene,renderer,{model='model'}={}){
+  if(scene.userData.realismFinished)return;scene.userData.realismFinished=true;scene.userData.realismModel=model;
+  softenEdges(scene);
+  const low=typeof navigator!=='undefined'&&navigator.hardwareConcurrency<=4||typeof matchMedia==='function'&&matchMedia('(max-width:768px)').matches;
+  let environmentTarget=null;
+  // A local sky light probe gives non-metal surfaces soft environmental reflections.
+  try { if(!low&&THREE.PMREMGenerator){
+   const canvas=document.createElement('canvas');canvas.width=256;canvas.height=128;const ctx=canvas.getContext('2d');
+   const sky=ctx.createLinearGradient(0,0,0,128);sky.addColorStop(0,'#6d9fbf');sky.addColorStop(.48,'#dce7e8');sky.addColorStop(.53,'#c3c4aa');sky.addColorStop(1,'#626b51');ctx.fillStyle=sky;ctx.fillRect(0,0,256,128);ctx.fillStyle='#fff4d6';ctx.fillRect(180,32,9,7);
+   const source=new THREE.CanvasTexture(canvas);source.encoding=THREE.sRGBEncoding;source.mapping=THREE.EquirectangularReflectionMapping;
+   const generator=new THREE.PMREMGenerator(renderer);environmentTarget=generator.fromEquirectangular(source);scene.environment=environmentTarget.texture;source.dispose();generator.dispose();
+  }} catch(error) { console.warn('Không tạo được ánh sáng môi trường; tiếp tục với đèn của mô hình.',error); }
+  if(typeof document==='undefined'||!document.createElement)return;
+  const panel=document.createElement('label');panel.className='model-quality';panel.textContent='Chất lượng hình ảnh ';const select=document.createElement('select');select.setAttribute('aria-label','Chất lượng hình ảnh');
+  for(const [value,text] of [['auto','Tự động'],['low','Tiết kiệm'],['high','Chi tiết']]){const option=document.createElement('option');option.value=value;option.textContent=text;select.appendChild(option);}
+  function apply(){const high=select.value==='high',autoLow=(typeof navigator!=='undefined'&&navigator.hardwareConcurrency<=4)||matchMedia('(max-width:768px)').matches,economy=select.value==='low'||select.value==='auto'&&autoLow;renderer.setPixelRatio(Math.min(typeof devicePixelRatio==='number'?devicePixelRatio:1,economy?1:high?2:1.5));renderer.shadowMap.enabled=!economy;scene.traverse(o=>{if(o.isDirectionalLight){o.castShadow=!economy;o.shadow.bias=-.0003;o.shadow.normalBias=.035;}});scene.userData.quality=select.value;}
+  select.addEventListener('change',apply);qualityControllers.set(scene,value=>{select.value=value;apply();});panel.appendChild(select);document.body.appendChild(panel);window.addEventListener('resize',apply);apply();
+  window.addEventListener('pagehide',event=>{if(event?.persisted)return;window.removeEventListener('resize',apply);panel.remove();environmentTarget?.dispose();qualityControllers.delete(scene);detailTextures.forEach(t=>t.dispose());roundedBoxes.forEach(g=>g.dispose());});
+ }
+
+ function setQuality(scene,value){if(['auto','low','high'].includes(value))qualityControllers.get(scene)?.(value);}
+ function forest(parent,samples){
+  const g=new THREE.Group();g.name='CanopyForest';parent.add(g);
+  const trunk=detail(material(0x71543a),'wood',2,.035),foliage=detail(material(0x547044),'leaf',2,.025);
+  const trunks=new THREE.InstancedMesh(new THREE.CylinderGeometry(.15,.24,2.2,7),trunk,samples.length);
+  const canopies=new THREE.InstancedMesh(new THREE.SphereGeometry(1,10,7),foliage,samples.length*7),dummy=new THREE.Object3D();let i=0;
+  for(const [x,y,z,scale=1] of samples){dummy.position.set(x,y+1.1*scale,z);dummy.scale.set(scale,scale,scale);dummy.rotation.set(0,0,0);dummy.updateMatrix();trunks.setMatrixAt(i,dummy.matrix);
+   for(let k=0;k<7;k++){const a=k*2.399;dummy.position.set(x+Math.cos(a)*.6*scale,y+(2.5+(k%3)*.35)*scale,z+Math.sin(a)*.6*scale);dummy.scale.set((.95+k%2*.2)*scale,(.7+k%3*.09)*scale,.85*scale);dummy.rotation.y=a;dummy.updateMatrix();canopies.setMatrixAt(i*7+k,dummy.matrix);canopies.setColorAt(i*7+k,new THREE.Color().setHSL(.24+(k%3)*.008,.22,.7+(k%3)*.05));}i++;
+  }
+  for(const m of [trunks,canopies]){m.frustumCulled=false;m.castShadow=true;m.receiveShadow=true;g.add(m);}g.userData.treeCount=samples.length;return g;
+ }
+ function cropRows(parent,{x=0,z=0,width=10,depth=10,count=200,y=0,color=0x80934e,scale=1}={}){
+  const vertices=[],uv=[],indices=[];for(let i=0;i<=6;i++){const t=i/6,w=Math.sin(Math.PI*t)*.12;vertices.push(-w,.9*t,.27*t*t,w,.9*t,.27*t*t);uv.push(0,t,1,t);if(i<6){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2);}}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeVertexNormals();
+  const m=detail(material(color),'leaf',1,.02);m.side=THREE.DoubleSide;const crop=new THREE.InstancedMesh(geo,m,count),dummy=new THREE.Object3D();
+  const cols=Math.ceil(Math.sqrt(count*width/depth)),rows=Math.ceil(count/cols);
+  for(let i=0;i<count;i++){dummy.position.set(x+((i%cols)/cols-.5)*width,y,z+(Math.floor(i/cols)/rows-.5)*depth);dummy.rotation.set(0,i*2.399,Math.sin(i*3.1)*.12);dummy.scale.setScalar(scale*(.8+(i%7)*.06));dummy.updateMatrix();crop.setMatrixAt(i,dummy.matrix);}crop.receiveShadow=true;crop.frustumCulled=false;crop.name='CropRows';parent.add(crop);return crop;
+ }
+
+ global.ModelRealism={setQuality,forest,cropRows,detailTexture,detail,planarUV,softenEdges,finish,updateMaterials,configure,material,mound,hull,limb,surface,delta,naturalize,particleTexture,fly,cameraControls,boatDetail,resizeCamera};
 })(window);

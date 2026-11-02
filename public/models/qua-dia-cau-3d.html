@@ -341,7 +341,7 @@ header {
 </script>
 <script src="lib/scene-realism.js"></script>
 <link rel="stylesheet" href="lib/scene-realism.css">
-</head>
+<link rel="stylesheet" href="lib/realism-quality.css"></head>
 <body>
 <div id="app">
   <header>
@@ -567,6 +567,7 @@ async function init() {
 
   // Loop
   ModelRealism.naturalize(scene);
+  ModelRealism.finish(scene,renderer,{model:"qua-dia-cau"});
   animate();
 }
 
@@ -622,8 +623,8 @@ async function createGlobeAndStand() {
   const earthGeo = new THREE.SphereGeometry(radius, 64, 64);
   const earthMat = new THREE.MeshStandardMaterial({
     map: fallbackTexture,
-    roughness: 0.55,
-    metalness: 0.1
+    roughness: 0.85,
+    metalness: 0.0
   });
   earthMesh = new THREE.Mesh(earthGeo, earthMat);
   globeGroup.add(earthMesh);
@@ -634,7 +635,7 @@ async function createGlobeAndStand() {
   texLoader.load(
     'textures/earth-blue-marble.jpg',
     (tex) => {
-      tex.encoding=THREE.sRGBEncoding;fallbackTexture.dispose();
+      tex.encoding=THREE.sRGBEncoding;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());fallbackTexture.dispose();
       earthMat.map = tex;
       earthMat.needsUpdate = true;
     },
@@ -647,7 +648,7 @@ async function createGlobeAndStand() {
   const cloudsMat = new THREE.MeshStandardMaterial({
     transparent: true,
     opacity: 0.36,
-    blending: THREE.AdditiveBlending
+    depthWrite: false
   });
   texLoader.load(
     'textures/earth-clouds.png',
@@ -663,11 +664,11 @@ async function createGlobeAndStand() {
 
   // Glowing Atmosphere
   const atmosGeo = new THREE.SphereGeometry(radius + 0.35, 32, 32);
-  const atmosMat = new THREE.MeshBasicMaterial({
-    color: 0x818cf8,
-    transparent: true,
-    opacity: 0.16,
-    side: THREE.BackSide
+  const atmosMat = new THREE.ShaderMaterial({
+    transparent:true,depthWrite:false,side:THREE.BackSide,
+    uniforms:{glowColor:{value:new THREE.Color(0x7caecc)}},
+    vertexShader:'varying vec3 vNormal; varying vec3 vView; void main(){vec4 mv=modelViewMatrix*vec4(position,1.0);vNormal=normalize(normalMatrix*normal);vView=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}',
+    fragmentShader:'uniform vec3 glowColor; varying vec3 vNormal; varying vec3 vView; void main(){float rim=pow(1.0-abs(dot(normalize(vNormal),normalize(vView))),3.0);gl_FragColor=vec4(glowColor,rim*0.35);}'
   });
   const atmos = new THREE.Mesh(atmosGeo, atmosMat);
   globeGroup.add(atmos);
@@ -898,7 +899,7 @@ function animate() {
   }
 
   if (controls) controls.update();
-  renderer.render(scene, camera);
+  ModelRealism.updateMaterials();renderer.render(scene,camera);
   if(gridMesh)gridMesh.rotation.y=earthMesh.rotation.y;
   updateMarkers();
 }
