@@ -360,7 +360,7 @@ header {
 </script>
 <script src="lib/scene-realism.js"></script>
 <link rel="stylesheet" href="lib/scene-realism.css">
-</head>
+<link rel="stylesheet" href="lib/realism-quality.css"></head>
 <body>
 <div id="app">
   <header>
@@ -561,6 +561,7 @@ function init() {
 
   selectStation(0);
   ModelRealism.naturalize(scene);
+  ModelRealism.finish(scene,renderer,{model:"de-song-hong"});
   animate();
 }
 
@@ -595,6 +596,7 @@ function createCrossSectionTerrain() {
     roughness: 0.9,
     flatShading: true
   });
+  ModelRealism.detail(dikeMat,'soil',3,.035);
   const dike = new THREE.Mesh(dikeGeo, dikeMat);
   dike.position.set(0, 0, -35);
   dike.receiveShadow = true;
@@ -609,6 +611,7 @@ function createCrossSectionTerrain() {
   // Top road of dike (Mặt đê trải nhựa/bê tông)
   const roadGeo = new THREE.BoxGeometry(7.5, 0.2, 70);
   const roadMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.7 });
+  ModelRealism.detail(roadMat,'stone',3,.035);
   const road = new THREE.Mesh(roadGeo, roadMat);
   road.position.set(0, 9.1, 0);
   terrainGroup.add(road);
@@ -641,6 +644,7 @@ function createCrossSectionTerrain() {
   // 2. Riverbank beach (Bãi bồi trồng màu ngoài đê)
   const beachGeo = new THREE.BoxGeometry(20, 2, 70);
   const beachMat = new THREE.MeshStandardMaterial({ color: 0x94734f, roughness: 0.9 });
+  ModelRealism.detail(beachMat,'soil',3,.035);
   const beach = new THREE.Mesh(beachGeo, beachMat);
   beach.position.set(-22, -1, 0);
   beach.receiveShadow = true;
@@ -658,7 +662,8 @@ function createCrossSectionTerrain() {
 
   // 3. Protected inland plain (Vùng đồng bằng trong đê - trũng thấp)
   const plainGeo = new THREE.BoxGeometry(32, 2, 70);
-  const plainMat = new THREE.MeshStandardMaterial({ color: 0xb79f58, roughness: 0.8 }); // Golden rice fields
+  const plainMat = new THREE.MeshStandardMaterial({ color: 0xb79f58, roughness: 0.8 });
+  ModelRealism.detail(plainMat,'leaf',3,.035); // Golden rice fields
   const plain = new THREE.Mesh(plainGeo, plainMat);
   plain.position.set(28, -1, 0);
   plain.receiveShadow = true;
@@ -677,6 +682,7 @@ function createRiver() {
     transparent: true,
     opacity: 0.92
   });
+  ModelRealism.detail(riverMat,'water',4,.12);
   riverMesh = new THREE.Mesh(riverGeo, riverMat);
   riverMesh.rotation.x = -Math.PI / 2;
   riverMesh.position.set(-42, waterLevel, 0);
@@ -688,7 +694,7 @@ function createRiver() {
     ModelRealism.hull(6,2,.7),
     new THREE.MeshStandardMaterial({ color: 0x78350f })
   );
-  boatGroup.add(boatHull);
+  ModelRealism.detail(boatHull.material,'wood',3,.04);boatGroup.add(boatHull);
   ModelRealism.boatDetail(boatGroup,6,2);
   const boatSail = new THREE.Mesh(
     new THREE.PlaneGeometry(2.2,2.5,8,8),
@@ -697,7 +703,7 @@ function createRiver() {
   const cloth=boatSail.geometry.attributes.position;for(let i=0;i<cloth.count;i++)cloth.setZ(i,.2*Math.cos(cloth.getX(i)*1.3));boatSail.geometry.computeVertexNormals();
   ModelRealism.limb(boatGroup,[0,0,0],[0,3.3,0],.05,ModelRealism.material(0x61482f));
   boatSail.position.y = 1.8;
-  boatGroup.add(boatSail);
+  ModelRealism.detail(boatSail.material,'cloth',2,.025);boatGroup.add(boatSail);
 
   boatGroup.position.set(-40, waterLevel + 0.4, 5);
   riverBoat=boatGroup;
@@ -724,7 +730,7 @@ function createVillageAndFields() {
     );
     roof.position.set(0,2.2,-1.9);
 
-    h.add(roof);
+    ModelRealism.detail(roof.material,'roof',2,.035);h.add(roof);
     const door=new THREE.Mesh(new THREE.BoxGeometry(.7,1.5,.08),ModelRealism.material(0x644b35));door.position.set(0,.75,1.55);h.add(door);
     for(const x of [-1.1,1.1]){const window=new THREE.Mesh(new THREE.BoxGeometry(.6,.65,.08),ModelRealism.material(0x46555a));window.position.set(x,1.3,1.55);h.add(window);}
 
@@ -750,6 +756,8 @@ function createVillageAndFields() {
     }
   }
 
+  ModelRealism.cropRows(villageGroup,{x:22,z:-25,width:16,depth:10,count:260,y:.03,color:0xa4984e,scale:1.2});
+  ModelRealism.cropRows(villageGroup,{x:37,z:7,width:10,depth:15,count:220,y:.03,color:0x8d9a46,scale:1.1});
   scene.add(villageGroup);
 }
 
@@ -912,7 +920,7 @@ function animate() {
   }
 
   if (controls) controls.update();
-  renderer.render(scene, camera);
+  ModelRealism.updateMaterials();renderer.render(scene,camera);
   updateMarkers();
 }
 

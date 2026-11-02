@@ -28,7 +28,13 @@ jobs:
         run: npm run lint
 
       - name: Check model learning and render lifecycle
-        run: node scripts/check-model-learning.mjs
+        run: |
+          node scripts/check-model-learning.mjs
+          node scripts/check-realism-upgrade.mjs
+          node scripts/check-new-models.mjs
+          node scripts/check-model-realism.mjs
+          node scripts/check-hung-temple-layout.mjs
+          node scripts/check-hung-temple-tour.mjs
 
       - name: Build
         run: npm run build

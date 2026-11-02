@@ -337,7 +337,7 @@ header {
 </script>
 <script src="lib/scene-realism.js"></script>
 <link rel="stylesheet" href="lib/scene-realism.css">
-</head>
+<link rel="stylesheet" href="lib/realism-quality.css"></head>
 
 <body>
 <div id="app">
@@ -514,6 +514,7 @@ const NODES_DATA = [
 
 let scene, camera, renderer, controls;
 let energyCurves = [];
+const organismMotion=[];
 let energyParticles = [];
 let nodeMeshes = [];
 let sunMesh, sunLight;
@@ -578,6 +579,7 @@ function init() {
 
   // Start Animation Loop
   ModelRealism.naturalize(scene);
+  ModelRealism.finish(scene,renderer,{model:"chuoi-thuc-an"});
   animate();
 }
 
@@ -624,6 +626,7 @@ function createEnvironment() {
     roughness: 0.9,
     metalness: 0.1
   });
+  ModelRealism.detail(islandMat,'soil',3,.035);
   const island = new THREE.Mesh(islandGeo, islandMat);
   island.position.y = -2;
   island.receiveShadow = true;
@@ -635,10 +638,13 @@ function createEnvironment() {
     color: 0x2d6a4f,
     roughness: 0.8
   });
+  ModelRealism.detail(grassMat,'leaf',3,.035);
   const grass = new THREE.Mesh(grassGeo, grassMat);
   grass.position.y = 0.2;
   grass.receiveShadow = true;
   scene.add(grass);
+
+  ModelRealism.cropRows(scene,{x:-30,z:12,width:12,depth:18,count:180,y:.52,color:0x6b8b42,scale:1.7});
 
   // Small rolling mounds and stones
   const moundMat = new THREE.MeshStandardMaterial({ color: 0x40916c, roughness: 0.9 });
@@ -718,6 +724,7 @@ function createFoodChainNodes() {
       const bodyGeo = new THREE.ConeGeometry(0.8, 4, 8);
       bodyGeo.rotateX(Math.PI / 2);
       const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8b9d43, roughness: 0.4 });
+  ModelRealism.detail(bodyMat,'leaf',3,.035);
       const body = new THREE.Mesh(bodyGeo, bodyMat);
       body.position.set(0, 3.2, 0);
       group.add(body);
@@ -752,6 +759,7 @@ function createFoodChainNodes() {
       const frogGeo = new THREE.SphereGeometry(1.4, 16, 12);
       frogGeo.scale(1.2, 0.8, 1);
       const frogMat = new THREE.MeshStandardMaterial({ color: 0x527447, roughness: 0.4 });
+  ModelRealism.detail(frogMat,'tissue',3,.035);
       const frog = new THREE.Mesh(frogGeo, frogMat);
       frog.position.set(0, 3.2, 0);
       group.add(frog);
@@ -782,6 +790,7 @@ function createFoodChainNodes() {
       ]);
       const snakeGeo = new THREE.TubeGeometry(curve, 32, 0.45, 8, false);
       const snakeMat = new THREE.MeshStandardMaterial({ color: 0x74654a, roughness: 0.5 });
+  ModelRealism.detail(snakeMat,'scales',3,.035);
       const snake = new THREE.Mesh(snakeGeo, snakeMat);
       group.add(snake);
 
@@ -806,6 +815,7 @@ function createFoodChainNodes() {
 
         const capGeo = new THREE.SphereGeometry(0.9, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2);
         const capMat = new THREE.MeshStandardMaterial({ color: 0x8d6948, roughness: 0.3 });
+  ModelRealism.detail(capMat,'soil',3,.035);
         const cap = new THREE.Mesh(capGeo, capMat);
         cap.position.set(stem.position.x, 4.1, stem.position.z);
         group.add(cap);
@@ -1103,13 +1113,16 @@ function animate() {
     });
   }
 
+  const gentleMotion=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+  organismMotion.forEach(({mesh,side})=>{mesh.rotation.z=gentleMotion?side*(.03+Math.sin(time*.9)*.025):0;});
+
   // Display bases are stationary; animals do not levitate above the ground.
 
   // Controls update
   if (controls) controls.update();
 
   // Render scene
-  renderer.render(scene, camera);
+  ModelRealism.updateMaterials();renderer.render(scene,camera);
 
   // Update 2D Screen Markers
   updateMarkersPosition();

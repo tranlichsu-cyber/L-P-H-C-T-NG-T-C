@@ -340,7 +340,7 @@ header {
 </script>
 <script src="lib/scene-realism.js"></script>
 <link rel="stylesheet" href="lib/scene-realism.css">
-</head>
+<link rel="stylesheet" href="lib/realism-quality.css"></head>
 <body>
 <div id="app">
   <header>
@@ -562,6 +562,7 @@ function init() {
 
   // Animation Loop
   ModelRealism.naturalize(scene);
+  ModelRealism.finish(scene,renderer,{model:"vong-tuan-hoan-nuoc"});
   animate();
 }
 
@@ -606,10 +607,11 @@ function createOcean() {
     color: 0x0284c7,
     roughness: 0.2,
     metalness: 0.6,
-    flatShading: true,
+    flatShading: false,
     transparent: true,
     opacity: 0.88
   });
+  ModelRealism.detail(oceanMat,'water',4,.12);
   oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
   oceanMesh.rotation.x = -Math.PI / 2;
   oceanMesh.position.set(-45, 0, 0);
@@ -621,12 +623,13 @@ function createTerrainAndMountains() {
   const terrainGroup = new THREE.Group();
 
   // Mountain range on the right side
-  const mtnGeo = ModelRealism.mound(28,44);
+  const mtnGeo = ModelRealism.planarUV(ModelRealism.mound(28,44),['x','z'],18);
   const mtnMat = new THREE.MeshStandardMaterial({
     color: 0x334155,
     roughness: 0.8,
-    flatShading: true
+    flatShading: false
   });
+  ModelRealism.detail(mtnMat,'stone',3,.035);
   const peak = new THREE.Mesh(mtnGeo, mtnMat);
   peak.position.set(45,0,-15);
   peak.castShadow = true;
@@ -634,12 +637,13 @@ function createTerrainAndMountains() {
   terrainGroup.add(peak);
 
   // Secondary hill
-  const hillGeo = ModelRealism.mound(20,27);
+  const hillGeo = ModelRealism.planarUV(ModelRealism.mound(20,27),['x','z'],16);
   const hillMat = new THREE.MeshStandardMaterial({
     color: 0x166534,
     roughness: 0.9,
-    flatShading: true
+    flatShading: false
   });
+  ModelRealism.detail(hillMat,'leaf',3,.035);
   const hill = new THREE.Mesh(hillGeo, hillMat);
   hill.position.set(30,0,20);
   hill.castShadow = true;
@@ -651,6 +655,7 @@ function createTerrainAndMountains() {
     color: 0x466c3c,
     roughness: 0.9
   });
+  ModelRealism.detail(plainMat,'soil',3,.035);
   const plain = new THREE.Mesh(plainGeo, plainMat);
   plain.position.set(15, -2, 0);
   plain.receiveShadow = true;
@@ -669,31 +674,16 @@ function createTerrainAndMountains() {
     roughness: 0.1,
     metalness: 0.02
   });
+  ModelRealism.detail(riverMat,'water',4,.12);
   const river = new THREE.Mesh(riverTubeGeo, riverMat);
   river.scale.set(1, 0.3, 1);
   river.position.y = 0.1;
   terrainGroup.add(river);
 
-  // Pine trees on hills
-  for (let i = 0; i < 24; i++) {
-    const treeTrunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.3, 0.5, 2),
-      new THREE.MeshStandardMaterial({ color: 0x78350f })
-    );
-    const treeFoliage = new THREE.Mesh(
-      new THREE.ConeGeometry(2, 4, 5),
-      new THREE.MeshStandardMaterial({ color: 0x14532d, flatShading: true })
-    );
-    treeFoliage.position.y = 2.5;
-    const tree = new THREE.Group();
-    tree.add(treeTrunk);
-    tree.add(treeFoliage);
-
-    const tx = 10 + Math.random() * 35;
-    const tz = -35 + Math.random() * 70;
-    tree.position.set(tx,waterLandHeight(tx,tz),tz);
-    terrainGroup.add(tree);
-  }
+  // Batched broadleaf trees follow the same land surface as the rain.
+  const forestPoints=[];
+  for(let i=0;i<36;i++){const tx=12+(i*13.7)%35,tz=-32+(i*23.1)%65;forestPoints.push([tx,waterLandHeight(tx,tz),tz,.8+(i%4)*.16]);}
+  ModelRealism.forest(terrainGroup,forestPoints);
 
   scene.add(terrainGroup);
 }
@@ -707,6 +697,7 @@ function createUndergroundAquifer() {
     transparent: true,
     opacity: 0.75
   });
+  ModelRealism.detail(strataMat,'soil',3,.035);
   const strata = new THREE.Mesh(strataGeo, strataMat);
   strata.position.set(15, -12, 0);
   scene.add(strata);
@@ -1057,7 +1048,7 @@ function animate() {
   if (controls) controls.update();
 
   // Render 3D Scene
-  renderer.render(scene, camera);
+  ModelRealism.updateMaterials();renderer.render(scene,camera);
 
   // Update HTML Labels 2D Projection
   updateMarkersPosition();
