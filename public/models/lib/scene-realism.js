@@ -103,7 +103,7 @@
  }
  function updateMaterials(){
   if(typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  const time=performance.now()*.000025;waterMaps.forEach(t=>t.offset.set(time%1,time*.43%1));
+  const time=simulationTime()*.025;waterMaps.forEach(t=>t.offset.set(time%1,time*.43%1));
  }
  function planarUV(geo,axes=['x','z'],scale=1){
   const pos=geo.attributes.position,uv=[];for(let i=0;i<pos.count;i++)uv.push(pos['get'+axes[0].toUpperCase()](i)/scale,pos['get'+axes[1].toUpperCase()](i)/scale);geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));return geo;
@@ -120,7 +120,52 @@
    const old=o.geometry;o.geometry=roundedBoxes.get(key);old.dispose();
   });
  }
- function finish(scene,renderer,{model='model'}={}){
+ // Inspection controls do not alter lesson content or the underlying model geometry.
+ const motionListeners=new Set();let motionPaused=false,modelTime=0,modelTick=performance.now();
+ function simulationTime(){const now=performance.now();if(!motionPaused)modelTime+=Math.max(0,(now-modelTick)/1000);modelTick=now;return modelTime;}
+ function setMotionPaused(value){simulationTime();motionPaused=Boolean(value);motionListeners.forEach(fn=>fn(motionPaused));}
+ function isMotionPaused(){return motionPaused;}
+ function pausedFrame(renderer,scene,camera,controls,refresh){
+  if(!motionPaused)return false;simulationTime();delta('simulation');
+  if(controls){const auto=controls.autoRotate;controls.autoRotate=false;controls.update();controls.autoRotate=auto;}
+  renderer.render(scene,camera);if(refresh)refresh();return true;
+ }
+ function inspectionPose(origin,target,view){
+  const distance=Math.max(.1,origin.distanceTo(target));
+  const directions={top:[0,1,.001],front:[0,.22,1],side:[1,.22,0]};
+  if(view==='overview')return {position:origin.clone(),target:target.clone()};
+  if(!directions[view])throw new Error('Unknown inspection view');
+  return {position:new THREE.Vector3(...directions[view]).normalize().multiplyScalar(distance).add(target),target:target.clone()};
+ }
+ function roofTransparency(scene){
+  const meshes=[];scene.traverse(o=>{if(!o.isMesh)return;for(let p=o;p;p=p.parent){if(p.userData.inspectionRole==='roof'){meshes.push(o);break;}}});
+  const originals=new Map(),copies=new Map();let active=false;
+  function set(enabled){
+   if(active===enabled)return;active=enabled;
+   if(enabled){for(const mesh of meshes){originals.set(mesh,mesh.material);const make=material=>{if(!copies.has(material)){const copy=material.clone();copy.transparent=true;copy.opacity=.18;copy.depthWrite=false;copy.needsUpdate=true;copies.set(material,copy);}return copies.get(material);};mesh.material=Array.isArray(mesh.material)?mesh.material.map(make):make(mesh.material);}}
+   else{originals.forEach((material,mesh)=>{mesh.material=material;});originals.clear();copies.forEach(material=>material.dispose());copies.clear();}
+  }
+  return {count:meshes.length,set,isActive:()=>active,dispose:()=>set(false)};
+ }
+ function installInspection(scene,renderer,camera,controls,onInspect){
+  const origin=camera.position.clone(),target=controls.target.clone(),roof=roofTransparency(scene);
+  const panel=document.createElement('details');panel.className='model-inspection';
+  const summary=document.createElement('summary');summary.textContent='Góc nhìn & chuyển động';panel.appendChild(summary);
+  const body=document.createElement('div');body.className='inspection-body';panel.appendChild(body);
+  const views=document.createElement('div');views.className='inspection-views';views.setAttribute('role','group');views.setAttribute('aria-label','Góc quan sát');body.appendChild(views);
+  for(const [id,label] of [['overview','Góc ban đầu'],['top','Từ trên'],['front','Phía trước'],['side','Bên cạnh']]){
+   const button=document.createElement('button');button.type='button';button.textContent=label;button.onclick=()=>{if(onInspect)onInspect();const pose=inspectionPose(origin,target,id);controls.autoRotate=false;flights.set(camera,{});camera.position.copy(pose.position);controls.target.copy(pose.target);controls.update();};views.appendChild(button);
+  }
+  const pause=document.createElement('button');pause.type='button';pause.title='Dừng chuyển động của mô hình; vẫn có thể xoay và đổi góc nhìn. Chuyến tham quan có nút tạm dừng riêng.';
+  const syncPause=paused=>{pause.textContent=paused?'Tiếp tục chuyển động':'Dừng chuyển động';pause.setAttribute('aria-pressed',String(paused));};syncPause(motionPaused);motionListeners.add(syncPause);pause.onclick=()=>setMotionPaused(!motionPaused);body.appendChild(pause);
+  if(roof.count){const toggle=document.createElement('button');toggle.type='button';toggle.textContent='Mái trong suốt';toggle.setAttribute('aria-pressed','false');toggle.onclick=()=>{roof.set(!roof.isActive());toggle.setAttribute('aria-pressed',String(roof.isActive()));};body.appendChild(toggle);}
+  const note=document.createElement('p');note.textContent='Kéo để xoay; dùng con lăn hoặc hai ngón tay để thu phóng. Có thể đổi góc khi chuyển động đang dừng.';body.appendChild(note);document.body.appendChild(panel);
+  const resetClock=()=>{modelTick=performance.now();};document.addEventListener('visibilitychange',resetClock);
+  const cleanup=event=>{if(event?.persisted)return;roof.dispose();motionListeners.delete(syncPause);document.removeEventListener('visibilitychange',resetClock);panel.remove();};window.addEventListener('pagehide',cleanup);
+  return {roof,dispose:()=>{cleanup();window.removeEventListener('pagehide',cleanup);}};
+ }
+
+ function finish(scene,renderer,{model='model',camera,controls,onInspect}={}){
   if(scene.userData.realismFinished)return;scene.userData.realismFinished=true;scene.userData.realismModel=model;
   softenEdges(scene);
   const low=typeof navigator!=='undefined'&&navigator.hardwareConcurrency<=4||typeof matchMedia==='function'&&matchMedia('(max-width:768px)').matches;
@@ -136,7 +181,7 @@
   const panel=document.createElement('label');panel.className='model-quality';panel.textContent='Chất lượng hình ảnh ';const select=document.createElement('select');select.setAttribute('aria-label','Chất lượng hình ảnh');
   for(const [value,text] of [['auto','Tự động'],['low','Tiết kiệm'],['high','Chi tiết']]){const option=document.createElement('option');option.value=value;option.textContent=text;select.appendChild(option);}
   function apply(){const high=select.value==='high',autoLow=(typeof navigator!=='undefined'&&navigator.hardwareConcurrency<=4)||matchMedia('(max-width:768px)').matches,economy=select.value==='low'||select.value==='auto'&&autoLow;renderer.setPixelRatio(Math.min(typeof devicePixelRatio==='number'?devicePixelRatio:1,economy?1:high?2:1.5));renderer.shadowMap.enabled=!economy;scene.traverse(o=>{if(o.isDirectionalLight){o.castShadow=!economy;o.shadow.bias=-.0003;o.shadow.normalBias=.035;}});scene.userData.quality=select.value;}
-  select.addEventListener('change',apply);qualityControllers.set(scene,value=>{select.value=value;apply();});panel.appendChild(select);document.body.appendChild(panel);window.addEventListener('resize',apply);apply();
+  select.addEventListener('change',apply);qualityControllers.set(scene,value=>{select.value=value;apply();});panel.appendChild(select);document.body.appendChild(panel);window.addEventListener('resize',apply);apply();if(camera&&controls)installInspection(scene,renderer,camera,controls,onInspect);
   window.addEventListener('pagehide',event=>{if(event?.persisted)return;window.removeEventListener('resize',apply);panel.remove();environmentTarget?.dispose();qualityControllers.delete(scene);detailTextures.forEach(t=>t.dispose());roundedBoxes.forEach(g=>g.dispose());});
  }
 
@@ -159,5 +204,5 @@
   for(let i=0;i<count;i++){dummy.position.set(x+((i%cols)/cols-.5)*width,y,z+(Math.floor(i/cols)/rows-.5)*depth);dummy.rotation.set(0,i*2.399,Math.sin(i*3.1)*.12);dummy.scale.setScalar(scale*(.8+(i%7)*.06));dummy.updateMatrix();crop.setMatrixAt(i,dummy.matrix);}crop.receiveShadow=true;crop.frustumCulled=false;crop.name='CropRows';parent.add(crop);return crop;
  }
 
- global.ModelRealism={setQuality,forest,cropRows,detailTexture,detail,planarUV,softenEdges,finish,updateMaterials,configure,material,mound,hull,limb,surface,delta,naturalize,particleTexture,fly,cameraControls,boatDetail,resizeCamera};
+ global.ModelRealism={simulationTime,setMotionPaused,isMotionPaused,pausedFrame,inspectionPose,roofTransparency,installInspection,setQuality,forest,cropRows,detailTexture,detail,planarUV,softenEdges,finish,updateMaterials,configure,material,mound,hull,limb,surface,delta,naturalize,particleTexture,fly,cameraControls,boatDetail,resizeCamera};
 })(window);

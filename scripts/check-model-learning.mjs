@@ -29,7 +29,7 @@ const context = vm.createContext({
   THREE: { Vector3: class { constructor() {} } },
   document: { hidden: false, addEventListener: (name, fn) => listeners.set(name, fn) },
   window: { addEventListener() {} },
-  ModelRealism: { updateMaterials() {}, delta: () => 0.016 },
+  ModelRealism: { pausedFrame:()=>false, simulationTime:()=>0, updateMaterials() {}, delta: () => 0.016 },
   requestAnimationFrame: fn => { const id = ++nextId; frames.set(id, fn); return id; },
   cancelAnimationFrame: id => frames.delete(id),
 });

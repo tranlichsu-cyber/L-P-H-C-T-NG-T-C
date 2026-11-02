@@ -338,9 +338,9 @@ header {
     document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
   }
 </script>
-<script src="lib/scene-realism.js?v=20261102-realism1"></script>
+<script src="lib/scene-realism.js?v=20261102-inspection1"></script>
 <link rel="stylesheet" href="lib/scene-realism.css">
-<link rel="stylesheet" href="lib/realism-quality.css?v=20261102-realism1"></head>
+<link rel="stylesheet" href="lib/realism-quality.css?v=20261102-inspection1"></head>
 <body>
 <div id="app">
   <header>
@@ -562,7 +562,7 @@ function init() {
 
   // Animation Loop
   ModelRealism.naturalize(scene);
-  ModelRealism.finish(scene,renderer,{model:"vong-tuan-hoan-nuoc"});
+  ModelRealism.finish(scene,renderer,{model:"vong-tuan-hoan-nuoc",camera,controls,onInspect:()=>{autoRotate=false;document.getElementById('btn-rotate-auto').classList.remove('active');}});
   animate();
 }
 
@@ -992,8 +992,9 @@ function animate() {
   animationFrameId = null;
   if (document.hidden) return;
   animationFrameId = requestAnimationFrame(animate);
+  if(ModelRealism.pausedFrame(renderer,scene,camera,controls,updateMarkersPosition))return;
 
-  const time = Date.now() * 0.001;
+  const time = ModelRealism.simulationTime();
   const dt=ModelRealism.delta('simulation');
 
   // Ocean wave simulation
