@@ -23,5 +23,5 @@ const inspector=R.installInspection(scene,renderer,camera,controls,()=>manualVie
 views.children[1].onclick();assert.equal(manualViews,1);assert.equal(controls.autoRotate,false);assert(camera.position.y>target.y);assert(Math.abs(camera.position.z-target.z)<.1);
 const pause=body.children[1];pause.onclick();assert.equal(R.isMotionPaused(),true);assert.equal(pause.attributes['aria-pressed'],'true');pause.onclick();assert.equal(R.isMotionPaused(),false);
 const roofButton=body.children[2];roofButton.onclick();assert.equal(roofMesh.material.opacity,.18);assert.equal(roofButton.attributes['aria-pressed'],'true');inspector.dispose();assert.equal(roofMesh.material,shared);assert.equal(panel.removed,true);
-for(const name of fs.readdirSync('public/models').filter(p=>p.endsWith('-3d.html'))){const html=fs.readFileSync('public/models/'+name,'utf8');assert(html.includes('v=20261102-inspection1'),name+' cache version');}
+for(const name of fs.readdirSync('public/models').filter(p=>p.endsWith('-3d.html'))){const html=fs.readFileSync('public/models/'+name,'utf8');assert(html.includes('v=20261102-performance1'),name+' cache version');}
 console.log('PASS inspection: four finite camera views, pause/resume without time jump, preserved manual orbit/autorotation state, isolated/restored roof materials, working UI handlers and 13 versioned pages.');

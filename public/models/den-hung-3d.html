@@ -82,7 +82,7 @@ body.is-embedded .brand h1{font-size:14.5px}
 @media(max-width:800px){header{padding:4px 8px;min-height:42px;max-height:44px;align-items:center}.brand p{display:none}.brand h1{font-size:13.5px}.header-actions button{font-size:11.5px;padding:4px 6px;height:29px}#workspace{display:block}#stage{height:100%}#side{display:none}#info{top:auto!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;max-height:50%!important;border-radius:16px 16px 0 0;border-bottom:0;padding:10px 12px}#info h2{font-size:18px}.info-content{font-size:14px}#info.collapsed{max-height:46px!important;height:46px!important;overflow:hidden!important}#info.collapsed #infoBody{display:none!important}.zoom-controls{top:50px;left:10px}.zoom-btn{width:32px;height:32px;font-size:17px}.reopen-pill{top:auto;bottom:14px;right:14px;font-size:12px;padding:6px 11px}#mobilePlaces{display:flex;position:absolute;z-index:4;left:0;right:0;top:8px;gap:6px;overflow-x:auto;padding:4px 8px;pointer-events:auto}#mobilePlaces button{white-space:nowrap;font-size:13px;padding:7px 10px}#disclaimer{right:8px;bottom:calc(42% + 12px);font-size:10px}#journeyBar{bottom:calc(50% + 45px)}#gameHud{top:55px}}
 @media(max-width:460px){.header-actions button[data-wide="1"]{display:none}.brand h1{font-size:12.5px}.header-actions{gap:3px}#info{height:42%}.dialog .grid2{grid-template-columns:1fr}}
 </style>
-<link rel="stylesheet" href="lib/realism-quality.css?v=20261102-inspection1"></head>
+<link rel="stylesheet" href="lib/realism-quality.css?v=20261102-performance1"></head>
 <body>
 <div id="app">
 <header>
@@ -158,7 +158,7 @@ body.is-embedded .brand h1{font-size:14.5px}
     document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
   }
 </script>
-<script src="lib/scene-realism.js?v=20261102-inspection1"></script>
+<script src="lib/scene-realism.js?v=20261102-performance1"></script>
 <script>
 (function(){
 'use strict';
@@ -207,13 +207,13 @@ const grass=mat(0x71984d),grass2=mat(0x8cac5d),soil=mat(0x98734d),stone=mat(0xb7
 
 leafMats.forEach(material=>material.color.convertSRGBToLinear());
 
-function mesh(geo,material,x,y,z,parent=root){let m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=renderer?renderer.shadowMap.enabled:true;m.receiveShadow=true;parent.add(m);return m}
+function mesh(geo,material,x,y,z,parent=root){let m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
 
 function init3D(){
  if(!window.THREE||!THREE.OrbitControls){throw new Error('Không tải được thư viện 3D')}
  scene=new THREE.Scene();scene.background=new THREE.Color(0xc2dded);scene.fog=new THREE.Fog(0xc2dded,100,220);
  camera=new THREE.PerspectiveCamera(42,stage.clientWidth/stage.clientHeight,.1,300);camera.position.set(0,25,43);
- renderer=new THREE.WebGLRenderer({antialias:!(weak||isMobile),alpha:false});renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio((weak||isMobile)?1:Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=!(weak||isMobile);renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+ renderer=new THREE.WebGLRenderer({antialias:false,alpha:false});renderer.setSize(stage.clientWidth,stage.clientHeight);renderer.setPixelRatio(1);renderer.shadowMap.enabled=!(weak||isMobile);renderer.shadowMap.type=THREE.PCFSoftShadowMap;
  if('outputColorSpace' in renderer)renderer.outputColorSpace=THREE.SRGBColorSpace;
  else if('outputEncoding' in renderer&&THREE.sRGBEncoding)renderer.outputEncoding=THREE.sRGBEncoding;
  if('toneMapping' in renderer){renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;}
@@ -545,7 +545,7 @@ function renderPlaceLists(){
 function updateLabels(){/* 3D Sprites are billboarded automatically */}
 
 function animate(){
- requestAnimationFrame(animate);if(!renderer)return;let dt=Math.min(clock.getDelta(),.05);if(ModelRealism.pausedFrame(renderer,scene,camera,controls,updateLabels))return;let t=ModelRealism.simulationTime();
+ requestAnimationFrame(animate);if(!ModelRealism.shouldRenderFrame())return;if(!renderer)return;let dt=Math.min(clock.getDelta(),.05);if(ModelRealism.pausedFrame(renderer,scene,camera,controls,updateLabels))return;let t=ModelRealism.simulationTime();
  controls.update();clouds.forEach(c=>{c.position.x+=dt*.25;if(c.position.x>90)c.position.x=-90});
  flags.forEach((f,i)=>{f.rotation.y=Math.sin(t*2.5+i)*.22});
  if(carriage&&caravan&&pilgrimageCurve){let u=(t*.02)%1;let p=pilgrimageCurve.getPoint(u);carriage.position.set(p.x,p.y+.3,p.z);carriage.rotation.y=Math.atan2(pilgrimageCurve.getTangent(u).x,pilgrimageCurve.getTangent(u).z)}

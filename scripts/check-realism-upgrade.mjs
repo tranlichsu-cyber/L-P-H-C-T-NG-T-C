@@ -26,7 +26,7 @@ const uv=R.planarUV(R.mound(5,3),['x','z'],4).attributes.uv;assert([...uv.array]
 let meshes=0;scene.traverse(o=>{if(o.isMesh){meshes++;for(const key of ['position','normal'])assert([...o.geometry.attributes[key].array].every(Number.isFinite));if(o.isInstancedMesh)assert([...o.instanceMatrix.array].every(Number.isFinite));}});
 const renderer={shadowMap:{enabled:true},setPixelRatio(value){this.ratio=value;}};
 R.finish(scene,renderer,{model:'test'});assert.equal(renderer.ratio,1,'Auto detects low-core device');assert.equal(renderer.shadowMap.enabled,false);
-R.setQuality(scene,'high');assert.equal(renderer.ratio,2);assert.equal(renderer.shadowMap.enabled,true);
+R.setQuality(scene,'high');assert.equal(renderer.ratio,1.5);assert.equal(renderer.shadowMap.enabled,true);
 R.setQuality(scene,'low');assert.equal(renderer.ratio,1);assert.equal(scene.userData.quality,'low');
 const panels=document.body.children.length;R.finish(scene,renderer);assert.equal(document.body.children.length,panels,'No duplicated quality selector');
 events.get('pagehide')();
