@@ -275,3 +275,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-11-02: Deploy PR #3 — model discovery and guided water-cycle learning (b4c4d5e591fcba3f3df8d93c2ce46e2a83bb0aae).
 
 2026-11-02: Deploy PR #4 — model-specific realism and quality controls (a6c634b185131ebb5a347270e1dd682af7323634).
+
+2026-11-02: Version model realism assets to prevent mixed cached script versions.
