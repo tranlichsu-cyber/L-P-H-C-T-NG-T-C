@@ -272,7 +272,6 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 
 259: 2026-11-01: Cap nhat Bo Suu Tap Huy Hieu Tham Hiem 3D: (1) Them nut shortcut '🏆 Huy hieu' tren thanh tieu de trang Kho mo hinh 3D giup nhay nhanh den bo suu tap; (2) Tich hop neo #huy-hieu va cho phep nhap chuot truc tiep vao tung huy hieu de mo bai hoc sa ban 3D tuong ung; (3) Nang cap Service Worker len v21 (lhtt-shell-v21-interactive-badges) lam moi cache trinh duyet.
 
-<<<<<<< HEAD
 2026-11-02: Deploy PR #3 — model discovery and guided water-cycle learning (b4c4d5e591fcba3f3df8d93c2ce46e2a83bb0aae).
 
 2026-11-02: Deploy PR #4 — model-specific realism and quality controls (a6c634b185131ebb5a347270e1dd682af7323634).
@@ -282,7 +281,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-11-02: Deploy PR #5 — inspection views, motion pause and transparent roofs (643905b767d400ea308e7904f8016a20d9de5894).
 
 2026-11-02: Deploy PR #6 — remove floating inspection panel and reduce default rendering cost (4ec602359493123cd1c4ef94b631e02e3d6489b9).
-=======
 
-260: 2026-11-03: Bo sung bo cau hoi "LTVC TUAN 11 ( Cung co)" vao Ngan hang cau hoi va them tinh nang Xoa bai kiem tra / bai on tap da giao (xoa toan bo tien do, cau tra loi va ma kiem tra tren Firestore). Nang cap Service Worker v22.
->>>>>>> ca17996 (feat: add LTVC Tuan 11 quiz to bank and enable deleting assigned tests (SW v22))
+2026-11-03: Bo sung bo cau hoi "LTVC TUAN 11 ( Cung co)" vao Ngan hang cau hoi va them tinh nang Xoa bai kiem tra / bai on tap da giao (xoa toan bo tien do, cau tra loi va ma kiem tra tren Firestore). Nang cap Service Worker v22.
