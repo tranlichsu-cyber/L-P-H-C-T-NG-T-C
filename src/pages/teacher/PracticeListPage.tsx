@@ -4,6 +4,7 @@ import { PageHeader } from '../../components/common/PageHeader';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Badge } from '../../components/common/Badge';
+import { Modal } from '../../components/common/Modal';
 import { PracticeService } from '../../services/practice/PracticeService';
 import type { PracticeSet } from '../../services/practice/types';
 import { useTeacherData } from '../../context/TeacherDataContext';
@@ -17,6 +18,7 @@ import {
   ArrowRight,
   RefreshCw,
   Archive,
+  Trash2,
 } from 'lucide-react';
 
 export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly = false }) => {
@@ -30,6 +32,9 @@ export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly 
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
   const [showArchived, setShowArchived] = useState<boolean>(false);
+
+  const [deleteTarget, setDeleteTarget] = useState<PracticeSet | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const fetchPracticeSets = async () => {
     setIsLoading(true);
@@ -52,6 +57,32 @@ export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly 
     await PracticeService.archivePracticeSet(id, !archived);
     showToast(archived ? 'Đã bỏ lưu trữ bài ôn!' : 'Đã lưu trữ bài ôn!', 'success');
     fetchPracticeSets();
+  };
+
+  const handleOpenDelete = (e: React.MouseEvent, setItem: PracticeSet) => {
+    e.stopPropagation();
+    setDeleteTarget(setItem);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const isTestItem = deleteTarget.type === 'TEST';
+      await PracticeService.deletePracticeSet(deleteTarget.id);
+      showToast(
+        isTestItem
+          ? `Đã xóa bài kiểm tra "${deleteTarget.title}"!`
+          : `Đã xóa bài ôn tập "${deleteTarget.title}"!`,
+        'success'
+      );
+      setDeleteTarget(null);
+      await fetchPracticeSets();
+    } catch (err: any) {
+      showToast(err?.message || 'Không thể xóa bài đã giao. Vui lòng thử lại.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -165,7 +196,7 @@ export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly 
                     </div>
 
                     <h3 className="text-base font-black text-slate-900">{p.title}</h3>
-                    {p.type==='TEST' && <p className="text-sky-900 font-bold">{p.testCode ? `Mã kiểm tra: ${p.testCode}` : 'Mở bài kiểm tra để tạo mã riêng'}</p>}
+                    {p.type === 'TEST' && <p className="text-sky-900 font-bold">{p.testCode ? `Mã kiểm tra: ${p.testCode}` : 'Mở bài kiểm tra để tạo mã riêng'}</p>}
 
                     <div className="flex items-center gap-4 text-xs text-slate-600 font-medium">
                       <span className="flex items-center gap-1">
@@ -188,6 +219,16 @@ export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly 
                       <Archive className="w-4 h-4" />
                     </button>
 
+                    <button
+                      type="button"
+                      onClick={(e) => handleOpenDelete(e, p)}
+                      className="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-all"
+                      title={p.type === 'TEST' ? 'Xóa bài kiểm tra đã giao' : 'Xóa bài ôn tập đã giao'}
+                      aria-label={p.type === 'TEST' ? `Xóa bài kiểm tra ${p.title}` : `Xóa bài ôn tập ${p.title}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
                     <Button variant="outline" size="sm" className="font-bold">
                       XEM KẾT QUẢ <ArrowRight className="w-4 h-4 ml-1" />
                     </Button>
@@ -198,6 +239,37 @@ export const PracticeListPage: React.FC<{ testsOnly?: boolean }> = ({ testsOnly 
           })}
         </div>
       )}
+
+      {/* MODAL: CONFIRM DELETE */}
+      <Modal
+        isOpen={!!deleteTarget}
+        onClose={() => {
+          if (!isDeleting) setDeleteTarget(null);
+        }}
+        title={deleteTarget?.type === 'TEST' ? 'Xóa bài kiểm tra đã giao' : 'Xóa bài ôn tập đã giao'}
+        footer={
+          <>
+            <Button variant="secondary" disabled={isDeleting} onClick={() => setDeleteTarget(null)}>
+              Hủy
+            </Button>
+            <Button variant="danger" disabled={isDeleting} onClick={handleConfirmDelete}>
+              {isDeleting ? 'Đang xóa...' : 'XÁC NHẬN XÓA'}
+            </Button>
+          </>
+        }
+      >
+        {deleteTarget && (
+          <div className="space-y-3 text-sm text-slate-700">
+            <p>
+              Thầy/cô có chắc chắn muốn xóa {deleteTarget.type === 'TEST' ? 'bài kiểm tra' : 'bài ôn tập'}{' '}
+              <strong className="text-slate-900">"{deleteTarget.title}"</strong> (Lớp {deleteTarget.className} • Môn {deleteTarget.subject})?
+            </p>
+            <p className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
+              Lưu ý: Toàn bộ tiến độ và kết quả nộp bài của học sinh trong bài này sẽ bị xóa vĩnh viễn và không thể khôi phục.
+            </p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -87,7 +87,7 @@ export const QuizEditorPage: React.FC = () => {
 
   const canEdit = Boolean(
     currentQuiz &&
-    (currentQuiz.teacherId === currentUser?.uid || isSchoolAdmin)
+    (currentQuiz.teacherId === currentUser?.uid || isSchoolAdmin || currentQuiz.teacherId === 'editorial')
   );
 
   if (!currentQuiz) {

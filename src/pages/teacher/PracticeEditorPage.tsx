@@ -51,6 +51,8 @@ export const PracticeEditorPage: React.FC = () => {
   // Modal Confirm Assign State
   const [isAssignConfirmOpen, setIsAssignConfirmOpen] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const [publishedTest, setPublishedTest] = useState(false);
   const isTest = type === 'TEST';
@@ -181,9 +183,25 @@ export const PracticeEditorPage: React.FC = () => {
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!practiceSetId || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await PracticeService.deletePracticeSet(practiceSetId);
+      showToast(isTest ? `Đã xóa bài kiểm tra "${title}"!` : `Đã xóa bài ôn tập "${title}"!`, 'success');
+      setIsDeleteConfirmOpen(false);
+      navigate(isTest ? '/teacher/tests' : '/teacher/practice');
+    } catch (err: any) {
+      showToast(err?.message || 'Lỗi khi xóa bài đã giao. Hãy thử lại.', 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 border-b pb-4">
+      <div className="flex items-center justify-between gap-3 border-b pb-4">
+        <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(isTest ? '/teacher/tests' : '/teacher/remediation')}
           className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
@@ -199,10 +217,23 @@ export const PracticeEditorPage: React.FC = () => {
             Biên soạn câu hỏi và giao nhiệm vụ cho cả lớp hoặc từng nhóm học sinh
           </p>
         </div>
+        </div>
+        {practiceSetId && (
+          <Button variant="danger" size="sm" onClick={() => setIsDeleteConfirmOpen(true)}>
+            <Trash2 className="w-4 h-4 mr-1" /> {isTest ? 'Xóa bài kiểm tra' : 'Xóa bài ôn tập'}
+          </Button>
+        )}
       </div>
 
       {isTest && <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200 text-sm text-indigo-950">Học sinh nhận cả đề, làm theo thứ tự tuỳ chọn và nộp một lần. Chấm tự động theo đáp án chuẩn, sai hoặc bỏ trống được 0 điểm, không trừ điểm. Trả lời ngắn cần khớp đáp án; không dùng cho tự luận dài. Tổng điểm từng câu phải bằng 10.</div>}
-      {publishedTest && <p className="p-4 rounded-xl bg-amber-50 text-amber-900">Bài kiểm tra đã giao: đề và biểu điểm được giữ nguyên. Hãy tạo bài mới nếu cần thay đổi.</p>}
+      {publishedTest && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-wrap items-center justify-between gap-3 text-sm">
+          <span>Bài kiểm tra đã giao: đề và biểu điểm được giữ nguyên. Hãy xóa bài này hoặc tạo bài mới nếu cần thay đổi.</span>
+          <Button variant="danger" size="sm" onClick={() => setIsDeleteConfirmOpen(true)}>
+            <Trash2 className="w-4 h-4 mr-1" /> Xóa bài kiểm tra đã giao
+          </Button>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column: Form & Question Editor */}
         <div className="lg:col-span-2 space-y-6">
@@ -511,6 +542,30 @@ export const PracticeEditorPage: React.FC = () => {
           {isTest && <p className="font-bold text-indigo-800">{questions.length} câu • Tổng 10 điểm • 1 lượt nộp • Hiện điểm ngay sau khi nộp</p>}
           <p className="text-slate-600">
             Học sinh sẽ nhìn thấy nhiệm vụ này khi mở ứng dụng phía Học sinh.
+          </p>
+        </div>
+      </Modal>
+
+      {/* MODAL: CONFIRM DELETE */}
+      <Modal
+        isOpen={isDeleteConfirmOpen}
+        onClose={() => { if (!isDeleting) setIsDeleteConfirmOpen(false); }}
+        title={isTest ? 'Xóa bài kiểm tra đã giao' : 'Xóa bài ôn tập đã giao'}
+        footer={
+          <>
+            <Button variant="secondary" disabled={isDeleting} onClick={() => setIsDeleteConfirmOpen(false)}>Hủy</Button>
+            <Button variant="danger" disabled={isDeleting} onClick={handleConfirmDelete}>
+              {isDeleting ? 'Đang xóa...' : 'XÁC NHẬN XÓA'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3 text-sm text-slate-700">
+          <p>
+            Thầy/cô có chắc chắn muốn xóa {isTest ? 'bài kiểm tra' : 'bài ôn tập'} <strong className="text-slate-900">"{title}"</strong>?
+          </p>
+          <p className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
+            Lưu ý: Toàn bộ tiến độ và kết quả nộp bài của học sinh trong bài này sẽ bị xóa vĩnh viễn.
           </p>
         </div>
       </Modal>

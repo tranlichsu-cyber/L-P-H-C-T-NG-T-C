@@ -4,9 +4,9 @@ import {loadVisibleClasses,loadVisibleQuizzes} from '../services/data/teacherQue
 import {useLocation} from 'react-router-dom';
 import type { ClassGroup, Student, Quiz, Question } from '../types';
 import { INITIAL_CLASSES } from '../data/mockClasses';
-import { INITIAL_QUIZZES } from '../data/mockQuizzes';
+import { INITIAL_QUIZZES, LTVC_TUAN_11_CUNG_CO_QUIZ, mergeWithBuiltInQuizzes } from '../data/mockQuizzes';
 import { normalizeVietnameseText } from '../utils/normalizeVietnamese';
-import { collection, deleteDoc, doc, getDocs, setDoc, updateDoc, writeBatch, runTransaction } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc, writeBatch, runTransaction } from 'firebase/firestore';
 import { auth, db, isFirebaseConfigured } from '../services/firebase/firebase';
 import { useAuth } from './AuthContext';
 import { SchoolService } from '../services/school/SchoolService';
@@ -146,7 +146,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
       loadedUid.current = uid; setLoadedForUid(uid); setLoadedForUid(uid);
       loadedAt.current = Math.min(cachedClasses?.savedAt || 0, cachedQuizzes?.savedAt || 0);
       setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
-      setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
+      setQuizzes(mergeWithBuiltInQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES));
     }
 
     if (!needsTeacherData) return;
@@ -161,7 +161,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
       loadedUid.current = uid; setLoadedForUid(uid);
       loadedAt.current = Date.now();
       setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
-      setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
+      setQuizzes(mergeWithBuiltInQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES));
       return;
     }
 
@@ -174,7 +174,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (!profile || profile.status !== 'ACTIVE') {
           if (!cancelled) {
             setClasses(cachedClasses?.items?.length ? cachedClasses.items : INITIAL_CLASSES);
-            setQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES);
+            setQuizzes(mergeWithBuiltInQuizzes(cachedQuizzes?.items?.length ? cachedQuizzes.items : INITIAL_QUIZZES));
           }
           return;
         }
@@ -268,11 +268,50 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
           })
         );
 
+        if (!realQuizzes.some((q) => q.id === LTVC_TUAN_11_CUNG_CO_QUIZ.id)) {
+          try {
+            const existingSnap = await getDoc(doc(firestore, 'quizzes', LTVC_TUAN_11_CUNG_CO_QUIZ.id));
+            if (!existingSnap.exists()) {
+              const now = new Date().toISOString();
+              const batch = writeBatch(firestore);
+              batch.set(doc(firestore, 'quizzes', LTVC_TUAN_11_CUNG_CO_QUIZ.id), {
+                teacherId: uid,
+                title: LTVC_TUAN_11_CUNG_CO_QUIZ.title,
+                subject: LTVC_TUAN_11_CUNG_CO_QUIZ.subject,
+                grade: LTVC_TUAN_11_CUNG_CO_QUIZ.grade,
+                questionCount: LTVC_TUAN_11_CUNG_CO_QUIZ.questions.length,
+                visibility: 'SCHOOL',
+                teamId: null,
+                createdAt: LTVC_TUAN_11_CUNG_CO_QUIZ.createdAt,
+                updatedAt: now,
+              });
+              LTVC_TUAN_11_CUNG_CO_QUIZ.questions.forEach((question, index) => {
+                batch.set(
+                  doc(firestore, 'quizzes', LTVC_TUAN_11_CUNG_CO_QUIZ.id, 'questions', question.id),
+                  sanitizeFirestoreData({
+                    ...question,
+                    order: index,
+                    createdAt: now,
+                    updatedAt: now,
+                  })
+                );
+              });
+              await batch.commit();
+              realQuizzes.unshift({
+                ...LTVC_TUAN_11_CUNG_CO_QUIZ,
+                teacherId: uid,
+              });
+            }
+          } catch (seedErr) {
+            console.warn('Chưa đồng bộ được bộ câu hỏi LTVC Tuần 11 lên Firestore:', seedErr);
+          }
+        }
+
         if (!cancelled) {
           loadedUid.current = uid; setLoadedForUid(uid);
           loadedAt.current = Date.now();
           const finalClasses = realClasses.length > 0 ? realClasses : cachedClasses?.items || [];
-          const finalQuizzes = realQuizzes.length > 0 ? realQuizzes : cachedQuizzes?.items || [];
+          const finalQuizzes = mergeWithBuiltInQuizzes(realQuizzes.length > 0 ? realQuizzes : cachedQuizzes?.items || []);
           setClasses(finalClasses);
           setQuizzes(finalQuizzes);
           if (finalClasses.length > 0) writeCachedTeacherList(CLASSES_CACHE_PREFIX, uid, finalClasses);
@@ -294,11 +333,13 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 : INITIAL_CLASSES
           );
           setQuizzes((prev) =>
-            prev.length > 0
-              ? prev
-              : cachedQuizzes?.items?.length
-                ? cachedQuizzes.items
-                : INITIAL_QUIZZES
+            mergeWithBuiltInQuizzes(
+              prev.length > 0
+                ? prev
+                : cachedQuizzes?.items?.length
+                  ? cachedQuizzes.items
+                  : INITIAL_QUIZZES
+            )
           );
         }
       }
@@ -533,6 +574,46 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   // --- QUIZ ACTIONS ---
+  const ensurePersistedQuiz = async (quizId: string): Promise<void> => {
+    if (!isFirebaseConfigured || !db) return;
+    const teacherId = auth?.currentUser?.uid;
+    if (!teacherId) return;
+    const target = quizzes.find((q) => q.id === quizId);
+    if (!target || target.teacherId !== 'editorial') return;
+
+    const quizRef = doc(db, 'quizzes', quizId);
+    const snap = await getDoc(quizRef);
+    if (!snap.exists()) {
+      const now = new Date().toISOString();
+      const batch = writeBatch(db);
+      batch.set(quizRef, {
+        teacherId,
+        title: target.title,
+        subject: target.subject,
+        grade: target.grade,
+        questionCount: target.questions.length,
+        visibility: target.visibility || 'SCHOOL',
+        teamId: target.teamId || null,
+        createdAt: target.createdAt || now,
+        updatedAt: now,
+      });
+      target.questions.forEach((question, index) => {
+        batch.set(
+          doc(db!, 'quizzes', quizId, 'questions', question.id),
+          sanitizeFirestoreData({
+            ...question,
+            order: index,
+            createdAt: now,
+            updatedAt: now,
+          })
+        );
+      });
+      await batch.commit();
+    }
+    setQuizzes((prev) =>
+      prev.map((q) => (q.id === quizId && q.teacherId === 'editorial' ? { ...q, teacherId } : q))
+    );
+  };
   const addQuiz = async (
     title: string,
     subject: string,
@@ -591,6 +672,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const nextTeamId = teamId !== undefined ? teamId : target.teamId;
 
     if (isFirebaseConfigured && db) {
+      await ensurePersistedQuiz(quizId);
       await updateDoc(doc(db, 'quizzes', quizId), {
         title: title.trim(),
         subject,
@@ -698,6 +780,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const now = new Date().toISOString();
     const added = items.map((item) => ({ ...item, id: crypto.randomUUID() }));
     if (isFirebaseConfigured && db) {
+      await ensurePersistedQuiz(quizId);
       const firestore = db;
       await runTransaction(firestore, async (transaction) => {
         const quizRef = doc(firestore, 'quizzes', quizId);
@@ -725,6 +808,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     questionData: Omit<Question, 'id'>
   ): Promise<void> => {
     if (isFirebaseConfigured && db) {
+      await ensurePersistedQuiz(quizId);
       await updateDoc(
         doc(db, 'quizzes', quizId, 'questions', questionId),
         sanitizeFirestoreData({
@@ -763,6 +847,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     updated.splice(index + 1, 0, copy);
 
     if (isFirebaseConfigured && db) {
+      await ensurePersistedQuiz(quizId);
       const firestore = db;
       const batch = writeBatch(firestore);
       updated.forEach((question, order) => {
@@ -794,6 +879,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const now = new Date().toISOString();
 
     if (isFirebaseConfigured && db) {
+      await ensurePersistedQuiz(quizId);
       const firestore = db;
       const batch = writeBatch(firestore);
       batch.delete(doc(firestore, 'quizzes', quizId, 'questions', questionId));

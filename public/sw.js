@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v21-interactive-badges';
+const CACHE_NAME = 'lhtt-shell-v22-ltvc-tuan11-delete-test';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

@@ -695,4 +695,49 @@ export class PracticeService {
     this.saveLocalPracticeSets(sets);
     return true;
   }
+
+  // 10. Delete Practice Set / Assigned Test
+  public static async deletePracticeSet(practiceSetId: string): Promise<boolean> {
+    if (isFirebaseConfigured && db) {
+      const firestore = db;
+      const setRef = doc(firestore, 'practiceSets', practiceSetId);
+      const setSnap = await getDoc(setRef);
+      if (!setSnap.exists()) return false;
+
+      const setData = setSnap.data() as PracticeSet;
+      const [progressSnap, responsesSnap] = await Promise.all([
+        getDocs(collection(firestore, 'practiceSets', practiceSetId, 'studentProgress')),
+        getDocs(collection(firestore, 'practiceSets', practiceSetId, 'responses')),
+      ]);
+
+      const refsToDelete = [
+        ...progressSnap.docs.map((d) => d.ref),
+        ...responsesSnap.docs.map((d) => d.ref),
+      ];
+
+      if (setData.testCode) {
+        const codeRef = doc(firestore, 'testCodes', String(setData.testCode));
+        const codeSnap = await getDoc(codeRef);
+        if (codeSnap.exists()) {
+          refsToDelete.push(codeRef);
+        }
+      }
+
+      refsToDelete.push(setRef);
+
+      const chunkSize = 400;
+      for (let i = 0; i < refsToDelete.length; i += chunkSize) {
+        const batch = writeBatch(firestore);
+        refsToDelete.slice(i, i + chunkSize).forEach((ref) => batch.delete(ref));
+        await batch.commit();
+      }
+      return true;
+    }
+
+    const sets = this.loadLocalPracticeSets();
+    const nextSets = sets.filter((s) => s.id !== practiceSetId);
+    if (nextSets.length === sets.length) return false;
+    this.saveLocalPracticeSets(nextSets);
+    return true;
+  }
 }

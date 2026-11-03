@@ -304,7 +304,7 @@ export const QuizzesPage: React.FC = () => {
                   onClick={() => navigate(`/teacher/quizzes/${quiz.id}`)}
                 >
                   <Edit3 className="w-4 h-4 mr-1" />
-                  {quiz.teacherId === currentUser?.uid || isSchoolAdmin ? 'Mở & Sửa' : 'Xem nội dung'}
+                  {quiz.teacherId === currentUser?.uid || isSchoolAdmin || quiz.teacherId === 'editorial' ? 'Mở & Sửa' : 'Xem nội dung'}
                 </Button>
 
                 <Button
@@ -316,8 +316,8 @@ export const QuizzesPage: React.FC = () => {
                   <Copy className="w-4 h-4 text-slate-600" />
                 </Button>
 
-                {(quiz.teacherId === currentUser?.uid || isSchoolAdmin) && <Button variant="outline" size="sm" title="Sửa tên bộ câu hỏi" onClick={()=>{setRenameTarget(quiz);setRenameTitle(quiz.title);setRenameError('');}}><Edit3 className="w-4 h-4 mr-1"/>Sửa tên</Button>}
-                {(quiz.teacherId === currentUser?.uid || isSchoolAdmin) && (
+                {(quiz.teacherId === currentUser?.uid || isSchoolAdmin || quiz.teacherId === 'editorial') && <Button variant="outline" size="sm" title="Sửa tên bộ câu hỏi" onClick={()=>{setRenameTarget(quiz);setRenameTitle(quiz.title);setRenameError('');}}><Edit3 className="w-4 h-4 mr-1"/>Sửa tên</Button>}
+                {(quiz.teacherId === currentUser?.uid || isSchoolAdmin || quiz.teacherId === 'editorial') && (
                   <Button
                     variant="secondary"
                     size="sm"

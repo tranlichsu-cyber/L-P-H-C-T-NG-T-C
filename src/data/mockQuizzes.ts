@@ -1,9 +1,77 @@
 import type { Quiz } from '../types';
-
 import { BUILTIN_MIDTERM_QUIZZES } from './exams/builtInMidtermExams';
 
-export const INITIAL_QUIZZES: Quiz[] = [
+export const LTVC_TUAN_11_CUNG_CO_QUIZ: Quiz = {
+  id: 'quiz-ltvc-tuan-11-cung-co',
+  teacherId: 'editorial',
+  title: 'LTVC TUẦN 11 ( Củng cố)',
+  subject: 'Tiếng Việt',
+  grade: 'Khối 4',
+  questionCount: 3,
+  createdAt: '2026-11-03',
+  visibility: 'SCHOOL',
+  questions: [
+    {
+      id: 'ltvc-t11-cc-q1',
+      type: 'MULTIPLE_CHOICE',
+      content: 'Điền từ thích hợp vào chỗ trống: Nhanh như….',
+      options: ['chớp', 'hổ', 'rùa', 'sư tử'],
+      correctAnswer: 'chớp',
+      explanation: 'Thành ngữ so sánh chỉ sự nhanh nhẹn: "Nhanh như chớp".',
+      correctPoints: 10,
+      wrongPenalty: 5,
+      difficulty: 'KNOWLEDGE',
+    },
+    {
+      id: 'ltvc-t11-cc-q2',
+      type: 'MULTIPLE_CHOICE',
+      content: 'Câu nào có sử dụng biện pháp nhân hóa?',
+      options: [
+        'Những cơn gió thổi nhẹ trên mặt hồ',
+        'Những chị gió đang vui đùa trên mặt hồ',
+        'Mặt hồ xanh biếc',
+        'Mặt trời lặn ở đằng Tây',
+      ],
+      correctAnswer: 'Những chị gió đang vui đùa trên mặt hồ',
+      explanation:
+        'Trong câu "Những chị gió đang vui đùa trên mặt hồ", sự vật "gió" được gọi bằng từ chỉ người ("chị") và tả bằng từ ngữ chỉ hoạt động của người ("vui đùa").',
+      correctPoints: 10,
+      wrongPenalty: 5,
+      difficulty: 'UNDERSTANDING',
+    },
+    {
+      id: 'ltvc-t11-cc-q3',
+      type: 'MULTIPLE_CHOICE',
+      content: 'Tác dụng của biện pháp nhân hóa là gì?',
+      options: [
+        'Giúp sự vật, hiện tượng có hồn hơn',
+        'Giúp sự vật, hiện tượng giống như con người',
+        'Giúp câu văn trở nên sinh động, ngộ nghĩnh',
+        'Cả 3 đáp án trên',
+      ],
+      correctAnswer: 'Cả 3 đáp án trên',
+      explanation:
+        'Biện pháp nhân hóa giúp sự vật, hiện tượng có hồn hơn, giống như con người và giúp câu văn trở nên sinh động, ngộ nghĩnh.',
+      correctPoints: 10,
+      wrongPenalty: 5,
+      difficulty: 'UNDERSTANDING',
+    },
+  ],
+};
+
+export const BUILTIN_QUIZZES: Quiz[] = [
+  LTVC_TUAN_11_CUNG_CO_QUIZ,
   ...BUILTIN_MIDTERM_QUIZZES,
+];
+
+export function mergeWithBuiltInQuizzes(list: Quiz[]): Quiz[] {
+  const existingIds = new Set(list.map((q) => q.id));
+  const missing = BUILTIN_QUIZZES.filter((q) => !existingIds.has(q.id));
+  return [...missing, ...list];
+}
+
+export const INITIAL_QUIZZES: Quiz[] = [
+  ...BUILTIN_QUIZZES,
   {
     id: 'quiz-1',
     title: 'Bài 43 – Nhân với số có hai chữ số',
