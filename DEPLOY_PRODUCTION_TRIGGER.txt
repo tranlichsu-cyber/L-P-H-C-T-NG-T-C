@@ -287,3 +287,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 Release phone remote control sync and direct QR scan support for Live Classroom (v23).
 
 Release performance optimization: eliminate live room broadcast loop, cache mockStorage in memory, deduplicate Firestore subcollection reads, and extract 102KB base64 school logo out of 11 JS bundles (v24).
+
+2026-11-03: Remove GAME HUB TRO CHOI button and its selection modal from the Live Room controller.

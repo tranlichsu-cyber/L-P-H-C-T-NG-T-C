@@ -1,5 +1,4 @@
 import {TeacherEncouragementPanel} from '../../components/activities/EncouragementPanel';
-import {useWorksheetState} from '../../hooks/useWorksheet';
 import {setSoundMuted} from '../../utils/audio';
 import {LessonDashboard,type LessonTab} from '../../components/teacher/LessonDashboard';
 import {TeacherLearningSignals} from '../../components/activities/LearningSignals';
@@ -25,13 +24,11 @@ import { loadMockDatabase } from '../../services/realtime/mockStorage';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
-import { GameHubModal } from '../../components/games/GameHubModal';
 import { RandomWheelGame } from '../../components/games/RandomWheelGame';
 import { MysteryDoorGame } from '../../components/games/MysteryDoorGame';
 import { QuickAnswerGame } from '../../components/games/QuickAnswerGame';
 import { TeamRaceGame } from '../../components/games/TeamRaceGame';
 import { KnowledgeBoxGame } from '../../components/games/KnowledgeBoxGame';
-import type { GameType, GameSessionData } from '../../services/realtime/types';
 import {
   Radio,
   Play,
@@ -44,7 +41,6 @@ import {
   Maximize2,
   Search,
   CheckCircle2,
-  Gamepad2,
   Pause,
 } from 'lucide-react';
 
@@ -67,7 +63,6 @@ export const RoomControllerPage: React.FC = () => {
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
   const [isManualScoreModalOpen, setIsManualScoreModalOpen] = useState(false);
-  const [isGameHubOpen, setIsGameHubOpen] = useState(false);
 
 
   const gameActionLock=useRef(false);
@@ -147,7 +142,6 @@ export const RoomControllerPage: React.FC = () => {
   const activeQStatus = room?.activeQuestionId ? room.liveQuestions?.[room.activeQuestionId]?.status : undefined;
   useEffect(() => { if (room?.id) void broadcastRoomState(room.id); }, [room?.id, room?.status, room?.activeQuestionId, activeQStatus, room?.calledStudent?.callSequence]);
   useEffect(() => subscribeActiveTeacherRooms(currentUser?.uid, () => {}), [currentUser?.uid]);
-  const {state:gameWorksheetState}=useWorksheetState(room?.id||null);
   useEffect(()=>{setSoundMuted(room?.activeGame?.settings.soundEnabled===false);return()=>setSoundMuted(false);},[room?.activeGame?.settings.soundEnabled]);
 
   if (!room) {
@@ -397,20 +391,6 @@ export const RoomControllerPage: React.FC = () => {
     const ok=await Promise.resolve(activeRealtimeService.updateGamePayload(room.id,g=>({...g,[kind]:g[kind]?.map(x=>x.id===id?{...x,isOpened:true}:x)})));if(!ok)throw Error('Chưa mở được ô chơi.');
   }catch(e){showToast((e as Error).message,'error');}finally{gameActionLock.current=false;setGameActionBusy(false);}};
   // --- GAME HANDLERS ---
-  const handleStartGame = async (type: GameType, settings: GameSessionData['settings']) => {
-    try {
-      if(room.status==='FINISHED')throw Error('Tiết học đã kết thúc.');
-      if(gameWorksheetState.worksheetId)throw Error('Thầy/cô thu phiếu hoặc hoạt động đang phát trước khi mở trò chơi.');
-      const game = await Promise.resolve(activeRealtimeService.createGameSession(room.id, type, settings, questionIds.filter(id=>['READY','OPEN'].includes(room.liveQuestions[id]?.status)&&!allSubmissionsList.some(w=>w.questionId===id))));
-      if (!game) throw new Error('Không thể tạo trò chơi.');
-      const started = await Promise.resolve(activeRealtimeService.startGameSession(room.id));
-      if (!started) throw new Error('Không thể bắt đầu trò chơi.');
-      showToast('Đã bắt đầu trò chơi!', 'success');
-    } catch (err: any) {
-      showToast(err?.message || 'Không thể bắt đầu trò chơi.', 'error');
-    }
-  };
-
   const handlePauseGame = async () => {
     try {
       const ok = await Promise.resolve(activeRealtimeService.pauseGameSession(room.id));
@@ -474,10 +454,6 @@ export const RoomControllerPage: React.FC = () => {
               <Radio className="w-4 h-4 mr-1 animate-pulse" />
               {room.status === 'FINISHED' ? 'Đã kết thúc' : room.status === 'ACTIVE' ? 'Đang Live' : 'Đang phòng chờ'}
             </Badge>
-
-            <Button disabled={isRoomFinished||!!room.activeGame} variant="warning" size="sm" onClick={() => setIsGameHubOpen(true)} className="font-bold text-slate-950">
-              <Gamepad2 className="w-4 h-4 mr-1" /> GAME HUB TRÒ CHƠI
-            </Button>
 
             <Button variant="outline" size="sm" onClick={() => setIsPresenting(true)}>
               <Maximize2 className="w-4 h-4 mr-1" /> Trình Chiếu Máy Chiếu
@@ -1181,12 +1157,6 @@ export const RoomControllerPage: React.FC = () => {
         </div>
       </Modal>
 
-      {/* MODAL 5: GAME HUB SELECTION */}
-      <GameHubModal
-        isOpen={isGameHubOpen}
-        onClose={() => setIsGameHubOpen(false)}
-        onStartGame={handleStartGame}
-      />
     </div>
   );
 };
