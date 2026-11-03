@@ -607,7 +607,7 @@ function handleRelayEnvelope(envelope: RelayEnvelope): void {
     const mockDb = loadMockDatabase();
     const room = mockDb.rooms[envelope.roomId];
     if (room && (room.roster?.length || Object.keys(room.liveQuestions || {}).length)) {
-      void broadcastRoomState(room.id);
+      void broadcastRoomState(room.id, true);
     }
     return;
   }
@@ -615,7 +615,7 @@ function handleRelayEnvelope(envelope: RelayEnvelope): void {
   if (envelope.type === 'REQUEST_TEACHER_ROOMS' && envelope.teacherId) {
     const rooms = getActiveMockRoomsForTeacher(envelope.teacherId);
     for (const r of rooms.slice(0, 5)) {
-      void broadcastRoomState(r.id);
+      void broadcastRoomState(r.id, true);
     }
   }
 }
@@ -730,12 +730,24 @@ function acquireNtfyStream(topic: string, onOpen?: () => void): () => void {
   };
 }
 
-export async function broadcastRoomState(roomId: string): Promise<void> {
+const lastBroadcastByRoom = new Map<string, { sig: string; ts: number }>();
+
+export async function broadcastRoomState(roomId: string, force = false): Promise<void> {
   const mockDb = loadMockDatabase();
   const room = mockDb.rooms[roomId];
   if (!room) return;
   const privateQuestions = ensureRoomPrivateQuestions(roomId);
   const relayRoom = stripLargeBase64ForRelay(room);
+
+  notifyLocalRoomListeners(room);
+
+  const now = Date.now();
+  const sig = JSON.stringify({ r: relayRoom, p: privateQuestions });
+  const prev = lastBroadcastByRoom.get(roomId);
+  if (!force && prev && prev.sig === sig && now - prev.ts < 3000) {
+    return;
+  }
+  lastBroadcastByRoom.set(roomId, { sig, ts: now });
 
   const envelope: RelayEnvelope = {
     type: 'ROOM_STATE',
@@ -744,10 +756,9 @@ export async function broadcastRoomState(roomId: string): Promise<void> {
     teacherId: room.teacherId,
     room: relayRoom,
     privateQuestions,
-    ts: Date.now(),
+    ts: now,
   };
 
-  notifyLocalRoomListeners(room);
   void publishToRtdb(room, privateQuestions);
   await publishToNtfyTopic(getRoomTopic(room.id), envelope);
   if (room.teacherId) {

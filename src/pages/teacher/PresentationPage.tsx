@@ -30,7 +30,8 @@ export const PresentationPage: React.FC = () => {
   }, [paramRoomId, navigate]);
 
   const room = useRoomRealtime(activeRoomId);
-  useEffect(() => { if (room?.id) void broadcastRoomState(room.id); }, [room]);
+  const activeQStatus = room?.activeQuestionId ? room.liveQuestions?.[room.activeQuestionId]?.status : undefined;
+  useEffect(() => { if (room?.id) void broadcastRoomState(room.id); }, [room?.id, room?.status, room?.activeQuestionId, activeQStatus, room?.calledStudent?.callSequence]);
 
   if (!room) {
     return (

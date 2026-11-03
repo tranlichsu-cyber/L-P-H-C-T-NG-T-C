@@ -1,8 +1,9 @@
-const CACHE_NAME = 'lhtt-shell-v23-live-room-phone-remote';
+const CACHE_NAME = 'lhtt-shell-v24-perf-optimization';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',
   '/favicon.ico',
+  '/school-logo.png',
 ];
 
 // Install only tiny stable shell assets. Never pre-cache index.html or JS chunks.

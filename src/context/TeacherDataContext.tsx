@@ -138,6 +138,7 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
 
     const uid = currentUser.uid;
+    if (loadedUid.current === uid && Date.now() - loadedAt.current < TEACHER_CACHE_TTL_MS && classes.length > 0) return;
     const cachedClasses = readCachedTeacherList<ClassGroup>(CLASSES_CACHE_PREFIX, uid);
     const cachedQuizzes = readCachedTeacherList<Quiz>(QUIZZES_CACHE_PREFIX, uid);
 
@@ -243,6 +244,10 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const realQuizzes = await Promise.all(
           visibleQuizDocs.map(async (quizDoc) => {
             const data = quizDoc.data() as Partial<Quiz>;
+            const cachedQuiz = cachedQuizzes?.items?.find((cq) => cq.id === quizDoc.id);
+            if (cachedQuiz?.questions?.length && cachedQuiz.questions.length === data.questionCount) {
+              return { ...cachedQuiz, title: data.title || cachedQuiz.title, subject: data.subject || cachedQuiz.subject, grade: data.grade || cachedQuiz.grade, visibility: data.visibility || cachedQuiz.visibility || 'PRIVATE', teamId: data.teamId } as Quiz;
+            }
             const questionsSnap = await getDocs(
               collection(firestore, 'quizzes', quizDoc.id, 'questions')
             );
@@ -268,7 +273,8 @@ export const TeacherDataProvider: React.FC<{ children: React.ReactNode }> = ({ c
           })
         );
 
-        if (!realQuizzes.some((q) => q.id === LTVC_TUAN_11_CUNG_CO_QUIZ.id)) {
+        if (!realQuizzes.some((q) => q.id === LTVC_TUAN_11_CUNG_CO_QUIZ.id) && !sessionStorage.getItem('lhtt_seeded_ltvc_t11_v1')) {
+          sessionStorage.setItem('lhtt_seeded_ltvc_t11_v1', '1');
           try {
             const existingSnap = await getDoc(doc(firestore, 'quizzes', LTVC_TUAN_11_CUNG_CO_QUIZ.id));
             if (!existingSnap.exists()) {

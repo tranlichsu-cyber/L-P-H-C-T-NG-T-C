@@ -285,3 +285,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-11-03: Bo sung bo cau hoi "LTVC TUAN 11 ( Cung co)" vao Ngan hang cau hoi va them tinh nang Xoa bai kiem tra / bai on tap da giao (xoa toan bo tien do, cau tra loi va ma kiem tra tren Firestore). Nang cap Service Worker v22.
 
 Release phone remote control sync and direct QR scan support for Live Classroom (v23).
+
+Release performance optimization: eliminate live room broadcast loop, cache mockStorage in memory, deduplicate Firestore subcollection reads, and extract 102KB base64 school logo out of 11 JS bundles (v24).

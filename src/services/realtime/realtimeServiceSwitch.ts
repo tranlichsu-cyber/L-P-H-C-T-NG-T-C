@@ -633,12 +633,23 @@ class HybridRealtimeService {
       callback(relayRoom);
     });
 
+    let cancelled = false;
+    let pendingFsRoom: MockRoomData | null = null;
     let unsubFirestore: (() => void) | null = null;
     if (shouldUseFirestoreForRoom(roomId)) {
       try {
         unsubFirestore = firestoreRealtimeService.subscribeRoom(roomId, fsRoom => {
-          const merged = cacheRoomLocally(fsRoom);
-          callback(merged);
+          const isFirst = !pendingFsRoom;
+          pendingFsRoom = fsRoom;
+          if (isFirst) {
+            queueMicrotask(() => {
+              if (cancelled || !pendingFsRoom) return;
+              const latest = pendingFsRoom;
+              pendingFsRoom = null;
+              const merged = cacheRoomLocally(latest);
+              callback(merged);
+            });
+          }
         });
       } catch (err) {
         if (isQuotaExceededError(err)) {
@@ -648,6 +659,7 @@ class HybridRealtimeService {
     }
 
     return () => {
+      cancelled = true;
       unsubRelay();
       if (unsubFirestore) unsubFirestore();
     };
