@@ -87,6 +87,54 @@ function sortActiveRooms(rooms: MockRoomData[]): MockRoomData[] {
   });
 }
 
+export async function fetchActiveTeacherRoomsOnce(
+  teacherId: string | undefined | null
+): Promise<MockRoomData[]> {
+  if (!teacherId) return [];
+  const mergedMap = new Map<string, MockRoomData>();
+  const mockDb = loadMockDatabase();
+  for (const r of Object.values(mockDb.rooms || {})) {
+    if (r && r.teacherId === teacherId && isRoomStillActive(r)) {
+      mergedMap.set(r.id, r);
+    }
+  }
+
+  if (isFirebaseActive && db && !isFirestoreTemporarilyExhausted()) {
+    try {
+      const q = query(collection(db, 'rooms'), where('teacherId', '==', teacherId));
+      const snap = await getDocs(q);
+      snap.docs.forEach(d => {
+        const data = d.data() as MockRoomData;
+        const localRecord = mockDb.rooms?.[d.id];
+        if (localRecord?.status === 'FINISHED') return;
+        if (isRoomStillActive(data)) {
+          const roomObj: MockRoomData = {
+            ...data,
+            id: d.id,
+            roster: localRecord?.roster?.length ? localRecord.roster : data.roster || [],
+            participants: data.participants || localRecord?.participants || {},
+            liveQuestions:
+              Object.keys(localRecord?.liveQuestions || {}).length > 0
+                ? localRecord.liveQuestions
+                : data.liveQuestions || {},
+            submissions: data.submissions || localRecord?.submissions || {},
+            scores: data.scores || localRecord?.scores || {},
+            scoreEvents: data.scoreEvents || localRecord?.scoreEvents || {},
+          };
+          cacheRoomLocally(roomObj);
+          mergedMap.set(roomObj.id, roomObj);
+        }
+      });
+    } catch (err) {
+      if (isQuotaExceededError(err)) {
+        markFirestoreQuotaExceeded();
+      }
+    }
+  }
+
+  return sortActiveRooms([...mergedMap.values()]);
+}
+
 export function subscribeActiveTeacherRooms(
   teacherId: string | undefined | null,
   callback: (rooms: MockRoomData[]) => void

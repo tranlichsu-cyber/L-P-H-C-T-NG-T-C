@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lhtt-shell-v22-ltvc-tuan11-delete-test';
+const CACHE_NAME = 'lhtt-shell-v23-live-room-phone-remote';
 
 const SHELL_ASSETS = [
   '/manifest.webmanifest',

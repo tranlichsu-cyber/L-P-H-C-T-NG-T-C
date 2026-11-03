@@ -39,8 +39,16 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
       void broadcastRoomState(room.id);
       return;
     }
-    return subscribeActiveTeacherRooms(currentUser?.uid, setActiveRooms);
-  }, [currentUser?.uid, room?.id]);
+    requestRelaySync(roomId || undefined, currentUser?.uid);
+    const retryInterval = setInterval(() => {
+      requestRelaySync(roomId || undefined, currentUser?.uid);
+    }, 2200);
+    const unsub = subscribeActiveTeacherRooms(currentUser?.uid, setActiveRooms);
+    return () => {
+      clearInterval(retryInterval);
+      unsub();
+    };
+  }, [currentUser?.uid, room?.id, roomId]);
 
   if (!room) {
     const otherActive = activeRooms.find(r => r.responseMode === 'QR_CARD') || activeRooms[0] || null;
@@ -101,6 +109,8 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
   }
 
   const base = `/teacher/qr-cards/${encodeURIComponent(room.id)}`;
+  const controlUrl =
+    room.responseMode === 'QR_CARD' ? base : `/teacher/room/${encodeURIComponent(room.id)}`;
   const ids = (room.questionOrder || Object.keys(room.liveQuestions)).filter(
     id => room.liveQuestions[id]
   );
@@ -215,8 +225,8 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
             </>
           )}
           {screen === 'scan' && (
-            <Link className={button} to={base}>
-              Về màn điều khiển máy tính
+            <Link className={button} to={controlUrl}>
+              Về màn điều khiển đầy đủ
             </Link>
           )}
         </div>
@@ -527,7 +537,7 @@ export function QrRoomPage({ screen = 'control' }: { screen?: 'control' | 'scan'
           <Suspense fallback={<p>Đang mở màn thẻ QR…</p>}>
             <QrCardsPanel
               room={room}
-              onClose={() => (screen === 'scan' ? navigate(base) : setShowScanner(false))}
+              onClose={() => (screen === 'scan' ? navigate(controlUrl) : setShowScanner(false))}
             />
           </Suspense>
         </div>

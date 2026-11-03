@@ -155,6 +155,7 @@ export const App: React.FC = () => {
 
                   {/* Teacher Auth */}
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/teacher/qr-cards/:roomId/scan" element={<div className="min-h-screen bg-slate-50 p-3 sm:p-6"><QrRoomPage screen="scan" /></div>} />
 
                   <Route path="/teacher/qr-cards/:roomId/present" element={
                     <AccountRoleGuard allowedRoles={['SCHOOL_ADMIN', 'TEAM_LEADER', 'TEACHER']}>

@@ -283,3 +283,5 @@ Resolve overlapping question/answer text boxes via exitStep and automatic step s
 2026-11-02: Deploy PR #6 — remove floating inspection panel and reduce default rendering cost (4ec602359493123cd1c4ef94b631e02e3d6489b9).
 
 2026-11-03: Bo sung bo cau hoi "LTVC TUAN 11 ( Cung co)" vao Ngan hang cau hoi va them tinh nang Xoa bai kiem tra / bai on tap da giao (xoa toan bo tien do, cau tra loi va ma kiem tra tren Firestore). Nang cap Service Worker v22.
+
+Release phone remote control sync and direct QR scan support for Live Classroom (v23).

@@ -26,11 +26,30 @@ export type PrivateAnswerMap = Record<
 >;
 
 export type RelayActionPayload =
+  | { kind: 'START_SESSION' }
   | { kind: 'OPEN_QUESTION'; questionId: string }
   | { kind: 'CLOSE_QUESTION'; questionId: string }
   | { kind: 'SHOW_RESULT'; questionId: string }
   | { kind: 'SUBMIT_QR_ANSWER'; questionId: string; studentId: string; choice: CardChoice }
+  | { kind: 'CALL_STUDENT'; studentId: string; studentName: string; reason?: string }
+  | { kind: 'CLEAR_CALLED_STUDENT' }
+  | {
+      kind: 'ADD_MANUAL_SCORE';
+      studentId: string;
+      studentName: string;
+      points: number;
+      reason?: string;
+      awardKey?: string;
+    }
+  | { kind: 'RESET_CALL_HISTORY' }
   | { kind: 'FINISH_ROOM' };
+
+type HostActionForwarder = (roomId: string, action: RelayActionPayload) => Promise<void> | void;
+let hostActionForwarder: HostActionForwarder | null = null;
+
+export function registerHostActionForwarder(forwarder: HostActionForwarder): void {
+  hostActionForwarder = forwarder;
+}
 
 type RelayEnvelope =
   | {
@@ -48,6 +67,7 @@ type RelayEnvelope =
       roomId: string;
       teacherId?: string;
       action: RelayActionPayload;
+      appliedToFirestore?: boolean;
       ts: number;
     }
   | {
@@ -508,6 +528,9 @@ function applyIncomingRelayAction(roomId: string, action: RelayActionPayload): M
   if (!mockDb.rooms[roomId]) return null;
 
   switch (action.kind) {
+    case 'START_SESSION':
+      realtimeService.startRoomSession(roomId);
+      break;
     case 'OPEN_QUESTION':
       realtimeService.openQuestion(roomId, action.questionId);
       break;
@@ -520,6 +543,25 @@ function applyIncomingRelayAction(roomId: string, action: RelayActionPayload): M
       break;
     case 'SUBMIT_QR_ANSWER':
       realtimeService.submitQrAnswer(roomId, action.questionId, action.studentId, action.choice);
+      break;
+    case 'CALL_STUDENT':
+      realtimeService.callStudent(roomId, action.studentId, action.studentName, action.reason);
+      break;
+    case 'CLEAR_CALLED_STUDENT':
+      realtimeService.clearCalledStudent(roomId);
+      break;
+    case 'ADD_MANUAL_SCORE':
+      realtimeService.addManualScore(
+        roomId,
+        action.studentId,
+        action.studentName,
+        action.points,
+        action.reason,
+        action.awardKey
+      );
+      break;
+    case 'RESET_CALL_HISTORY':
+      realtimeService.resetCallHistory(roomId);
       break;
     case 'FINISH_ROOM':
       realtimeService.finishRoom(roomId);
@@ -554,6 +596,9 @@ function handleRelayEnvelope(envelope: RelayEnvelope): void {
       if (envelope.action.kind === 'SHOW_RESULT') {
         void broadcastRoomState(updated.id);
       }
+    }
+    if (!envelope.appliedToFirestore && hostActionForwarder) {
+      void hostActionForwarder(envelope.roomId, envelope.action);
     }
     return;
   }
@@ -712,7 +757,8 @@ export async function broadcastRoomState(roomId: string): Promise<void> {
 
 export async function broadcastRoomAction(
   roomId: string,
-  action: RelayActionPayload
+  action: RelayActionPayload,
+  appliedToFirestore?: boolean
 ): Promise<void> {
   const mockDb = loadMockDatabase();
   const room = mockDb.rooms[roomId];
@@ -722,6 +768,7 @@ export async function broadcastRoomAction(
     roomId,
     teacherId: room?.teacherId,
     action,
+    appliedToFirestore,
     ts: Date.now(),
   };
 

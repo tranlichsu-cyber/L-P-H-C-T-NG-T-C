@@ -96,7 +96,7 @@ export class FirestoreRealtimeService {
       quizId: params.quizId,
       quizTitle: params.quizTitle,
       ...(params.questionSource?{questionSource:params.questionSource}:{}),
-      ...(params.responseMode?{responseMode:params.responseMode,questionOrder:params.questions.map(q=>q.id)}:{}),
+      questionOrder: params.questions.map(q=>q.id), ...(params.responseMode?{responseMode:params.responseMode}:{}),
       status: 'WAITING',
       activeQuestionId: params.questions[0]?.id || null,
       createdAt: serverTimestamp(),
@@ -147,7 +147,7 @@ export class FirestoreRealtimeService {
         status: 'READY',
       };
       batch.set(qRef, sanitizeFirestoreData(publicQ));
-      if(params.questionSource==='QR_BANK')batch.set(doc(db!, 'rooms',roomId,'privateQrQuestions',q.id),sanitizeFirestoreData({type:q.type,options:q.options,correctAnswer:q.correctAnswer,explanation:q.explanation||'',correctPoints:q.correctPoints??10,wrongPenalty:q.wrongPenalty??0}));
+      batch.set(doc(db!, 'rooms',roomId,'privateQrQuestions',q.id),sanitizeFirestoreData({type:q.type,options:q.options,correctAnswer:q.correctAnswer,explanation:q.explanation||'',correctPoints:q.correctPoints??10,wrongPenalty:q.wrongPenalty??(params.responseMode==='QR_CARD'?0:5)}));
     });
 
     await batch.commit();
@@ -454,7 +454,7 @@ export class FirestoreRealtimeService {
 
     // Fetch private answer from quizzes/{quizId}/questions/{questionId}.
     // Never invent a fallback answer because that would score students incorrectly.
-    const privateSnap = await getDoc(roomData.questionSource==='QR_BANK'?doc(db!,'rooms',roomId,'privateQrQuestions',questionId):doc(db!, 'quizzes', quizId, 'questions', questionId));
+    let privateSnap = await getDoc(roomData.questionSource==='QR_BANK'?doc(db!,'rooms',roomId,'privateQrQuestions',questionId):doc(db!, 'quizzes', quizId, 'questions', questionId)); if ((!privateSnap.exists() || !privateSnap.data()?.correctAnswer) && roomData.questionSource !== 'QR_BANK') privateSnap = await getDoc(doc(db!, 'rooms', roomId, 'privateQrQuestions', questionId));
     if (!privateSnap.exists() || !privateSnap.data()?.correctAnswer) {
       throw new Error('Không tìm thấy đáp án gốc của câu hỏi. Không thể công bố kết quả.');
     }

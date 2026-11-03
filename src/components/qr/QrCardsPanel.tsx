@@ -47,12 +47,15 @@ export default function QrCardsPanel({
     : room.liveQuestions[ids[0]];
   const index = q ? ids.indexOf(q.id) : -1;
   const finished = room.status === 'FINISHED';
-  const nextId = [...ids.slice(index + 1), ...ids.slice(0, index)].find(
-    id => room.liveQuestions[id]?.status === 'READY'
-  );
+  const nextId =
+    [...ids.slice(index + 1), ...ids.slice(0, index)].find(
+      id => room.liveQuestions[id]?.status === 'READY'
+    ) || (index >= 0 && index < ids.length - 1 ? ids[index + 1] : undefined);
   const prevId =
     index > 0
-      ? [...ids.slice(0, index)].reverse().find(id => room.liveQuestions[id]?.status === 'READY')
+      ? room.responseMode === 'QR_CARD'
+        ? [...ids.slice(0, index)].reverse().find(id => room.liveQuestions[id]?.status === 'READY')
+        : ids[index - 1]
       : undefined;
 
   const [ctrlBusy, setCtrlBusy] = useState(false);
@@ -110,6 +113,45 @@ export default function QrCardsPanel({
     });
   }
 
+  async function callRandomStudentFromPhone() {
+    const participantsList = Object.values(room.participants || {});
+    const candidates = participantsList.length > 0 ? participantsList : room.roster || [];
+    if (candidates.length === 0) {
+      setCtrlError('Chưa có danh sách học sinh trong lớp để gọi tên.');
+      return;
+    }
+    const uncalled = candidates.filter(p => !room.callHistory?.includes(p.studentId));
+    const pool = uncalled.length > 0 ? uncalled : candidates;
+    const selected = pool[Math.floor(Math.random() * pool.length)];
+    await runControl(() =>
+      activeRealtimeService.callStudent(
+        room.id,
+        selected.studentId,
+        selected.name,
+        'Mời phát biểu từ điện thoại GV'
+      )
+    );
+  }
+
+  async function awardCalledStudentFromPhone(points: number, reason: string) {
+    const called = room.calledStudent;
+    if (!called) return;
+    await runControl(async () => {
+      if (points > 0) {
+        const awardKey = `call_${called.callSequence || called.calledAt}_${called.studentId}`;
+        await activeRealtimeService.addManualScore(
+          room.id,
+          called.studentId,
+          called.studentName,
+          points,
+          reason,
+          awardKey
+        );
+      }
+      return await activeRealtimeService.clearCalledStudent(room.id);
+    });
+  }
+
   const submissions = Object.values(room.submissions).filter(s => s.questionId === q?.id);
   const counts = countChoices(
     q?.options || [],
@@ -133,13 +175,77 @@ export default function QrCardsPanel({
             Lớp: {room.className} ({room.roster.length} học sinh)
           </h2>
           <p className="text-xs font-bold text-amber-300 sm:text-sm">
-            Bộ câu hỏi: {room.quizTitle || 'Bộ câu hỏi trực tiếp'} {room.subject ? `• Môn ${room.subject}` : ''} • Câu {index + 1}/{ids.length}
+            Bộ câu hỏi: {room.quizTitle || 'Bộ câu hỏi trực tiếp'} {room.subject ? `• Môn ${room.subject}` : ''} • Mã phòng: {room.roomCode} • Câu {index + 1}/{ids.length}
           </p>
         </div>
         <button className={button} onClick={onClose}>
-          Đóng màn quét
+          Đóng màn điều khiển ĐT
         </button>
       </div>
+
+      {room.status === 'WAITING' && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-amber-400 bg-amber-100 p-3.5 text-amber-950">
+          <div>
+            <p className="text-xs font-extrabold uppercase">Phòng học Live đang ở chế độ Phòng chờ</p>
+            <p className="text-xs font-semibold">Bấm bắt đầu hoặc bấm Phát câu hỏi bên dưới để mở ngay trên máy chiếu.</p>
+          </div>
+          <button
+            type="button"
+            className="rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-black text-white hover:bg-amber-700 disabled:opacity-40"
+            disabled={ctrlBusy}
+            onClick={() => void runControl(() => activeRealtimeService.startRoomSession(room.id))}
+          >
+            ▶️ BẮT ĐẦU BUỔI HỌC LIVE
+          </button>
+        </div>
+      )}
+
+      {room.calledStudent && (
+        <div className="space-y-2.5 rounded-2xl border-2 border-amber-400 bg-amber-50 p-3.5 text-slate-900">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span className="text-[11px] font-extrabold uppercase text-amber-800">
+                🎤 Đang mời học sinh phát biểu trên màn chiếu
+              </span>
+              <p className="text-lg font-black text-slate-900">{room.calledStudent.studentName}</p>
+            </div>
+            <button
+              type="button"
+              className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-bold text-slate-700"
+              disabled={ctrlBusy}
+              onClick={() => void runControl(() => activeRealtimeService.clearCalledStudent(room.id))}
+            >
+              Đóng bảng gọi
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              className="rounded-xl bg-emerald-600 px-3 py-2 text-xs font-black text-white hover:bg-emerald-700 disabled:opacity-40"
+              disabled={ctrlBusy}
+              onClick={() => void awardCalledStudentFromPhone(10, 'Trả lời miệng chính xác')}
+            >
+              🌟 Đúng (+10đ)
+            </button>
+            <button
+              type="button"
+              className="rounded-xl bg-sky-600 px-3 py-2 text-xs font-black text-white hover:bg-sky-700 disabled:opacity-40"
+              disabled={ctrlBusy}
+              onClick={() => void awardCalledStudentFromPhone(5, 'Có cố gắng phát biểu')}
+            >
+              👍 Cố gắng (+5đ)
+            </button>
+            <button
+              type="button"
+              className="rounded-xl bg-slate-200 px-3 py-2 text-xs font-black text-slate-800 hover:bg-slate-300 disabled:opacity-40"
+              disabled={ctrlBusy}
+              onClick={() => void awardCalledStudentFromPhone(0, '')}
+            >
+              Chưa đúng (0đ)
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Plickers-style Remote Control Bar right on the phone */}
       <div className="space-y-3 rounded-2xl border border-indigo-200 bg-indigo-50/70 p-3.5">
@@ -233,7 +339,7 @@ export default function QrCardsPanel({
                   <option
                     key={id}
                     value={id}
-                    disabled={st === 'RESULT' && id !== q?.id}
+                    disabled={room.responseMode === 'QR_CARD' && st === 'RESULT' && id !== q?.id}
                   >
                     Câu {i + 1} {st === 'RESULT' ? '(Đã chấm)' : ''}: {room.liveQuestions[id].content}
                   </option>
@@ -241,6 +347,14 @@ export default function QrCardsPanel({
               })}
             </select>
           </label>
+          <button
+            type="button"
+            className={secondaryButton}
+            disabled={ctrlBusy || finished}
+            onClick={() => void callRandomStudentFromPhone()}
+          >
+            🎲 Gọi HS ngẫu nhiên
+          </button>
           <button
             type="button"
             className={secondaryButton}

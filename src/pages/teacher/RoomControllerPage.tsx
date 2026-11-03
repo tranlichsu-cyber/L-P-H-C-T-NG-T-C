@@ -19,6 +19,8 @@ import { Input } from '../../components/common/Input';
 import { PresentationView } from '../../components/teacher/PresentationView';
 import { useRoomRealtime } from '../../hooks/useRoomRealtime';
 import { activeRealtimeService, isFirebaseActive } from '../../services/realtime/realtimeServiceSwitch';
+import { fetchActiveTeacherRoomsOnce, subscribeActiveTeacherRooms } from '../../services/qr/activeQrSession';
+import { broadcastRoomState } from '../../services/qr/cloudRoomRelay';
 import { loadMockDatabase } from '../../services/realtime/mockStorage';
 import { useTeacherData } from '../../context/TeacherDataContext';
 import { useToast } from '../../context/ToastContext';
@@ -95,6 +97,7 @@ export const RoomControllerPage: React.FC = () => {
         return;
       }
 
+      const existingRooms = await fetchActiveTeacherRoomsOnce(currentUser?.uid || 'teacher-current'); const activeExisting = existingRooms.find((r) => r.responseMode !== 'QR_CARD') || existingRooms[0]; if (activeExisting) { if (!cancelled) { setActiveRoomId(activeExisting.id); navigate(`/teacher/room/${activeExisting.id}`, { replace: true }); } return; }
       if (!isFirebaseActive) {
         const mockDb = loadMockDatabase();
         const active = Object.values(mockDb.rooms).find((r) => r.status !== 'FINISHED');
@@ -123,7 +126,7 @@ export const RoomControllerPage: React.FC = () => {
         );
 
         if (!cancelled) {
-          setActiveRoomId(createdRoom.id);
+          setActiveRoomId(createdRoom.id); navigate(`/teacher/room/${createdRoom.id}`, { replace: true });
         }
       } catch (error) {
         console.error('Không thể tạo phòng học Live', error);
@@ -138,9 +141,11 @@ export const RoomControllerPage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [paramRoomId, quizzes, classes, currentUser?.uid, showToast]);
+  }, [paramRoomId, quizzes, classes, currentUser?.uid, showToast, navigate]);
 
   const room = useRoomRealtime(activeRoomId);
+  useEffect(() => { if (room?.id) void broadcastRoomState(room.id); }, [room]);
+  useEffect(() => subscribeActiveTeacherRooms(currentUser?.uid, () => {}), [currentUser?.uid]);
   const {state:gameWorksheetState}=useWorksheetState(room?.id||null);
   useEffect(()=>{setSoundMuted(room?.activeGame?.settings.soundEnabled===false);return()=>setSoundMuted(false);},[room?.activeGame?.settings.soundEnabled]);
 
@@ -155,7 +160,7 @@ export const RoomControllerPage: React.FC = () => {
   // Active question & submissions
   const currentQuestionId = room.activeQuestionId || Object.keys(room.liveQuestions)[0];
   const liveQ = room.liveQuestions[currentQuestionId];
-  const questionIds = Object.keys(room.liveQuestions);
+  const questionIds = (room.questionOrder?.length ? room.questionOrder : Object.keys(room.liveQuestions)).filter((id) => room.liveQuestions[id]);
   const currentIndex = questionIds.indexOf(currentQuestionId);
 
   const participantsList = Object.values(room.participants || {});
@@ -176,8 +181,8 @@ export const RoomControllerPage: React.FC = () => {
   const canStartSession = room.status === 'WAITING';
   const canOpenQuestion = !isRoomFinished && !gamePaused && (qStatus === 'READY' || qStatus === 'CLOSED');
   const canCloseQuestion = !isRoomFinished && !gamePaused && qStatus === 'OPEN';
-  const canShowResult = !isRoomFinished && !gamePaused && qStatus === 'CLOSED';
-  const canNextQuestion = !isRoomFinished && !gamePaused && qStatus === 'RESULT' && (!room.activeGame?.questionIds||room.activeGame.questionIds.indexOf(currentQuestionId)<room.activeGame.questionIds.length-1);
+  const canShowResult = !isRoomFinished && !gamePaused && (qStatus === 'OPEN' || qStatus === 'CLOSED');
+  const canNextQuestion = !isRoomFinished && !gamePaused && (!room.activeGame?.questionIds ? currentIndex < questionIds.length - 1 : room.activeGame.questionIds.indexOf(currentQuestionId) < room.activeGame.questionIds.length - 1);
 
   const joinUrl = `${window.location.origin}/student/join?room=${room.roomCode}`;
 
@@ -217,6 +222,7 @@ export const RoomControllerPage: React.FC = () => {
   const handleShowResult = async () => {
     if (!currentQuestionId) return;
     try {
+      if (qStatus === 'OPEN') await Promise.resolve(activeRealtimeService.closeQuestion(room.id, currentQuestionId));
       const ok = await Promise.resolve(activeRealtimeService.showQuestionResult(room.id, currentQuestionId));
       if (!ok) throw new Error('Không thể công bố đáp án.');
       showToast('Đã công bố đáp án và tự động cộng +10 điểm cho học sinh làm đúng!', 'success');
@@ -231,6 +237,7 @@ export const RoomControllerPage: React.FC = () => {
     if (index>=0&&index < sequence.length - 1) {
       const nextId = sequence[index + 1];
       try {
+        if (qStatus === 'OPEN') { await Promise.resolve(activeRealtimeService.closeQuestion(room.id, currentQuestionId)); await Promise.resolve(activeRealtimeService.showQuestionResult(room.id, currentQuestionId)).catch(() => false); } else if (qStatus === 'CLOSED') { await Promise.resolve(activeRealtimeService.showQuestionResult(room.id, currentQuestionId)).catch(() => false); }
         const ok = await Promise.resolve(activeRealtimeService.openQuestion(room.id, nextId));
         if (!ok) throw new Error('Không thể chuyển câu hỏi.');
         showToast('Đã chuyển sang câu hỏi tiếp theo!', 'info');
@@ -260,23 +267,24 @@ export const RoomControllerPage: React.FC = () => {
 
   // --- STUDENT CALLING LOGIC ---
   const handleRandomCall = () => {
-    if (participantsList.length === 0) {
+    const callCandidates = participantsList.length > 0 ? participantsList : rosterList;
+    if (callCandidates.length === 0) {
       showToast('Chưa có học sinh nào tham gia phòng!', 'info');
       return;
     }
 
     setIsSpinning(true);
     const pool = prioritizeUncalled
-      ? participantsList.filter((p) => !room.callHistory?.includes(p.studentId))
-      : participantsList;
+      ? callCandidates.filter((p) => !room.callHistory?.includes(p.studentId))
+      : callCandidates;
 
-    const targetPool = pool.length > 0 ? pool : participantsList;
+    const targetPool = pool.length > 0 ? pool : callCandidates;
     const finalSelected = targetPool[Math.floor(Math.random() * targetPool.length)];
 
     // 1.5s spinning animation effect
     let count = 0;
     const interval = setInterval(() => {
-      const randomTemp = participantsList[Math.floor(Math.random() * participantsList.length)];
+      const randomTemp = callCandidates[Math.floor(Math.random() * callCandidates.length)];
       setSpinningName(randomTemp.name);
       count++;
 

@@ -1,6 +1,6 @@
 import { realtimeService, MockRealtimeService } from './MockRealtimeService';
 import { firestoreRealtimeService } from '../firebase/FirestoreRealtimeService';
-import { isFirebaseConfigured } from '../firebase/firebase';
+import { auth, isFirebaseConfigured } from '../firebase/firebase';
 import { loadMockDatabase } from './mockStorage';
 import type { CardChoice } from '../qr/cards';
 import type {
@@ -20,8 +20,10 @@ import {
   isFirestoreTemporarilyExhausted,
   isQuotaExceededError,
   markFirestoreQuotaExceeded,
+  registerHostActionForwarder,
   subscribeRelayRoom,
   type PrivateAnswerMap,
+  type RelayActionPayload,
 } from '../qr/cloudRoomRelay';
 
 const dataMode = import.meta.env.VITE_DATA_MODE || 'mock';
@@ -31,6 +33,17 @@ export const isFirebaseActive = dataMode === 'firebase' && isFirebaseConfigured;
 function shouldUseFirestoreForRoom(roomId?: string): boolean {
   if (!isFirebaseActive || isFirestoreTemporarilyExhausted()) return false;
   if (roomId && roomId.startsWith('room-')) return false;
+  return true;
+}
+
+function canWriteFirestoreAsTeacher(roomId?: string): boolean {
+  if (!shouldUseFirestoreForRoom(roomId)) return false;
+  const user = auth?.currentUser;
+  if (!user || user.isAnonymous) return false;
+  if (roomId) {
+    const localRoom = loadMockDatabase().rooms[roomId];
+    if (localRoom?.teacherId && localRoom.teacherId !== user.uid) return false;
+  }
   return true;
 }
 
@@ -159,73 +172,69 @@ class HybridRealtimeService {
   }
 
   public async startRoomSession(roomId: string): Promise<boolean> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.startRoomSession(roomId);
         if (ok) {
           realtimeService.startRoomSession(roomId);
-          void broadcastRoomState(roomId);
+          void broadcastRoomAction(roomId, { kind: 'START_SESSION' }, true);
           return true;
         }
       } catch (err) {
         if (isQuotaExceededError(err)) {
           markFirestoreQuotaExceeded();
-        } else {
-          throw err;
         }
       }
     }
     const ok = realtimeService.startRoomSession(roomId);
-    if (ok) void broadcastRoomState(roomId);
+    if (ok) {
+      void broadcastRoomAction(roomId, { kind: 'START_SESSION' }, false);
+    }
     return ok;
   }
 
   public async openQuestion(roomId: string, questionId: string): Promise<boolean> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.openQuestion(roomId, questionId);
         if (ok) {
           realtimeService.openQuestion(roomId, questionId);
-          void broadcastRoomAction(roomId, { kind: 'OPEN_QUESTION', questionId });
+          void broadcastRoomAction(roomId, { kind: 'OPEN_QUESTION', questionId }, true);
           return true;
         }
       } catch (err) {
         if (isQuotaExceededError(err)) {
           markFirestoreQuotaExceeded();
-        } else {
-          throw err;
         }
       }
     }
 
     const ok = realtimeService.openQuestion(roomId, questionId);
     if (ok) {
-      void broadcastRoomAction(roomId, { kind: 'OPEN_QUESTION', questionId });
+      void broadcastRoomAction(roomId, { kind: 'OPEN_QUESTION', questionId }, false);
     }
     return ok;
   }
 
   public async closeQuestion(roomId: string, questionId: string): Promise<boolean> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.closeQuestion(roomId, questionId);
         if (ok) {
           realtimeService.closeQuestion(roomId, questionId);
-          void broadcastRoomAction(roomId, { kind: 'CLOSE_QUESTION', questionId });
+          void broadcastRoomAction(roomId, { kind: 'CLOSE_QUESTION', questionId }, true);
           return true;
         }
       } catch (err) {
         if (isQuotaExceededError(err)) {
           markFirestoreQuotaExceeded();
-        } else {
-          throw err;
         }
       }
     }
 
     const ok = realtimeService.closeQuestion(roomId, questionId);
     if (ok) {
-      void broadcastRoomAction(roomId, { kind: 'CLOSE_QUESTION', questionId });
+      void broadcastRoomAction(roomId, { kind: 'CLOSE_QUESTION', questionId }, false);
     }
     return ok;
   }
@@ -233,12 +242,12 @@ class HybridRealtimeService {
   public async showQuestionResult(roomId: string, questionId: string): Promise<boolean> {
     ensureRoomPrivateQuestions(roomId);
 
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.showQuestionResult(roomId, questionId);
         if (ok) {
           realtimeService.showQuestionResult(roomId, questionId);
-          void broadcastRoomAction(roomId, { kind: 'SHOW_RESULT', questionId });
+          void broadcastRoomAction(roomId, { kind: 'SHOW_RESULT', questionId }, true);
           return true;
         }
       } catch (err) {
@@ -254,7 +263,7 @@ class HybridRealtimeService {
     ensureRoomPrivateQuestions(roomId);
     const ok = realtimeService.showQuestionResult(roomId, questionId);
     if (ok) {
-      void broadcastRoomAction(roomId, { kind: 'SHOW_RESULT', questionId });
+      void broadcastRoomAction(roomId, { kind: 'SHOW_RESULT', questionId }, false);
     }
     return ok;
   }
@@ -265,7 +274,7 @@ class HybridRealtimeService {
     studentId: string,
     choice: CardChoice
   ): Promise<{ success: boolean; error?: string }> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const res = await firestoreRealtimeService.submitQrAnswer(
           roomId,
@@ -275,12 +284,16 @@ class HybridRealtimeService {
         );
         if (res.success) {
           realtimeService.submitQrAnswer(roomId, questionId, studentId, choice);
-          void broadcastRoomAction(roomId, {
-            kind: 'SUBMIT_QR_ANSWER',
-            questionId,
-            studentId,
-            choice,
-          });
+          void broadcastRoomAction(
+            roomId,
+            {
+              kind: 'SUBMIT_QR_ANSWER',
+              questionId,
+              studentId,
+              choice,
+            },
+            true
+          );
           return res;
         }
         // If Firestore rejected only because of missing state that exists locally, fall through
@@ -296,12 +309,16 @@ class HybridRealtimeService {
 
     const res = realtimeService.submitQrAnswer(roomId, questionId, studentId, choice);
     if (res.success) {
-      void broadcastRoomAction(roomId, {
-        kind: 'SUBMIT_QR_ANSWER',
-        questionId,
-        studentId,
-        choice,
-      });
+      void broadcastRoomAction(
+        roomId,
+        {
+          kind: 'SUBMIT_QR_ANSWER',
+          questionId,
+          studentId,
+          choice,
+        },
+        false
+      );
     }
     return res;
   }
@@ -333,7 +350,9 @@ class HybridRealtimeService {
     reason?: string,
     awardKey?: string
   ): Promise<boolean> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    const resolvedAwardKey =
+      awardKey || `manual_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.addManualScore(
           roomId,
@@ -341,18 +360,34 @@ class HybridRealtimeService {
           studentName,
           points,
           reason,
-          awardKey
+          resolvedAwardKey
         );
         if (ok) {
-          realtimeService.addManualScore(roomId, studentId, studentName, points, reason, awardKey);
-          void broadcastRoomState(roomId);
+          realtimeService.addManualScore(
+            roomId,
+            studentId,
+            studentName,
+            points,
+            reason,
+            resolvedAwardKey
+          );
+          void broadcastRoomAction(
+            roomId,
+            {
+              kind: 'ADD_MANUAL_SCORE',
+              studentId,
+              studentName,
+              points,
+              reason,
+              awardKey: resolvedAwardKey,
+            },
+            true
+          );
           return true;
         }
       } catch (err) {
         if (isQuotaExceededError(err)) {
           markFirestoreQuotaExceeded();
-        } else {
-          throw err;
         }
       }
     }
@@ -362,9 +397,22 @@ class HybridRealtimeService {
       studentName,
       points,
       reason,
-      awardKey
+      resolvedAwardKey
     );
-    if (ok) void broadcastRoomState(roomId);
+    if (ok) {
+      void broadcastRoomAction(
+        roomId,
+        {
+          kind: 'ADD_MANUAL_SCORE',
+          studentId,
+          studentName,
+          points,
+          reason,
+          awardKey: resolvedAwardKey,
+        },
+        false
+      );
+    }
     return ok;
   }
 
@@ -374,7 +422,7 @@ class HybridRealtimeService {
     studentName: string,
     reason?: string
   ): Promise<boolean> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.callStudent(
           roomId,
@@ -384,71 +432,90 @@ class HybridRealtimeService {
         );
         if (ok) {
           realtimeService.callStudent(roomId, studentId, studentName, reason);
-          void broadcastRoomState(roomId);
+          void broadcastRoomAction(
+            roomId,
+            {
+              kind: 'CALL_STUDENT',
+              studentId,
+              studentName,
+              reason,
+            },
+            true
+          );
           return true;
         }
       } catch (err) {
         if (isQuotaExceededError(err)) {
           markFirestoreQuotaExceeded();
-        } else {
-          throw err;
         }
       }
     }
     const ok = realtimeService.callStudent(roomId, studentId, studentName, reason);
-    if (ok) void broadcastRoomState(roomId);
+    if (ok) {
+      void broadcastRoomAction(
+        roomId,
+        {
+          kind: 'CALL_STUDENT',
+          studentId,
+          studentName,
+          reason,
+        },
+        false
+      );
+    }
     return ok;
   }
 
   public async clearCalledStudent(roomId: string): Promise<boolean> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.clearCalledStudent(roomId);
         if (ok) {
           realtimeService.clearCalledStudent(roomId);
-          void broadcastRoomState(roomId);
+          void broadcastRoomAction(roomId, { kind: 'CLEAR_CALLED_STUDENT' }, true);
           return true;
         }
       } catch (err) {
         if (isQuotaExceededError(err)) {
           markFirestoreQuotaExceeded();
-        } else {
-          throw err;
         }
       }
     }
     const ok = realtimeService.clearCalledStudent(roomId);
-    if (ok) void broadcastRoomState(roomId);
+    if (ok) {
+      void broadcastRoomAction(roomId, { kind: 'CLEAR_CALLED_STUDENT' }, false);
+    }
     return ok;
   }
 
   public async resetCallHistory(roomId: string): Promise<boolean> {
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFirestoreAsTeacher(roomId)) {
       try {
         const ok = await firestoreRealtimeService.resetCallHistory(roomId);
         if (ok) {
           realtimeService.resetCallHistory(roomId);
-          void broadcastRoomState(roomId);
+          void broadcastRoomAction(roomId, { kind: 'RESET_CALL_HISTORY' }, true);
           return true;
         }
       } catch (err) {
         if (isQuotaExceededError(err)) {
           markFirestoreQuotaExceeded();
-        } else {
-          throw err;
         }
       }
     }
     const ok = realtimeService.resetCallHistory(roomId);
-    if (ok) void broadcastRoomState(roomId);
+    if (ok) {
+      void broadcastRoomAction(roomId, { kind: 'RESET_CALL_HISTORY' }, false);
+    }
     return ok;
   }
 
   public async finishRoom(roomId: string): Promise<boolean> {
     realtimeService.finishRoom(roomId);
-    void broadcastRoomAction(roomId, { kind: 'FINISH_ROOM' });
+    const canWriteFs = canWriteFirestoreAsTeacher(roomId);
+    void broadcastRoomAction(roomId, { kind: 'FINISH_ROOM' }, canWriteFs);
 
-    if (shouldUseFirestoreForRoom(roomId)) {
+    if (canWriteFs) {
       try {
         await firestoreRealtimeService.finishRoom(roomId);
         return true;
@@ -620,6 +687,71 @@ class HybridRealtimeService {
 }
 
 const hybridRealtimeService = new HybridRealtimeService();
+
+registerHostActionForwarder(async (roomId: string, action: RelayActionPayload) => {
+  if (!canWriteFirestoreAsTeacher(roomId)) return;
+  try {
+    let ok = false;
+    switch (action.kind) {
+      case 'START_SESSION':
+        ok = await firestoreRealtimeService.startRoomSession(roomId);
+        break;
+      case 'OPEN_QUESTION':
+        ok = await firestoreRealtimeService.openQuestion(roomId, action.questionId);
+        break;
+      case 'CLOSE_QUESTION':
+        ok = await firestoreRealtimeService.closeQuestion(roomId, action.questionId);
+        break;
+      case 'SHOW_RESULT':
+        ok = await firestoreRealtimeService.showQuestionResult(roomId, action.questionId);
+        break;
+      case 'SUBMIT_QR_ANSWER': {
+        const res = await firestoreRealtimeService.submitQrAnswer(
+          roomId,
+          action.questionId,
+          action.studentId,
+          action.choice
+        );
+        ok = res.success;
+        break;
+      }
+      case 'CALL_STUDENT':
+        ok = await firestoreRealtimeService.callStudent(
+          roomId,
+          action.studentId,
+          action.studentName,
+          action.reason
+        );
+        break;
+      case 'CLEAR_CALLED_STUDENT':
+        ok = await firestoreRealtimeService.clearCalledStudent(roomId);
+        break;
+      case 'ADD_MANUAL_SCORE':
+        ok = await firestoreRealtimeService.addManualScore(
+          roomId,
+          action.studentId,
+          action.studentName,
+          action.points,
+          action.reason,
+          action.awardKey
+        );
+        break;
+      case 'RESET_CALL_HISTORY':
+        ok = await firestoreRealtimeService.resetCallHistory(roomId);
+        break;
+      case 'FINISH_ROOM':
+        ok = await firestoreRealtimeService.finishRoom(roomId);
+        break;
+    }
+    if (ok) {
+      void broadcastRoomState(roomId);
+    }
+  } catch (err) {
+    if (isQuotaExceededError(err)) {
+      markFirestoreQuotaExceeded();
+    }
+  }
+});
 
 // Export active realtime service instance
 export const activeRealtimeService: MockRealtimeService = (

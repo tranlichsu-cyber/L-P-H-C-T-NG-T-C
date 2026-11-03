@@ -33,6 +33,8 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
   const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
   const [showStudentName, setShowStudentName] = useState(true);
   const [showSubmissionPicker, setShowSubmissionPicker] = useState(false);
+  const [showTeacherRemoteQr, setShowTeacherRemoteQr] = useState(false);
+  const teacherRemoteUrl = `${window.location.origin}/teacher/qr-cards/${encodeURIComponent(room.id)}/scan`;
   const joinUrl = `${window.location.origin}/student/join?room=${room.roomCode}`;
   const participantsList = Object.values(room.participants || {});
   const totalRoster = room.roster?.length || 30;
@@ -112,6 +114,7 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
 
         {/* Room Code Badge */}
         <div className="flex items-center gap-2 shrink-0">
+          <button type="button" onClick={() => setShowTeacherRemoteQr((v) => !v)} className="rounded-xl border-2 border-indigo-400/60 bg-indigo-950/90 px-3 py-1.5 text-xs font-extrabold text-indigo-200 hover:bg-indigo-900 transition-colors">📱 QR ĐT Giáo viên</button>
           <div className="bg-slate-900 border-2 border-sky-500/40 rounded-xl px-3 py-1 text-center shadow-xl">
             <div className="text-xs uppercase font-bold tracking-widest text-sky-400">MÃ THAM GIA</div>
             <div className="text-xl font-mono font-black text-white tracking-widest">
@@ -130,6 +133,20 @@ export const PresentationView: React.FC<PresentationViewProps> = ({
       </div>
 
       
+      {showTeacherRemoteQr && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border-2 border-indigo-400 bg-indigo-950/95 p-3 text-white shrink-0">
+          <div className="space-y-1">
+            <p className="text-xs font-extrabold uppercase tracking-wider text-indigo-300">📱 Điều khiển màn chiếu từ điện thoại giáo viên</p>
+            <p className="text-sm font-bold">Quét mã QR bên phải bằng điện thoại giáo viên (Zalo / Camera) để phát câu hỏi, đóng trả lời, hiện đáp án, gọi học sinh và quét thẻ QR từ xa.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-white p-2 text-slate-900">
+              <QRCodeSVG value={teacherRemoteUrl} size={96} marginSize={1} />
+            </div>
+            <button type="button" onClick={() => setShowTeacherRemoteQr(false)} className="rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700">Ẩn QR</button>
+          </div>
+        </div>
+      )}
       {(worksheetState.worksheetId||worksheetState.projectedWorksheetId)&&<div className="flex gap-3 shrink-0"><button onClick={()=>setShowWorksheet(true)} className="rounded-xl bg-sky-700 text-white px-4 py-2 font-bold">Hoạt động / Bài được chọn</button><button onClick={()=>setShowWorksheet(false)} className="rounded-xl bg-slate-800 text-white px-4 py-2 font-bold">Câu hỏi trực tiếp</button></div>}
       {/* Main Content Area */}
       <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_240px] lg:grid-cols-[minmax(0,1fr)_280px] gap-4 py-2">

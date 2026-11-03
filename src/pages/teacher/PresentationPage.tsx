@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PresentationView } from '../../components/teacher/PresentationView';
 import { useRoomRealtime } from '../../hooks/useRoomRealtime';
 import { activeRealtimeService, isFirebaseActive } from '../../services/realtime/realtimeServiceSwitch';
+import { broadcastRoomState } from '../../services/qr/cloudRoomRelay';
 import { loadMockDatabase } from '../../services/realtime/mockStorage';
 import { useToast } from '../../context/ToastContext';
 
@@ -29,6 +30,7 @@ export const PresentationPage: React.FC = () => {
   }, [paramRoomId, navigate]);
 
   const room = useRoomRealtime(activeRoomId);
+  useEffect(() => { if (room?.id) void broadcastRoomState(room.id); }, [room]);
 
   if (!room) {
     return (
@@ -47,7 +49,7 @@ export const PresentationPage: React.FC = () => {
   }
 
   const currentQuestionId = room.activeQuestionId || Object.keys(room.liveQuestions)[0];
-  const questionIds = Object.keys(room.liveQuestions);
+  const questionIds = (room.questionOrder?.length ? room.questionOrder : Object.keys(room.liveQuestions)).filter((id) => room.liveQuestions[id]);
   const currentIndex = questionIds.indexOf(currentQuestionId);
 
   const handleOpenQuestion = async (qId: string) => {
@@ -68,6 +70,7 @@ export const PresentationPage: React.FC = () => {
 
   const handleShowResult = async (qId: string) => {
     try {
+      if (room.liveQuestions[qId]?.status === 'OPEN') await Promise.resolve(activeRealtimeService.closeQuestion(room.id, qId));
       await Promise.resolve(activeRealtimeService.showQuestionResult(room.id, qId));
     } catch (err: any) {
       showToast(err?.message || 'Không thể công bố kết quả.', 'error');
@@ -88,7 +91,7 @@ export const PresentationPage: React.FC = () => {
   };
 
   const handleCallRandomStudent = async () => {
-    const participantsList = Object.values(room.participants || {});
+    const participantsList = Object.values(room.participants || {}).length > 0 ? Object.values(room.participants || {}) : (room.roster || []);
     if (participantsList.length === 0) {
       showToast('Chưa có học sinh nào tham gia phòng!', 'info');
       return;
