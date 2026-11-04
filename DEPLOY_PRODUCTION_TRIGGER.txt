@@ -291,3 +291,5 @@ Release performance optimization: eliminate live room broadcast loop, cache mock
 2026-11-03: Remove GAME HUB TRO CHOI button and its selection modal from the Live Room controller.
 
 2026-11-04: Remove QR answer and classroom game shortcuts from the teacher homepage; retain function menu entries.
+
+2026-11-04: Simplify the teaching homepage to only the create-new-Live-room button, keeping the room creation dialog.
