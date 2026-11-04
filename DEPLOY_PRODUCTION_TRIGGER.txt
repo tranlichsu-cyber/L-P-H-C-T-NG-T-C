@@ -293,3 +293,5 @@ Release performance optimization: eliminate live room broadcast loop, cache mock
 2026-11-04: Remove QR answer and classroom game shortcuts from the teacher homepage; retain function menu entries.
 
 2026-11-04: Simplify the teaching homepage to only the create-new-Live-room button, keeping the room creation dialog.
+
+2026-11-04: Narrow the presentation leaderboard to 180/200px and compact its content to give questions and answers more room.
